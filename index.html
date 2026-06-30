@@ -9,8 +9,8 @@
 :root{
   --surface-0:#f4f3ee; --surface-1:#ffffff; --surface-2:#ffffff;
   --text-primary:#1a1a18; --text-secondary:#5f5e5a; --text-muted:#888780;
-  --border:#e3e1d8; --border-strong:#c9c7bb; --border-accent:#378ADD;
-  --bg-accent:#E6F1FB; --text-accent:#0C447C; --fill-accent:#378ADD; --on-accent:#ffffff;
+  --border:#e3e1d8; --border-strong:#c9c7bb; --border-accent:#2554C7;
+  --bg-accent:#E8EEFC; --text-accent:#1E3A8A; --fill-accent:#2554C7; --on-accent:#ffffff;
   --bg-danger:#FCEBEB; --text-danger:#A32D2D; --fill-danger:#E24B4A;
   --bg-success:#EAF3DE; --text-success:#3B6D11; --fill-success:#639922;
   --bg-warning:#FAEEDA; --text-warning:#854F0B; --fill-warning:#EF9F27;
@@ -24,7 +24,7 @@
     --surface-0:#1c1c1a; --surface-1:#252522; --surface-2:#2b2b28;
     --text-primary:#f0efe9; --text-secondary:#b4b2a9; --text-muted:#888780;
     --border:#3a3a36; --border-strong:#4a4a45;
-    --bg-accent:#0C447C; --text-accent:#B5D4F4; --on-accent:#ffffff;
+    --bg-accent:#1E3A8A; --text-accent:#A8C0F5; --on-accent:#ffffff;
     --bg-danger:#791F1F; --text-danger:#F7C1C1;
     --bg-success:#27500A; --text-success:#C0DD97;
     --bg-warning:#633806; --text-warning:#FAC775;
@@ -207,21 +207,84 @@ function dayjs(input){
 
 /* ============================================================
    업무 대시보드 - 단일 파일 앱
-   데이터 저장: localStorage (Supabase 연동 시 이 부분만 교체)
+   데이터 저장: Supabase (app_data 테이블, id='main' 단일 행에 JSON 저장)
    ============================================================ */
 
-/* ---------- 데이터 스토어 ---------- */
-const STORE_KEY = 'opl_dashboard_v1';
+/* ---------- Supabase 설정 ---------- */
+const SUPABASE_URL = 'https://afdospdphlkcjyvdlukg.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZG9zcGRwaGxrY2p5dmRsdWtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDAyNTEsImV4cCI6MjA5ODM3NjI1MX0.o9IRhp5dsUark4xD3QnOieLdjA52JAcZMPXx-VmZNfU';
+const SUPABASE_TABLE = 'app_data';
+const SUPABASE_ROW_ID = 'main';
 
-function loadStore(){
-  try{
-    const raw = localStorage.getItem(STORE_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){}
-  return seedData();
+async function supabaseFetch(path, options={}){
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers||{})
+    }
+  });
+  if(!res.ok){
+    const text = await res.text();
+    throw new Error(`Supabase error ${res.status}: ${text}`);
+  }
+  return res.json();
 }
+
+async function loadStoreRemote(){
+  const rows = await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}&select=data`);
+  if(rows && rows.length>0 && rows[0].data && Object.keys(rows[0].data).length>0){
+    return rows[0].data;
+  }
+  // 행이 비어있으면 시드 데이터로 초기 저장
+  const seed = seedData();
+  await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}`, {
+    method: 'PATCH',
+    prefer: 'return=minimal',
+    body: JSON.stringify({ data: seed })
+  });
+  return seed;
+}
+
+let saveTimer = null;
+let saveInFlight = false;
+let savePending = false;
+
 function saveStore(){
-  localStorage.setItem(STORE_KEY, JSON.stringify(state.data));
+  // 디바운스: 짧은 시간 내 연속 저장 요청을 묶어서 한 번만 전송
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSaveStore, 400);
+}
+
+async function doSaveStore(){
+  if(saveInFlight){ savePending = true; return; }
+  saveInFlight = true;
+  try{
+    await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ data: state.data, updated_at: new Date().toISOString() })
+    });
+    setSyncStatus('synced');
+  }catch(e){
+    console.error('저장 실패:', e);
+    setSyncStatus('error');
+  }finally{
+    saveInFlight = false;
+    if(savePending){ savePending = false; doSaveStore(); }
+  }
+}
+
+function setSyncStatus(status){
+  const el = document.getElementById('syncStatus');
+  if(!el) return;
+  if(status==='saving'){ el.textContent = '저장 중...'; el.style.color = 'var(--text-muted)'; }
+  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = 'var(--text-success)'; }
+  else if(status==='error'){ el.textContent = '저장 실패 (연결 확인)'; el.style.color = 'var(--text-danger)'; }
 }
 
 function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
@@ -301,7 +364,7 @@ function seedData(){
 }
 
 const state = {
-  data: loadStore(),
+  data: null,
   view: 'home',
   selectedVendorId: null,
   selectedProjectId: null,
@@ -312,7 +375,7 @@ const state = {
   companySearch: '',
 };
 
-function persist(){ saveStore(); render(); }
+function persist(){ setSyncStatus('saving'); saveStore(); render(); }
 
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -352,7 +415,7 @@ function priorityColor(p){
   return {bg:'var(--bg-success)', text:'var(--text-success)'};
 }
 function eventColor(type){
-  if(type==='미팅') return {bg:'var(--bg-accent)', text:'var(--text-accent)', dot:'#378ADD'};
+  if(type==='미팅') return {bg:'var(--bg-accent)', text:'var(--text-accent)', dot:'#2554C7'};
   if(type==='외근') return {bg:'var(--bg-coral)', text:'var(--text-coral)', dot:'#D85A30'};
   if(type==='마감') return {bg:'var(--bg-pro)', text:'var(--text-pro)', dot:'#7F77DD'};
   if(type==='연차') return {bg:'var(--bg-success)', text:'var(--text-success)', dot:'#1D9E75'};
@@ -373,6 +436,7 @@ function eventsOnDate(dateStr){
 
 /* ---------- 렌더 루트 ---------- */
 function render(){
+  if(!state.data){ return; }
   const app = document.getElementById('app');
   app.innerHTML = `
     <div class="sidebar" id="sidebar">
@@ -392,6 +456,7 @@ function render(){
           <option value="me" ${state.data.role==='me'?'selected':''}>나 (편집 가능)</option>
           <option value="ceo" ${state.data.role==='ceo'?'selected':''}>대표님 (읽기 전용)</option>
         </select>
+        <p id="syncStatus" style="font-size:11px; color:var(--text-muted); margin:8px 0 0;">저장됨</p>
       </div>
     </div>
     <div class="main">
@@ -801,7 +866,7 @@ function viewCalendar(){
     </div>
 
     <div class="legend">
-      <span><span class="dot" style="background:#378ADD"></span>미팅</span>
+      <span><span class="dot" style="background:#2554C7"></span>미팅</span>
       <span><span class="dot" style="background:#D85A30"></span>외근</span>
       <span><span class="dot" style="background:#7F77DD"></span>프로젝트 마감</span>
       <span><span class="dot" style="background:#1D9E75"></span>연차/반차</span>
@@ -1815,8 +1880,24 @@ function renderMeetingResult(result, originalText){
   });
 }
 
-render();
+/* ---------- 앱 초기화 ---------- */
+async function initApp(){
+  const app = document.getElementById('app');
+  app.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; color:var(--text-muted); font-size:13px;">불러오는 중...</div>`;
+  try{
+    state.data = await loadStoreRemote();
+    render();
+  }catch(e){
+    console.error(e);
+    app.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; width:100%; gap:10px; padding:2rem; text-align:center;">
+      <p style="font-size:14px; color:var(--text-danger);">데이터를 불러오지 못했습니다.</p>
+      <p style="font-size:12px; color:var(--text-muted);">${e.message}</p>
+      <button id="retryBtn">다시 시도</button>
+    </div>`;
+    document.getElementById('retryBtn').addEventListener('click', initApp);
+  }
+}
+initApp();
 </script>
 </body>
 </html>
-
