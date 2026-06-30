@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>업무 대시보드</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
+<style>
+:root{
+  --surface-0:#f4f3ee; --surface-1:#ffffff; --surface-2:#ffffff;
+  --text-primary:#1a1a18; --text-secondary:#5f5e5a; --text-muted:#888780;
+  --border:#e3e1d8; --border-strong:#c9c7bb; --border-accent:#378ADD;
+  --bg-accent:#E6F1FB; --text-accent:#0C447C; --fill-accent:#378ADD; --on-accent:#ffffff;
+  --bg-danger:#FCEBEB; --text-danger:#A32D2D; --fill-danger:#E24B4A;
+  --bg-success:#EAF3DE; --text-success:#3B6D11; --fill-success:#639922;
+  --bg-warning:#FAEEDA; --text-warning:#854F0B; --fill-warning:#EF9F27;
+  --bg-pro:#EEEDFE; --text-pro:#3C3489; --fill-pro:#7F77DD;
+  --bg-coral:#FAECE7; --text-coral:#993C1D;
+  --bg-teal:#E1F5EE; --text-teal:#0F6E56;
+  --radius:8px; --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Malgun Gothic',sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --surface-0:#1c1c1a; --surface-1:#252522; --surface-2:#2b2b28;
+    --text-primary:#f0efe9; --text-secondary:#b4b2a9; --text-muted:#888780;
+    --border:#3a3a36; --border-strong:#4a4a45;
+    --bg-accent:#0C447C; --text-accent:#B5D4F4; --on-accent:#ffffff;
+    --bg-danger:#791F1F; --text-danger:#F7C1C1;
+    --bg-success:#27500A; --text-success:#C0DD97;
+    --bg-warning:#633806; --text-warning:#FAC775;
+    --bg-pro:#3C3489; --text-pro:#CECBF6;
+    --bg-coral:#712B13; --text-coral:#F0997B;
+    --bg-teal:#085041; --text-teal:#9FE1CB;
+  }
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; font-family:var(--font-sans); background:var(--surface-0); color:var(--text-primary);
+  font-size:14px; line-height:1.6;
+}
+h1,h2,h3{font-weight:500; margin:0;}
+h1{font-size:22px;} h2{font-size:18px;} h3{font-size:16px;}
+button{
+  font-family:inherit; font-size:13px; padding:8px 14px; border-radius:var(--radius);
+  border:0.5px solid var(--border-strong); background:transparent; color:var(--text-primary);
+  cursor:pointer; transition:background .12s;
+}
+button:hover{background:var(--surface-1);}
+button:active{transform:scale(0.98);}
+button.primary{background:var(--fill-accent); color:var(--on-accent); border-color:transparent;}
+button.primary:hover{background:#2f78c2;}
+button.danger-text{color:var(--text-danger); border-color:var(--bg-danger);}
+input,select,textarea{
+  font-family:inherit; font-size:13px; padding:8px 10px; border-radius:var(--radius);
+  border:0.5px solid var(--border); background:var(--surface-1); color:var(--text-primary);
+  width:100%;
+}
+input:focus,select:focus,textarea:focus{outline:none; border-color:var(--border-accent); box-shadow:0 0 0 2px var(--bg-accent);}
+label{font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;}
+.field{margin-bottom:12px;}
+.app{display:flex; min-height:100vh;}
+.sidebar{
+  width:200px; flex-shrink:0; background:var(--surface-1); border-right:0.5px solid var(--border);
+  padding:1rem 0; position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.sidebar-title{padding:0 1rem 1rem; font-size:13px; font-weight:500; color:var(--text-secondary);}
+.nav-item{
+  display:flex; align-items:center; gap:8px; padding:9px 1rem; font-size:14px; color:var(--text-secondary);
+  cursor:pointer; border-left:2px solid transparent;
+}
+.nav-item:hover{background:var(--surface-0);}
+.nav-item.active{background:var(--bg-accent); color:var(--text-accent); font-weight:500; border-left-color:var(--border-accent);}
+.nav-item i{font-size:16px;}
+.main{flex:1; padding:1.5rem 2rem; min-width:0; max-width:1100px;}
+.row{display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:12px; flex-wrap:wrap;}
+.metric-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:1.5rem;}
+.metric-card{background:var(--surface-1); border-radius:var(--radius); padding:1rem;}
+.metric-card p.label{font-size:13px; color:var(--text-secondary); margin:0 0 4px;}
+.metric-card p.value{font-size:24px; font-weight:500; margin:0;}
+.card{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1.25rem;}
+.badge{font-size:11px; padding:2px 8px; border-radius:var(--radius); display:inline-block; font-weight:500;}
+table{width:100%; border-collapse:collapse; font-size:13px;}
+th{text-align:left; padding:8px 12px; font-weight:500; color:var(--text-secondary); background:var(--surface-1);}
+td{padding:8px 12px; border-top:0.5px solid var(--border);}
+tr.clickable{cursor:pointer;}
+tr.clickable:hover td{background:var(--surface-1);}
+.table-wrap{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; overflow:hidden;}
+.tag{font-size:12px; padding:4px 10px; border-radius:var(--radius); border:0.5px solid var(--border-strong); cursor:pointer; background:var(--surface-1); color:var(--text-secondary);}
+.tag.active{background:var(--bg-accent); color:var(--text-accent); border-color:transparent;}
+.proj-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;}
+.proj-card{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1rem; cursor:pointer;}
+.proj-card:hover{border-color:var(--border-strong);}
+.checklist-item{display:flex; align-items:flex-start; gap:8px; font-size:13px; padding:4px 0;}
+.checklist-item input[type=checkbox]{width:14px; height:14px; margin-top:2px; flex-shrink:0;}
+.checklist-item.done span{text-decoration:line-through; color:var(--text-muted);}
+.progress-bar{height:4px; background:var(--surface-1); border-radius:2px; overflow:hidden; margin-top:10px;}
+.progress-fill{height:100%; background:var(--fill-accent);}
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;
+  z-index:100; padding:1.5rem;
+}
+.modal{background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:1.25rem; width:420px; max-width:100%; max-height:85vh; overflow-y:auto;}
+.modal-wide{width:560px;}
+.close-x{cursor:pointer; color:var(--text-secondary); font-size:18px;}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; font-size:12px;}
+.cal-head{background:var(--surface-1); padding:6px; text-align:center; color:var(--text-secondary);}
+.cal-cell{background:var(--surface-2); min-height:78px; padding:4px; cursor:pointer;}
+.cal-cell:hover{background:var(--surface-1);}
+.cal-cell .daynum{color:var(--text-muted);}
+.cal-cell .daynum.today{color:var(--text-accent); font-weight:500;}
+.cal-event{margin-top:2px; font-size:10px; padding:1px 4px; border-radius:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text-secondary); margin-bottom:1rem;}
+.legend span.dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px;}
+.empty-state{text-align:center; padding:3rem 1rem; color:var(--text-muted);}
+.contact-row{display:flex; justify-content:space-between; padding:3px 0; font-size:13px;}
+.activity-row{display:flex; gap:12px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); margin-bottom:8px;}
+.activity-date{font-size:12px; color:var(--text-muted); width:64px; flex-shrink:0;}
+.search-bar{position:relative; width:240px;}
+.search-bar i{position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;}
+.search-bar input{padding-left:30px;}
+.back-link{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:1rem;}
+.back-link:hover{color:var(--text-primary);}
+.toast{
+  position:fixed; bottom:24px; right:24px; background:var(--text-primary); color:var(--surface-0);
+  padding:10px 18px; border-radius:var(--radius); font-size:13px; z-index:200; opacity:0; transform:translateY(8px);
+  transition:opacity .2s, transform .2s; pointer-events:none;
+}
+.toast.show{opacity:1; transform:translateY(0);}
+.role-toggle{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted);}
+@media (max-width:720px){
+  .sidebar{position:fixed; z-index:50; transform:translateX(-100%); transition:transform .2s;}
+  .sidebar.open{transform:translateX(0);}
+  .main{padding:1rem;}
+  .menu-btn{display:block !important;}
+}
+.menu-btn{display:none; background:none; border:none; font-size:20px; padding:4px;}
+</style>
+</head>
+<body>
+<div id="app" class="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   경량 날짜 유틸 (dayjs 대체 - 외부 CDN 의존 제거)
+   ============================================================ */
+function dayjs(input){
+  let d;
+  if(input===undefined) d = new Date();
+  else if(input instanceof Date) d = new Date(input);
+  else if(typeof input === 'string'){
+    d = new Date(input.length<=10 ? input+'T00:00:00' : input);
+  } else d = new Date(input);
+
+  const obj = {
+    _d: d,
+    format(fmt){
+      const Y = d.getFullYear(), M = d.getMonth()+1, D = d.getDate();
+      const dowNames = ['일','월','화','수','목','금','토'];
+      const dow = dowNames[d.getDay()];
+      const h = d.getHours(), m = d.getMinutes();
+      const pad = n => String(n).padStart(2,'0');
+      return fmt
+        .replace(/YYYY/g, Y)
+        .replace(/MM/g, pad(M))
+        .replace(/M/g, M)
+        .replace(/DD/g, pad(D))
+        .replace(/D/g, D)
+        .replace(/ddd/g, dow)
+        .replace(/HH/g, pad(h))
+        .replace(/mm/g, pad(m));
+    },
+    add(n, unit){
+      const nd = new Date(d);
+      if(unit==='day') nd.setDate(nd.getDate()+n);
+      else if(unit==='month') nd.setMonth(nd.getMonth()+n);
+      else if(unit==='year') nd.setFullYear(nd.getFullYear()+n);
+      return dayjs(nd);
+    },
+    subtract(n, unit){ return obj.add(-n, unit); },
+    diff(other, unit){
+      const od = other._d ? other._d : new Date(other);
+      const ms = d.getTime() - od.getTime();
+      if(unit==='day') return Math.round(ms/86400000);
+      if(unit==='month') return (d.getFullYear()-od.getFullYear())*12 + (d.getMonth()-od.getMonth());
+      return ms;
+    },
+    date(n){
+      if(n===undefined) return d.getDate();
+      const nd = new Date(d); nd.setDate(n); return dayjs(nd);
+    },
+    day(){ return d.getDay(); },
+    startOf(unit){
+      const nd = new Date(d);
+      if(unit==='month'){ nd.setDate(1); nd.setHours(0,0,0,0); }
+      return dayjs(nd);
+    },
+    endOf(unit){
+      const nd = new Date(d);
+      if(unit==='month'){ nd.setMonth(nd.getMonth()+1); nd.setDate(0); nd.setHours(0,0,0,0); }
+      return dayjs(nd);
+    },
+    isValid(){ return !isNaN(d.getTime()); }
+  };
+  return obj;
+}
+
+/* ============================================================
+   업무 대시보드 - 단일 파일 앱
+   데이터 저장: localStorage (Supabase 연동 시 이 부분만 교체)
+   ============================================================ */
+
+/* ---------- 데이터 스토어 ---------- */
+const STORE_KEY = 'opl_dashboard_v1';
+
+function loadStore(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return seedData();
+}
+function saveStore(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state.data));
+}
+
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+
+function seedData(){
+  const today = dayjs();
+  return {
+    vendors: [
+      { id:'v1', name:'Nordic Naturals', priority:'높음', status:'전송',
+        contact:{name:'Troy Taylor', title:'Director of Int\'l Sales', email:'troy.morley@nordicnaturals.com', phone:''},
+        notes:{discount:'', payment:'', moq:'', creditLimit:''} },
+      { id:'v2', name:'Enzymedica', priority:'완료', status:'완료',
+        contact:{name:'Monica Andrichak', title:'Director', email:'monicaa@enzymedica.com', phone:''},
+        notes:{discount:'', payment:'', moq:'', creditLimit:''} },
+      { id:'v3', name:'UNFI', priority:'높음', status:'전송',
+        contact:{name:'Jonathan Dernandez', title:'Director of Sales', email:'johnathan.fernandez@unfi.com', phone:''},
+        notes:{discount:'', payment:'', moq:'', creditLimit:''} },
+      { id:'v4', name:'Old Spice', priority:'높음', status:'진행중',
+        contact:{name:'-', title:'', email:'', phone:''},
+        notes:{discount:'', payment:'', moq:'', creditLimit:''} },
+    ],
+    vendorLogs: [
+      { id:uid('vl'), vendorId:'v1', date:today.subtract(11,'day').format('YYYY-MM-DD'), type:'이메일', status:'전송', priority:'높음', summary:'잔여 재고 유통기한, 수량 전달, Buyback 신청 관련 팔로업 요청', nextStep:'답변 대기, 4월 6일까지 Out of office', rawText:'' },
+      { id:uid('vl'), vendorId:'v1', date:today.subtract(18,'day').format('YYYY-MM-DD'), type:'이슈/리스크', status:'전송', priority:'높음', summary:'잔여 재고 유통기한, 수량 전달, Buyback 신청', nextStep:'답변 대기', rawText:'' },
+      { id:uid('vl'), vendorId:'v2', date:today.subtract(12,'day').format('YYYY-MM-DD'), type:'발주', status:'완료', priority:'완료', summary:'공급 중단 이후 첫 발주, 권장 판매가 운영팀과 공유', nextStep:'판매 추이 모니터링 및 추가 발주 검토', rawText:'' },
+      { id:uid('vl'), vendorId:'v3', date:today.subtract(8,'day').format('YYYY-MM-DD'), type:'이메일', status:'전송', priority:'높음', summary:'지난 이메일 미회신: 유통기한/파손 클레임 프로세스 이슈: 미팅 요청', nextStep:'회신 대기 및 해결 전까지 발주 재검토', rawText:'' },
+      { id:uid('vl'), vendorId:'v4', date:today.subtract(12,'day').format('YYYY-MM-DD'), type:'신규 브랜드', status:'진행중', priority:'높음', summary:'P&G 다이렉트 공급 요청 함. 현재 샘스에서 limit 3개로 이슈', nextStep:'답변 2-3일 소요, 대기 후 회신 없으면 전화', rawText:'' },
+    ],
+    projects: [
+      { id:'p1', title:'GDC 이전 운영 프로세스 구체화', category:'물류', vendorId:'GDC', owner:'Sena Cheon',
+        deadline: today.add(3,'day').format('YYYY-MM-DD'),
+        checklist:[
+          {id:uid('c'), text:'현장 방문 및 견적 비교', done:true, status:'완료', priority:'높음', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+          {id:uid('c'), text:'김유진 프로 인수인계 자료 작성', done:false, status:'진행중', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+          {id:uid('c'), text:'대표님 최종 보고', done:false, status:'대기', priority:'높음', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+        ], meetingNotes:[], logs:[] },
+      { id:'p2', title:'러시아 시장 검토 보고서', category:'시장조사', vendorId:'', owner:'Sena Cheon',
+        deadline: today.add(12,'day').format('YYYY-MM-DD'),
+        checklist:[
+          {id:uid('c'), text:'시장 규모 자료 조사', done:true, status:'완료', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+          {id:uid('c'), text:'경쟁사 분석', done:true, status:'완료', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+          {id:uid('c'), text:'내부 검토 회의', done:false, status:'대기', priority:'낮음', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+        ], meetingNotes:[], logs:[] },
+      { id:'p3', title:'WMS/OMS 개발사 비교 분석', category:'IT 개발', vendorId:'', owner:'Sena Cheon',
+        deadline: today.add(20,'day').format('YYYY-MM-DD'),
+        checklist:[
+          {id:uid('c'), text:'후보 업체 리스트업', done:true, status:'완료', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+          {id:uid('c'), text:'견적 비교표 작성', done:false, status:'진행중', priority:'높음', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]},
+        ], meetingNotes:[], logs:[] },
+    ],
+    calendar: [
+      { id:uid('ev'), date: today.add(1,'day').format('YYYY-MM-DD'), type:'미팅', title:'MXN 화상미팅', time:'16:00', vendorId:'' },
+      { id:uid('ev'), date: today.add(7,'day').format('YYYY-MM-DD'), type:'미팅', title:'Vytalogy 줌미팅', time:'09:00', vendorId:'' },
+      { id:uid('ev'), date: today.add(8,'day').format('YYYY-MM-DD'), type:'외근', title:'OurBox 창고 방문', time:'14:00', vendorId:'' },
+      { id:uid('ev'), date: today.subtract(2,'day').format('YYYY-MM-DD'), type:'연차', title:'반차 (오후)', time:'', vendorId:'' },
+    ],
+    leave: { totalGranted:10, compRgranted:1, used:7.5,
+      logs:[
+        {id:uid('lv'), date: today.subtract(40,'day').format('YYYY-MM-DD'), type:'반차', amount:0.5, memo:'오후'},
+        {id:uid('lv'), date: today.subtract(20,'day').format('YYYY-MM-DD'), type:'연차', amount:1, memo:''},
+      ]
+    },
+    companies: [
+      { id:uid('co'), name:'Nordic Naturals',
+        people:[ {id:uid('p'), name:'Troy Taylor', title:'Director of Int\'l Sales', email:'troy.morley@nordicnaturals.com', phone:''} ] },
+      { id:uid('co'), name:'Pregis',
+        people:[ {id:uid('p'), name:'Tyler Hartland', title:'Account Manager', email:'thartland@pregis.com', phone:''} ] },
+      { id:uid('co'), name:'롯데글로벌로지스',
+        people:[
+          {id:uid('p'), name:'최찬', title:'Global신규개발팀 책임', email:'chan.choi@lotte.net', phone:'01129227393'},
+          {id:uid('p'), name:'박동훈', title:'CBE팀 팀장', email:'donghun.park@lotte.net', phone:'01041367817'},
+        ] },
+    ],
+    categories: ['물류','벤더','BPO','IT 개발','시장조사','디자인','발주','기타'],
+    role: 'me',
+  };
+}
+
+const state = {
+  data: loadStore(),
+  view: 'home',
+  selectedVendorId: null,
+  selectedProjectId: null,
+  selectedCompanyId: null,
+  calMonth: dayjs().format('YYYY-MM'),
+  projectFilter: '전체',
+  vendorSearch: '',
+  companySearch: '',
+};
+
+function persist(){ saveStore(); render(); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------- 유틸 ---------- */
+function daysAgo(dateStr){
+  if(!dateStr) return null;
+  return dayjs().diff(dayjs(dateStr), 'day');
+}
+function fmtDate(d){ return dayjs(d).format('M월 D일'); }
+function fmtDateDow(d){ return dayjs(d).format('M월 D일 (ddd)'); }
+
+function latestLogForVendor(vendorId){
+  const logs = state.data.vendorLogs.filter(l=>l.vendorId===vendorId);
+  if(logs.length===0) return null;
+  return logs.slice().sort((a,b)=> dayjs(b.date).diff(dayjs(a.date)))[0];
+}
+function logsForVendor(vendorId){
+  return state.data.vendorLogs.filter(l=>l.vendorId===vendorId).slice().sort((a,b)=> dayjs(b.date).diff(dayjs(a.date)));
+}
+function projectsForVendor(vendorId){
+  return state.data.projects.filter(p=>p.vendorId===vendorId);
+}
+function progressOf(project){
+  if(!project.checklist.length) return 0;
+  const done = project.checklist.filter(c=>c.done).length;
+  return Math.round(done/project.checklist.length*100);
+}
+function priorityColor(p){
+  if(p==='높음') return {bg:'var(--bg-danger)', text:'var(--text-danger)'};
+  if(p==='보통') return {bg:'var(--bg-warning)', text:'var(--text-warning)'};
+  if(p==='완료') return {bg:'var(--surface-1)', text:'var(--text-secondary)'};
+  return {bg:'var(--bg-success)', text:'var(--text-success)'};
+}
+function eventColor(type){
+  if(type==='미팅') return {bg:'var(--bg-accent)', text:'var(--text-accent)', dot:'#378ADD'};
+  if(type==='외근') return {bg:'var(--bg-coral)', text:'var(--text-coral)', dot:'#D85A30'};
+  if(type==='마감') return {bg:'var(--bg-pro)', text:'var(--text-pro)', dot:'#7F77DD'};
+  if(type==='연차') return {bg:'var(--bg-success)', text:'var(--text-success)', dot:'#1D9E75'};
+  return {bg:'var(--surface-1)', text:'var(--text-secondary)', dot:'#888780'};
+}
+function allCalendarEvents(){
+  const evs = state.data.calendar.map(e=>({...e}));
+  state.data.projects.forEach(p=>{
+    if(p.deadline){
+      evs.push({id:'deadline_'+p.id, date:p.deadline, type:'마감', title:p.title+' 마감', time:'', projectId:p.id});
+    }
+  });
+  return evs;
+}
+function eventsOnDate(dateStr){
+  return allCalendarEvents().filter(e=>e.date===dateStr);
+}
+
+/* ---------- 렌더 루트 ---------- */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-title">업무 대시보드</div>
+      ${navItem('home','ti-home','홈')}
+      ${navItem('vendors','ti-building-store','벤더')}
+      ${navItem('contacts','ti-address-book','컨택')}
+      ${navItem('projects','ti-checklist','프로젝트')}
+      ${navItem('calendar','ti-calendar','캘린더')}
+      ${navItem('log','ti-pencil-plus','로그 입력')}
+      ${navItem('leave','ti-beach','연차 관리')}
+      <div style="padding:1rem 1rem 0; border-top:0.5px solid var(--border); margin-top:1rem;">
+        <div class="role-toggle">
+          <span>보기 모드</span>
+        </div>
+        <select id="roleSelect" style="margin-top:6px; font-size:12px; padding:6px 8px;">
+          <option value="me" ${state.data.role==='me'?'selected':''}>나 (편집 가능)</option>
+          <option value="ceo" ${state.data.role==='ceo'?'selected':''}>대표님 (읽기 전용)</option>
+        </select>
+      </div>
+    </div>
+    <div class="main">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+        <button class="menu-btn" id="menuBtn"><i class="ti ti-menu-2"></i></button>
+        ${state.data.role==='ceo' ? '<span class="badge" style="background:var(--bg-pro); color:var(--text-pro);">읽기 전용 모드</span>' : ''}
+      </div>
+      <div id="viewRoot"></div>
+    </div>
+  `;
+  document.getElementById('roleSelect').addEventListener('change', e=>{
+    state.data.role = e.target.value;
+    persist();
+  });
+  document.getElementById('menuBtn').addEventListener('click', ()=>{
+    document.getElementById('sidebar').classList.toggle('open');
+  });
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.view = el.dataset.view;
+      state.selectedVendorId = null;
+      state.selectedProjectId = null;
+      state.selectedCompanyId = null;
+      render();
+    });
+  });
+
+  const root = document.getElementById('viewRoot');
+  if(state.view==='home') root.innerHTML = viewHome();
+  else if(state.view==='vendors') root.innerHTML = state.selectedVendorId ? viewVendorDetail() : viewVendorList();
+  else if(state.view==='projects') root.innerHTML = state.selectedProjectId ? viewProjectDetail() : viewProjects();
+  else if(state.view==='calendar') root.innerHTML = viewCalendar();
+  else if(state.view==='log') root.innerHTML = viewLogInput();
+  else if(state.view==='contacts') root.innerHTML = state.selectedCompanyId ? viewCompanyDetail() : viewCompanyList();
+  else if(state.view==='leave') root.innerHTML = viewLeave();
+
+  bindViewEvents();
+}
+
+function navItem(view, icon, label){
+  const active = state.view===view ? 'active' : '';
+  return `<div class="nav-item ${active}" data-view="${view}"><i class="ti ${icon}"></i>${label}</div>`;
+}
+
+const isReadOnly = () => state.data.role === 'ceo';
+
+/* ---------- 홈 ---------- */
+function viewHome(){
+  const today = dayjs();
+  const todayStr = today.format('YYYY-MM-DD');
+  const allEvents = allCalendarEvents();
+  const todayEvents = allEvents.filter(e=>e.date===todayStr);
+  const upcomingDeadlines = state.data.projects
+    .filter(p=>p.deadline)
+    .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
+    .filter(p=>p.dday>=0 && p.dday<=7)
+    .sort((a,b)=>a.dday-b.dday);
+  const staleVendors = state.data.vendors
+    .map(v=>({...v, latest:latestLogForVendor(v.id)}))
+    .filter(v=>v.latest && daysAgo(v.latest.date) >= 90)
+    .sort((a,b)=> daysAgo(b.latest.date) - daysAgo(a.latest.date));
+  const recentLogs = state.data.vendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).slice(0,7);
+
+  return `
+    <div class="row"><h1>오늘 브리핑 · ${today.format('YYYY년 M월 D일 (ddd)')}</h1></div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><p class="label">오늘 일정</p><p class="value">${todayEvents.length}건</p></div>
+      <div class="metric-card"><p class="label">마감 임박 (7일 이내)</p><p class="value" style="color:var(--text-danger)">${upcomingDeadlines.length}건</p></div>
+      <div class="metric-card"><p class="label">정체 벤더 (90일+)</p><p class="value" style="color:var(--text-warning)">${staleVendors.length}건</p></div>
+      <div class="metric-card"><p class="label">전체 벤더</p><p class="value">${state.data.vendors.length}</p></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+      <div class="card">
+        <h3 style="margin-bottom:10px;">오늘 일정</h3>
+        ${todayEvents.length===0 ? '<p style="font-size:13px;color:var(--text-muted)">오늘 등록된 일정이 없습니다.</p>' :
+          todayEvents.map(e=>{
+            const c = eventColor(e.type);
+            return `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;">
+              <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;"></span>
+              <span>${e.time?e.time+' · ':''}${e.title}</span>
+            </div>`;
+          }).join('')}
+      </div>
+
+      <div class="card">
+        <h3 style="margin-bottom:10px;">마감 임박 프로젝트</h3>
+        ${upcomingDeadlines.length===0 ? '<p style="font-size:13px;color:var(--text-muted)">임박한 마감일이 없습니다.</p>' :
+          upcomingDeadlines.map(p=>`
+            <div class="proj-link" data-pid="${p.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
+              <span>${p.title}</span>
+              <span style="color:${p.dday<=2?'var(--text-danger)':'var(--text-secondary)'}">D-${p.dday}</span>
+            </div>`).join('')}
+      </div>
+    </div>
+
+    ${staleVendors.length>0 ? `
+    <div class="card" style="margin-bottom:1rem; border-color:var(--bg-warning);">
+      <h3 style="margin-bottom:10px; display:flex; align-items:center; gap:6px;"><i class="ti ti-alert-triangle" style="color:var(--text-warning); font-size:16px;"></i>90일 이상 방치된 벤더</h3>
+      ${staleVendors.map(v=>`
+        <div class="vendor-link" data-vid="${v.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
+          <span>${v.name}</span>
+          <span style="color:var(--text-warning)">${daysAgo(v.latest.date)}일 경과</span>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <h3 style="margin-bottom:10px;">최근 활동</h3>
+      ${recentLogs.map(l=>{
+        const v = state.data.vendors.find(x=>x.id===l.vendorId);
+        return `<div class="activity-row">
+          <span class="activity-date">${fmtDate(l.date)}</span>
+          <span style="font-size:13px;"><strong style="font-weight:500">${v?v.name:''}</strong> · ${l.summary}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+/* ---------- 벤더 리스트 ---------- */
+function viewVendorList(){
+  let vendors = state.data.vendors.map(v=>({...v, latest:latestLogForVendor(v.id)}));
+  if(state.vendorSearch){
+    const q = state.vendorSearch.toLowerCase();
+    vendors = vendors.filter(v=> v.name.toLowerCase().includes(q) || (v.contact.name||'').toLowerCase().includes(q));
+  }
+  vendors.sort((a,b)=>{
+    const da = a.latest ? daysAgo(a.latest.date) : -1;
+    const db = b.latest ? daysAgo(b.latest.date) : -1;
+    return db - da;
+  });
+
+  const highCount = state.data.vendors.filter(v=>v.priority==='높음').length;
+  const waitingCount = state.data.vendors.filter(v=>{const l=latestLogForVendor(v.id); return l && (l.status==='전송'||l.status==='수신');}).length;
+  const staleCount = vendors.filter(v=>v.latest && daysAgo(v.latest.date)>=90).length;
+
+  return `
+    <div class="row">
+      <h1>벤더</h1>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="search-bar"><i class="ti ti-search"></i><input id="vendorSearchInput" placeholder="브랜드 또는 담당자 검색" value="${state.vendorSearch}"/></div>
+        ${!isReadOnly() ? '<button class="primary" id="addVendorBtn"><i class="ti ti-plus"></i> 벤더 추가</button>' : ''}
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><p class="label">전체 브랜드</p><p class="value">${state.data.vendors.length}</p></div>
+      <div class="metric-card"><p class="label">우선순위 높음</p><p class="value" style="color:var(--text-danger)">${highCount}</p></div>
+      <div class="metric-card"><p class="label">회신 대기</p><p class="value">${waitingCount}</p></div>
+      <div class="metric-card"><p class="label">90일 이상 정체</p><p class="value" style="color:var(--text-warning)">${staleCount}</p></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:18%"><col style="width:10%"><col style="width:32%"><col style="width:12%"><col style="width:12%"><col style="width:16%"></colgroup>
+        <thead><tr><th>브랜드</th><th>경과일</th><th>최근 상황</th><th>상태</th><th>우선순위</th><th>담당자</th></tr></thead>
+        <tbody>
+        ${vendors.length===0 ? `<tr><td colspan="6"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>` :
+          vendors.map(v=>{
+            const days = v.latest ? daysAgo(v.latest.date) : null;
+            const pr = priorityColor(v.priority);
+            return `<tr class="clickable vendor-row" data-vid="${v.id}">
+              <td style="font-weight:500">${v.name}</td>
+              <td style="${days>=90?'color:var(--text-danger)':''}">${days!==null?days+'일':'-'}</td>
+              <td style="color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${v.latest?v.latest.summary:'-'}</td>
+              <td><span class="badge" style="background:var(--surface-1); color:var(--text-secondary);">${v.latest?v.latest.status:'-'}</span></td>
+              <td><span class="badge" style="background:${pr.bg}; color:${pr.text};">${v.priority}</span></td>
+              <td style="color:var(--text-secondary)">${v.contact.name}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ---------- 벤더 상세 ---------- */
+function viewVendorDetail(){
+  const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+  if(!v) return '<p>벤더를 찾을 수 없습니다.</p>';
+  const logs = logsForVendor(v.id);
+  const projects = projectsForVendor(v.id);
+  const latest = logs[0];
+  const days = latest ? daysAgo(latest.date) : null;
+  const pr = priorityColor(v.priority);
+
+  return `
+    <div class="back-link" id="backToVendors"><i class="ti ti-arrow-left"></i>벤더 목록</div>
+    <div class="row">
+      <div>
+        <h1>${v.name}</h1>
+        <div style="margin-top:6px;">
+          <span class="badge" style="background:${pr.bg}; color:${pr.text};">우선순위 ${v.priority}</span>
+          ${days!==null?`<span class="badge" style="background:var(--surface-1); color:var(--text-secondary); margin-left:6px;">${days}일 경과</span>`:''}
+        </div>
+      </div>
+      ${!isReadOnly() ? '<button id="editVendorBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+      <div class="card">
+        <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">컨택 정보</p>
+        <div class="contact-row"><span style="color:var(--text-secondary)">담당자</span><span>${v.contact.name||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">직함</span><span>${v.contact.title||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">이메일</span><span style="color:var(--text-accent)">${v.contact.email||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">전화</span><span>${v.contact.phone||'-'}</span></div>
+      </div>
+      <div class="card">
+        <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">거래 메모</p>
+        <div class="contact-row"><span style="color:var(--text-secondary)">할인율</span><span>${v.notes.discount||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">MOQ</span><span>${v.notes.moq||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-secondary)">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
+      </div>
+    </div>
+
+    ${projects.length>0 ? `
+    <div class="card" style="margin-bottom:1.25rem;">
+      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">연결된 프로젝트</p>
+      ${projects.map(p=>`<div class="proj-link" data-pid="${p.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
+        <span>${p.title}</span><span style="color:var(--text-secondary)">${progressOf(p)}%</span>
+      </div>`).join('')}
+    </div>` : ''}
+
+    <div class="row">
+      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0;">활동 로그</p>
+      ${!isReadOnly() ? `<button id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+    </div>
+    ${logs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
+      logs.map(l=>`
+      <div class="activity-row log-detail-row" data-lid="${l.id}" style="flex-direction:column; align-items:flex-start; gap:4px; ${l.rawText?'cursor:pointer;':''}">
+        <div style="display:flex; justify-content:space-between; width:100%;">
+          <span style="font-size:12px; color:var(--text-muted);">${fmtDateDow(l.date)} · ${l.type}</span>
+          <span class="badge" style="background:var(--surface-2); color:var(--text-secondary); font-size:11px;">${l.status}</span>
+        </div>
+        <span style="font-size:13px;">${l.summary}</span>
+        ${l.nextStep ? `<span style="font-size:12px; color:var(--text-secondary);">→ ${l.nextStep}</span>` : ''}
+        ${l.rawText ? `<span style="font-size:11px; color:var(--text-accent);"><i class="ti ti-file-text" style="font-size:12px; vertical-align:-1px;"></i> 원본 보기</span>` : ''}
+      </div>`).join('')}
+  `;
+}
+
+/* ---------- 프로젝트 리스트 ---------- */
+function viewProjects(){
+  let projects = state.data.projects.slice();
+  if(state.projectFilter!=='전체'){
+    projects = projects.filter(p=>p.category===state.projectFilter);
+  }
+  projects.sort((a,b)=> dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01')));
+
+  return `
+    <div class="row">
+      <h1>프로젝트</h1>
+      ${!isReadOnly() ? '<button class="primary" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button>' : ''}
+    </div>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
+      <span class="tag ${state.projectFilter==='전체'?'active':''}" data-cat="전체">전체</span>
+      ${state.data.categories.map(c=>`<span class="tag ${state.projectFilter===c?'active':''}" data-cat="${c}">${c}</span>`).join('')}
+    </div>
+
+    ${projects.length===0 ? '<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>' : `
+    <div class="proj-grid">
+      ${projects.map(p=>{
+        const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
+        const prog = progressOf(p);
+        const ddayColor = dday!==null && dday<=3 ? 'var(--text-danger)' : 'var(--text-secondary)';
+        const ddayLabel = dday===null ? '' : dday<0 ? `D+${Math.abs(dday)}` : `D-${dday}`;
+        return `<div class="proj-card" data-pid="${p.id}">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+            <span class="badge" style="background:var(--bg-accent); color:var(--text-accent);">${p.category}</span>
+            ${dday!==null?`<span style="font-size:12px; color:${ddayColor}">${ddayLabel}</span>`:''}
+          </div>
+          <p style="font-weight:500; font-size:14px; margin:0 0 4px;">${p.title}</p>
+          <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px;">담당: ${p.owner}${p.vendorId?' · 연결: '+p.vendorId:''}</p>
+          ${p.checklist.slice(0,3).map(c=>`
+            <div class="checklist-item ${c.done?'done':''}">
+              <input type="checkbox" disabled ${c.done?'checked':''}/>
+              <span>${c.text}</span>
+            </div>`).join('')}
+          ${p.checklist.length>3?`<p style="font-size:12px; color:var(--text-muted); margin:4px 0 0;">+${p.checklist.length-3}개 더보기</p>`:''}
+          <div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>`}
+  `;
+}
+
+/* ---------- 프로젝트 상세 ---------- */
+function viewProjectDetail(){
+  const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+  if(!p) return '<p>프로젝트를 찾을 수 없습니다.</p>';
+  const prog = progressOf(p);
+  const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
+
+  return `
+    <div class="back-link" id="backToProjects"><i class="ti ti-arrow-left"></i>프로젝트 목록</div>
+    <div class="row">
+      <div>
+        <h1>${p.title}</h1>
+        <div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <span class="badge" style="background:var(--bg-accent); color:var(--text-accent);">${p.category}</span>
+          <span style="font-size:12px; color:var(--text-secondary);">담당: ${p.owner}</span>
+          ${p.deadline ? `<span style="font-size:12px; color:var(--text-secondary);">· 마감: ${fmtDate(p.deadline)} (${dday<0?'D+'+Math.abs(dday):'D-'+dday})</span>` : ''}
+        </div>
+      </div>
+      ${!isReadOnly() ? '<button id="editProjectBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
+    </div>
+
+    <div class="progress-bar" style="margin-bottom:1.25rem;"><div class="progress-fill" style="width:${prog}%"></div></div>
+
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="row" style="margin-bottom:8px;">
+        <h3>체크리스트</h3>
+        ${!isReadOnly() ? `<button id="addChecklistItemBtn"><i class="ti ti-plus"></i> 항목 추가</button>` : ''}
+      </div>
+      ${p.checklist.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">체크리스트 항목이 없습니다.</p>' :
+        p.checklist.map(c=>{
+          const assignee = checklistAssigneeName(c);
+          const stColor = checklistStatusColor(c.status);
+          const prColor = priorityColor(c.priority);
+          return `<div class="checklist-card" data-cid="${c.id}" style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:0.5px solid var(--border); cursor:pointer;">
+          <input type="checkbox" class="checklist-toggle" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''} style="margin-top:3px;"/>
+          <div style="flex:1; min-width:0;">
+            <span style="font-size:13px; ${c.done?'text-decoration:line-through; color:var(--text-muted);':''}">${c.text}</span>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+              ${c.status ? `<span class="badge" style="background:${stColor.bg}; color:${stColor.text}; font-size:10px;">${c.status}</span>` : ''}
+              ${c.priority ? `<span class="badge" style="background:${prColor.bg}; color:${prColor.text}; font-size:10px;">${c.priority}</span>` : ''}
+              ${c.dueDate ? `<span style="font-size:11px; color:var(--text-secondary);"><i class="ti ti-calendar" style="font-size:11px; vertical-align:-1px;"></i> ${fmtDate(c.dueDate)}</span>` : ''}
+              ${assignee ? `<span style="font-size:11px; color:var(--text-secondary);"><i class="ti ti-user" style="font-size:11px; vertical-align:-1px;"></i> ${assignee}</span>` : ''}
+              ${c.attachments && c.attachments.length>0 ? `<span style="font-size:11px; color:var(--text-accent);"><i class="ti ti-paperclip" style="font-size:11px; vertical-align:-1px;"></i> ${c.attachments.length}</span>` : ''}
+            </div>
+          </div>
+          ${!isReadOnly() ? `<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px; color:var(--text-muted); cursor:pointer; flex-shrink:0;"></i>` : ''}
+        </div>`;
+        }).join('')}
+    </div>
+
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="row" style="margin-bottom:8px;">
+        <h3>회의록</h3>
+        ${!isReadOnly() ? `<button class="primary" id="addMeetingNoteBtn"><i class="ti ti-plus"></i> 회의록 작성</button>` : ''}
+      </div>
+      ${(!p.meetingNotes || p.meetingNotes.length===0) ? '<p style="font-size:13px; color:var(--text-muted)">작성된 회의록이 없습니다.</p>' :
+        p.meetingNotes.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
+        <div style="border-top:0.5px solid var(--border); padding:12px 0;">
+          <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateDow(m.date)}</p>
+          <p style="font-size:13px; margin:0 0 6px; white-space:pre-wrap;">${m.text}</p>
+          ${m.summary ? `<div style="background:var(--surface-1); border-radius:var(--radius); padding:8px 10px; font-size:12px; color:var(--text-secondary);"><i class="ti ti-sparkles" style="font-size:13px; color:var(--text-accent); margin-right:4px;"></i>${m.summary}</div>` : ''}
+        </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <h3>활동 로그</h3>
+        ${!isReadOnly() ? `<button id="addProjectLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+      </div>
+      ${(!p.logs || p.logs.length===0) ? '<p style="font-size:13px; color:var(--text-muted)">기록된 활동이 없습니다.</p>' :
+        p.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
+        <div style="border-top:0.5px solid var(--border); padding:10px 0;">
+          <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateDow(l.date)}</p>
+          <p style="font-size:13px; margin:0;">${l.text}</p>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function checklistAssigneeName(c){
+  if(!c.assigneeId) return '';
+  if(c.assigneeType==='internal') return c.assigneeId;
+  const people = allPeopleFlat();
+  const person = people.find(p=>p.id===c.assigneeId);
+  return person ? `${person.companyName} · ${person.name}` : '';
+}
+function checklistStatusColor(status){
+  if(status==='완료') return {bg:'var(--bg-success)', text:'var(--text-success)'};
+  if(status==='진행중') return {bg:'var(--bg-accent)', text:'var(--text-accent)'};
+  if(status==='보류') return {bg:'var(--bg-warning)', text:'var(--text-warning)'};
+  return {bg:'var(--surface-1)', text:'var(--text-secondary)'};
+}
+
+
+/* ---------- 캘린더 ---------- */
+function viewCalendar(){
+  const month = dayjs(state.calMonth+'-01');
+  const startOfMonth = month.startOf('month');
+  const endOfMonth = month.endOf('month');
+  const startDay = startOfMonth.day();
+  const daysInMonth = endOfMonth.date();
+  const todayStr = dayjs().format('YYYY-MM-DD');
+
+  let cells = [];
+  for(let i=0;i<startDay;i++) cells.push(null);
+  for(let d=1; d<=daysInMonth; d++) cells.push(d);
+
+  const dowNames = ['일','월','화','수','목','금','토'];
+
+  return `
+    <div class="row">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <i class="ti ti-chevron-left" id="prevMonth" style="font-size:18px; cursor:pointer;"></i>
+        <h2 style="margin:0">${month.format('YYYY년 M월')}</h2>
+        <i class="ti ti-chevron-right" id="nextMonth" style="font-size:18px; cursor:pointer;"></i>
+      </div>
+      ${!isReadOnly() ? `<button class="primary" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>` : ''}
+    </div>
+
+    <div class="legend">
+      <span><span class="dot" style="background:#378ADD"></span>미팅</span>
+      <span><span class="dot" style="background:#D85A30"></span>외근</span>
+      <span><span class="dot" style="background:#7F77DD"></span>프로젝트 마감</span>
+      <span><span class="dot" style="background:#1D9E75"></span>연차/반차</span>
+    </div>
+
+    <div class="cal-grid">
+      ${dowNames.map(d=>`<div class="cal-head">${d}</div>`).join('')}
+      ${cells.map(d=>{
+        if(d===null) return `<div class="cal-cell" style="cursor:default;"></div>`;
+        const dateStr = month.date(d).format('YYYY-MM-DD');
+        const evs = eventsOnDate(dateStr);
+        const isToday = dateStr===todayStr;
+        return `<div class="cal-cell" data-date="${dateStr}">
+          <span class="daynum ${isToday?'today':''}">${d}</span>
+          ${evs.slice(0,3).map(e=>{
+            const c = eventColor(e.type);
+            return `<div class="cal-event" style="background:${c.bg}; color:${c.text};">${e.title}</div>`;
+          }).join('')}
+          ${evs.length>3?`<div style="font-size:10px; color:var(--text-muted); margin-top:2px;">+${evs.length-3}건</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+/* ---------- 로그 입력 ---------- */
+function viewLogInput(){
+  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  return `
+    <h1 style="margin-bottom:1rem;">로그 입력</h1>
+    <div class="card" style="max-width:560px;">
+      <form id="logForm">
+        <div class="field">
+          <label>날짜</label>
+          <input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/>
+        </div>
+        <div class="field">
+          <label>벤더</label>
+          <select name="vendorId" required><option value="">선택하세요</option>${vendorOptions}</select>
+        </div>
+        <div class="field">
+          <label>업데이트 유형</label>
+          <select name="type">
+            <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
+            <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
+            <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>진행 상태</label>
+          <select name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select>
+        </div>
+        <div class="field">
+          <label>우선순위</label>
+          <select name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select>
+        </div>
+        <div class="field">
+          <label>원본 내용 (이메일 전체 등 붙여넣기)</label>
+          <textarea name="rawText" id="logRawText" rows="6" placeholder="이메일 전체 내용 또는 통화/미팅 메모를 붙여넣으세요"></textarea>
+        </div>
+        <button type="button" id="logAiSummarizeBtn" style="display:flex; align-items:center; gap:6px; margin-bottom:12px;"><i class="ti ti-sparkles"></i>AI 요약 생성</button>
+        <div class="field">
+          <label>상황 요약 (한 줄)</label>
+          <input type="text" name="summary" id="logSummaryInput" placeholder="예: 잔여 재고 유통기한 관련 팔로업 요청, 또는 위에서 AI 요약 생성" required/>
+        </div>
+        <div class="field">
+          <label>다음 액션</label>
+          <input type="text" name="nextStep" placeholder="예: 답변 대기, 4월 6일까지 회신 필요"/>
+        </div>
+        <button type="submit" class="primary" style="width:100%;">로그 저장</button>
+      </form>
+    </div>
+  `;
+}
+
+/* ---------- 연차 관리 ---------- */
+function viewLeave(){
+  const l = state.data.leave;
+  const remaining = (l.totalGranted + l.compRgranted - l.used).toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');
+  return `
+    <div class="row">
+      <h1>연차 관리</h1>
+      ${!isReadOnly() ? `<button class="primary" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>` : ''}
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><p class="label">총 발생 연차</p><p class="value">${l.totalGranted}</p></div>
+      <div class="metric-card"><p class="label">보상 발생 휴가</p><p class="value">${l.compRgranted}</p></div>
+      <div class="metric-card"><p class="label">사용 연차</p><p class="value">${l.used}</p></div>
+      <div class="metric-card"><p class="label">잔여 연차</p><p class="value" style="color:var(--text-accent)">${remaining}</p></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>날짜</th><th>구분</th><th>사용</th><th>메모</th></tr></thead>
+        <tbody>
+        ${l.logs.length===0 ? `<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>` :
+          l.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
+          <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}</td><td style="color:var(--text-secondary)">${r.memo||'-'}</td></tr>
+        `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ---------- 컨택 (회사/담당자) ---------- */
+function allPeopleFlat(){
+  const result = [];
+  state.data.companies.forEach(c=>{
+    c.people.forEach(p=>result.push({...p, companyId:c.id, companyName:c.name}));
+  });
+  return result;
+}
+
+function viewCompanyList(){
+  let companies = state.data.companies.slice();
+  if(state.companySearch){
+    const q = state.companySearch.toLowerCase();
+    companies = companies.filter(c=> c.name.toLowerCase().includes(q) || c.people.some(p=>p.name.toLowerCase().includes(q)));
+  }
+  companies.sort((a,b)=>a.name.localeCompare(b.name));
+
+  return `
+    <div class="row">
+      <h1>컨택</h1>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="search-bar"><i class="ti ti-search"></i><input id="companySearchInput" placeholder="회사 또는 담당자 검색" value="${state.companySearch}"/></div>
+        ${!isReadOnly() ? '<button class="primary" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>' : ''}
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><p class="label">등록된 회사</p><p class="value">${state.data.companies.length}</p></div>
+      <div class="metric-card"><p class="label">등록된 담당자</p><p class="value">${allPeopleFlat().length}</p></div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <colgroup><col style="width:30%"><col style="width:20%"><col style="width:50%"></colgroup>
+        <thead><tr><th>회사명</th><th>담당자 수</th><th>담당자 미리보기</th></tr></thead>
+        <tbody>
+        ${companies.length===0 ? `<tr><td colspan="3"><div class="empty-state">등록된 회사가 없습니다.</div></td></tr>` :
+          companies.map(c=>`
+            <tr class="clickable company-row" data-cid="${c.id}">
+              <td style="font-weight:500">${c.name}</td>
+              <td>${c.people.length}명</td>
+              <td style="color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${c.people.map(p=>p.name).join(', ')||'-'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function viewCompanyDetail(){
+  const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
+  if(!c) return '<p>회사를 찾을 수 없습니다.</p>';
+  return `
+    <div class="back-link" id="backToCompanies"><i class="ti ti-arrow-left"></i>컨택 목록</div>
+    <div class="row">
+      <h1>${c.name}</h1>
+      <div style="display:flex; gap:8px;">
+        ${!isReadOnly() ? `<button id="editCompanyBtn"><i class="ti ti-pencil"></i> 회사명 편집</button>` : ''}
+        ${!isReadOnly() ? `<button class="primary" id="addPersonBtn"><i class="ti ti-plus"></i> 담당자 추가</button>` : ''}
+      </div>
+    </div>
+
+    <div class="proj-grid">
+      ${c.people.length===0 ? '<div class="empty-state">등록된 담당자가 없습니다.</div>' :
+        c.people.map(p=>`
+        <div class="card" style="cursor:default;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--bg-accent); display:flex; align-items:center; justify-content:center; font-weight:500; font-size:13px; color:var(--text-accent); flex-shrink:0;">${p.name.slice(0,1)}</div>
+            <div>
+              <p style="font-weight:500; font-size:14px; margin:0;">${p.name}</p>
+              <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 0;">${p.title||'-'}</p>
+            </div>
+          </div>
+          <div class="contact-row"><span style="color:var(--text-secondary)">이메일</span><span style="color:var(--text-accent)">${p.email||'-'}</span></div>
+          <div class="contact-row"><span style="color:var(--text-secondary)">전화</span><span>${p.phone||'-'}</span></div>
+          ${!isReadOnly() ? `<div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="edit-person-btn" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">편집</button>
+            <button class="delete-person-btn danger-text" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">삭제</button>
+          </div>` : ''}
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+function openModal(html){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modalOverlay';
+  overlay.innerHTML = html;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
+  document.body.appendChild(overlay);
+}
+function closeModal(){
+  const m = document.getElementById('modalOverlay');
+  if(m) m.remove();
+}
+
+function modalVendorForm(vendor){
+  const isEdit = !!vendor;
+  const v = vendor || {name:'', priority:'보통', status:'전송', contact:{name:'',title:'',email:'',phone:''}, notes:{discount:'',payment:'',moq:'',creditLimit:''}};
+  return `
+    <div class="modal">
+      <div class="row"><h3>${isEdit?'벤더 편집':'벤더 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="vendorForm">
+        <div class="field"><label>브랜드명</label><input name="name" value="${v.name}" required/></div>
+        <div class="field"><label>우선순위</label><select name="priority">
+          ${['높음','보통','낮음','완료'].map(p=>`<option ${v.priority===p?'selected':''}>${p}</option>`).join('')}
+        </select></div>
+        <div class="field"><label>담당자 이름</label><input name="contactName" value="${v.contact.name}"/></div>
+        <div class="field"><label>직함</label><input name="contactTitle" value="${v.contact.title}"/></div>
+        <div class="field"><label>이메일</label><input name="contactEmail" value="${v.contact.email}"/></div>
+        <div class="field"><label>전화</label><input name="contactPhone" value="${v.contact.phone}"/></div>
+        <div class="field"><label>할인율</label><input name="discount" value="${v.notes.discount}"/></div>
+        <div class="field"><label>결제 조건</label><input name="payment" value="${v.notes.payment}"/></div>
+        <div class="field"><label>MOQ</label><input name="moq" value="${v.notes.moq}"/></div>
+        <div class="field"><label>Credit Limit</label><input name="creditLimit" value="${v.notes.creditLimit}"/></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          ${isEdit?`<button type="button" id="deleteVendorBtn" class="danger-text" style="flex:1;">삭제</button>`:''}
+          <button type="submit" class="primary" style="flex:1;">저장</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function modalVendorLogForm(vendorId){
+  return `
+    <div class="modal modal-wide">
+      <div class="row"><h3>활동 로그 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="vendorLogForm">
+        <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+        <div class="field"><label>업데이트 유형</label><select name="type">
+          <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
+          <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
+          <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
+        </select></div>
+        <div class="field"><label>진행 상태</label><select name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
+        <div class="field"><label>우선순위</label><select name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
+        <div class="field"><label>원본 내용 (이메일 전체 등 붙여넣기)</label><textarea name="rawText" id="vlRawText" rows="5" placeholder="이메일 전체 내용 또는 통화/미팅 메모를 붙여넣으세요"></textarea></div>
+        <button type="button" id="vlAiSummarizeBtn" style="display:flex; align-items:center; gap:6px; margin-bottom:12px;"><i class="ti ti-sparkles"></i>AI 요약 생성</button>
+        <div class="field"><label>상황 요약</label><input type="text" name="summary" id="vlSummaryInput" required/></div>
+        <div class="field"><label>다음 액션</label><input type="text" name="nextStep"/></div>
+        <input type="hidden" name="vendorId" value="${vendorId}"/>
+        <button type="submit" class="primary" style="width:100%;">저장</button>
+      </form>
+    </div>
+  `;
+}
+
+function modalLogDetail(log, vendorName){
+  return `
+    <div class="modal modal-wide">
+      <div class="row"><h3>${vendorName} · ${fmtDateDow(log.date)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div style="margin-bottom:10px;">
+        <span class="badge" style="background:var(--surface-1); color:var(--text-secondary);">${log.type}</span>
+        <span class="badge" style="background:var(--surface-1); color:var(--text-secondary); margin-left:4px;">${log.status}</span>
+      </div>
+      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">AI 요약</p>
+      <p style="font-size:13px; margin:0 0 14px;">${log.summary}</p>
+      ${log.nextStep ? `<p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">다음 액션</p><p style="font-size:13px; margin:0 0 14px;">${log.nextStep}</p>` : ''}
+      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">원본 내용</p>
+      <div style="background:var(--surface-1); border-radius:var(--radius); padding:12px; font-size:13px; white-space:pre-wrap; line-height:1.6;">${log.rawText || '원본이 등록되지 않았습니다.'}</div>
+    </div>
+  `;
+}
+
+function modalProjectForm(project){
+  const isEdit = !!project;
+  const p = project || {title:'', category:state.data.categories[0], owner:'Sena Cheon', deadline:'', vendorId:''};
+  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${p.vendorId===v.id?'selected':''}>${v.name}</option>`).join('');
+  return `
+    <div class="modal">
+      <div class="row"><h3>${isEdit?'프로젝트 편집':'새 프로젝트'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="projectForm">
+        <div class="field"><label>제목</label><input name="title" value="${p.title}" required/></div>
+        <div class="field"><label>카테고리</label><select name="category">
+          ${state.data.categories.map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
+          <option value="__new__">+ 새 카테고리 직접 입력</option>
+        </select></div>
+        <div class="field" id="newCatField" style="display:none;"><label>새 카테고리명</label><input name="newCategory"/></div>
+        <div class="field"><label>담당자</label><input name="owner" value="${p.owner}"/></div>
+        <div class="field"><label>마감일</label><input type="date" name="deadline" value="${p.deadline||''}"/></div>
+        <div class="field"><label>연결 벤더 (선택)</label><select name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          ${isEdit?`<button type="button" id="deleteProjectBtn" class="danger-text" style="flex:1;">삭제</button>`:''}
+          <button type="submit" class="primary" style="flex:1;">저장</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function modalEventForm(dateStr){
+  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  return `
+    <div class="modal">
+      <div class="row"><h3>일정 등록</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="eventForm">
+        <div class="field"><label>날짜</label><input type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
+        <div class="field"><label>종류</label><select name="type"><option>미팅</option><option>외근</option><option>연차</option><option>개인 용무</option></select></div>
+        <div class="field"><label>제목</label><input type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
+        <div class="field"><label>시간 (선택)</label><input type="time" name="time"/></div>
+        <div class="field"><label>관련 벤더 (선택)</label><select name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
+        <button type="submit" class="primary" style="width:100%;">저장</button>
+      </form>
+    </div>
+  `;
+}
+
+function modalDayDetail(dateStr){
+  const evs = eventsOnDate(dateStr);
+  return `
+    <div class="modal">
+      <div class="row"><h3>${fmtDateDow(dateStr)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <p style="font-size:13px; color:var(--text-secondary); margin:0 0 16px;">일정 ${evs.length}건</p>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
+        ${evs.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">등록된 일정이 없습니다.</p>' :
+          evs.map(e=>{
+            const c = eventColor(e.type);
+            return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex; gap:10px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); border-left:3px solid ${c.dot}; cursor:pointer;">
+              <div style="flex:1">
+                <p style="font-size:13px; font-weight:500; margin:0;">${e.title}</p>
+                <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 0;">${e.type}${e.time?' · '+e.time:''}</p>
+              </div>
+              <i class="ti ti-chevron-right" style="font-size:16px; color:var(--text-muted); align-self:center;"></i>
+            </div>`;
+          }).join('')}
+      </div>
+      ${!isReadOnly() ? `<button id="addEventFromDayBtn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px;"><i class="ti ti-plus"></i>이 날짜에 일정 추가</button>` : ''}
+    </div>
+  `;
+}
+
+function modalMeetingNoteForm(){
+  const projectOptions = state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+  return `
+    <div class="modal modal-wide">
+      <div class="row"><h3>회의록 작성</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="field"><label>연결 프로젝트</label><select id="mnProject">${projectOptions}</select></div>
+      <div class="field"><label>날짜</label><input type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
+      <div class="field"><label>회의 내용</label><textarea id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
+      <button id="mnGenerateBtn" style="display:flex; align-items:center; gap:6px;"><i class="ti ti-sparkles"></i>AI 요약 및 액션 아이템 생성</button>
+      <div id="mnResult" style="margin-top:16px;"></div>
+    </div>
+  `;
+}
+
+/* ---------- 체크리스트 상세 모달 ---------- */
+function modalChecklistDetail(item){
+  const internalNames = ['Sena Cheon','Jenna Kwon','Justin Kim'];
+  const people = allPeopleFlat();
+  return `
+    <div class="modal modal-wide">
+      <div class="row"><h3>체크리스트 상세</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="checklistDetailForm">
+        <div class="field"><label>내용</label><input type="text" name="text" value="${item.text}" required/></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="field"><label>상태</label><select name="status">
+            ${['대기','진행중','완료','보류'].map(s=>`<option ${item.status===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+          <div class="field"><label>우선순위</label><select name="priority">
+            ${['높음','보통','낮음'].map(s=>`<option ${item.priority===s?'selected':''}>${s}</option>`).join('')}
+          </select></div>
+          <div class="field"><label>시작일</label><input type="date" name="startDate" value="${item.startDate||''}"/></div>
+          <div class="field"><label>마감일</label><input type="date" name="dueDate" value="${item.dueDate||''}"/></div>
+        </div>
+        <div class="field"><label>요청자</label><input type="text" name="requester" value="${item.requester||''}" placeholder="예: 대표님, Jenna Kwon"/></div>
+        <div class="field">
+          <label>담당자 유형</label>
+          <select name="assigneeType" id="assigneeTypeSelect">
+            <option value="" ${!item.assigneeType?'selected':''}>지정 안함</option>
+            <option value="internal" ${item.assigneeType==='internal'?'selected':''}>내부 담당자</option>
+            <option value="external" ${item.assigneeType==='external'?'selected':''}>외부 컨택 담당자</option>
+          </select>
+        </div>
+        <div class="field" id="assigneeInternalField" style="display:${item.assigneeType==='internal'?'block':'none'};">
+          <label>내부 담당자</label>
+          <select name="assigneeInternal">
+            <option value="">선택하세요</option>
+            ${internalNames.map(n=>`<option value="${n}" ${item.assigneeType==='internal'&&item.assigneeId===n?'selected':''}>${n}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field" id="assigneeExternalField" style="display:${item.assigneeType==='external'?'block':'none'};">
+          <label>외부 컨택 담당자</label>
+          <select name="assigneeExternal">
+            <option value="">선택하세요</option>
+            ${people.map(p=>`<option value="${p.id}" ${item.assigneeType==='external'&&item.assigneeId===p.id?'selected':''}>${p.companyName} · ${p.name}</option>`).join('')}
+          </select>
+          <p style="font-size:11px; color:var(--text-muted); margin:4px 0 0;">컨택 탭에서 회사/담당자를 먼저 등록하세요.</p>
+        </div>
+        <div class="field">
+          <label>관련 자료 (링크 - 원드라이브, 구글드라이브 등)</label>
+          <div id="attachmentList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;">
+            ${(item.attachments||[]).map((a,i)=>`
+              <div style="display:flex; gap:6px; align-items:center;">
+                <input type="text" class="attachment-input" value="${a}" placeholder="https://..." style="flex:1;"/>
+                <i class="ti ti-x remove-attachment" data-idx="${i}" style="cursor:pointer; color:var(--text-muted);"></i>
+              </div>`).join('')}
+          </div>
+          <button type="button" id="addAttachmentBtn" style="font-size:12px; padding:6px 10px;"><i class="ti ti-plus"></i> 링크 추가</button>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button type="button" id="deleteChecklistBtn" class="danger-text" style="flex:1;">삭제</button>
+          <button type="submit" class="primary" style="flex:1;">저장</button>
+        </div>
+      </form>
+    </div>
+  `;
+}
+
+function modalCompanyForm(company){
+  const isEdit = !!company;
+  return `
+    <div class="modal">
+      <div class="row"><h3>${isEdit?'회사명 편집':'회사 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="companyForm">
+        <div class="field"><label>회사명</label><input type="text" name="name" value="${isEdit?company.name:''}" required/></div>
+        <button type="submit" class="primary" style="width:100%;">저장</button>
+      </form>
+    </div>
+  `;
+}
+
+function modalPersonForm(companyId, person){
+  const isEdit = !!person;
+  const p = person || {name:'',title:'',email:'',phone:''};
+  return `
+    <div class="modal">
+      <div class="row"><h3>${isEdit?'담당자 편집':'담당자 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="personForm">
+        <div class="field"><label>이름</label><input type="text" name="name" value="${p.name}" required/></div>
+        <div class="field"><label>직함</label><input type="text" name="title" value="${p.title}"/></div>
+        <div class="field"><label>이메일</label><input type="text" name="email" value="${p.email}"/></div>
+        <div class="field"><label>전화</label><input type="text" name="phone" value="${p.phone}"/></div>
+        <input type="hidden" name="companyId" value="${companyId}"/>
+        <button type="submit" class="primary" style="width:100%;">저장</button>
+      </form>
+    </div>
+  `;
+}
+
+function modalProjectLogForm(projectId){
+  return `
+    <div class="modal">
+      <div class="row"><h3>프로젝트 로그 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <form id="projectLogForm">
+        <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+        <div class="field"><label>내용</label><textarea name="text" rows="4" required placeholder="진행 상황, 결정 사항 등을 기록하세요"></textarea></div>
+        <input type="hidden" name="projectId" value="${projectId}"/>
+        <button type="submit" class="primary" style="width:100%;">저장</button>
+      </form>
+    </div>
+  `;
+}
+
+/* 간단한 규칙 기반 요약/액션아이템 추출 (Claude API 연동 시 이 함수를 교체) */
+function generateMeetingSummary(text){
+  const sentences = text.split(/[.。\n]/).map(s=>s.trim()).filter(Boolean);
+  const summary = sentences.slice(0,2).join('. ') + (sentences.length>0?'.':'');
+  const actionKeywords = ['필요','예정','하기로','전달','검토','보고','확인','요청','작성'];
+  const candidates = sentences.filter(s=> actionKeywords.some(k=>s.includes(k)));
+  const items = candidates.slice(0,5).map(s=>({text:s.replace(/^(그리고|또한|그래서)\s*/,''), deadline:''}));
+  if(items.length===0 && sentences.length>0){
+    items.push({text:sentences[0], deadline:''});
+  }
+  return {summary: summary || '요약할 내용이 없습니다.', items};
+}
+
+/* 로그 원본 -> 한 줄 요약 (간단 규칙 기반, Claude API 연동 시 교체) */
+function generateOneLineSummary(text){
+  const sentences = text.split(/[.。\n]/).map(s=>s.trim()).filter(Boolean);
+  if(sentences.length===0) return '';
+  let first = sentences[0];
+  if(first.length>60) first = first.slice(0,57)+'...';
+  return first;
+}
+
+
+/* ============================================================
+   이벤트 바인딩
+   ============================================================ */
+function bindViewEvents(){
+  // 홈/리스트 -> 상세 이동 링크들
+  document.querySelectorAll('.vendor-link, .vendor-row').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.selectedVendorId = el.dataset.vid;
+      state.view = 'vendors';
+      render();
+    });
+  });
+  document.querySelectorAll('.proj-link, .proj-card').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.selectedProjectId = el.dataset.pid;
+      state.view = 'projects';
+      render();
+    });
+  });
+
+  // 벤더 검색
+  const vSearch = document.getElementById('vendorSearchInput');
+  if(vSearch){
+    vSearch.addEventListener('input', e=>{
+      state.vendorSearch = e.target.value;
+      render();
+      document.getElementById('vendorSearchInput').focus();
+      const val = document.getElementById('vendorSearchInput');
+      val.setSelectionRange(val.value.length, val.value.length);
+    });
+  }
+
+  // 벤더 추가/편집/삭제
+  const addVendorBtn = document.getElementById('addVendorBtn');
+  if(addVendorBtn) addVendorBtn.addEventListener('click', ()=>{ openModal(modalVendorForm(null)); bindModalCommon(); bindVendorFormSubmit(null); });
+
+  const editVendorBtn = document.getElementById('editVendorBtn');
+  if(editVendorBtn) editVendorBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    openModal(modalVendorForm(v)); bindModalCommon(); bindVendorFormSubmit(v);
+  });
+
+  const backToVendors = document.getElementById('backToVendors');
+  if(backToVendors) backToVendors.addEventListener('click', ()=>{ state.selectedVendorId=null; render(); });
+
+  const addVendorLogBtn = document.getElementById('addVendorLogBtn');
+  if(addVendorLogBtn) addVendorLogBtn.addEventListener('click', ()=>{
+    openModal(modalVendorLogForm(state.selectedVendorId)); bindModalCommon();
+    document.getElementById('vlAiSummarizeBtn').addEventListener('click', ()=>{
+      const raw = document.getElementById('vlRawText').value.trim();
+      if(!raw){ showToast('원본 내용을 입력해주세요.'); return; }
+      document.getElementById('vlSummaryInput').value = generateOneLineSummary(raw);
+      showToast('AI 요약이 생성되었습니다.');
+    });
+    document.getElementById('vendorLogForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.data.vendorLogs.push({
+        id: uid('vl'), vendorId: fd.get('vendorId'), date: fd.get('date'), type: fd.get('type'),
+        status: fd.get('status'), priority: fd.get('priority'), summary: fd.get('summary'), nextStep: fd.get('nextStep')||'',
+        rawText: fd.get('rawText')||''
+      });
+      const v = state.data.vendors.find(x=>x.id===fd.get('vendorId'));
+      if(v) v.priority = fd.get('priority');
+      closeModal(); persist(); showToast('로그가 저장되었습니다.');
+    });
+  });
+
+  // 로그 상세 (원본 보기)
+  document.querySelectorAll('.log-detail-row').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const log = state.data.vendorLogs.find(l=>l.id===el.dataset.lid);
+      if(!log || !log.rawText) return;
+      const v = state.data.vendors.find(x=>x.id===log.vendorId);
+      openModal(modalLogDetail(log, v?v.name:''));
+      bindModalCommon();
+    });
+  });
+
+  // 프로젝트 카테고리 필터
+  document.querySelectorAll('.tag').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.projectFilter = el.dataset.cat;
+      render();
+    });
+  });
+
+  // 프로젝트 추가/편집/삭제
+  const addProjectBtn = document.getElementById('addProjectBtn');
+  if(addProjectBtn) addProjectBtn.addEventListener('click', ()=>{ openModal(modalProjectForm(null)); bindModalCommon(); bindProjectFormSubmit(null); bindCategorySelect(); });
+
+  const editProjectBtn = document.getElementById('editProjectBtn');
+  if(editProjectBtn) editProjectBtn.addEventListener('click', ()=>{
+    const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    openModal(modalProjectForm(p)); bindModalCommon(); bindProjectFormSubmit(p); bindCategorySelect();
+  });
+
+  const backToProjects = document.getElementById('backToProjects');
+  if(backToProjects) backToProjects.addEventListener('click', ()=>{ state.selectedProjectId=null; render(); });
+
+  // 체크리스트 토글/삭제/상세
+  document.querySelectorAll('.checklist-toggle').forEach(el=>{
+    el.addEventListener('click', e=> e.stopPropagation());
+    el.addEventListener('change', ()=>{
+      const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      const item = p.checklist.find(c=>c.id===el.dataset.cid);
+      item.done = el.checked;
+      item.status = el.checked ? '완료' : (item.status==='완료' ? '진행중' : item.status);
+      persist();
+    });
+  });
+  document.querySelectorAll('.checklist-delete').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      p.checklist = p.checklist.filter(c=>c.id!==el.dataset.cid);
+      persist();
+    });
+  });
+  document.querySelectorAll('.checklist-card').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      const item = p.checklist.find(c=>c.id===el.dataset.cid);
+      openModal(modalChecklistDetail(item));
+      bindModalCommon();
+      bindChecklistDetailForm(item);
+    });
+  });
+  const addChecklistItemBtn = document.getElementById('addChecklistItemBtn');
+  if(addChecklistItemBtn) addChecklistItemBtn.addEventListener('click', ()=>{
+    const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    const newItem = {id:uid('c'), text:'새 항목', done:false, status:'대기', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]};
+    p.checklist.push(newItem);
+    saveStore();
+    openModal(modalChecklistDetail(newItem));
+    bindModalCommon();
+    bindChecklistDetailForm(newItem);
+  });
+
+  // 회의록
+  const addMeetingNoteBtn = document.getElementById('addMeetingNoteBtn');
+  if(addMeetingNoteBtn) addMeetingNoteBtn.addEventListener('click', ()=>{
+    openModal(modalMeetingNoteForm());
+    bindModalCommon();
+    const projSel = document.getElementById('mnProject');
+    if(state.selectedProjectId) projSel.value = state.selectedProjectId;
+    document.getElementById('mnGenerateBtn').addEventListener('click', ()=>{
+      const text = document.getElementById('mnText').value.trim();
+      if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
+      const result = generateMeetingSummary(text);
+      renderMeetingResult(result, text);
+    });
+  });
+
+  // 컨택 (회사/담당자)
+  document.querySelectorAll('.company-row').forEach(el=>{
+    el.addEventListener('click', ()=>{ state.selectedCompanyId = el.dataset.cid; render(); });
+  });
+  const companySearchInput = document.getElementById('companySearchInput');
+  if(companySearchInput){
+    companySearchInput.addEventListener('input', e=>{
+      state.companySearch = e.target.value;
+      render();
+      const val = document.getElementById('companySearchInput');
+      val.focus(); val.setSelectionRange(val.value.length, val.value.length);
+    });
+  }
+  const addCompanyBtn = document.getElementById('addCompanyBtn');
+  if(addCompanyBtn) addCompanyBtn.addEventListener('click', ()=>{ openModal(modalCompanyForm(null)); bindModalCommon(); bindCompanyFormSubmit(null); });
+
+  const backToCompanies = document.getElementById('backToCompanies');
+  if(backToCompanies) backToCompanies.addEventListener('click', ()=>{ state.selectedCompanyId=null; render(); });
+
+  const editCompanyBtn = document.getElementById('editCompanyBtn');
+  if(editCompanyBtn) editCompanyBtn.addEventListener('click', ()=>{
+    const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
+    openModal(modalCompanyForm(c)); bindModalCommon(); bindCompanyFormSubmit(c);
+  });
+
+  const addPersonBtn = document.getElementById('addPersonBtn');
+  if(addPersonBtn) addPersonBtn.addEventListener('click', ()=>{
+    openModal(modalPersonForm(state.selectedCompanyId, null)); bindModalCommon(); bindPersonFormSubmit(null);
+  });
+  document.querySelectorAll('.edit-person-btn').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
+      const person = c.people.find(p=>p.id===el.dataset.pid);
+      openModal(modalPersonForm(c.id, person)); bindModalCommon(); bindPersonFormSubmit(person);
+    });
+  });
+  document.querySelectorAll('.delete-person-btn').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(confirm('이 담당자를 삭제하시겠습니까?')){
+        const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
+        c.people = c.people.filter(p=>p.id!==el.dataset.pid);
+        persist(); showToast('담당자가 삭제되었습니다.');
+      }
+    });
+  });
+
+  // 프로젝트 활동 로그
+  const addProjectLogBtn = document.getElementById('addProjectLogBtn');
+  if(addProjectLogBtn) addProjectLogBtn.addEventListener('click', ()=>{
+    openModal(modalProjectLogForm(state.selectedProjectId)); bindModalCommon();
+    document.getElementById('projectLogForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const p = state.data.projects.find(x=>x.id===fd.get('projectId'));
+      if(!p.logs) p.logs = [];
+      p.logs.push({id:uid('pl'), date:fd.get('date'), text:fd.get('text')});
+      closeModal(); persist(); showToast('프로젝트 로그가 저장되었습니다.');
+    });
+  });
+
+  // 로그 입력 폼 - AI 요약
+  const logAiSummarizeBtn = document.getElementById('logAiSummarizeBtn');
+  if(logAiSummarizeBtn) logAiSummarizeBtn.addEventListener('click', ()=>{
+    const raw = document.getElementById('logRawText').value.trim();
+    if(!raw){ showToast('원본 내용을 입력해주세요.'); return; }
+    document.getElementById('logSummaryInput').value = generateOneLineSummary(raw);
+    showToast('AI 요약이 생성되었습니다.');
+  });
+
+
+  // 캘린더
+  const prevMonth = document.getElementById('prevMonth');
+  if(prevMonth) prevMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').subtract(1,'month').format('YYYY-MM'); render(); });
+  const nextMonth = document.getElementById('nextMonth');
+  if(nextMonth) nextMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').add(1,'month').format('YYYY-MM'); render(); });
+
+  document.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      openModal(modalDayDetail(el.dataset.date));
+      bindModalCommon();
+      bindDayDetailEvents(el.dataset.date);
+    });
+  });
+
+  const addEventBtnTop = document.getElementById('addEventBtnTop');
+  if(addEventBtnTop) addEventBtnTop.addEventListener('click', ()=>{
+    openModal(modalEventForm(null)); bindModalCommon(); bindEventFormSubmit();
+  });
+
+  // 로그 입력 폼
+  const logForm = document.getElementById('logForm');
+  if(logForm) logForm.addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    state.data.vendorLogs.push({
+      id: uid('vl'), vendorId: fd.get('vendorId'), date: fd.get('date'), type: fd.get('type'),
+      status: fd.get('status'), priority: fd.get('priority'), summary: fd.get('summary'), nextStep: fd.get('nextStep')||'',
+      rawText: fd.get('rawText')||''
+    });
+    const v = state.data.vendors.find(x=>x.id===fd.get('vendorId'));
+    if(v) v.priority = fd.get('priority');
+    e.target.reset();
+    showToast('로그가 저장되었습니다.');
+    persist();
+  });
+
+  // 연차
+  const addLeaveBtn = document.getElementById('addLeaveBtn');
+  if(addLeaveBtn) addLeaveBtn.addEventListener('click', ()=>{
+    openModal(`
+      <div class="modal">
+        <div class="row"><h3>연차 사용 기록 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+        <form id="leaveForm">
+          <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+          <div class="field"><label>구분</label><select name="type"><option>연차</option><option>반차</option><option>반반차</option><option>대체휴무</option></select></div>
+          <div class="field"><label>사용량</label><input type="number" step="0.25" name="amount" value="1" required/></div>
+          <div class="field"><label>메모</label><input type="text" name="memo"/></div>
+          <button type="submit" class="primary" style="width:100%;">저장</button>
+        </form>
+      </div>
+    `);
+    bindModalCommon();
+    document.getElementById('leaveForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const amount = parseFloat(fd.get('amount'));
+      state.data.leave.logs.push({id:uid('lv'), date:fd.get('date'), type:fd.get('type'), amount, memo:fd.get('memo')||''});
+      state.data.leave.used = Math.round((state.data.leave.used + amount)*100)/100;
+      closeModal(); persist(); showToast('연차 기록이 저장되었습니다.');
+    });
+  });
+}
+
+function bindCategorySelect(){
+  const sel = document.querySelector('select[name=category]');
+  if(!sel) return;
+  sel.addEventListener('change', ()=>{
+    document.getElementById('newCatField').style.display = sel.value==='__new__' ? 'block' : 'none';
+  });
+}
+
+function bindChecklistDetailForm(item){
+  const typeSel = document.getElementById('assigneeTypeSelect');
+  typeSel.addEventListener('change', ()=>{
+    document.getElementById('assigneeInternalField').style.display = typeSel.value==='internal' ? 'block' : 'none';
+    document.getElementById('assigneeExternalField').style.display = typeSel.value==='external' ? 'block' : 'none';
+  });
+
+  let attachments = (item.attachments||[]).slice();
+  document.getElementById('addAttachmentBtn').addEventListener('click', ()=>{
+    const list = document.getElementById('attachmentList');
+    const idx = list.children.length;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:6px; align-items:center;';
+    row.innerHTML = `<input type="text" class="attachment-input" placeholder="https://..." style="flex:1;"/><i class="ti ti-x remove-attachment" style="cursor:pointer; color:var(--text-muted);"></i>`;
+    list.appendChild(row);
+    row.querySelector('.remove-attachment').addEventListener('click', ()=> row.remove());
+  });
+  document.querySelectorAll('.remove-attachment').forEach(el=>{
+    el.addEventListener('click', ()=> el.closest('div').remove());
+  });
+
+  document.getElementById('checklistDetailForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    const target = p.checklist.find(c=>c.id===item.id);
+    target.text = fd.get('text');
+    target.status = fd.get('status');
+    target.priority = fd.get('priority');
+    target.startDate = fd.get('startDate')||'';
+    target.dueDate = fd.get('dueDate')||'';
+    target.requester = fd.get('requester')||'';
+    target.done = fd.get('status')==='완료';
+    const aType = fd.get('assigneeType');
+    target.assigneeType = aType;
+    if(aType==='internal') target.assigneeId = fd.get('assigneeInternal')||'';
+    else if(aType==='external') target.assigneeId = fd.get('assigneeExternal')||'';
+    else target.assigneeId = '';
+    target.attachments = Array.from(document.querySelectorAll('.attachment-input')).map(i=>i.value.trim()).filter(Boolean);
+    closeModal(); persist(); showToast('체크리스트 항목이 저장되었습니다.');
+  });
+  const deleteBtn = document.getElementById('deleteChecklistBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
+    if(confirm('이 항목을 삭제하시겠습니까?')){
+      const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      p.checklist = p.checklist.filter(c=>c.id!==item.id);
+      closeModal(); persist(); showToast('항목이 삭제되었습니다.');
+    }
+  });
+}
+
+function bindCompanyFormSubmit(existingCompany){
+  document.getElementById('companyForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    if(existingCompany){
+      existingCompany.name = fd.get('name');
+    } else {
+      state.data.companies.push({id:uid('co'), name:fd.get('name'), people:[]});
+    }
+    closeModal(); persist(); showToast('회사 정보가 저장되었습니다.');
+  });
+}
+
+function bindPersonFormSubmit(existingPerson){
+  document.getElementById('personForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const company = state.data.companies.find(c=>c.id===fd.get('companyId'));
+    const obj = {id: existingPerson?existingPerson.id:uid('p'), name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone')};
+    if(existingPerson){
+      const idx = company.people.findIndex(p=>p.id===existingPerson.id);
+      company.people[idx] = obj;
+    } else {
+      company.people.push(obj);
+    }
+    closeModal(); persist(); showToast('담당자 정보가 저장되었습니다.');
+  });
+}
+
+function bindModalCommon(){
+  const closeBtn = document.getElementById('closeModal');
+  if(closeBtn) closeBtn.addEventListener('click', closeModal);
+}
+
+function bindVendorFormSubmit(existingVendor){
+  document.getElementById('vendorForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const obj = {
+      id: existingVendor ? existingVendor.id : uid('v'),
+      name: fd.get('name'), priority: fd.get('priority'), status: existingVendor?existingVendor.status:'전송',
+      contact:{name:fd.get('contactName'), title:fd.get('contactTitle'), email:fd.get('contactEmail'), phone:fd.get('contactPhone')},
+      notes:{discount:fd.get('discount'), payment:fd.get('payment'), moq:fd.get('moq'), creditLimit:fd.get('creditLimit')}
+    };
+    if(existingVendor){
+      const idx = state.data.vendors.findIndex(v=>v.id===existingVendor.id);
+      state.data.vendors[idx] = obj;
+    } else {
+      state.data.vendors.push(obj);
+    }
+    closeModal(); persist(); showToast('벤더 정보가 저장되었습니다.');
+  });
+  const deleteBtn = document.getElementById('deleteVendorBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
+    if(confirm('이 벤더를 삭제하시겠습니까? 관련 로그도 함께 삭제됩니다.')){
+      state.data.vendors = state.data.vendors.filter(v=>v.id!==existingVendor.id);
+      state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.vendorId!==existingVendor.id);
+      state.selectedVendorId = null;
+      closeModal(); persist(); showToast('벤더가 삭제되었습니다.');
+    }
+  });
+}
+
+function bindProjectFormSubmit(existingProject){
+  document.getElementById('projectForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    let category = fd.get('category');
+    if(category==='__new__'){
+      const nc = (fd.get('newCategory')||'').trim();
+      if(nc){
+        category = nc;
+        if(!state.data.categories.includes(nc)) state.data.categories.push(nc);
+      } else {
+        category = '기타';
+      }
+    }
+    const obj = {
+      id: existingProject ? existingProject.id : uid('p'),
+      title: fd.get('title'), category, owner: fd.get('owner')||'Sena Cheon',
+      deadline: fd.get('deadline')||'', vendorId: fd.get('vendorId')||'',
+      checklist: existingProject ? existingProject.checklist : [],
+      meetingNotes: existingProject ? existingProject.meetingNotes : [],
+      logs: existingProject ? (existingProject.logs||[]) : []
+    };
+    if(existingProject){
+      const idx = state.data.projects.findIndex(p=>p.id===existingProject.id);
+      state.data.projects[idx] = obj;
+    } else {
+      state.data.projects.push(obj);
+    }
+    closeModal(); persist(); showToast('프로젝트가 저장되었습니다.');
+  });
+  const deleteBtn = document.getElementById('deleteProjectBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
+    if(confirm('이 프로젝트를 삭제하시겠습니까?')){
+      state.data.projects = state.data.projects.filter(p=>p.id!==existingProject.id);
+      state.selectedProjectId = null;
+      closeModal(); persist(); showToast('프로젝트가 삭제되었습니다.');
+    }
+  });
+}
+
+function bindEventFormSubmit(){
+  document.getElementById('eventForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    state.data.calendar.push({
+      id: uid('ev'), date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
+      time: fd.get('time')||'', vendorId: fd.get('vendorId')||''
+    });
+    closeModal(); persist(); showToast('일정이 등록되었습니다.');
+  });
+}
+
+function bindDayDetailEvents(dateStr){
+  document.querySelectorAll('.day-event-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(el.dataset.projectid){
+        state.selectedProjectId = el.dataset.projectid;
+        state.view = 'projects';
+        closeModal(); render();
+      }
+    });
+  });
+  const addBtn = document.getElementById('addEventFromDayBtn');
+  if(addBtn) addBtn.addEventListener('click', ()=>{
+    closeModal();
+    openModal(modalEventForm(dateStr));
+    bindModalCommon();
+    bindEventFormSubmit();
+  });
+}
+
+function renderMeetingResult(result, originalText){
+  const resultDiv = document.getElementById('mnResult');
+  resultDiv.innerHTML = `
+    <div style="border-top:0.5px solid var(--border); padding-top:14px;">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        <i class="ti ti-sparkles" style="font-size:16px; color:var(--text-accent);"></i>
+        <h3 style="margin:0;">AI 요약</h3>
+      </div>
+      <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0 0 16px;">${result.summary}</p>
+      <p style="font-size:13px; font-weight:500; margin:0 0 10px;">추출된 액션 아이템 · 체크한 항목만 체크리스트에 추가됩니다</p>
+      <div id="actionItemsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+        ${result.items.map((item,i)=>`
+          <label style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); cursor:pointer;">
+            <input type="checkbox" class="action-item-check" data-idx="${i}" checked style="width:14px; height:14px; margin-top:2px;"/>
+            <span style="font-size:13px; flex:1;">${item.text}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button type="button" id="cancelMeetingNote" style="flex:1;">취소</button>
+        <button type="button" id="confirmAddItems" class="primary" style="flex:1;">체크리스트에 추가</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('cancelMeetingNote').addEventListener('click', closeModal);
+  document.getElementById('confirmAddItems').addEventListener('click', ()=>{
+    const projectId = document.getElementById('mnProject').value;
+    const date = document.getElementById('mnDate').value;
+    const p = state.data.projects.find(x=>x.id===projectId);
+    if(!p){ showToast('프로젝트를 찾을 수 없습니다.'); return; }
+
+    const checks = document.querySelectorAll('.action-item-check');
+    let addedCount = 0;
+    checks.forEach(c=>{
+      if(c.checked){
+        const idx = parseInt(c.dataset.idx);
+        p.checklist.push({id:uid('c'), text:result.items[idx].text, done:false});
+        addedCount++;
+      }
+    });
+    if(!p.meetingNotes) p.meetingNotes = [];
+    p.meetingNotes.push({id:uid('mn'), date, text:originalText, summary:result.summary});
+
+    closeModal();
+    persist();
+    showToast(`회의록이 저장되고 체크리스트에 ${addedCount}건 추가되었습니다.`);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
+
