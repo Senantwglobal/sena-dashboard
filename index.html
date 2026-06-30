@@ -232,7 +232,9 @@ async function supabaseFetch(path, options={}){
     const text = await res.text();
     throw new Error(`Supabase error ${res.status}: ${text}`);
   }
-  return res.json();
+  const text = await res.text();
+  if(!text) return null;
+  try{ return JSON.parse(text); }catch(e){ return null; }
 }
 
 async function loadStoreRemote(){
