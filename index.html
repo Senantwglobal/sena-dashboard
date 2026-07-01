@@ -413,6 +413,14 @@ function eventsOnDate(dateStr){
   return allCalendarEvents().filter(e=>e.date===dateStr);
 }
 
+function allPeopleFlat(){
+  const result = [];
+  (state.data.companies||[]).forEach(c=>{
+    (c.people||[]).forEach(p=>result.push({...p, companyId:c.id, companyName:c.name}));
+  });
+  return result;
+}
+
 /* ---------- 렌더 루트 ---------- */
 function avatarColor(name){
   const colors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
@@ -430,11 +438,9 @@ function render(){
   if(!state.data){ return; }
 
   const today = dayjs();
-  const nearestDeadline = state.data.projects
-    .filter(p=>p.deadline)
-    .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
-    .filter(p=>p.dday>=0).sort((a,b)=>a.dday-b.dday)[0];
-  const ddayLabel = nearestDeadline ? `D-${nearestDeadline.dday} · ${fmtDate(nearestDeadline.deadline)}` : '';
+  const nearestDeadline = null; // D-day 배지 미사용
+  const ddayLabel = '';
+  const todayLabel = today.format('YYYY년 M월 D일 (ddd)');
 
   const tabs = [
     {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
@@ -452,8 +458,7 @@ function render(){
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="logo">O</span>
         <span style="font-size:14px;font-weight:500">업무 대시보드</span>
-        ${ddayLabel ? `<span class="dday-b">${ddayLabel}</span>` : ''}
-        <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:4px;"></span>실시간</span>
+        <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
         ${av('Sena Cheon', 30)}
@@ -532,14 +537,18 @@ function viewHome(){
     p.checklist.forEach(c=>{ catProg[p.category].total++; if(c.done) catProg[p.category].done++; });
   });
 
+  const inProgProjects = state.data.projects.filter(p=> progressOf(p) > 0 && progressOf(p) < 100).length;
+  const undoneItems = allCL.filter(c=>!c.done).length;
+  const thisMonthStr = today.format('YYYY-MM');
+  const thisMonthMeetings = allCalendarEvents().filter(e=>e.date.startsWith(thisMonthStr) && e.type==='미팅').length;
+
   return `
     <div class="krow">
-      <div class="kpi"><div class="kn" style="color:var(--o)">${pct}%</div><div class="kl">전체 진행률</div></div>
-      <div class="kpi"><div class="kn">${done}<span style="font-size:14px;font-weight:400;color:var(--muted)">/${total}</span></div><div class="kl">완료 항목</div></div>
-      <div class="kpi"><div class="kn" style="color:var(--o)">${inProg}</div><div class="kl">진행중</div></div>
-      <div class="kpi"><div class="kn" style="${deadlines.length>0?'color:#A32D2D':''}">${deadlines.length}</div><div class="kl">마감 임박 (7일)</div></div>
-      <div class="kpi"><div class="kn" style="${stale.length>0?'color:#A32D2D':''}">${stale.length}</div><div class="kl">정체 벤더 (90일+)</div></div>
+      <div class="kpi"><div class="kn" style="color:var(--o)">${inProgProjects}</div><div class="kl">진행중인 프로젝트</div></div>
+      <div class="kpi"><div class="kn" style="${undoneItems>0?'color:#A32D2D':''}">${undoneItems}</div><div class="kl">미완료 항목</div></div>
       <div class="kpi"><div class="kn">${todayEvs.length}</div><div class="kl">오늘 일정</div></div>
+      <div class="kpi"><div class="kn" style="${deadlines.length>0?'color:#A32D2D':''}">${deadlines.length}</div><div class="kl">마감 임박 프로젝트</div></div>
+      <div class="kpi"><div class="kn" style="color:var(--o)">${thisMonthMeetings}</div><div class="kl">이번달 미팅</div></div>
     </div>
 
     <div class="two">
@@ -625,50 +634,47 @@ function viewVendorList(){
   let vendors = state.data.vendors.map(v=>({...v, latest:latestLogForVendor(v.id)}));
   if(state.vendorSearch){
     const q = state.vendorSearch.toLowerCase();
-    vendors = vendors.filter(v=> v.name.toLowerCase().includes(q) || (v.contact.name||'').toLowerCase().includes(q));
+    vendors = vendors.filter(v=>v.name.toLowerCase().includes(q)||(v.contact.name||'').toLowerCase().includes(q));
   }
-  vendors.sort((a,b)=>{
-    const da = a.latest ? daysAgo(a.latest.date) : -1;
-    const db = b.latest ? daysAgo(b.latest.date) : -1;
-    return db - da;
-  });
-
+  vendors.sort((a,b)=>(b.latest?daysAgo(b.latest.date):-1)-(a.latest?daysAgo(a.latest.date):-1));
   const highCount = state.data.vendors.filter(v=>v.priority==='높음').length;
-  const waitingCount = state.data.vendors.filter(v=>{const l=latestLogForVendor(v.id); return l && (l.status==='전송'||l.status==='수신');}).length;
-  const staleCount = vendors.filter(v=>v.latest && daysAgo(v.latest.date)>=90).length;
+  const waitingCount = state.data.vendors.filter(v=>{const l=latestLogForVendor(v.id);return l&&(l.status==='전송'||l.status==='수신');}).length;
+  const staleCount = vendors.filter(v=>v.latest&&daysAgo(v.latest.date)>=90).length;
 
   return `
-    <div class="row">
-      <h1>벤더</h1>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <div class="search-bar"><i class="ti ti-search"></i><input id="vendorSearchInput" placeholder="브랜드 또는 담당자 검색" value="${state.vendorSearch}"/></div>
-        ${!isReadOnly() ? '<button class="primary" id="addVendorBtn"><i class="ti ti-plus"></i> 벤더 추가</button>' : ''}
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:16px;font-weight:600">벤더</span>
+        <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="vendorSearchInput" placeholder="브랜드 또는 담당자 검색" value="${state.vendorSearch}" style="margin:0"/></div>
       </div>
+      ${!isReadOnly()?`<button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 벤더 추가</button>`:''}
     </div>
 
-    <div class="metric-grid">
-      <div class="metric-card"><p class="label">전체 브랜드</p><p class="value">${state.data.vendors.length}</p></div>
-      <div class="metric-card"><p class="label">우선순위 높음</p><p class="value" style="color:var(--danger)">${highCount}</p></div>
-      <div class="metric-card"><p class="label">회신 대기</p><p class="value">${waitingCount}</p></div>
-      <div class="metric-card"><p class="label">90일 이상 정체</p><p class="value" style="color:var(--warning)">${staleCount}</p></div>
+    <div class="krow" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi"><div class="kn">${state.data.vendors.length}</div><div class="kl">전체 브랜드</div></div>
+      <div class="kpi"><div class="kn" style="color:#A32D2D">${highCount}</div><div class="kl">우선순위 높음</div></div>
+      <div class="kpi"><div class="kn">${waitingCount}</div><div class="kl">회신 대기</div></div>
+      <div class="kpi"><div class="kn" style="color:#B45309">${staleCount}</div><div class="kl">90일 이상 정체</div></div>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <colgroup><col style="width:18%"><col style="width:10%"><col style="width:32%"><col style="width:12%"><col style="width:12%"><col style="width:16%"></colgroup>
-        <thead><tr><th>브랜드</th><th>경과일</th><th>최근 상황</th><th>상태</th><th>우선순위</th><th>담당자</th></tr></thead>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <colgroup><col style="width:20%"><col style="width:8%"><col style="width:30%"><col style="width:10%"><col style="width:10%"><col style="width:16%"><col style="width:6%"></colgroup>
+        <thead><tr>
+          <th>브랜드</th><th>경과일</th><th>최근 상황</th><th>상태</th><th>우선순위</th><th>담당자</th><th></th>
+        </tr></thead>
         <tbody>
-        ${vendors.length===0 ? `<tr><td colspan="6"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>` :
+        ${vendors.length===0?`<tr><td colspan="7"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>`:
           vendors.map(v=>{
-            const days = v.latest ? daysAgo(v.latest.date) : null;
-            const pr = priorityColor(v.priority);
+            const days=v.latest?daysAgo(v.latest.date):null;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
-              <td style="font-weight:500">${v.name}</td>
-              <td style="${days>=90?'color:var(--danger)':''}">${days!==null?days+'일':'-'}</td>
-              <td style="color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${v.latest?v.latest.summary:'-'}</td>
-              <td><span class="badge" style="background:var(--surface); color:var(--text-muted);">${v.latest?v.latest.status:'-'}</span></td>
-              <td><span class="badge" style="background:${pr.bg}; color:${pr.text};">${v.priority}</span></td>
-              <td style="color:var(--text-muted)">${v.contact.name}</td>
+              <td><div style="display:flex;align-items:center;gap:8px">${av(v.name,24)}<span style="font-weight:500">${v.name}</span></div></td>
+              <td style="${days>=90?'color:#A32D2D;font-weight:500':''}">${days!==null?days+'일':'-'}</td>
+              <td style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:1px">${v.latest?v.latest.summary:'-'}</td>
+              <td><span class="badge bgr">${v.latest?v.latest.status:'-'}</span></td>
+              <td><span class="badge ${priorityBadge(v.priority)}">${v.priority}</span></td>
+              <td style="color:var(--muted)">${v.contact.name||'-'}</td>
+              <td><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -677,193 +683,197 @@ function viewVendorList(){
   `;
 }
 
-/* ---------- 벤더 상세 ---------- */
 function viewVendorDetail(){
   const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-  if(!v) return '<p>벤더를 찾을 수 없습니다.</p>';
+  if(!v) return '<div class="empty-state">벤더를 찾을 수 없습니다.</div>';
   const logs = logsForVendor(v.id);
   const projects = projectsForVendor(v.id);
   const latest = logs[0];
-  const days = latest ? daysAgo(latest.date) : null;
-  const pr = priorityColor(v.priority);
+  const days = latest?daysAgo(latest.date):null;
 
   return `
-    <div class="back-link" id="backToVendors"><i class="ti ti-arrow-left"></i>벤더 목록</div>
-    <div class="row">
-      <div>
-        <h1>${v.name}</h1>
-        <div style="margin-top:6px;">
-          <span class="badge" style="background:${pr.bg}; color:${pr.text};">우선순위 ${v.priority}</span>
-          ${days!==null?`<span class="badge" style="background:var(--surface); color:var(--text-muted); margin-left:6px;">${days}일 경과</span>`:''}
+    <button class="back-link" id="backToVendors"><i class="ti ti-arrow-left"></i> 벤더 목록</button>
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:12px">
+        ${av(v.name,40)}
+        <div>
+          <div style="font-size:18px;font-weight:600">${v.name}</div>
+          <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
+            <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
+            ${days!==null?`<span class="badge bgr">${days}일 경과</span>`:''}
+          </div>
         </div>
       </div>
-      ${!isReadOnly() ? '<button id="editVendorBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
+      ${!isReadOnly()?`<button class="btn" id="editVendorBtn"><i class="ti ti-pencil"></i> 편집</button>`:''}
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
+    <div class="two" style="margin-bottom:14px">
       <div class="card">
-        <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">컨택 정보</p>
-        <div class="contact-row"><span style="color:var(--text-muted)">담당자</span><span>${v.contact.name||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">직함</span><span>${v.contact.title||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">이메일</span><span style="color:var(--accent-text)">${v.contact.email||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">전화</span><span>${v.contact.phone||'-'}</span></div>
+        <div class="sh" style="margin-bottom:10px"><div class="st"><i class="ti ti-user oi"></i>컨택 정보</div></div>
+        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">담당자</span><span style="font-weight:500">${v.contact.name||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">직함</span><span>${v.contact.title||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">이메일</span><span style="color:var(--o)">${v.contact.email||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">전화</span><span>${v.contact.phone||'-'}</span></div>
       </div>
       <div class="card">
-        <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">거래 메모</p>
-        <div class="contact-row"><span style="color:var(--text-muted)">할인율</span><span>${v.notes.discount||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">MOQ</span><span>${v.notes.moq||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-muted)">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
+        <div class="sh" style="margin-bottom:10px"><div class="st"><i class="ti ti-notes oi"></i>거래 메모</div></div>
+        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">할인율</span><span>${v.notes.discount||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">MOQ</span><span>${v.notes.moq||'-'}</span></div>
+        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
       </div>
     </div>
 
-    ${projects.length>0 ? `
-    <div class="card" style="margin-bottom:1.25rem;">
-      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">연결된 프로젝트</p>
-      ${projects.map(p=>`<div class="proj-link" data-pid="${p.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
-        <span>${p.title}</span><span style="color:var(--text-muted)">${progressOf(p)}%</span>
+    ${projects.length>0?`<div class="card" style="margin-bottom:14px">
+      <div class="sh"><div class="st"><i class="ti ti-checklist oi"></i>연결된 프로젝트</div></div>
+      ${projects.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
+        <span style="flex:1;font-weight:500">${p.title}</span>
+        <div class="pgb" style="width:80px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
+        <span style="font-size:11px;color:var(--muted);width:32px;text-align:right">${progressOf(p)}%</span>
       </div>`).join('')}
-    </div>` : ''}
+    </div>`:''}
 
-    <div class="row">
-      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0;">활동 로그</p>
-      ${!isReadOnly() ? `<button id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+    <div class="card">
+      <div class="sh">
+        <div class="st"><i class="ti ti-history oi"></i>활동 로그</div>
+        ${!isReadOnly()?`<button class="btn" id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
+      </div>
+      ${logs.length===0?'<div class="empty-state">기록된 활동이 없습니다.</div>':
+        logs.map(l=>`<div class="dash-row log-detail-row" data-lid="${l.id}" style="flex-direction:column;align-items:flex-start;gap:4px;padding:10px 0;${l.rawText?'cursor:pointer':''}">
+          <div style="display:flex;justify-content:space-between;width:100%;align-items:center">
+            <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
+            <span class="badge bgr" style="font-size:10px">${l.status}</span>
+          </div>
+          <span style="font-size:13px">${l.summary}</span>
+          ${l.nextStep?`<span style="font-size:12px;color:var(--muted)">→ ${l.nextStep}</span>`:''}
+          ${l.rawText?`<span style="font-size:11px;color:var(--o)"><i class="ti ti-file-text" style="font-size:11px"></i> 원본 보기</span>`:''}
+        </div>`).join('')}
     </div>
-    ${logs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
-      logs.map(l=>`
-      <div class="activity-row log-detail-row" data-lid="${l.id}" style="flex-direction:column; align-items:flex-start; gap:4px; ${l.rawText?'cursor:pointer;':''}">
-        <div style="display:flex; justify-content:space-between; width:100%;">
-          <span style="font-size:12px; color:var(--text-muted);">${fmtDateDow(l.date)} · ${l.type}</span>
-          <span class="badge" style="background:var(--surface); color:var(--text-muted); font-size:11px;">${l.status}</span>
-        </div>
-        <span style="font-size:13px;">${l.summary}</span>
-        ${l.nextStep ? `<span style="font-size:12px; color:var(--text-muted);">→ ${l.nextStep}</span>` : ''}
-        ${l.rawText ? `<span style="font-size:11px; color:var(--accent-text);"><i class="ti ti-file-text" style="font-size:12px; vertical-align:-1px;"></i> 원본 보기</span>` : ''}
-      </div>`).join('')}
   `;
 }
 
-/* ---------- 프로젝트 리스트 ---------- */
 function viewProjects(){
   let projects = state.data.projects.slice();
-  if(state.projectFilter!=='전체'){
-    projects = projects.filter(p=>p.category===state.projectFilter);
-  }
-  projects.sort((a,b)=> dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01')));
+  if(state.projectFilter!=='전체') projects = projects.filter(p=>p.category===state.projectFilter);
+  projects.sort((a,b)=>dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01')));
+
+  const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const catColorMap = {};
+  state.data.categories.forEach((c,i)=>catColorMap[c]=catColors[i%catColors.length]);
 
   return `
-    <div class="row">
-      <h1>프로젝트</h1>
-      ${!isReadOnly() ? '<button class="primary" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button>' : ''}
+    <div class="sh">
+      <div style="font-size:16px;font-weight:600">프로젝트</div>
+      ${!isReadOnly()?`<button class="btn btn-o" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button>`:''}
     </div>
 
-    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
-      <span class="tag ${state.projectFilter==='전체'?'active':''}" data-cat="전체">전체</span>
-      ${state.data.categories.map(c=>`<span class="tag ${state.projectFilter===c?'active':''}" data-cat="${c}">${c}</span>`).join('')}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn ${state.projectFilter==='전체'?'btn-o':''}" data-cat="전체">전체</button>
+      ${state.data.categories.map(c=>`<button class="btn ${state.projectFilter===c?'btn-o':''}" data-cat="${c}">${c}</button>`).join('')}
     </div>
 
-    ${projects.length===0 ? '<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>' : `
-    <div class="proj-grid">
+    ${projects.length===0?'<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>':
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
       ${projects.map(p=>{
-        const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
-        const prog = progressOf(p);
-        const ddayColor = dday!==null && dday<=3 ? 'var(--danger)' : 'var(--text-muted)';
-        const ddayLabel = dday===null ? '' : dday<0 ? `D+${Math.abs(dday)}` : `D-${dday}`;
-        return `<div class="proj-card" data-pid="${p.id}">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-            <span class="badge" style="background:var(--accent-bg); color:var(--accent-text);">${p.category}</span>
-            ${dday!==null?`<span style="font-size:12px; color:${ddayColor}">${ddayLabel}</span>`:''}
+        const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+        const prog=progressOf(p);
+        const ddayLabel=dday===null?'':(dday<0?`D+${Math.abs(dday)}`:`D-${dday}`);
+        const col=catColorMap[p.category]||'#2554C7';
+        return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px;margin-bottom:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span class="badge" style="background:${col}22;color:${col}">${p.category}</span>
+            ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${ddayLabel}</span>`:''}
           </div>
-          <p style="font-weight:500; font-size:14px; margin:0 0 4px;">${p.title}</p>
-          <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px;">담당: ${p.owner}${p.vendorId?' · 연결: '+p.vendorId:''}</p>
-          ${p.checklist.slice(0,3).map(c=>`
-            <div class="checklist-item ${c.done?'done':''}">
-              <input type="checkbox" disabled ${c.done?'checked':''}/>
-              <span>${c.text}</span>
-            </div>`).join('')}
-          ${p.checklist.length>3?`<p style="font-size:12px; color:var(--text-muted); margin:4px 0 0;">+${p.checklist.length-3}개 더보기</p>`:''}
-          <div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;line-height:1.4">${p.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">담당: ${p.owner}${p.vendorId?' · '+p.vendorId:''}</div>
+          ${p.checklist.slice(0,3).map(c=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:12px">
+            <input type="checkbox" disabled ${c.done?'checked':''} style="accent-color:var(--o);margin-top:2px;flex-shrink:0"/>
+            <span style="${c.done?'text-decoration:line-through;color:var(--muted)':''}">${c.text}</span>
+          </div>`).join('')}
+          ${p.checklist.length>3?`<div style="font-size:11px;color:var(--muted);margin-top:4px">+${p.checklist.length-3}개 더보기</div>`:''}
+          <div class="pgb" style="margin-top:10px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+          <div style="font-size:10px;color:var(--muted);text-align:right;margin-top:3px">${prog}%</div>
         </div>`;
       }).join('')}
     </div>`}
   `;
 }
 
-/* ---------- 프로젝트 상세 ---------- */
 function viewProjectDetail(){
   const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
-  if(!p) return '<p>프로젝트를 찾을 수 없습니다.</p>';
-  const prog = progressOf(p);
-  const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
+  if(!p) return '<div class="empty-state">프로젝트를 찾을 수 없습니다.</div>';
+  const prog=progressOf(p);
+  const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
 
   return `
-    <div class="back-link" id="backToProjects"><i class="ti ti-arrow-left"></i>프로젝트 목록</div>
-    <div class="row">
+    <button class="back-link" id="backToProjects"><i class="ti ti-arrow-left"></i> 프로젝트 목록</button>
+    <div class="sh">
       <div>
-        <h1>${p.title}</h1>
-        <div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <span class="badge" style="background:var(--accent-bg); color:var(--accent-text);">${p.category}</span>
-          <span style="font-size:12px; color:var(--text-muted);">담당: ${p.owner}</span>
-          ${p.deadline ? `<span style="font-size:12px; color:var(--text-muted);">· 마감: ${fmtDate(p.deadline)} (${dday<0?'D+'+Math.abs(dday):'D-'+dday})</span>` : ''}
+        <div style="font-size:18px;font-weight:600">${p.title}</div>
+        <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
+          <span class="badge bo">${p.category}</span>
+          <span style="font-size:12px;color:var(--muted)">담당: ${p.owner}</span>
+          ${p.deadline?`<span class="dlc ${dday!==null&&dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${fmtDate(p.deadline)} (D-${dday})</span>`:''}
         </div>
       </div>
-      ${!isReadOnly() ? '<button id="editProjectBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
+      ${!isReadOnly()?`<button class="btn" id="editProjectBtn"><i class="ti ti-pencil"></i> 편집</button>`:''}
     </div>
 
-    <div class="progress-bar" style="margin-bottom:1.25rem;"><div class="progress-fill" style="width:${prog}%"></div></div>
+    <div class="pgb" style="margin-bottom:14px;height:8px;border-radius:4px">
+      <div class="pgf" style="width:${prog}%;background:var(--o);border-radius:4px"></div>
+    </div>
 
-    <div class="card" style="margin-bottom:1.25rem;">
-      <div class="row" style="margin-bottom:8px;">
-        <h3>체크리스트</h3>
-        ${!isReadOnly() ? `<button id="addChecklistItemBtn"><i class="ti ti-plus"></i> 항목 추가</button>` : ''}
+    <div class="card" style="margin-bottom:14px">
+      <div class="sh">
+        <div class="st"><i class="ti ti-checklist oi"></i>체크리스트</div>
+        ${!isReadOnly()?`<button class="btn" id="addChecklistItemBtn"><i class="ti ti-plus"></i> 항목 추가</button>`:''}
       </div>
-      ${p.checklist.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">체크리스트 항목이 없습니다.</p>' :
+      ${p.checklist.length===0?'<div class="empty-state">체크리스트 항목이 없습니다.</div>':
         p.checklist.map(c=>{
-          const assignee = checklistAssigneeName(c);
-          const stColor = checklistStatusColor(c.status);
-          const prColor = priorityColor(c.priority);
-          return `<div class="checklist-card" data-cid="${c.id}" style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:0.5px solid var(--border); cursor:pointer;">
-          <input type="checkbox" class="checklist-toggle" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''} style="margin-top:3px;"/>
-          <div style="flex:1; min-width:0;">
-            <span style="font-size:13px; ${c.done?'text-decoration:line-through; color:var(--text-muted);':''}">${c.text}</span>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
-              ${c.status ? `<span class="badge" style="background:${stColor.bg}; color:${stColor.text}; font-size:10px;">${c.status}</span>` : ''}
-              ${c.priority ? `<span class="badge" style="background:${prColor.bg}; color:${prColor.text}; font-size:10px;">${c.priority}</span>` : ''}
-              ${c.dueDate ? `<span style="font-size:11px; color:var(--text-muted);"><i class="ti ti-calendar" style="font-size:11px; vertical-align:-1px;"></i> ${fmtDate(c.dueDate)}</span>` : ''}
-              ${assignee ? `<span style="font-size:11px; color:var(--text-muted);"><i class="ti ti-user" style="font-size:11px; vertical-align:-1px;"></i> ${assignee}</span>` : ''}
-              ${c.attachments && c.attachments.length>0 ? `<span style="font-size:11px; color:var(--accent-text);"><i class="ti ti-paperclip" style="font-size:11px; vertical-align:-1px;"></i> ${c.attachments.length}</span>` : ''}
+          const sc=checklistStatusColor(c.status);
+          const assignee=checklistAssigneeName(c);
+          return `<div class="checklist-card ck-item" data-cid="${c.id}">
+            <input type="checkbox" class="checklist-toggle ck-cb" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
+            <div class="ck-body">
+              <div class="ck-title ${c.done?'done':''}">${c.text}</div>
+              <div class="ck-meta">
+                ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
+                ${c.priority?`<span class="badge ${priorityBadge(c.priority)}">${c.priority}</span>`:''}
+                ${c.dueDate?`<span><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
+                ${assignee?`<span><i class="ti ti-user" style="font-size:10px"></i> ${assignee}</span>`:''}
+                ${c.attachments&&c.attachments.length?`<span><i class="ti ti-paperclip" style="font-size:10px"></i> ${c.attachments.length}</span>`:''}
+              </div>
             </div>
-          </div>
-          ${!isReadOnly() ? `<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px; color:var(--text-muted); cursor:pointer; flex-shrink:0;"></i>` : ''}
-        </div>`;
+            ${!isReadOnly()?`<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px;color:var(--muted);cursor:pointer;flex-shrink:0"></i>`:''}
+          </div>`;
         }).join('')}
     </div>
 
-    <div class="card" style="margin-bottom:1.25rem;">
-      <div class="row" style="margin-bottom:8px;">
-        <h3>회의록</h3>
-        ${!isReadOnly() ? `<button class="primary" id="addMeetingNoteBtn"><i class="ti ti-plus"></i> 회의록 작성</button>` : ''}
+    <div class="card" style="margin-bottom:14px">
+      <div class="sh">
+        <div class="st"><i class="ti ti-notes oi"></i>회의록</div>
+        ${!isReadOnly()?`<button class="btn btn-o" id="addMeetingNoteBtn"><i class="ti ti-plus"></i> 회의록 작성</button>`:''}
       </div>
-      ${(!p.meetingNotes || p.meetingNotes.length===0) ? '<p style="font-size:13px; color:var(--text-muted)">작성된 회의록이 없습니다.</p>' :
+      ${(!p.meetingNotes||p.meetingNotes.length===0)?'<div class="empty-state">작성된 회의록이 없습니다.</div>':
         p.meetingNotes.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
-        <div style="border-top:0.5px solid var(--border); padding:12px 0;">
-          <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateDow(m.date)}</p>
-          <p style="font-size:13px; margin:0 0 6px; white-space:pre-wrap;">${m.text}</p>
-          ${m.summary ? `<div style="background:var(--surface); border-radius:var(--radius); padding:8px 10px; font-size:12px; color:var(--text-muted);"><i class="ti ti-sparkles" style="font-size:13px; color:var(--accent-text); margin-right:4px;"></i>${m.summary}</div>` : ''}
-        </div>`).join('')}
+          <div style="border-top:0.5px solid var(--bd);padding:12px 0">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${fmtDateDow(m.date)}</div>
+            <div style="font-size:13px;white-space:pre-wrap;line-height:1.6">${m.text}</div>
+            ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted);margin-top:8px"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
+          </div>`).join('')}
     </div>
 
     <div class="card">
-      <div class="row" style="margin-bottom:8px;">
-        <h3>활동 로그</h3>
-        ${!isReadOnly() ? `<button id="addProjectLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+      <div class="sh">
+        <div class="st"><i class="ti ti-history oi"></i>활동 로그</div>
+        ${!isReadOnly()?`<button class="btn" id="addProjectLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
       </div>
-      ${(!p.logs || p.logs.length===0) ? '<p style="font-size:13px; color:var(--text-muted)">기록된 활동이 없습니다.</p>' :
+      ${(!p.logs||p.logs.length===0)?'<div class="empty-state">기록된 활동이 없습니다.</div>':
         p.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
-        <div style="border-top:0.5px solid var(--border); padding:10px 0;">
-          <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateDow(l.date)}</p>
-          <p style="font-size:13px; margin:0;">${l.text}</p>
-        </div>`).join('')}
+          <div style="border-top:0.5px solid var(--bd);padding:10px 0">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${fmtDateDow(l.date)}</div>
+            <div style="font-size:13px">${l.text}</div>
+          </div>`).join('')}
     </div>
   `;
 }
@@ -871,199 +881,108 @@ function viewProjectDetail(){
 function checklistAssigneeName(c){
   if(!c.assigneeId) return '';
   if(c.assigneeType==='internal') return c.assigneeId;
-  const people = allPeopleFlat();
-  const person = people.find(p=>p.id===c.assigneeId);
-  return person ? `${person.companyName} · ${person.name}` : '';
+  const people=allPeopleFlat();
+  const person=people.find(p=>p.id===c.assigneeId);
+  return person?`${person.companyName} · ${person.name}`:'';
 }
+
 function checklistStatusColor(status){
-  if(status==='완료') return {bg:'var(--success-bg)', text:'var(--success)'};
-  if(status==='진행중') return {bg:'var(--accent-bg)', text:'var(--accent-text)'};
-  if(status==='보류') return {bg:'var(--warning-bg)', text:'var(--warning)'};
-  return {bg:'var(--surface)', text:'var(--text-muted)'};
-}
-
-
-/* ---------- 캘린더 ---------- */
-function viewCalendar(){
-  const month = dayjs(state.calMonth+'-01');
-  const startDay = month.startOf('month').day();
-  const daysInMonth = month.endOf('month').date();
-  const todayStr = dayjs().format('YYYY-MM-DD');
-  const allEvs = allCalendarEvents();
-
-  const dowNames = ['일','월','화','수','목','금','토'];
-  let cells = [];
-  for(let i=0;i<startDay;i++) cells.push(null);
-  for(let d=1;d<=daysInMonth;d++) cells.push(d);
-  while(cells.length%7!==0) cells.push(null);
-
-  const evColors = {
-    '미팅':{bg:'#E6F1FB',text:'#185FA5'},
-    '외근':{bg:'#FAECE7',text:'#993C1D'},
-    '마감':{bg:'#EEEDFE',text:'#534AB7'},
-    '연차':{bg:'#EAF3DE',text:'#3B6D11'},
-  };
-
-  return `
-    <div class="sh">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
-        <span style="font-size:16px;font-weight:500">${month.format('YYYY년 M월')}</span>
-        <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
-      </div>
-      ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}
-    </div>
-
-    <div class="legend-row">
-      <span><span class="legend-dot" style="background:#185FA5"></span>미팅</span>
-      <span><span class="legend-dot" style="background:#993C1D"></span>외근</span>
-      <span><span class="legend-dot" style="background:#534AB7"></span>프로젝트 마감</span>
-      <span><span class="legend-dot" style="background:#3B6D11"></span>연차/반차</span>
-    </div>
-
-    <div class="cal-grid">
-      ${dowNames.map(d=>`<div class="cal-dh">${d}</div>`).join('')}
-      ${cells.map(d=>{
-        if(d===null) return `<div class="cal-cell empty"></div>`;
-        const dateStr = month.date(d).format('YYYY-MM-DD');
-        const evs = allEvs.filter(e=>e.date===dateStr);
-        const isToday = dateStr===todayStr;
-        return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
-          <div class="cal-num${isToday?' today':''}">${d}</div>
-          ${evs.slice(0,3).map(e=>{
-            const c=evColors[e.type]||{bg:'#F1EFE8',text:'#5F5E5A'};
-            return `<span class="cal-ev" style="background:${c.bg};color:${c.text}">${e.title}</span>`;
-          }).join('')}
-          ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
-        </div>`;
-      }).join('')}
-    </div>
-  `;
+  if(status==='완료') return {bg:'#EAF3DE',text:'#3B6D11'};
+  if(status==='진행중') return {bg:'var(--ol)',text:'var(--od)'};
+  if(status==='보류') return {bg:'#FEF3C7',text:'#92400E'};
+  return {bg:'var(--sf)',text:'var(--muted)'};
 }
 
 function viewLogInput(){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
-    <h1 style="margin-bottom:1rem;">로그 입력</h1>
-    <div class="card" style="max-width:560px;">
+    <div class="sh" style="margin-bottom:20px"><div style="font-size:16px;font-weight:600">로그 입력</div></div>
+    <div class="card" style="max-width:560px">
       <form id="logForm">
-        <div class="field">
-          <label>날짜</label>
-          <input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/>
+        <div class="field"><label class="field-label">날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" class="inp" required/></div>
+        <div class="field"><label class="field-label">벤더</label><select name="vendorId" class="inp" required><option value="">선택하세요</option>${vendorOptions}</select></div>
+        <div class="field"><label class="field-label">업데이트 유형</label><select name="type" class="inp">
+          <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
+          <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
+          <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
+        </select></div>
+        <div class="two">
+          <div class="field"><label class="field-label">진행 상태</label><select name="status" class="inp"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
+          <div class="field"><label class="field-label">우선순위</label><select name="priority" class="inp"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
         </div>
-        <div class="field">
-          <label>벤더</label>
-          <select name="vendorId" required><option value="">선택하세요</option>${vendorOptions}</select>
-        </div>
-        <div class="field">
-          <label>업데이트 유형</label>
-          <select name="type">
-            <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
-            <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
-            <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>진행 상태</label>
-          <select name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select>
-        </div>
-        <div class="field">
-          <label>우선순위</label>
-          <select name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select>
-        </div>
-        <div class="field">
-          <label>원본 내용 (이메일 전체 등 붙여넣기)</label>
-          <textarea name="rawText" id="logRawText" rows="6" placeholder="이메일 전체 내용 또는 통화/미팅 메모를 붙여넣으세요"></textarea>
-        </div>
-        <button type="button" id="logAiSummarizeBtn" style="display:flex; align-items:center; gap:6px; margin-bottom:12px;"><i class="ti ti-sparkles"></i>AI 요약 생성</button>
-        <div class="field">
-          <label>상황 요약 (한 줄)</label>
-          <input type="text" name="summary" id="logSummaryInput" placeholder="예: 잔여 재고 유통기한 관련 팔로업 요청, 또는 위에서 AI 요약 생성" required/>
-        </div>
-        <div class="field">
-          <label>다음 액션</label>
-          <input type="text" name="nextStep" placeholder="예: 답변 대기, 4월 6일까지 회신 필요"/>
-        </div>
-        <button type="submit" class="primary" style="width:100%;">로그 저장</button>
+        <div class="field"><label class="field-label">원본 내용 (이메일 전체 등 붙여넣기)</label><textarea name="rawText" id="logRawText" rows="5" class="inp" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요"></textarea></div>
+        <button type="button" id="logAiSummarizeBtn" class="btn" style="margin-bottom:10px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성</button>
+        <div class="field"><label class="field-label">상황 요약 (한 줄)</label><input type="text" name="summary" id="logSummaryInput" class="inp" placeholder="예: 잔여 재고 유통기한 관련 팔로업 요청" required/></div>
+        <div class="field"><label class="field-label">다음 액션</label><input type="text" name="nextStep" class="inp" placeholder="예: 답변 대기, 4월 6일까지 회신 필요"/></div>
+        <button type="submit" class="btn btn-o" style="width:100%">저장</button>
       </form>
     </div>
   `;
 }
 
-/* ---------- 연차 관리 ---------- */
 function viewLeave(){
-  const l = state.data.leave;
-  const remaining = (l.totalGranted + l.compRgranted - l.used).toFixed(2).replace(/\.00$/,'').replace(/(\.\d)0$/,'$1');
+  const l=state.data.leave;
+  const remaining=((l.totalGranted+l.compRgranted-l.used)*10/10).toFixed(1).replace(/\.0$/,'');
   return `
-    <div class="row">
-      <h1>연차 관리</h1>
-      ${!isReadOnly() ? `<button class="primary" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>` : ''}
+    <div class="sh">
+      <div style="font-size:16px;font-weight:600">연차 관리</div>
+      ${!isReadOnly()?`<button class="btn btn-o" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>`:''}
     </div>
 
-    <div class="metric-grid">
-      <div class="metric-card"><p class="label">총 발생 연차</p><p class="value">${l.totalGranted}</p></div>
-      <div class="metric-card"><p class="label">보상 발생 휴가</p><p class="value">${l.compRgranted}</p></div>
-      <div class="metric-card"><p class="label">사용 연차</p><p class="value">${l.used}</p></div>
-      <div class="metric-card"><p class="label">잔여 연차</p><p class="value" style="color:var(--accent-text)">${remaining}</p></div>
+    <div class="krow" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
+      <div class="kpi"><div class="kn">${l.totalGranted}</div><div class="kl">총 발생 연차</div></div>
+      <div class="kpi"><div class="kn">${l.compRgranted}</div><div class="kl">보상 발생</div></div>
+      <div class="kpi"><div class="kn">${l.used}</div><div class="kl">사용 연차</div></div>
+      <div class="kpi"><div class="kn" style="color:var(--o)">${remaining}</div><div class="kl">잔여 연차</div></div>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>날짜</th><th>구분</th><th>사용</th><th>메모</th></tr></thead>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th></tr></thead>
         <tbody>
-        ${l.logs.length===0 ? `<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>` :
+        ${l.logs.length===0?`<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
           l.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
-          <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}</td><td style="color:var(--text-muted)">${r.memo||'-'}</td></tr>
-        `).join('')}
+            <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}일</td><td style="color:var(--muted)">${r.memo||'-'}</td></tr>
+          `).join('')}
         </tbody>
       </table>
     </div>
   `;
 }
 
-/* ---------- 컨택 (회사/담당자) ---------- */
-function allPeopleFlat(){
-  const result = [];
-  state.data.companies.forEach(c=>{
-    c.people.forEach(p=>result.push({...p, companyId:c.id, companyName:c.name}));
-  });
-  return result;
-}
-
 function viewCompanyList(){
   let companies = state.data.companies.slice();
   if(state.companySearch){
-    const q = state.companySearch.toLowerCase();
-    companies = companies.filter(c=> c.name.toLowerCase().includes(q) || c.people.some(p=>p.name.toLowerCase().includes(q)));
+    const q=state.companySearch.toLowerCase();
+    companies=companies.filter(c=>c.name.toLowerCase().includes(q)||c.people.some(p=>p.name.toLowerCase().includes(q)));
   }
   companies.sort((a,b)=>a.name.localeCompare(b.name));
 
   return `
-    <div class="row">
-      <h1>컨택</h1>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <div class="search-bar"><i class="ti ti-search"></i><input id="companySearchInput" placeholder="회사 또는 담당자 검색" value="${state.companySearch}"/></div>
-        ${!isReadOnly() ? '<button class="primary" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>' : ''}
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span style="font-size:16px;font-weight:600">컨택</span>
+        <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="companySearchInput" placeholder="회사 또는 담당자 검색" value="${state.companySearch}" style="margin:0"/></div>
       </div>
+      ${!isReadOnly()?`<button class="btn btn-o" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>`:''}
     </div>
 
-    <div class="metric-grid">
-      <div class="metric-card"><p class="label">등록된 회사</p><p class="value">${state.data.companies.length}</p></div>
-      <div class="metric-card"><p class="label">등록된 담당자</p><p class="value">${allPeopleFlat().length}</p></div>
+    <div class="krow" style="grid-template-columns:repeat(2,1fr);max-width:320px;margin-bottom:14px">
+      <div class="kpi"><div class="kn">${state.data.companies.length}</div><div class="kl">등록된 회사</div></div>
+      <div class="kpi"><div class="kn">${allPeopleFlat().length}</div><div class="kl">등록된 담당자</div></div>
     </div>
 
-    <div class="table-wrap">
-      <table>
-        <colgroup><col style="width:30%"><col style="width:20%"><col style="width:50%"></colgroup>
-        <thead><tr><th>회사명</th><th>담당자 수</th><th>담당자 미리보기</th></tr></thead>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <colgroup><col style="width:30%"><col style="width:12%"><col style="width:58%"></colgroup>
+        <thead><tr><th>회사명</th><th>담당자 수</th><th>담당자</th></tr></thead>
         <tbody>
-        ${companies.length===0 ? `<tr><td colspan="3"><div class="empty-state">등록된 회사가 없습니다.</div></td></tr>` :
-          companies.map(c=>`
-            <tr class="clickable company-row" data-cid="${c.id}">
-              <td style="font-weight:500">${c.name}</td>
-              <td>${c.people.length}명</td>
-              <td style="color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${c.people.map(p=>p.name).join(', ')||'-'}</td>
-            </tr>`).join('')}
+        ${companies.length===0?`<tr><td colspan="3"><div class="empty-state">등록된 회사가 없습니다.</div></td></tr>`:
+          companies.map(c=>`<tr class="clickable company-row" data-cid="${c.id}">
+            <td><div style="display:flex;align-items:center;gap:8px">${av(c.name,24)}<span style="font-weight:500">${c.name}</span></div></td>
+            <td>${c.people.length}명</td>
+            <td style="color:var(--muted)">${c.people.map(p=>p.name).join(', ')||'-'}</td>
+          </tr>`).join('')}
         </tbody>
       </table>
     </div>
@@ -1071,35 +990,37 @@ function viewCompanyList(){
 }
 
 function viewCompanyDetail(){
-  const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
-  if(!c) return '<p>회사를 찾을 수 없습니다.</p>';
+  const c=state.data.companies.find(x=>x.id===state.selectedCompanyId);
+  if(!c) return '<div class="empty-state">회사를 찾을 수 없습니다.</div>';
   return `
-    <div class="back-link" id="backToCompanies"><i class="ti ti-arrow-left"></i>컨택 목록</div>
-    <div class="row">
-      <h1>${c.name}</h1>
-      <div style="display:flex; gap:8px;">
-        ${!isReadOnly() ? `<button id="editCompanyBtn"><i class="ti ti-pencil"></i> 회사명 편집</button>` : ''}
-        ${!isReadOnly() ? `<button class="primary" id="addPersonBtn"><i class="ti ti-plus"></i> 담당자 추가</button>` : ''}
+    <button class="back-link" id="backToCompanies"><i class="ti ti-arrow-left"></i> 컨택 목록</button>
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:12px">
+        ${av(c.name,40)}
+        <div style="font-size:18px;font-weight:600">${c.name}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        ${!isReadOnly()?`<button class="btn" id="editCompanyBtn"><i class="ti ti-pencil"></i> 회사명 편집</button>`:''}
+        ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn"><i class="ti ti-plus"></i> 담당자 추가</button>`:''}
       </div>
     </div>
 
-    <div class="proj-grid">
-      ${c.people.length===0 ? '<div class="empty-state">등록된 담당자가 없습니다.</div>' :
-        c.people.map(p=>`
-        <div class="card" style="cursor:default;">
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-bg); display:flex; align-items:center; justify-content:center; font-weight:500; font-size:13px; color:var(--accent-text); flex-shrink:0;">${p.name.slice(0,1)}</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+      ${c.people.length===0?'<div class="empty-state">등록된 담당자가 없습니다.</div>':
+        c.people.map(p=>`<div class="card" style="margin-bottom:0">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            ${av(p.name,36)}
             <div>
-              <p style="font-weight:500; font-size:14px; margin:0;">${p.name}</p>
-              <p style="font-size:12px; color:var(--text-muted); margin:2px 0 0;">${p.title||'-'}</p>
+              <div style="font-weight:600;font-size:14px">${p.name}</div>
+              <div style="font-size:12px;color:var(--muted)">${p.title||'-'}</div>
             </div>
           </div>
-          <div class="contact-row"><span style="color:var(--text-muted)">이메일</span><span style="color:var(--accent-text)">${p.email||'-'}</span></div>
-          <div class="contact-row"><span style="color:var(--text-muted)">전화</span><span>${p.phone||'-'}</span></div>
-          ${!isReadOnly() ? `<div style="display:flex; gap:6px; margin-top:10px;">
-            <button class="edit-person-btn" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">편집</button>
-            <button class="delete-person-btn danger-text" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">삭제</button>
-          </div>` : ''}
+          <div class="dash-row"><span style="color:var(--muted);width:48px;flex-shrink:0;font-size:12px">이메일</span><span style="font-size:12px;color:var(--o)">${p.email||'-'}</span></div>
+          <div class="dash-row"><span style="color:var(--muted);width:48px;flex-shrink:0;font-size:12px">전화</span><span style="font-size:12px">${p.phone||'-'}</span></div>
+          ${!isReadOnly()?`<div style="display:flex;gap:6px;margin-top:10px">
+            <button class="btn edit-person-btn" data-pid="${p.id}" style="flex:1;font-size:12px">편집</button>
+            <button class="btn btn-red delete-person-btn" data-pid="${p.id}" style="flex:1;font-size:12px">삭제</button>
+          </div>`:''}
         </div>`).join('')}
     </div>
   `;
