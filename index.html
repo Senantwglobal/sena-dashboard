@@ -262,9 +262,9 @@ async function doSaveStore(){
 function setSyncStatus(status){
   const el = document.getElementById('syncStatus');
   if(!el) return;
-  if(status==='saving'){ el.textContent = '저장 중...'; el.style.color = 'var(--text-muted)'; }
-  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = 'var(--success)'; }
-  else if(status==='error'){ el.textContent = '저장 실패 (연결 확인)'; el.style.color = 'var(--danger)'; }
+  if(status==='saving'){ el.textContent = '저장 중...'; el.style.color = 'var(--muted)'; }
+  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = '#3B6D11'; }
+  else if(status==='error'){ el.textContent = '저장 실패'; el.style.color = '#A32D2D'; }
 }
 
 function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
@@ -1890,7 +1890,7 @@ function bindViewEvents(){
   });
 
   // 프로젝트 카테고리 필터
-  document.querySelectorAll('.tag').forEach(el=>{
+  document.querySelectorAll('[data-cat]').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.projectFilter = el.dataset.cat;
       render();
