@@ -7,134 +7,293 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
 <style>
 :root{
-  --surface-0:#f4f3ee; --surface-1:#ffffff; --surface-2:#ffffff;
-  --text-primary:#1a1a18; --text-secondary:#5f5e5a; --text-muted:#888780;
-  --border:#e3e1d8; --border-strong:#c9c7bb; --border-accent:#2554C7;
-  --bg-accent:#E8EEFC; --text-accent:#1E3A8A; --fill-accent:#2554C7; --on-accent:#ffffff;
-  --bg-danger:#FCEBEB; --text-danger:#A32D2D; --fill-danger:#E24B4A;
-  --bg-success:#EAF3DE; --text-success:#3B6D11; --fill-success:#639922;
-  --bg-warning:#FAEEDA; --text-warning:#854F0B; --fill-warning:#EF9F27;
-  --bg-pro:#EEEDFE; --text-pro:#3C3489; --fill-pro:#7F77DD;
-  --bg-coral:#FAECE7; --text-coral:#993C1D;
-  --bg-teal:#E1F5EE; --text-teal:#0F6E56;
-  --radius:8px; --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Malgun Gothic',sans-serif;
+  --bg:#F5F4F0;
+  --surface:#FFFFFF;
+  --border:#E8E6E0;
+  --border-strong:#D4D1C8;
+  --text-primary:#1A1916;
+  --text-secondary:#6B6860;
+  --text-muted:#9B9890;
+  --accent:#2554C7;
+  --accent-bg:#EBF0FB;
+  --accent-text:#1A3A9E;
+  --danger:#D93B3B;
+  --danger-bg:#FDEAEA;
+  --success:#2E7D32;
+  --success-bg:#E8F5E9;
+  --warning:#B45309;
+  --warning-bg:#FEF3C7;
+  --header-h:52px;
+  --sidebar-w:220px;
+  --radius:8px;
+  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
 }
-@media (prefers-color-scheme: dark){
-  :root{
-    --surface-0:#1c1c1a; --surface-1:#252522; --surface-2:#2b2b28;
-    --text-primary:#f0efe9; --text-secondary:#b4b2a9; --text-muted:#888780;
-    --border:#3a3a36; --border-strong:#4a4a45;
-    --bg-accent:#1E3A8A; --text-accent:#A8C0F5; --on-accent:#ffffff;
-    --bg-danger:#791F1F; --text-danger:#F7C1C1;
-    --bg-success:#27500A; --text-success:#C0DD97;
-    --bg-warning:#633806; --text-warning:#FAC775;
-    --bg-pro:#3C3489; --text-pro:#CECBF6;
-    --bg-coral:#712B13; --text-coral:#F0997B;
-    --bg-teal:#085041; --text-teal:#9FE1CB;
-  }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font);background:var(--bg);color:var(--text-primary);font-size:13px;line-height:1.5;}
+h1{font-size:20px;font-weight:600;}
+h2{font-size:16px;font-weight:600;}
+h3{font-size:14px;font-weight:600;}
+
+/* ── 헤더 ── */
+.header{
+  position:fixed;top:0;left:0;right:0;height:var(--header-h);
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:16px;z-index:50;
 }
-*{box-sizing:border-box;}
-body{
-  margin:0; font-family:var(--font-sans); background:var(--surface-0); color:var(--text-primary);
-  font-size:14px; line-height:1.6;
+.header-logo{
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--text-primary);
+  border-right:1px solid var(--border);padding-right:16px;
 }
-h1,h2,h3{font-weight:500; margin:0;}
-h1{font-size:22px;} h2{font-size:18px;} h3{font-size:16px;}
-button{
-  font-family:inherit; font-size:13px; padding:8px 14px; border-radius:var(--radius);
-  border:0.5px solid var(--border-strong); background:transparent; color:var(--text-primary);
-  cursor:pointer; transition:background .12s;
+.logo-badge{
+  width:28px;height:28px;border-radius:6px;
+  background:var(--accent);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
 }
-button:hover{background:var(--surface-1);}
-button:active{transform:scale(0.98);}
-button.primary{background:var(--fill-accent); color:var(--on-accent); border-color:transparent;}
-button.primary:hover{background:#2f78c2;}
-button.danger-text{color:var(--text-danger); border-color:var(--bg-danger);}
+.header-nav{display:flex;align-items:center;gap:2px;flex:1;}
+.header-tab{
+  display:flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:6px;
+  font-size:13px;color:var(--text-muted);
+  cursor:pointer;border:none;background:none;
+  white-space:nowrap;font-family:var(--font);
+  transition:background .1s,color .1s;
+}
+.header-tab:hover{background:var(--bg);color:var(--text-primary);}
+.header-tab.active{
+  color:var(--accent);font-weight:600;
+  position:relative;
+}
+.header-tab.active::after{
+  content:'';position:absolute;bottom:-14px;left:0;right:0;
+  height:2px;background:var(--accent);border-radius:2px 2px 0 0;
+}
+.header-tab i{font-size:14px;}
+.header-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
+.dday-badge{
+  font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;
+  background:var(--danger-bg);color:var(--danger);
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
+}
+
+/* ── 메인 콘텐츠 ── */
+.main{
+  margin-top:var(--header-h);
+  padding:24px 28px;
+  max-width:1280px;
+  min-height:calc(100vh - var(--header-h));
+}
+
+/* ── 지표 카드 ── */
+.metrics-row{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
+  margin-bottom:20px;
+}
+.metric-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;text-align:center;
+}
+.metric-card .val{
+  font-size:26px;font-weight:700;line-height:1;margin-bottom:4px;
+  color:var(--text-primary);
+}
+.metric-card .val.danger{color:var(--danger);}
+.metric-card .val.accent{color:var(--accent);}
+.metric-card .lbl{font-size:11px;color:var(--text-muted);}
+
+/* ── 카드 ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);
+}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.card-header-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
+.card-body{padding:16px;}
+
+/* ── 2컬럼 레이아웃 ── */
+.two-col{display:grid;grid-template-columns:1fr 380px;gap:16px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+
+/* ── 활동 피드 ── */
+.feed-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.feed-item:last-child{border-bottom:none;}
+.feed-content{flex:1;min-width:0;}
+.feed-content .title{font-size:13px;color:var(--text-primary);line-height:1.4;}
+.feed-content .title strong{font-weight:600;}
+.feed-content .time{font-size:11px;color:var(--text-muted);margin-top:2px;}
+
+/* ── 진행률 바 ── */
+.progress-row{
+  display:flex;align-items:center;gap:10px;padding:8px 16px;
+  border-bottom:1px solid var(--border);
+}
+.progress-row:last-child{border-bottom:none;}
+.progress-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.progress-label{font-size:12px;color:var(--text-primary);width:90px;flex-shrink:0;}
+.progress-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.progress-bar-fill{height:100%;border-radius:3px;}
+.progress-pct{font-size:11px;color:var(--text-muted);width:36px;text-align:right;}
+
+/* ── 테이블 ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{
+  padding:9px 14px;text-align:left;font-size:11px;font-weight:600;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;
+  background:var(--bg);border-bottom:1px solid var(--border);
+}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr.clickable{cursor:pointer;}
+.tbl tr.clickable:hover td{background:#FAFAF8;}
+
+/* ── 배지 ── */
+.badge{
+  display:inline-flex;align-items:center;
+  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
+}
+.badge-danger{background:var(--danger-bg);color:var(--danger);}
+.badge-success{background:var(--success-bg);color:var(--success);}
+.badge-warning{background:var(--warning-bg);color:var(--warning);}
+.badge-accent{background:var(--accent-bg);color:var(--accent-text);}
+.badge-neutral{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
+
+/* ── 태그 필터 ── */
+.tag{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:12px;padding:4px 12px;border-radius:20px;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-muted);cursor:pointer;white-space:nowrap;
+  transition:all .1s;
+}
+.tag.active,.tag:hover{background:var(--accent-bg);color:var(--accent-text);border-color:var(--accent);}
+
+/* ── 버튼 ── */
+button{font-family:var(--font);cursor:pointer;}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:13px;padding:7px 14px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-primary);cursor:pointer;white-space:nowrap;
+  transition:background .1s;
+}
+.btn:hover{background:var(--bg);}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:#1a44b0;}
+.btn-danger{color:var(--danger);border-color:var(--danger-bg);}
+.btn i{font-size:14px;}
+
+/* ── 인풋 ── */
 input,select,textarea{
-  font-family:inherit; font-size:13px; padding:8px 10px; border-radius:var(--radius);
-  border:0.5px solid var(--border); background:var(--surface-1); color:var(--text-primary);
-  width:100%;
+  font-family:var(--font);font-size:13px;
+  padding:8px 10px;border-radius:var(--radius);
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-primary);width:100%;outline:none;
+  transition:border-color .1s,box-shadow .1s;
 }
-input:focus,select:focus,textarea:focus{outline:none; border-color:var(--border-accent); box-shadow:0 0 0 2px var(--bg-accent);}
-label{font-size:12px; color:var(--text-secondary); display:block; margin-bottom:4px;}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);
+}
 .field{margin-bottom:12px;}
-.app{display:flex; min-height:100vh;}
-.sidebar{
-  width:200px; flex-shrink:0; background:var(--surface-1); border-right:0.5px solid var(--border);
-  padding:1rem 0; position:sticky; top:0; height:100vh; overflow-y:auto;
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+
+/* ── 프로젝트 카드 ── */
+.proj-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;cursor:pointer;
+  transition:border-color .1s,box-shadow .1s;
 }
-.sidebar-title{padding:0 1rem 1rem; font-size:13px; font-weight:500; color:var(--text-secondary);}
-.nav-item{
-  display:flex; align-items:center; gap:8px; padding:9px 1rem; font-size:14px; color:var(--text-secondary);
-  cursor:pointer; border-left:2px solid transparent;
+.proj-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,84,199,.08);}
+
+/* ── 체크리스트 카드 ── */
+.cl-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  cursor:pointer;
 }
-.nav-item:hover{background:var(--surface-0);}
-.nav-item.active{background:var(--bg-accent); color:var(--text-accent); font-weight:500; border-left-color:var(--border-accent);}
-.nav-item i{font-size:16px;}
-.main{flex:1; padding:1.5rem 2rem; min-width:0; max-width:1100px;}
-.row{display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:12px; flex-wrap:wrap;}
-.metric-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:1.5rem;}
-.metric-card{background:var(--surface-1); border-radius:var(--radius); padding:1rem;}
-.metric-card p.label{font-size:13px; color:var(--text-secondary); margin:0 0 4px;}
-.metric-card p.value{font-size:24px; font-weight:500; margin:0;}
-.card{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1.25rem;}
-.badge{font-size:11px; padding:2px 8px; border-radius:var(--radius); display:inline-block; font-weight:500;}
-table{width:100%; border-collapse:collapse; font-size:13px;}
-th{text-align:left; padding:8px 12px; font-weight:500; color:var(--text-secondary); background:var(--surface-1);}
-td{padding:8px 12px; border-top:0.5px solid var(--border);}
-tr.clickable{cursor:pointer;}
-tr.clickable:hover td{background:var(--surface-1);}
-.table-wrap{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; overflow:hidden;}
-.tag{font-size:12px; padding:4px 10px; border-radius:var(--radius); border:0.5px solid var(--border-strong); cursor:pointer; background:var(--surface-1); color:var(--text-secondary);}
-.tag.active{background:var(--bg-accent); color:var(--text-accent); border-color:transparent;}
-.proj-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;}
-.proj-card{background:var(--surface-2); border:0.5px solid var(--border); border-radius:12px; padding:1rem; cursor:pointer;}
-.proj-card:hover{border-color:var(--border-strong);}
-.checklist-item{display:flex; align-items:flex-start; gap:8px; font-size:13px; padding:4px 0;}
-.checklist-item input[type=checkbox]{width:14px; height:14px; margin-top:2px; flex-shrink:0;}
-.checklist-item.done span{text-decoration:line-through; color:var(--text-muted);}
-.progress-bar{height:4px; background:var(--surface-1); border-radius:2px; overflow:hidden; margin-top:10px;}
-.progress-fill{height:100%; background:var(--fill-accent);}
+.cl-item:last-child{border-bottom:none;}
+.cl-item:hover{background:#FAFAF8;margin:0 -16px;padding:10px 16px;}
+
+/* ── 진행률 바 (프로젝트 내) ── */
+.pbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;}
+.pbar-fill{height:100%;background:var(--accent);border-radius:2px;}
+
+/* ── 캘린더 ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.cal-head{background:var(--bg);padding:8px;text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border);}
+.cal-cell{min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;background:var(--surface);}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell:hover{background:#FAFAF8;}
+.cal-daynum{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:2px;}
+.cal-daynum.today{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:#fff;font-weight:700;
+}
+.cal-event{font-size:10px;padding:1px 5px;border-radius:3px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── 모달 ── */
 .modal-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,0.45); display:flex; align-items:center; justify-content:center;
-  z-index:100; padding:1.5rem;
+  position:fixed;inset:0;background:rgba(0,0,0,.4);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;padding:20px;
 }
-.modal{background:var(--surface-2); border-radius:12px; border:0.5px solid var(--border); padding:1.25rem; width:420px; max-width:100%; max-height:85vh; overflow-y:auto;}
-.modal-wide{width:560px;}
-.close-x{cursor:pointer; color:var(--text-secondary); font-size:18px;}
-.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border:0.5px solid var(--border); border-radius:var(--radius); overflow:hidden; font-size:12px;}
-.cal-head{background:var(--surface-1); padding:6px; text-align:center; color:var(--text-secondary);}
-.cal-cell{background:var(--surface-2); min-height:78px; padding:4px; cursor:pointer;}
-.cal-cell:hover{background:var(--surface-1);}
-.cal-cell .daynum{color:var(--text-muted);}
-.cal-cell .daynum.today{color:var(--text-accent); font-weight:500;}
-.cal-event{margin-top:2px; font-size:10px; padding:1px 4px; border-radius:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--text-secondary); margin-bottom:1rem;}
-.legend span.dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:4px;}
-.empty-state{text-align:center; padding:3rem 1rem; color:var(--text-muted);}
-.contact-row{display:flex; justify-content:space-between; padding:3px 0; font-size:13px;}
-.activity-row{display:flex; gap:12px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); margin-bottom:8px;}
-.activity-date{font-size:12px; color:var(--text-muted); width:64px; flex-shrink:0;}
-.search-bar{position:relative; width:240px;}
-.search-bar i{position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:14px;}
-.search-bar input{padding-left:30px;}
-.back-link{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--text-muted); cursor:pointer; margin-bottom:1rem;}
+.modal{
+  background:var(--surface);border-radius:12px;
+  border:1px solid var(--border);padding:20px;
+  width:440px;max-width:100%;max-height:88vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.15);
+}
+.modal-wide{width:580px;}
+.modal-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.modal-title h3{font-size:15px;font-weight:600;}
+.close-x{cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;}
+
+/* ── 기타 ── */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--text-muted);cursor:pointer;
+  margin-bottom:16px;
+}
 .back-link:hover{color:var(--text-primary);}
+.empty-state{text-align:center;padding:48px 16px;color:var(--text-muted);}
+.search-wrap{position:relative;}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;}
+.search-wrap input{padding-left:32px;}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.contact-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);}
+.contact-row:last-child{border-bottom:none;}
+.activity-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.activity-row:last-child{border-bottom:none;}
+
 .toast{
-  position:fixed; bottom:24px; right:24px; background:var(--text-primary); color:var(--surface-0);
-  padding:10px 18px; border-radius:var(--radius); font-size:13px; z-index:200; opacity:0; transform:translateY(8px);
-  transition:opacity .2s, transform .2s; pointer-events:none;
+  position:fixed;bottom:24px;right:24px;
+  background:#1A1916;color:#fff;
+  padding:10px 18px;border-radius:var(--radius);
+  font-size:13px;z-index:200;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .2s,transform .2s;pointer-events:none;
 }
-.toast.show{opacity:1; transform:translateY(0);}
-.role-toggle{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted);}
-@media (max-width:720px){
-  .sidebar{position:fixed; z-index:50; transform:translateX(-100%); transition:transform .2s;}
-  .sidebar.open{transform:translateX(0);}
-  .main{padding:1rem;}
-  .menu-btn{display:block !important;}
+.toast.show{opacity:1;transform:translateY(0);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#2E7D32;display:inline-block;margin-right:4px;}
+
+@media(max-width:900px){
+  .metrics-row{grid-template-columns:repeat(3,1fr);}
+  .two-col{grid-template-columns:1fr;}
+  .header-tab span{display:none;}
 }
-.menu-btn{display:none; background:none; border:none; font-size:20px; padding:4px;}
 </style>
+
 </head>
 <body>
 <div id="app" class="app"></div>
@@ -218,19 +377,22 @@ const SUPABASE_ROW_ID = 'main';
 
 async function supabaseFetch(path, options={}){
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const {prefer, body, method, ...rest} = options;
   const res = await fetch(url, {
-    ...options,
+    method: method || 'GET',
+    mode: 'cors',
+    credentials: 'omit',
+    body: body || undefined,
     headers: {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       'Content-Type': 'application/json',
-      'Prefer': options.prefer || 'return=representation',
-      ...(options.headers||{})
+      'Prefer': prefer || 'return=representation',
     }
   });
   if(!res.ok){
     const text = await res.text();
-    throw new Error(`Supabase error ${res.status}: ${text}`);
+    throw new Error(`Supabase ${res.status}: ${text}`);
   }
   const text = await res.text();
   if(!text) return null;
@@ -285,8 +447,8 @@ function setSyncStatus(status){
   const el = document.getElementById('syncStatus');
   if(!el) return;
   if(status==='saving'){ el.textContent = '저장 중...'; el.style.color = 'var(--text-muted)'; }
-  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = 'var(--text-success)'; }
-  else if(status==='error'){ el.textContent = '저장 실패 (연결 확인)'; el.style.color = 'var(--text-danger)'; }
+  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = 'var(--success)'; }
+  else if(status==='error'){ el.textContent = '저장 실패 (연결 확인)'; el.style.color = 'var(--danger)'; }
 }
 
 function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
@@ -411,17 +573,17 @@ function progressOf(project){
   return Math.round(done/project.checklist.length*100);
 }
 function priorityColor(p){
-  if(p==='높음') return {bg:'var(--bg-danger)', text:'var(--text-danger)'};
-  if(p==='보통') return {bg:'var(--bg-warning)', text:'var(--text-warning)'};
-  if(p==='완료') return {bg:'var(--surface-1)', text:'var(--text-secondary)'};
-  return {bg:'var(--bg-success)', text:'var(--text-success)'};
+  if(p==='높음') return {bg:'var(--danger-bg)', text:'var(--danger)'};
+  if(p==='보통') return {bg:'var(--warning-bg)', text:'var(--warning)'};
+  if(p==='완료') return {bg:'var(--surface)', text:'var(--text-muted)'};
+  return {bg:'var(--success-bg)', text:'var(--success)'};
 }
 function eventColor(type){
-  if(type==='미팅') return {bg:'var(--bg-accent)', text:'var(--text-accent)', dot:'#2554C7'};
+  if(type==='미팅') return {bg:'var(--accent-bg)', text:'var(--accent-text)', dot:'#2554C7'};
   if(type==='외근') return {bg:'var(--bg-coral)', text:'var(--text-coral)', dot:'#D85A30'};
   if(type==='마감') return {bg:'var(--bg-pro)', text:'var(--text-pro)', dot:'#7F77DD'};
-  if(type==='연차') return {bg:'var(--bg-success)', text:'var(--text-success)', dot:'#1D9E75'};
-  return {bg:'var(--surface-1)', text:'var(--text-secondary)', dot:'#888780'};
+  if(type==='연차') return {bg:'var(--success-bg)', text:'var(--success)', dot:'#1D9E75'};
+  return {bg:'var(--surface)', text:'var(--text-muted)', dot:'#888780'};
 }
 function allCalendarEvents(){
   const evs = state.data.calendar.map(e=>({...e}));
@@ -437,46 +599,72 @@ function eventsOnDate(dateStr){
 }
 
 /* ---------- 렌더 루트 ---------- */
+function avatarColor(name){
+  const colors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  let h = 0; for(let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xFFFFFF;
+  return colors[Math.abs(h) % colors.length];
+}
+function avatarEl(name, size=28){
+  const initials = (name||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const bg = avatarColor(name);
+  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};font-size:${size<=24?10:11}px;">${initials}</div>`;
+}
+
 function render(){
   if(!state.data){ return; }
+
+  const today = dayjs();
+  const nearestDeadline = state.data.projects
+    .filter(p=>p.deadline)
+    .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
+    .filter(p=>p.dday>=0).sort((a,b)=>a.dday-b.dday)[0];
+  const ddayLabel = nearestDeadline ? `D-${nearestDeadline.dday}` : '';
+
+  const tabs = [
+    {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
+    {view:'vendors', icon:'ti-building-store', label:'벤더'},
+    {view:'contacts', icon:'ti-address-book', label:'컨택'},
+    {view:'projects', icon:'ti-checklist', label:'프로젝트'},
+    {view:'calendar', icon:'ti-calendar', label:'캘린더'},
+    {view:'log', icon:'ti-pencil-plus', label:'로그 입력'},
+    {view:'leave', icon:'ti-beach', label:'연차'},
+  ];
+
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-title">업무 대시보드</div>
-      ${navItem('home','ti-home','홈')}
-      ${navItem('vendors','ti-building-store','벤더')}
-      ${navItem('contacts','ti-address-book','컨택')}
-      ${navItem('projects','ti-checklist','프로젝트')}
-      ${navItem('calendar','ti-calendar','캘린더')}
-      ${navItem('log','ti-pencil-plus','로그 입력')}
-      ${navItem('leave','ti-beach','연차 관리')}
-      <div style="padding:1rem 1rem 0; border-top:0.5px solid var(--border); margin-top:1rem;">
-        <div class="role-toggle">
-          <span>보기 모드</span>
-        </div>
-        <select id="roleSelect" style="margin-top:6px; font-size:12px; padding:6px 8px;">
-          <option value="me" ${state.data.role==='me'?'selected':''}>나 (편집 가능)</option>
-          <option value="ceo" ${state.data.role==='ceo'?'selected':''}>대표님 (읽기 전용)</option>
+    <div class="header">
+      <div class="header-logo">
+        <div class="logo-badge">O</div>
+        <span>업무 대시보드</span>
+      </div>
+      <nav class="header-nav">
+        ${tabs.map(t=>`
+          <button class="header-tab ${state.view===t.view?'active':''}" data-view="${t.view}">
+            <i class="ti ${t.icon}"></i><span>${t.label}</span>
+          </button>`).join('')}
+      </nav>
+      <div class="header-right">
+        ${ddayLabel ? `<span class="dday-badge">${ddayLabel}</span>` : ''}
+        <select id="roleSelect" style="font-size:11px;padding:4px 8px;width:auto;">
+          <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
+          <option value="ceo" ${state.data.role==='ceo'?'selected':''}>읽기 전용</option>
         </select>
-        <p id="syncStatus" style="font-size:11px; color:var(--text-muted); margin:8px 0 0;">저장됨</p>
+        <span id="syncStatus" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
+          <span class="sync-dot"></span>저장됨
+        </span>
+        ${avatarEl('Sena Cheon', 30)}
       </div>
     </div>
     <div class="main">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-        <button class="menu-btn" id="menuBtn"><i class="ti ti-menu-2"></i></button>
-        ${state.data.role==='ceo' ? '<span class="badge" style="background:var(--bg-pro); color:var(--text-pro);">읽기 전용 모드</span>' : ''}
-      </div>
+      ${state.data.role==='ceo' ? '<div style="background:var(--warning-bg);color:var(--warning);font-size:12px;padding:6px 12px;border-radius:var(--radius);margin-bottom:14px;display:inline-block;">읽기 전용 모드</div>' : ''}
       <div id="viewRoot"></div>
     </div>
   `;
+
   document.getElementById('roleSelect').addEventListener('change', e=>{
-    state.data.role = e.target.value;
-    persist();
+    state.data.role = e.target.value; persist();
   });
-  document.getElementById('menuBtn').addEventListener('click', ()=>{
-    document.getElementById('sidebar').classList.toggle('open');
-  });
-  document.querySelectorAll('.nav-item').forEach(el=>{
+  document.querySelectorAll('.header-tab').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.view = el.dataset.view;
       state.selectedVendorId = null;
@@ -499,11 +687,11 @@ function render(){
 }
 
 function navItem(view, icon, label){
-  const active = state.view===view ? 'active' : '';
-  return `<div class="nav-item ${active}" data-view="${view}"><i class="ti ${icon}"></i>${label}</div>`;
+  return `<button class="header-tab ${state.view===view?'active':''}" data-view="${view}"><i class="ti ${icon}"></i><span>${label}</span></button>`;
 }
 
 const isReadOnly = () => state.data.role === 'ceo';
+
 
 /* ---------- 홈 ---------- */
 function viewHome(){
@@ -518,66 +706,146 @@ function viewHome(){
     .sort((a,b)=>a.dday-b.dday);
   const staleVendors = state.data.vendors
     .map(v=>({...v, latest:latestLogForVendor(v.id)}))
-    .filter(v=>v.latest && daysAgo(v.latest.date) >= 90)
-    .sort((a,b)=> daysAgo(b.latest.date) - daysAgo(a.latest.date));
-  const recentLogs = state.data.vendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).slice(0,7);
+    .filter(v=>v.latest && daysAgo(v.latest.date) >= 90);
+  const recentLogs = state.data.vendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).slice(0,8);
+  const allChecklist = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c, projectTitle:p.title, projectId:p.id})));
+  const inProgress = allChecklist.filter(c=>c.status==='진행중').length;
+  const totalDone = allChecklist.filter(c=>c.done).length;
+  const totalItems = allChecklist.length;
+  const pct = totalItems>0 ? Math.round(totalDone/totalItems*100) : 0;
+
+  // 카테고리별 진행률
+  const catProgress = {};
+  state.data.projects.forEach(p=>{
+    if(!catProgress[p.category]) catProgress[p.category] = {done:0,total:0};
+    p.checklist.forEach(c=>{
+      catProgress[p.category].total++;
+      if(c.done) catProgress[p.category].done++;
+    });
+  });
+  const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D','#9333EA','#EA580C'];
 
   return `
-    <div class="row"><h1>오늘 브리핑 · ${today.format('YYYY년 M월 D일 (ddd)')}</h1></div>
+    <h1 style="margin-bottom:16px;font-size:18px;">${today.format('YYYY년 M월 D일 (ddd)')} · 오늘 브리핑</h1>
 
-    <div class="metric-grid">
-      <div class="metric-card"><p class="label">오늘 일정</p><p class="value">${todayEvents.length}건</p></div>
-      <div class="metric-card"><p class="label">마감 임박 (7일 이내)</p><p class="value" style="color:var(--text-danger)">${upcomingDeadlines.length}건</p></div>
-      <div class="metric-card"><p class="label">정체 벤더 (90일+)</p><p class="value" style="color:var(--text-warning)">${staleVendors.length}건</p></div>
-      <div class="metric-card"><p class="label">전체 벤더</p><p class="value">${state.data.vendors.length}</p></div>
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="val accent">${pct}%</div>
+        <div class="lbl">전체 진행률</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">${totalDone}<span style="font-size:14px;font-weight:400;color:var(--text-muted);">/${totalItems}</span></div>
+        <div class="lbl">완료 항목</div>
+      </div>
+      <div class="metric-card">
+        <div class="val accent">${inProgress}</div>
+        <div class="lbl">진행중</div>
+      </div>
+      <div class="metric-card">
+        <div class="val ${upcomingDeadlines.length>0?'danger':''}">${upcomingDeadlines.length}</div>
+        <div class="lbl">마감 임박</div>
+      </div>
+      <div class="metric-card">
+        <div class="val ${staleVendors.length>0?'danger':''}">${staleVendors.length}</div>
+        <div class="lbl">정체 벤더</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">${todayEvents.length}</div>
+        <div class="lbl">오늘 일정</div>
+      </div>
     </div>
 
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
-      <div class="card">
-        <h3 style="margin-bottom:10px;">오늘 일정</h3>
-        ${todayEvents.length===0 ? '<p style="font-size:13px;color:var(--text-muted)">오늘 등록된 일정이 없습니다.</p>' :
-          todayEvents.map(e=>{
+    <div class="two-col">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title"><i class="ti ti-activity" style="color:var(--accent);font-size:15px;"></i> 최근 활동</div>
+            <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span class="sync-dot"></span>실시간</span>
+          </div>
+          ${recentLogs.length===0 ? `<div class="empty-state">기록된 활동이 없습니다.</div>` :
+            recentLogs.map(l=>{
+              const v = state.data.vendors.find(x=>x.id===l.vendorId);
+              return `<div class="feed-item vendor-link" data-vid="${l.vendorId}" style="cursor:pointer;">
+                ${avatarEl(v?v.name:'?', 28)}
+                <div class="feed-content">
+                  <div class="title"><strong>${v?v.name:''}</strong> · ${l.summary}</div>
+                  <div class="time">${fmtDate(l.date)} · ${l.type}</div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+
+        ${upcomingDeadlines.length>0 ? `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title"><i class="ti ti-flag" style="color:var(--danger);font-size:15px;"></i> 마감 임박 프로젝트</div>
+          </div>
+          ${upcomingDeadlines.map(p=>`
+            <div class="feed-item proj-link" data-pid="${p.id}" style="cursor:pointer;align-items:center;">
+              <span class="badge ${p.dday<=2?'badge-danger':'badge-warning'}" style="min-width:42px;justify-content:center;">D-${p.dday}</span>
+              <div class="feed-content"><div class="title">${p.title}</div><div class="time">${p.category}</div></div>
+            </div>`).join('')}
+        </div>` : ''}
+
+        ${todayEvents.length>0 ? `
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title"><i class="ti ti-calendar-event" style="color:var(--accent);font-size:15px;"></i> 오늘 일정</div>
+          </div>
+          ${todayEvents.map(e=>{
             const c = eventColor(e.type);
-            return `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px;">
-              <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0;"></span>
-              <span>${e.time?e.time+' · ':''}${e.title}</span>
+            return `<div class="feed-item" style="align-items:center;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0;"></span>
+              <div class="feed-content"><div class="title">${e.title}</div><div class="time">${e.time||e.type}</div></div>
             </div>`;
           }).join('')}
+        </div>` : ''}
       </div>
 
-      <div class="card">
-        <h3 style="margin-bottom:10px;">마감 임박 프로젝트</h3>
-        ${upcomingDeadlines.length===0 ? '<p style="font-size:13px;color:var(--text-muted)">임박한 마감일이 없습니다.</p>' :
-          upcomingDeadlines.map(p=>`
-            <div class="proj-link" data-pid="${p.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
-              <span>${p.title}</span>
-              <span style="color:${p.dday<=2?'var(--text-danger)':'var(--text-secondary)'}">D-${p.dday}</span>
-            </div>`).join('')}
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title"><i class="ti ti-chart-bar" style="color:var(--accent);font-size:15px;"></i> 카테고리별 진행률</div>
+          </div>
+          ${Object.keys(catProgress).length===0 ? `<div class="empty-state" style="padding:20px;">프로젝트를 추가해주세요.</div>` :
+            Object.entries(catProgress).map(([cat, stat], i)=>{
+              const pct2 = stat.total>0 ? Math.round(stat.done/stat.total*100) : 0;
+              const col = catColors[i % catColors.length];
+              return `<div class="progress-row">
+                <span class="progress-dot" style="background:${col};"></span>
+                <span class="progress-label">${cat}</span>
+                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct2}%;background:${col};"></div></div>
+                <span class="progress-pct">${pct2}%</span>
+              </div>`;
+            }).join('')}
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-title"><i class="ti ti-building-store" style="color:var(--accent);font-size:15px;"></i> 벤더 현황</div>
+          </div>
+          ${state.data.vendors.slice(0,6).map(v=>{
+            const latest = latestLogForVendor(v.id);
+            const days = latest ? daysAgo(latest.date) : null;
+            const pc = priorityColor(v.priority);
+            return `<div class="feed-item vendor-link" data-vid="${v.id}" style="cursor:pointer;align-items:center;">
+              ${avatarEl(v.name, 26)}
+              <div class="feed-content">
+                <div class="title" style="display:flex;align-items:center;gap:6px;">
+                  ${v.name}
+                  <span class="badge" style="background:${pc.bg};color:${pc.text};">${v.priority}</span>
+                </div>
+                <div class="time">${days!==null?days+'일 경과':'기록 없음'}${latest?' · '+latest.summary.slice(0,30)+'…':''}</div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
       </div>
-    </div>
-
-    ${staleVendors.length>0 ? `
-    <div class="card" style="margin-bottom:1rem; border-color:var(--bg-warning);">
-      <h3 style="margin-bottom:10px; display:flex; align-items:center; gap:6px;"><i class="ti ti-alert-triangle" style="color:var(--text-warning); font-size:16px;"></i>90일 이상 방치된 벤더</h3>
-      ${staleVendors.map(v=>`
-        <div class="vendor-link" data-vid="${v.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
-          <span>${v.name}</span>
-          <span style="color:var(--text-warning)">${daysAgo(v.latest.date)}일 경과</span>
-        </div>`).join('')}
-    </div>` : ''}
-
-    <div class="card">
-      <h3 style="margin-bottom:10px;">최근 활동</h3>
-      ${recentLogs.map(l=>{
-        const v = state.data.vendors.find(x=>x.id===l.vendorId);
-        return `<div class="activity-row">
-          <span class="activity-date">${fmtDate(l.date)}</span>
-          <span style="font-size:13px;"><strong style="font-weight:500">${v?v.name:''}</strong> · ${l.summary}</span>
-        </div>`;
-      }).join('')}
     </div>
   `;
 }
+
 
 /* ---------- 벤더 리스트 ---------- */
 function viewVendorList(){
@@ -607,9 +875,9 @@ function viewVendorList(){
 
     <div class="metric-grid">
       <div class="metric-card"><p class="label">전체 브랜드</p><p class="value">${state.data.vendors.length}</p></div>
-      <div class="metric-card"><p class="label">우선순위 높음</p><p class="value" style="color:var(--text-danger)">${highCount}</p></div>
+      <div class="metric-card"><p class="label">우선순위 높음</p><p class="value" style="color:var(--danger)">${highCount}</p></div>
       <div class="metric-card"><p class="label">회신 대기</p><p class="value">${waitingCount}</p></div>
-      <div class="metric-card"><p class="label">90일 이상 정체</p><p class="value" style="color:var(--text-warning)">${staleCount}</p></div>
+      <div class="metric-card"><p class="label">90일 이상 정체</p><p class="value" style="color:var(--warning)">${staleCount}</p></div>
     </div>
 
     <div class="table-wrap">
@@ -623,11 +891,11 @@ function viewVendorList(){
             const pr = priorityColor(v.priority);
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
               <td style="font-weight:500">${v.name}</td>
-              <td style="${days>=90?'color:var(--text-danger)':''}">${days!==null?days+'일':'-'}</td>
-              <td style="color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${v.latest?v.latest.summary:'-'}</td>
-              <td><span class="badge" style="background:var(--surface-1); color:var(--text-secondary);">${v.latest?v.latest.status:'-'}</span></td>
+              <td style="${days>=90?'color:var(--danger)':''}">${days!==null?days+'일':'-'}</td>
+              <td style="color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${v.latest?v.latest.summary:'-'}</td>
+              <td><span class="badge" style="background:var(--surface); color:var(--text-muted);">${v.latest?v.latest.status:'-'}</span></td>
               <td><span class="badge" style="background:${pr.bg}; color:${pr.text};">${v.priority}</span></td>
-              <td style="color:var(--text-secondary)">${v.contact.name}</td>
+              <td style="color:var(--text-muted)">${v.contact.name}</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -653,7 +921,7 @@ function viewVendorDetail(){
         <h1>${v.name}</h1>
         <div style="margin-top:6px;">
           <span class="badge" style="background:${pr.bg}; color:${pr.text};">우선순위 ${v.priority}</span>
-          ${days!==null?`<span class="badge" style="background:var(--surface-1); color:var(--text-secondary); margin-left:6px;">${days}일 경과</span>`:''}
+          ${days!==null?`<span class="badge" style="background:var(--surface); color:var(--text-muted); margin-left:6px;">${days}일 경과</span>`:''}
         </div>
       </div>
       ${!isReadOnly() ? '<button id="editVendorBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
@@ -661,31 +929,31 @@ function viewVendorDetail(){
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem;">
       <div class="card">
-        <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">컨택 정보</p>
-        <div class="contact-row"><span style="color:var(--text-secondary)">담당자</span><span>${v.contact.name||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">직함</span><span>${v.contact.title||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">이메일</span><span style="color:var(--text-accent)">${v.contact.email||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">전화</span><span>${v.contact.phone||'-'}</span></div>
+        <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">컨택 정보</p>
+        <div class="contact-row"><span style="color:var(--text-muted)">담당자</span><span>${v.contact.name||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">직함</span><span>${v.contact.title||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">이메일</span><span style="color:var(--accent-text)">${v.contact.email||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">전화</span><span>${v.contact.phone||'-'}</span></div>
       </div>
       <div class="card">
-        <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">거래 메모</p>
-        <div class="contact-row"><span style="color:var(--text-secondary)">할인율</span><span>${v.notes.discount||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">MOQ</span><span>${v.notes.moq||'-'}</span></div>
-        <div class="contact-row"><span style="color:var(--text-secondary)">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
+        <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">거래 메모</p>
+        <div class="contact-row"><span style="color:var(--text-muted)">할인율</span><span>${v.notes.discount||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">MOQ</span><span>${v.notes.moq||'-'}</span></div>
+        <div class="contact-row"><span style="color:var(--text-muted)">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
       </div>
     </div>
 
     ${projects.length>0 ? `
     <div class="card" style="margin-bottom:1.25rem;">
-      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin-bottom:8px;">연결된 프로젝트</p>
+      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin-bottom:8px;">연결된 프로젝트</p>
       ${projects.map(p=>`<div class="proj-link" data-pid="${p.id}" style="display:flex; justify-content:space-between; padding:6px 0; font-size:13px; cursor:pointer;">
-        <span>${p.title}</span><span style="color:var(--text-secondary)">${progressOf(p)}%</span>
+        <span>${p.title}</span><span style="color:var(--text-muted)">${progressOf(p)}%</span>
       </div>`).join('')}
     </div>` : ''}
 
     <div class="row">
-      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0;">활동 로그</p>
+      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0;">활동 로그</p>
       ${!isReadOnly() ? `<button id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
     </div>
     ${logs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
@@ -693,11 +961,11 @@ function viewVendorDetail(){
       <div class="activity-row log-detail-row" data-lid="${l.id}" style="flex-direction:column; align-items:flex-start; gap:4px; ${l.rawText?'cursor:pointer;':''}">
         <div style="display:flex; justify-content:space-between; width:100%;">
           <span style="font-size:12px; color:var(--text-muted);">${fmtDateDow(l.date)} · ${l.type}</span>
-          <span class="badge" style="background:var(--surface-2); color:var(--text-secondary); font-size:11px;">${l.status}</span>
+          <span class="badge" style="background:var(--surface); color:var(--text-muted); font-size:11px;">${l.status}</span>
         </div>
         <span style="font-size:13px;">${l.summary}</span>
-        ${l.nextStep ? `<span style="font-size:12px; color:var(--text-secondary);">→ ${l.nextStep}</span>` : ''}
-        ${l.rawText ? `<span style="font-size:11px; color:var(--text-accent);"><i class="ti ti-file-text" style="font-size:12px; vertical-align:-1px;"></i> 원본 보기</span>` : ''}
+        ${l.nextStep ? `<span style="font-size:12px; color:var(--text-muted);">→ ${l.nextStep}</span>` : ''}
+        ${l.rawText ? `<span style="font-size:11px; color:var(--accent-text);"><i class="ti ti-file-text" style="font-size:12px; vertical-align:-1px;"></i> 원본 보기</span>` : ''}
       </div>`).join('')}
   `;
 }
@@ -726,15 +994,15 @@ function viewProjects(){
       ${projects.map(p=>{
         const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
         const prog = progressOf(p);
-        const ddayColor = dday!==null && dday<=3 ? 'var(--text-danger)' : 'var(--text-secondary)';
+        const ddayColor = dday!==null && dday<=3 ? 'var(--danger)' : 'var(--text-muted)';
         const ddayLabel = dday===null ? '' : dday<0 ? `D+${Math.abs(dday)}` : `D-${dday}`;
         return `<div class="proj-card" data-pid="${p.id}">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
-            <span class="badge" style="background:var(--bg-accent); color:var(--text-accent);">${p.category}</span>
+            <span class="badge" style="background:var(--accent-bg); color:var(--accent-text);">${p.category}</span>
             ${dday!==null?`<span style="font-size:12px; color:${ddayColor}">${ddayLabel}</span>`:''}
           </div>
           <p style="font-weight:500; font-size:14px; margin:0 0 4px;">${p.title}</p>
-          <p style="font-size:12px; color:var(--text-secondary); margin:0 0 12px;">담당: ${p.owner}${p.vendorId?' · 연결: '+p.vendorId:''}</p>
+          <p style="font-size:12px; color:var(--text-muted); margin:0 0 12px;">담당: ${p.owner}${p.vendorId?' · 연결: '+p.vendorId:''}</p>
           ${p.checklist.slice(0,3).map(c=>`
             <div class="checklist-item ${c.done?'done':''}">
               <input type="checkbox" disabled ${c.done?'checked':''}/>
@@ -761,9 +1029,9 @@ function viewProjectDetail(){
       <div>
         <h1>${p.title}</h1>
         <div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <span class="badge" style="background:var(--bg-accent); color:var(--text-accent);">${p.category}</span>
-          <span style="font-size:12px; color:var(--text-secondary);">담당: ${p.owner}</span>
-          ${p.deadline ? `<span style="font-size:12px; color:var(--text-secondary);">· 마감: ${fmtDate(p.deadline)} (${dday<0?'D+'+Math.abs(dday):'D-'+dday})</span>` : ''}
+          <span class="badge" style="background:var(--accent-bg); color:var(--accent-text);">${p.category}</span>
+          <span style="font-size:12px; color:var(--text-muted);">담당: ${p.owner}</span>
+          ${p.deadline ? `<span style="font-size:12px; color:var(--text-muted);">· 마감: ${fmtDate(p.deadline)} (${dday<0?'D+'+Math.abs(dday):'D-'+dday})</span>` : ''}
         </div>
       </div>
       ${!isReadOnly() ? '<button id="editProjectBtn"><i class="ti ti-pencil"></i> 편집</button>' : ''}
@@ -788,9 +1056,9 @@ function viewProjectDetail(){
             <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
               ${c.status ? `<span class="badge" style="background:${stColor.bg}; color:${stColor.text}; font-size:10px;">${c.status}</span>` : ''}
               ${c.priority ? `<span class="badge" style="background:${prColor.bg}; color:${prColor.text}; font-size:10px;">${c.priority}</span>` : ''}
-              ${c.dueDate ? `<span style="font-size:11px; color:var(--text-secondary);"><i class="ti ti-calendar" style="font-size:11px; vertical-align:-1px;"></i> ${fmtDate(c.dueDate)}</span>` : ''}
-              ${assignee ? `<span style="font-size:11px; color:var(--text-secondary);"><i class="ti ti-user" style="font-size:11px; vertical-align:-1px;"></i> ${assignee}</span>` : ''}
-              ${c.attachments && c.attachments.length>0 ? `<span style="font-size:11px; color:var(--text-accent);"><i class="ti ti-paperclip" style="font-size:11px; vertical-align:-1px;"></i> ${c.attachments.length}</span>` : ''}
+              ${c.dueDate ? `<span style="font-size:11px; color:var(--text-muted);"><i class="ti ti-calendar" style="font-size:11px; vertical-align:-1px;"></i> ${fmtDate(c.dueDate)}</span>` : ''}
+              ${assignee ? `<span style="font-size:11px; color:var(--text-muted);"><i class="ti ti-user" style="font-size:11px; vertical-align:-1px;"></i> ${assignee}</span>` : ''}
+              ${c.attachments && c.attachments.length>0 ? `<span style="font-size:11px; color:var(--accent-text);"><i class="ti ti-paperclip" style="font-size:11px; vertical-align:-1px;"></i> ${c.attachments.length}</span>` : ''}
             </div>
           </div>
           ${!isReadOnly() ? `<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px; color:var(--text-muted); cursor:pointer; flex-shrink:0;"></i>` : ''}
@@ -808,7 +1076,7 @@ function viewProjectDetail(){
         <div style="border-top:0.5px solid var(--border); padding:12px 0;">
           <p style="font-size:12px; color:var(--text-muted); margin:0 0 4px;">${fmtDateDow(m.date)}</p>
           <p style="font-size:13px; margin:0 0 6px; white-space:pre-wrap;">${m.text}</p>
-          ${m.summary ? `<div style="background:var(--surface-1); border-radius:var(--radius); padding:8px 10px; font-size:12px; color:var(--text-secondary);"><i class="ti ti-sparkles" style="font-size:13px; color:var(--text-accent); margin-right:4px;"></i>${m.summary}</div>` : ''}
+          ${m.summary ? `<div style="background:var(--surface); border-radius:var(--radius); padding:8px 10px; font-size:12px; color:var(--text-muted);"><i class="ti ti-sparkles" style="font-size:13px; color:var(--accent-text); margin-right:4px;"></i>${m.summary}</div>` : ''}
         </div>`).join('')}
     </div>
 
@@ -835,10 +1103,10 @@ function checklistAssigneeName(c){
   return person ? `${person.companyName} · ${person.name}` : '';
 }
 function checklistStatusColor(status){
-  if(status==='완료') return {bg:'var(--bg-success)', text:'var(--text-success)'};
-  if(status==='진행중') return {bg:'var(--bg-accent)', text:'var(--text-accent)'};
-  if(status==='보류') return {bg:'var(--bg-warning)', text:'var(--text-warning)'};
-  return {bg:'var(--surface-1)', text:'var(--text-secondary)'};
+  if(status==='완료') return {bg:'var(--success-bg)', text:'var(--success)'};
+  if(status==='진행중') return {bg:'var(--accent-bg)', text:'var(--accent-text)'};
+  if(status==='보류') return {bg:'var(--warning-bg)', text:'var(--warning)'};
+  return {bg:'var(--surface)', text:'var(--text-muted)'};
 }
 
 
@@ -958,7 +1226,7 @@ function viewLeave(){
       <div class="metric-card"><p class="label">총 발생 연차</p><p class="value">${l.totalGranted}</p></div>
       <div class="metric-card"><p class="label">보상 발생 휴가</p><p class="value">${l.compRgranted}</p></div>
       <div class="metric-card"><p class="label">사용 연차</p><p class="value">${l.used}</p></div>
-      <div class="metric-card"><p class="label">잔여 연차</p><p class="value" style="color:var(--text-accent)">${remaining}</p></div>
+      <div class="metric-card"><p class="label">잔여 연차</p><p class="value" style="color:var(--accent-text)">${remaining}</p></div>
     </div>
 
     <div class="table-wrap">
@@ -967,7 +1235,7 @@ function viewLeave(){
         <tbody>
         ${l.logs.length===0 ? `<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>` :
           l.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
-          <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}</td><td style="color:var(--text-secondary)">${r.memo||'-'}</td></tr>
+          <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}</td><td style="color:var(--text-muted)">${r.memo||'-'}</td></tr>
         `).join('')}
         </tbody>
       </table>
@@ -1016,7 +1284,7 @@ function viewCompanyList(){
             <tr class="clickable company-row" data-cid="${c.id}">
               <td style="font-weight:500">${c.name}</td>
               <td>${c.people.length}명</td>
-              <td style="color:var(--text-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${c.people.map(p=>p.name).join(', ')||'-'}</td>
+              <td style="color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:1px;">${c.people.map(p=>p.name).join(', ')||'-'}</td>
             </tr>`).join('')}
         </tbody>
       </table>
@@ -1042,14 +1310,14 @@ function viewCompanyDetail(){
         c.people.map(p=>`
         <div class="card" style="cursor:default;">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-            <div style="width:40px; height:40px; border-radius:50%; background:var(--bg-accent); display:flex; align-items:center; justify-content:center; font-weight:500; font-size:13px; color:var(--text-accent); flex-shrink:0;">${p.name.slice(0,1)}</div>
+            <div style="width:40px; height:40px; border-radius:50%; background:var(--accent-bg); display:flex; align-items:center; justify-content:center; font-weight:500; font-size:13px; color:var(--accent-text); flex-shrink:0;">${p.name.slice(0,1)}</div>
             <div>
               <p style="font-weight:500; font-size:14px; margin:0;">${p.name}</p>
-              <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 0;">${p.title||'-'}</p>
+              <p style="font-size:12px; color:var(--text-muted); margin:2px 0 0;">${p.title||'-'}</p>
             </div>
           </div>
-          <div class="contact-row"><span style="color:var(--text-secondary)">이메일</span><span style="color:var(--text-accent)">${p.email||'-'}</span></div>
-          <div class="contact-row"><span style="color:var(--text-secondary)">전화</span><span>${p.phone||'-'}</span></div>
+          <div class="contact-row"><span style="color:var(--text-muted)">이메일</span><span style="color:var(--accent-text)">${p.email||'-'}</span></div>
+          <div class="contact-row"><span style="color:var(--text-muted)">전화</span><span>${p.phone||'-'}</span></div>
           ${!isReadOnly() ? `<div style="display:flex; gap:6px; margin-top:10px;">
             <button class="edit-person-btn" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">편집</button>
             <button class="delete-person-btn danger-text" data-pid="${p.id}" style="flex:1; font-size:12px; padding:6px;">삭제</button>
@@ -1129,14 +1397,14 @@ function modalLogDetail(log, vendorName){
     <div class="modal modal-wide">
       <div class="row"><h3>${vendorName} · ${fmtDateDow(log.date)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
       <div style="margin-bottom:10px;">
-        <span class="badge" style="background:var(--surface-1); color:var(--text-secondary);">${log.type}</span>
-        <span class="badge" style="background:var(--surface-1); color:var(--text-secondary); margin-left:4px;">${log.status}</span>
+        <span class="badge" style="background:var(--surface); color:var(--text-muted);">${log.type}</span>
+        <span class="badge" style="background:var(--surface); color:var(--text-muted); margin-left:4px;">${log.status}</span>
       </div>
-      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">AI 요약</p>
+      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">AI 요약</p>
       <p style="font-size:13px; margin:0 0 14px;">${log.summary}</p>
-      ${log.nextStep ? `<p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">다음 액션</p><p style="font-size:13px; margin:0 0 14px;">${log.nextStep}</p>` : ''}
-      <p style="font-size:13px; font-weight:500; color:var(--text-secondary); margin:0 0 4px;">원본 내용</p>
-      <div style="background:var(--surface-1); border-radius:var(--radius); padding:12px; font-size:13px; white-space:pre-wrap; line-height:1.6;">${log.rawText || '원본이 등록되지 않았습니다.'}</div>
+      ${log.nextStep ? `<p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">다음 액션</p><p style="font-size:13px; margin:0 0 14px;">${log.nextStep}</p>` : ''}
+      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">원본 내용</p>
+      <div style="background:var(--surface); border-radius:var(--radius); padding:12px; font-size:13px; white-space:pre-wrap; line-height:1.6;">${log.rawText || '원본이 등록되지 않았습니다.'}</div>
     </div>
   `;
 }
@@ -1189,15 +1457,15 @@ function modalDayDetail(dateStr){
   return `
     <div class="modal">
       <div class="row"><h3>${fmtDateDow(dateStr)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
-      <p style="font-size:13px; color:var(--text-secondary); margin:0 0 16px;">일정 ${evs.length}건</p>
+      <p style="font-size:13px; color:var(--text-muted); margin:0 0 16px;">일정 ${evs.length}건</p>
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
         ${evs.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">등록된 일정이 없습니다.</p>' :
           evs.map(e=>{
             const c = eventColor(e.type);
-            return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex; gap:10px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); border-left:3px solid ${c.dot}; cursor:pointer;">
+            return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex; gap:10px; padding:10px 12px; background:var(--surface); border-radius:var(--radius); border-left:3px solid ${c.dot}; cursor:pointer;">
               <div style="flex:1">
                 <p style="font-size:13px; font-weight:500; margin:0;">${e.title}</p>
-                <p style="font-size:12px; color:var(--text-secondary); margin:2px 0 0;">${e.type}${e.time?' · '+e.time:''}</p>
+                <p style="font-size:12px; color:var(--text-muted); margin:2px 0 0;">${e.type}${e.time?' · '+e.time:''}</p>
               </div>
               <i class="ti ti-chevron-right" style="font-size:16px; color:var(--text-muted); align-self:center;"></i>
             </div>`;
@@ -1838,14 +2106,14 @@ function renderMeetingResult(result, originalText){
   resultDiv.innerHTML = `
     <div style="border-top:0.5px solid var(--border); padding-top:14px;">
       <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-        <i class="ti ti-sparkles" style="font-size:16px; color:var(--text-accent);"></i>
+        <i class="ti ti-sparkles" style="font-size:16px; color:var(--accent-text);"></i>
         <h3 style="margin:0;">AI 요약</h3>
       </div>
-      <p style="font-size:13px; color:var(--text-secondary); line-height:1.6; margin:0 0 16px;">${result.summary}</p>
+      <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin:0 0 16px;">${result.summary}</p>
       <p style="font-size:13px; font-weight:500; margin:0 0 10px;">추출된 액션 아이템 · 체크한 항목만 체크리스트에 추가됩니다</p>
       <div id="actionItemsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
         ${result.items.map((item,i)=>`
-          <label style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface-1); border-radius:var(--radius); cursor:pointer;">
+          <label style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface); border-radius:var(--radius); cursor:pointer;">
             <input type="checkbox" class="action-item-check" data-idx="${i}" checked style="width:14px; height:14px; margin-top:2px;"/>
             <span style="font-size:13px; flex:1;">${item.text}</span>
           </label>
@@ -1885,16 +2153,23 @@ function renderMeetingResult(result, originalText){
 /* ---------- 앱 초기화 ---------- */
 async function initApp(){
   const app = document.getElementById('app');
-  app.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; min-height:100vh; width:100%; color:var(--text-muted); font-size:13px;">불러오는 중...</div>`;
+  app.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--text-muted);font-size:13px;">불러오는 중...</div>`;
   try{
     state.data = await loadStoreRemote();
     render();
   }catch(e){
-    console.error(e);
-    app.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; width:100%; gap:10px; padding:2rem; text-align:center;">
-      <p style="font-size:14px; color:var(--text-danger);">데이터를 불러오지 못했습니다.</p>
-      <p style="font-size:12px; color:var(--text-muted);">${e.message}</p>
-      <button id="retryBtn">다시 시도</button>
+    console.error('Dashboard error:', e);
+    const isNetworkError = e.message.includes('fetch') || e.message.includes('network') || e.message.includes('CORS');
+    app.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:2rem;text-align:center;">
+      <div style="font-size:32px;">⚠️</div>
+      <p style="font-size:15px;font-weight:600;color:var(--danger);">데이터를 불러오지 못했습니다</p>
+      <p style="font-size:12px;color:var(--text-muted);max-width:400px;">${e.message}</p>
+      ${isNetworkError ? `<p style="font-size:12px;color:var(--text-muted);background:var(--bg);padding:10px 16px;border-radius:8px;max-width:400px;">
+        Supabase 대시보드 → Project Settings → API → <strong>Allowed origins</strong>에<br>
+        <code style="background:#eee;padding:2px 6px;border-radius:4px;">https://senantwglobal.github.io</code><br>
+        를 추가했는지 확인해주세요.
+      </p>` : ''}
+      <button id="retryBtn" class="btn btn-primary">다시 시도</button>
     </div>`;
     document.getElementById('retryBtn').addEventListener('click', initApp);
   }
