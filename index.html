@@ -6,293 +6,108 @@
 <title>업무 대시보드</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
 <style>
-:root{
-  --bg:#F5F4F0;
-  --surface:#FFFFFF;
-  --border:#E8E6E0;
-  --border-strong:#D4D1C8;
-  --text-primary:#1A1916;
-  --text-secondary:#6B6860;
-  --text-muted:#9B9890;
-  --accent:#2554C7;
-  --accent-bg:#EBF0FB;
-  --accent-text:#1A3A9E;
-  --danger:#D93B3B;
-  --danger-bg:#FDEAEA;
-  --success:#2E7D32;
-  --success-bg:#E8F5E9;
-  --warning:#B45309;
-  --warning-bg:#FEF3C7;
-  --header-h:52px;
-  --sidebar-w:220px;
-  --radius:8px;
-  --font:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:var(--font);background:var(--bg);color:var(--text-primary);font-size:13px;line-height:1.5;}
-h1{font-size:20px;font-weight:600;}
-h2{font-size:16px;font-weight:600;}
-h3{font-size:14px;font-weight:600;}
-
-/* ── 헤더 ── */
-.header{
-  position:fixed;top:0;left:0;right:0;height:var(--header-h);
-  background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 20px;gap:16px;z-index:50;
-}
-.header-logo{
-  display:flex;align-items:center;gap:8px;
-  font-size:13px;font-weight:600;color:var(--text-primary);
-  border-right:1px solid var(--border);padding-right:16px;
-}
-.logo-badge{
-  width:28px;height:28px;border-radius:6px;
-  background:var(--accent);color:#fff;
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;
-}
-.header-nav{display:flex;align-items:center;gap:2px;flex:1;}
-.header-tab{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 14px;border-radius:6px;
-  font-size:13px;color:var(--text-muted);
-  cursor:pointer;border:none;background:none;
-  white-space:nowrap;font-family:var(--font);
-  transition:background .1s,color .1s;
-}
-.header-tab:hover{background:var(--bg);color:var(--text-primary);}
-.header-tab.active{
-  color:var(--accent);font-weight:600;
-  position:relative;
-}
-.header-tab.active::after{
-  content:'';position:absolute;bottom:-14px;left:0;right:0;
-  height:2px;background:var(--accent);border-radius:2px 2px 0 0;
-}
-.header-tab i{font-size:14px;}
-.header-right{display:flex;align-items:center;gap:10px;margin-left:auto;}
-.dday-badge{
-  font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;
-  background:var(--danger-bg);color:var(--danger);
-}
-.avatar{
-  width:30px;height:30px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;font-weight:700;color:#fff;flex-shrink:0;
-}
-
-/* ── 메인 콘텐츠 ── */
-.main{
-  margin-top:var(--header-h);
-  padding:24px 28px;
-  max-width:1280px;
-  min-height:calc(100vh - var(--header-h));
-}
-
-/* ── 지표 카드 ── */
-.metrics-row{
-  display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
-  margin-bottom:20px;
-}
-.metric-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px 16px;text-align:center;
-}
-.metric-card .val{
-  font-size:26px;font-weight:700;line-height:1;margin-bottom:4px;
-  color:var(--text-primary);
-}
-.metric-card .val.danger{color:var(--danger);}
-.metric-card .val.accent{color:var(--accent);}
-.metric-card .lbl{font-size:11px;color:var(--text-muted);}
-
-/* ── 카드 ── */
-.card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);
-}
-.card-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 16px;border-bottom:1px solid var(--border);
-}
-.card-header-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;}
-.card-body{padding:16px;}
-
-/* ── 2컬럼 레이아웃 ── */
-.two-col{display:grid;grid-template-columns:1fr 380px;gap:16px;}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-
-/* ── 활동 피드 ── */
-.feed-item{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:10px 16px;border-bottom:1px solid var(--border);
-}
-.feed-item:last-child{border-bottom:none;}
-.feed-content{flex:1;min-width:0;}
-.feed-content .title{font-size:13px;color:var(--text-primary);line-height:1.4;}
-.feed-content .title strong{font-weight:600;}
-.feed-content .time{font-size:11px;color:var(--text-muted);margin-top:2px;}
-
-/* ── 진행률 바 ── */
-.progress-row{
-  display:flex;align-items:center;gap:10px;padding:8px 16px;
-  border-bottom:1px solid var(--border);
-}
-.progress-row:last-child{border-bottom:none;}
-.progress-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.progress-label{font-size:12px;color:var(--text-primary);width:90px;flex-shrink:0;}
-.progress-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
-.progress-bar-fill{height:100%;border-radius:3px;}
-.progress-pct{font-size:11px;color:var(--text-muted);width:36px;text-align:right;}
-
-/* ── 테이블 ── */
-.tbl{width:100%;border-collapse:collapse;font-size:13px;}
-.tbl th{
-  padding:9px 14px;text-align:left;font-size:11px;font-weight:600;
-  color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;
-  background:var(--bg);border-bottom:1px solid var(--border);
-}
-.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
-.tbl tr:last-child td{border-bottom:none;}
-.tbl tr.clickable{cursor:pointer;}
-.tbl tr.clickable:hover td{background:#FAFAF8;}
-
-/* ── 배지 ── */
-.badge{
-  display:inline-flex;align-items:center;
-  font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;
-}
-.badge-danger{background:var(--danger-bg);color:var(--danger);}
-.badge-success{background:var(--success-bg);color:var(--success);}
-.badge-warning{background:var(--warning-bg);color:var(--warning);}
-.badge-accent{background:var(--accent-bg);color:var(--accent-text);}
-.badge-neutral{background:var(--bg);color:var(--text-muted);border:1px solid var(--border);}
-
-/* ── 태그 필터 ── */
-.tag{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:12px;padding:4px 12px;border-radius:20px;
-  border:1px solid var(--border);background:var(--surface);
-  color:var(--text-muted);cursor:pointer;white-space:nowrap;
-  transition:all .1s;
-}
-.tag.active,.tag:hover{background:var(--accent-bg);color:var(--accent-text);border-color:var(--accent);}
-
-/* ── 버튼 ── */
-button{font-family:var(--font);cursor:pointer;}
-.btn{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:13px;padding:7px 14px;border-radius:var(--radius);
-  border:1px solid var(--border);background:var(--surface);
-  color:var(--text-primary);cursor:pointer;white-space:nowrap;
-  transition:background .1s;
-}
-.btn:hover{background:var(--bg);}
-.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
-.btn-primary:hover{background:#1a44b0;}
-.btn-danger{color:var(--danger);border-color:var(--danger-bg);}
-.btn i{font-size:14px;}
-
-/* ── 인풋 ── */
-input,select,textarea{
-  font-family:var(--font);font-size:13px;
-  padding:8px 10px;border-radius:var(--radius);
-  border:1px solid var(--border);background:var(--surface);
-  color:var(--text-primary);width:100%;outline:none;
-  transition:border-color .1s,box-shadow .1s;
-}
-input:focus,select:focus,textarea:focus{
-  border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-bg);
-}
-.field{margin-bottom:12px;}
-.field label{display:block;font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
-
-/* ── 프로젝트 카드 ── */
-.proj-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:14px;cursor:pointer;
-  transition:border-color .1s,box-shadow .1s;
-}
-.proj-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(37,84,199,.08);}
-
-/* ── 체크리스트 카드 ── */
-.cl-item{
-  display:flex;align-items:flex-start;gap:10px;
-  padding:10px 0;border-bottom:1px solid var(--border);
-  cursor:pointer;
-}
-.cl-item:last-child{border-bottom:none;}
-.cl-item:hover{background:#FAFAF8;margin:0 -16px;padding:10px 16px;}
-
-/* ── 진행률 바 (프로젝트 내) ── */
-.pbar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:10px;}
-.pbar-fill{height:100%;background:var(--accent);border-radius:2px;}
-
-/* ── 캘린더 ── */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.cal-head{background:var(--bg);padding:8px;text-align:center;font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;border-bottom:1px solid var(--border);}
-.cal-cell{min-height:80px;padding:6px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);cursor:pointer;background:var(--surface);}
-.cal-cell:nth-child(7n){border-right:none;}
-.cal-cell:hover{background:#FAFAF8;}
-.cal-daynum{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:2px;}
-.cal-daynum.today{
-  display:inline-flex;align-items:center;justify-content:center;
-  width:22px;height:22px;border-radius:50%;
-  background:var(--accent);color:#fff;font-weight:700;
-}
-.cal-event{font-size:10px;padding:1px 5px;border-radius:3px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-/* ── 모달 ── */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.4);
-  display:flex;align-items:center;justify-content:center;
-  z-index:100;padding:20px;
-}
-.modal{
-  background:var(--surface);border-radius:12px;
-  border:1px solid var(--border);padding:20px;
-  width:440px;max-width:100%;max-height:88vh;overflow-y:auto;
-  box-shadow:0 20px 60px rgba(0,0,0,.15);
-}
-.modal-wide{width:580px;}
-.modal-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.modal-title h3{font-size:15px;font-weight:600;}
-.close-x{cursor:pointer;color:var(--text-muted);font-size:18px;line-height:1;}
-
-/* ── 기타 ── */
-.back-link{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:12px;color:var(--text-muted);cursor:pointer;
-  margin-bottom:16px;
-}
-.back-link:hover{color:var(--text-primary);}
-.empty-state{text-align:center;padding:48px 16px;color:var(--text-muted);}
-.search-wrap{position:relative;}
-.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:14px;pointer-events:none;}
-.search-wrap input{padding-left:32px;}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
-.contact-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--border);}
-.contact-row:last-child{border-bottom:none;}
-.activity-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
-.activity-row:last-child{border-bottom:none;}
-
-.toast{
-  position:fixed;bottom:24px;right:24px;
-  background:#1A1916;color:#fff;
-  padding:10px 18px;border-radius:var(--radius);
-  font-size:13px;z-index:200;
-  opacity:0;transform:translateY(8px);
-  transition:opacity .2s,transform .2s;pointer-events:none;
-}
-.toast.show{opacity:1;transform:translateY(0);}
-.sync-dot{width:7px;height:7px;border-radius:50%;background:#2E7D32;display:inline-block;margin-right:4px;}
-
-@media(max-width:900px){
-  .metrics-row{grid-template-columns:repeat(3,1fr);}
-  .two-col{grid-template-columns:1fr;}
-  .header-tab span{display:none;}
-}
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--o:#2554C7;--ol:#EBF0FB;--od:#1A3A9E;--ob:#A8C0F5;--bg:#f8f7f5;--card:#fff;--bd:#e5e3dc;--text:#1a1a1a;--muted:#888;--sf:#f3f2ef}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text)}
+.hdr{background:var(--card);border-bottom:0.5px solid var(--bd);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{background:var(--o);color:#fff;font-size:13px;font-weight:600;padding:4px 10px;border-radius:6px}
+.dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
+.uinfo{display:flex;align-items:center;gap:8px;position:relative}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
+.nav{display:flex;padding:0 16px;background:var(--card);border-bottom:0.5px solid var(--bd);overflow-x:auto;position:sticky;top:51px;z-index:49}
+.nb{padding:10px 14px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:400}
+.nb.active{color:var(--o);border-bottom-color:var(--o);font-weight:500}
+.nb:hover:not(.active){color:var(--text)}
+.cnt{padding:20px;max-width:1200px;margin:0 auto}
+.card{background:var(--card);border:0.5px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
+.st{font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+.oi{color:var(--o)}
+.btn{font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid var(--bd);background:none;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;font-family:inherit}
+.btn:hover{background:var(--sf)}
+.btn-o{background:var(--o);color:#fff;border-color:var(--o)}
+.btn-o:hover{background:var(--od);color:#fff}
+.btn-red{color:#A32D2D;border-color:#F09595}
+.btn-red:hover{background:#FCEBEB}
+.badge{font-size:10px;padding:2px 7px;border-radius:9px;font-weight:500;white-space:nowrap}
+.bo{background:var(--ol);color:var(--od)}
+.bb{background:#E6F1FB;color:#185FA5}
+.br{background:#FCEBEB;color:#A32D2D}
+.bg{background:#EAF3DE;color:#3B6D11}
+.bgr{background:#F1EFE8;color:#5F5E5A}
+.bw{background:#FEF3C7;color:#92400E}
+.inp{width:100%;padding:8px 11px;border:0.5px solid var(--bd);border-radius:8px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s;font-family:inherit}
+.inp:focus{border-color:var(--o)}
+textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
+select.inp{cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border-radius:12px;border:0.5px solid var(--bd);padding:14px;text-align:center}
+.kn{font-size:26px;font-weight:600;margin-bottom:3px}
+.kl{font-size:11px;color:var(--muted)}
+.pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
+.pgf{height:100%;border-radius:3px}
+.dlc{font-size:10px;font-weight:500;padding:2px 7px;border-radius:9px;white-space:nowrap}
+.dl-ok{background:#EAF3DE;color:#3B6D11}
+.dl-w{background:var(--ol);color:var(--od)}
+.dl-c{background:#FCEBEB;color:#A32D2D}
+.dl-d{background:#F1EFE8;color:#5F5E5A}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:500}
+.cal-cell{min-height:80px;border-radius:8px;padding:5px;border:0.5px solid transparent;background:var(--sf);position:relative;cursor:pointer;transition:border-color .12s;overflow:hidden}
+.cal-cell:hover{border-color:var(--o)}
+.cal-cell.today{border-color:var(--o);border-width:1.5px}
+.cal-cell.empty{background:transparent;border:none;cursor:default}
+.cal-num{font-size:11px;font-weight:500;margin-bottom:2px}
+.cal-cell.today .cal-num{color:var(--o);font-weight:700}
+.cal-ev{font-size:9px;padding:2px 5px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:var(--card);cursor:pointer;transition:border-color .15s}
+.ck-item:hover{border-color:var(--ob)}
+.ck-cb{accent-color:var(--o);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer}
+.ck-body{flex:1;min-width:0}
+.ck-title{font-size:13px;font-weight:500;margin-bottom:4px;line-height:1.4}
+.ck-title.done{text-decoration:line-through;color:var(--muted)}
+.ck-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
+.ck-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto}
+.modal{background:#fff;border-radius:14px;border:0.5px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto}
+.mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mb{padding:18px}
+.mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
+.toast{position:fixed;bottom:20px;right:20px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px}
+.dash-row:last-child{border-bottom:none}
+.feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0;font-size:11px}
+.cat-sidebar{width:180px;flex-shrink:0}
+.cat-item{padding:7px 10px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:4px;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.cat-item:hover{background:var(--sf)}
+.cat-item.active{background:var(--ol);color:var(--o);font-weight:500}
+.cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sync-row{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#639922}
+.legend-row{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-bottom:12px}
+.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+label.field-label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+.field{margin-bottom:12px}
+.back-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:14px;background:none;border:none;padding:0;font-family:inherit}
+.back-link:hover{color:var(--text)}
+.empty-state{text-align:center;padding:40px 16px;color:var(--muted);font-size:13px}
+.search-wrap{position:relative}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.search-wrap .inp{padding-left:32px;margin-bottom:0}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:8px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--muted);background:var(--sf);border-bottom:0.5px solid var(--bd)}
+.tbl td{padding:9px 12px;border-bottom:0.5px solid var(--bd);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.clickable{cursor:pointer}
+.tbl tr.clickable:hover td{background:var(--sf)}
+.prog-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:12px}
+.prog-row:last-child{border-bottom:none}
+@media(max-width:640px){.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.cnt{padding:12px}.cat-sidebar{display:none}}
 </style>
+
 
 </head>
 <body>
@@ -604,11 +419,12 @@ function avatarColor(name){
   let h = 0; for(let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xFFFFFF;
   return colors[Math.abs(h) % colors.length];
 }
-function avatarEl(name, size=28){
+function av(name, size=28){
   const initials = (name||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const bg = avatarColor(name);
-  return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};font-size:${size<=24?10:11}px;">${initials}</div>`;
+  return `<div class="av" style="width:${size}px;height:${size}px;background:${bg};font-size:${size<=24?9:11}px;">${initials}</div>`;
 }
+function avatarEl(name, size=28){ return av(name, size); }
 
 function render(){
   if(!state.data){ return; }
@@ -618,7 +434,7 @@ function render(){
     .filter(p=>p.deadline)
     .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
     .filter(p=>p.dday>=0).sort((a,b)=>a.dday-b.dday)[0];
-  const ddayLabel = nearestDeadline ? `D-${nearestDeadline.dday}` : '';
+  const ddayLabel = nearestDeadline ? `D-${nearestDeadline.dday} · ${fmtDate(nearestDeadline.deadline)}` : '';
 
   const tabs = [
     {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
@@ -632,39 +448,33 @@ function render(){
 
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="header">
-      <div class="header-logo">
-        <div class="logo-badge">O</div>
-        <span>업무 대시보드</span>
+    <div class="hdr">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="logo">O</span>
+        <span style="font-size:14px;font-weight:500">업무 대시보드</span>
+        ${ddayLabel ? `<span class="dday-b">${ddayLabel}</span>` : ''}
+        <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:4px;"></span>실시간</span>
       </div>
-      <nav class="header-nav">
-        ${tabs.map(t=>`
-          <button class="header-tab ${state.view===t.view?'active':''}" data-view="${t.view}">
-            <i class="ti ${t.icon}"></i><span>${t.label}</span>
-          </button>`).join('')}
-      </nav>
-      <div class="header-right">
-        ${ddayLabel ? `<span class="dday-badge">${ddayLabel}</span>` : ''}
-        <select id="roleSelect" style="font-size:11px;padding:4px 8px;width:auto;">
+      <div class="uinfo">
+        ${av('Sena Cheon', 30)}
+        <span style="font-size:13px;color:var(--muted)">Sena Cheon</span>
+        <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;">
           <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
           <option value="ceo" ${state.data.role==='ceo'?'selected':''}>읽기 전용</option>
         </select>
-        <span id="syncStatus" style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;">
-          <span class="sync-dot"></span>저장됨
-        </span>
-        ${avatarEl('Sena Cheon', 30)}
+        <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
       </div>
     </div>
-    <div class="main">
-      ${state.data.role==='ceo' ? '<div style="background:var(--warning-bg);color:var(--warning);font-size:12px;padding:6px 12px;border-radius:var(--radius);margin-bottom:14px;display:inline-block;">읽기 전용 모드</div>' : ''}
-      <div id="viewRoot"></div>
+    <div class="nav">
+      ${tabs.map(t=>`<button class="nb ${state.view===t.view?'active':''}" data-view="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
     </div>
+    <div class="cnt" id="viewRoot"></div>
   `;
 
   document.getElementById('roleSelect').addEventListener('change', e=>{
     state.data.role = e.target.value; persist();
   });
-  document.querySelectorAll('.header-tab').forEach(el=>{
+  document.querySelectorAll('.nb').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.view = el.dataset.view;
       state.selectedVendorId = null;
@@ -687,156 +497,114 @@ function render(){
 }
 
 function navItem(view, icon, label){
-  return `<button class="header-tab ${state.view===view?'active':''}" data-view="${view}"><i class="ti ${icon}"></i><span>${label}</span></button>`;
+  return `<button class="nb ${state.view===view?'active':''}" data-view="${view}"><i class="ti ${icon}"></i>${label}</button>`;
 }
 
 const isReadOnly = () => state.data.role === 'ceo';
+
+
 
 
 /* ---------- 홈 ---------- */
 function viewHome(){
   const today = dayjs();
   const todayStr = today.format('YYYY-MM-DD');
-  const allEvents = allCalendarEvents();
-  const todayEvents = allEvents.filter(e=>e.date===todayStr);
-  const upcomingDeadlines = state.data.projects
+  const allEvs = allCalendarEvents();
+  const todayEvs = allEvs.filter(e=>e.date===todayStr);
+  const deadlines = state.data.projects
     .filter(p=>p.deadline)
     .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
-    .filter(p=>p.dday>=0 && p.dday<=7)
-    .sort((a,b)=>a.dday-b.dday);
-  const staleVendors = state.data.vendors
+    .filter(p=>p.dday>=0 && p.dday<=7).sort((a,b)=>a.dday-b.dday);
+  const stale = state.data.vendors
     .map(v=>({...v, latest:latestLogForVendor(v.id)}))
-    .filter(v=>v.latest && daysAgo(v.latest.date) >= 90);
+    .filter(v=>v.latest && daysAgo(v.latest.date)>=90);
   const recentLogs = state.data.vendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).slice(0,8);
-  const allChecklist = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c, projectTitle:p.title, projectId:p.id})));
-  const inProgress = allChecklist.filter(c=>c.status==='진행중').length;
-  const totalDone = allChecklist.filter(c=>c.done).length;
-  const totalItems = allChecklist.length;
-  const pct = totalItems>0 ? Math.round(totalDone/totalItems*100) : 0;
+  const allCL = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c,pid:p.id,ptitle:p.title})));
+  const done = allCL.filter(c=>c.done).length;
+  const total = allCL.length;
+  const inProg = allCL.filter(c=>c.status==='진행중').length;
+  const pct = total>0 ? Math.round(done/total*100) : 0;
 
-  // 카테고리별 진행률
-  const catProgress = {};
+  const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const catProg = {};
   state.data.projects.forEach(p=>{
-    if(!catProgress[p.category]) catProgress[p.category] = {done:0,total:0};
-    p.checklist.forEach(c=>{
-      catProgress[p.category].total++;
-      if(c.done) catProgress[p.category].done++;
-    });
+    if(!catProg[p.category]) catProg[p.category]={done:0,total:0,color:catColors[Object.keys(catProg).length%catColors.length]};
+    p.checklist.forEach(c=>{ catProg[p.category].total++; if(c.done) catProg[p.category].done++; });
   });
-  const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D','#9333EA','#EA580C'];
 
   return `
-    <h1 style="margin-bottom:16px;font-size:18px;">${today.format('YYYY년 M월 D일 (ddd)')} · 오늘 브리핑</h1>
-
-    <div class="metrics-row">
-      <div class="metric-card">
-        <div class="val accent">${pct}%</div>
-        <div class="lbl">전체 진행률</div>
-      </div>
-      <div class="metric-card">
-        <div class="val">${totalDone}<span style="font-size:14px;font-weight:400;color:var(--text-muted);">/${totalItems}</span></div>
-        <div class="lbl">완료 항목</div>
-      </div>
-      <div class="metric-card">
-        <div class="val accent">${inProgress}</div>
-        <div class="lbl">진행중</div>
-      </div>
-      <div class="metric-card">
-        <div class="val ${upcomingDeadlines.length>0?'danger':''}">${upcomingDeadlines.length}</div>
-        <div class="lbl">마감 임박</div>
-      </div>
-      <div class="metric-card">
-        <div class="val ${staleVendors.length>0?'danger':''}">${staleVendors.length}</div>
-        <div class="lbl">정체 벤더</div>
-      </div>
-      <div class="metric-card">
-        <div class="val">${todayEvents.length}</div>
-        <div class="lbl">오늘 일정</div>
-      </div>
+    <div class="krow">
+      <div class="kpi"><div class="kn" style="color:var(--o)">${pct}%</div><div class="kl">전체 진행률</div></div>
+      <div class="kpi"><div class="kn">${done}<span style="font-size:14px;font-weight:400;color:var(--muted)">/${total}</span></div><div class="kl">완료 항목</div></div>
+      <div class="kpi"><div class="kn" style="color:var(--o)">${inProg}</div><div class="kl">진행중</div></div>
+      <div class="kpi"><div class="kn" style="${deadlines.length>0?'color:#A32D2D':''}">${deadlines.length}</div><div class="kl">마감 임박 (7일)</div></div>
+      <div class="kpi"><div class="kn" style="${stale.length>0?'color:#A32D2D':''}">${stale.length}</div><div class="kl">정체 벤더 (90일+)</div></div>
+      <div class="kpi"><div class="kn">${todayEvs.length}</div><div class="kl">오늘 일정</div></div>
     </div>
 
-    <div class="two-col">
-      <div style="display:flex;flex-direction:column;gap:14px;">
-
+    <div class="two">
+      <div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-header-title"><i class="ti ti-activity" style="color:var(--accent);font-size:15px;"></i> 최근 활동</div>
-            <span style="font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;"><span class="sync-dot"></span>실시간</span>
+          <div class="sh">
+            <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
+            <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:3px"></span>실시간</span>
           </div>
-          ${recentLogs.length===0 ? `<div class="empty-state">기록된 활동이 없습니다.</div>` :
+          ${recentLogs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
             recentLogs.map(l=>{
               const v = state.data.vendors.find(x=>x.id===l.vendorId);
-              return `<div class="feed-item vendor-link" data-vid="${l.vendorId}" style="cursor:pointer;">
-                ${avatarEl(v?v.name:'?', 28)}
-                <div class="feed-content">
-                  <div class="title"><strong>${v?v.name:''}</strong> · ${l.summary}</div>
-                  <div class="time">${fmtDate(l.date)} · ${l.type}</div>
+              return `<div class="dash-row vendor-link" data-vid="${l.vendorId}" style="cursor:pointer">
+                ${av(v?v.name:'?', 26)}
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v?v.name:''} <span style="font-weight:400;color:var(--muted)">· ${l.summary}</span></div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:1px">${fmtDate(l.date)} · ${l.type}</div>
                 </div>
               </div>`;
             }).join('')}
         </div>
 
-        ${upcomingDeadlines.length>0 ? `
-        <div class="card">
-          <div class="card-header">
-            <div class="card-header-title"><i class="ti ti-flag" style="color:var(--danger);font-size:15px;"></i> 마감 임박 프로젝트</div>
-          </div>
-          ${upcomingDeadlines.map(p=>`
-            <div class="feed-item proj-link" data-pid="${p.id}" style="cursor:pointer;align-items:center;">
-              <span class="badge ${p.dday<=2?'badge-danger':'badge-warning'}" style="min-width:42px;justify-content:center;">D-${p.dday}</span>
-              <div class="feed-content"><div class="title">${p.title}</div><div class="time">${p.category}</div></div>
-            </div>`).join('')}
+        ${deadlines.length>0 ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>마감 임박 프로젝트</div></div>
+          ${deadlines.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
+            <span class="dlc ${p.dday<=2?'dl-c':p.dday<=5?'dl-w':'dl-ok'}">D-${p.dday}</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
+          </div>`).join('')}
         </div>` : ''}
 
-        ${todayEvents.length>0 ? `
-        <div class="card">
-          <div class="card-header">
-            <div class="card-header-title"><i class="ti ti-calendar-event" style="color:var(--accent);font-size:15px;"></i> 오늘 일정</div>
-          </div>
-          ${todayEvents.map(e=>{
-            const c = eventColor(e.type);
-            return `<div class="feed-item" style="align-items:center;">
-              <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0;"></span>
-              <div class="feed-content"><div class="title">${e.title}</div><div class="time">${e.time||e.type}</div></div>
-            </div>`;
-          }).join('')}
+        ${todayEvs.length>0 ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-calendar-event oi"></i>오늘 일정</div></div>
+          ${todayEvs.map(e=>{const c=eventColor(e.type);return `<div class="dash-row"><span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span><span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span></div>`;}).join('')}
         </div>` : ''}
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:14px;">
+      <div>
         <div class="card">
-          <div class="card-header">
-            <div class="card-header-title"><i class="ti ti-chart-bar" style="color:var(--accent);font-size:15px;"></i> 카테고리별 진행률</div>
-          </div>
-          ${Object.keys(catProgress).length===0 ? `<div class="empty-state" style="padding:20px;">프로젝트를 추가해주세요.</div>` :
-            Object.entries(catProgress).map(([cat, stat], i)=>{
-              const pct2 = stat.total>0 ? Math.round(stat.done/stat.total*100) : 0;
-              const col = catColors[i % catColors.length];
-              return `<div class="progress-row">
-                <span class="progress-dot" style="background:${col};"></span>
-                <span class="progress-label">${cat}</span>
-                <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct2}%;background:${col};"></div></div>
-                <span class="progress-pct">${pct2}%</span>
+          <div class="sh"><div class="st"><i class="ti ti-chart-bar oi"></i>카테고리별 진행률</div></div>
+          ${Object.keys(catProg).length===0 ? '<div class="empty-state" style="padding:16px">프로젝트를 추가해주세요.</div>' :
+            Object.entries(catProg).map(([cat,s])=>{
+              const p2=s.total>0?Math.round(s.done/s.total*100):0;
+              return `<div class="prog-row">
+                <span style="width:8px;height:8px;border-radius:50%;background:${s.color};flex-shrink:0"></span>
+                <span style="font-size:12px;width:80px;flex-shrink:0">${cat}</span>
+                <div class="pgb" style="flex:1"><div class="pgf" style="width:${p2}%;background:${s.color}"></div></div>
+                <span style="font-size:11px;color:var(--muted);width:30px;text-align:right">${p2}%</span>
               </div>`;
             }).join('')}
         </div>
 
         <div class="card">
-          <div class="card-header">
-            <div class="card-header-title"><i class="ti ti-building-store" style="color:var(--accent);font-size:15px;"></i> 벤더 현황</div>
-          </div>
+          <div class="sh"><div class="st"><i class="ti ti-building-store oi"></i>벤더 현황</div></div>
           ${state.data.vendors.slice(0,6).map(v=>{
-            const latest = latestLogForVendor(v.id);
-            const days = latest ? daysAgo(latest.date) : null;
-            const pc = priorityColor(v.priority);
-            return `<div class="feed-item vendor-link" data-vid="${v.id}" style="cursor:pointer;align-items:center;">
-              ${avatarEl(v.name, 26)}
-              <div class="feed-content">
-                <div class="title" style="display:flex;align-items:center;gap:6px;">
-                  ${v.name}
-                  <span class="badge" style="background:${pc.bg};color:${pc.text};">${v.priority}</span>
+            const latest=latestLogForVendor(v.id);
+            const days=latest?daysAgo(latest.date):null;
+            const pc=priorityBadge(v.priority);
+            return `<div class="dash-row vendor-link" data-vid="${v.id}" style="cursor:pointer">
+              ${av(v.name,26)}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <span style="font-weight:500">${v.name}</span>
+                  <span class="badge ${pc}">${v.priority}</span>
                 </div>
-                <div class="time">${days!==null?days+'일 경과':'기록 없음'}${latest?' · '+latest.summary.slice(0,30)+'…':''}</div>
+                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${days!==null?days+'일 경과':'기록 없음'}${latest?' · '+latest.summary.slice(0,28)+'…':''}</div>
               </div>
             </div>`;
           }).join('')}
@@ -846,8 +614,13 @@ function viewHome(){
   `;
 }
 
+function priorityBadge(p){
+  if(p==='높음') return 'br';
+  if(p==='보통') return 'bw';
+  if(p==='완료') return 'bg';
+  return 'bgr';
+}
 
-/* ---------- 벤더 리스트 ---------- */
 function viewVendorList(){
   let vendors = state.data.vendors.map(v=>({...v, latest:latestLogForVendor(v.id)}));
   if(state.vendorSearch){
@@ -1113,56 +886,61 @@ function checklistStatusColor(status){
 /* ---------- 캘린더 ---------- */
 function viewCalendar(){
   const month = dayjs(state.calMonth+'-01');
-  const startOfMonth = month.startOf('month');
-  const endOfMonth = month.endOf('month');
-  const startDay = startOfMonth.day();
-  const daysInMonth = endOfMonth.date();
+  const startDay = month.startOf('month').day();
+  const daysInMonth = month.endOf('month').date();
   const todayStr = dayjs().format('YYYY-MM-DD');
-
-  let cells = [];
-  for(let i=0;i<startDay;i++) cells.push(null);
-  for(let d=1; d<=daysInMonth; d++) cells.push(d);
+  const allEvs = allCalendarEvents();
 
   const dowNames = ['일','월','화','수','목','금','토'];
+  let cells = [];
+  for(let i=0;i<startDay;i++) cells.push(null);
+  for(let d=1;d<=daysInMonth;d++) cells.push(d);
+  while(cells.length%7!==0) cells.push(null);
+
+  const evColors = {
+    '미팅':{bg:'#E6F1FB',text:'#185FA5'},
+    '외근':{bg:'#FAECE7',text:'#993C1D'},
+    '마감':{bg:'#EEEDFE',text:'#534AB7'},
+    '연차':{bg:'#EAF3DE',text:'#3B6D11'},
+  };
 
   return `
-    <div class="row">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <i class="ti ti-chevron-left" id="prevMonth" style="font-size:18px; cursor:pointer;"></i>
-        <h2 style="margin:0">${month.format('YYYY년 M월')}</h2>
-        <i class="ti ti-chevron-right" id="nextMonth" style="font-size:18px; cursor:pointer;"></i>
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
+        <span style="font-size:16px;font-weight:500">${month.format('YYYY년 M월')}</span>
+        <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
       </div>
-      ${!isReadOnly() ? `<button class="primary" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>` : ''}
+      ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}
     </div>
 
-    <div class="legend">
-      <span><span class="dot" style="background:#2554C7"></span>미팅</span>
-      <span><span class="dot" style="background:#D85A30"></span>외근</span>
-      <span><span class="dot" style="background:#7F77DD"></span>프로젝트 마감</span>
-      <span><span class="dot" style="background:#1D9E75"></span>연차/반차</span>
+    <div class="legend-row">
+      <span><span class="legend-dot" style="background:#185FA5"></span>미팅</span>
+      <span><span class="legend-dot" style="background:#993C1D"></span>외근</span>
+      <span><span class="legend-dot" style="background:#534AB7"></span>프로젝트 마감</span>
+      <span><span class="legend-dot" style="background:#3B6D11"></span>연차/반차</span>
     </div>
 
     <div class="cal-grid">
-      ${dowNames.map(d=>`<div class="cal-head">${d}</div>`).join('')}
+      ${dowNames.map(d=>`<div class="cal-dh">${d}</div>`).join('')}
       ${cells.map(d=>{
-        if(d===null) return `<div class="cal-cell" style="cursor:default;"></div>`;
+        if(d===null) return `<div class="cal-cell empty"></div>`;
         const dateStr = month.date(d).format('YYYY-MM-DD');
-        const evs = eventsOnDate(dateStr);
+        const evs = allEvs.filter(e=>e.date===dateStr);
         const isToday = dateStr===todayStr;
-        return `<div class="cal-cell" data-date="${dateStr}">
-          <span class="daynum ${isToday?'today':''}">${d}</span>
+        return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
+          <div class="cal-num${isToday?' today':''}">${d}</div>
           ${evs.slice(0,3).map(e=>{
-            const c = eventColor(e.type);
-            return `<div class="cal-event" style="background:${c.bg}; color:${c.text};">${e.title}</div>`;
+            const c=evColors[e.type]||{bg:'#F1EFE8',text:'#5F5E5A'};
+            return `<span class="cal-ev" style="background:${c.bg};color:${c.text}">${e.title}</span>`;
           }).join('')}
-          ${evs.length>3?`<div style="font-size:10px; color:var(--text-muted); margin-top:2px;">+${evs.length-3}건</div>`:''}
+          ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
         </div>`;
       }).join('')}
     </div>
   `;
 }
 
-/* ---------- 로그 입력 ---------- */
 function viewLogInput(){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
@@ -1329,7 +1107,7 @@ function viewCompanyDetail(){
 
 function openModal(html){
   const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
+  overlay.className = 'overlay';
   overlay.id = 'modalOverlay';
   overlay.innerHTML = html;
   overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
@@ -1345,7 +1123,7 @@ function modalVendorForm(vendor){
   const v = vendor || {name:'', priority:'보통', status:'전송', contact:{name:'',title:'',email:'',phone:''}, notes:{discount:'',payment:'',moq:'',creditLimit:''}};
   return `
     <div class="modal">
-      <div class="row"><h3>${isEdit?'벤더 편집':'벤더 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'벤더 편집':'벤더 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="vendorForm">
         <div class="field"><label>브랜드명</label><input name="name" value="${v.name}" required/></div>
         <div class="field"><label>우선순위</label><select name="priority">
@@ -1370,8 +1148,8 @@ function modalVendorForm(vendor){
 
 function modalVendorLogForm(vendorId){
   return `
-    <div class="modal modal-wide">
-      <div class="row"><h3>활동 로그 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+    <div class="modal" style="width:580px">
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">활동 로그 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="vendorLogForm">
         <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
         <div class="field"><label>업데이트 유형</label><select name="type">
@@ -1394,8 +1172,8 @@ function modalVendorLogForm(vendorId){
 
 function modalLogDetail(log, vendorName){
   return `
-    <div class="modal modal-wide">
-      <div class="row"><h3>${vendorName} · ${fmtDateDow(log.date)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+    <div class="modal" style="width:580px">
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${vendorName} · ${fmtDateDow(log.date)}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <div style="margin-bottom:10px;">
         <span class="badge" style="background:var(--surface); color:var(--text-muted);">${log.type}</span>
         <span class="badge" style="background:var(--surface); color:var(--text-muted); margin-left:4px;">${log.status}</span>
@@ -1415,7 +1193,7 @@ function modalProjectForm(project){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${p.vendorId===v.id?'selected':''}>${v.name}</option>`).join('');
   return `
     <div class="modal">
-      <div class="row"><h3>${isEdit?'프로젝트 편집':'새 프로젝트'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'프로젝트 편집':'새 프로젝트'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="projectForm">
         <div class="field"><label>제목</label><input name="title" value="${p.title}" required/></div>
         <div class="field"><label>카테고리</label><select name="category">
@@ -1439,7 +1217,7 @@ function modalEventForm(dateStr){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
     <div class="modal">
-      <div class="row"><h3>일정 등록</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">일정 등록</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="eventForm">
         <div class="field"><label>날짜</label><input type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
         <div class="field"><label>종류</label><select name="type"><option>미팅</option><option>외근</option><option>연차</option><option>개인 용무</option></select></div>
@@ -1456,7 +1234,7 @@ function modalDayDetail(dateStr){
   const evs = eventsOnDate(dateStr);
   return `
     <div class="modal">
-      <div class="row"><h3>${fmtDateDow(dateStr)}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${fmtDateDow(dateStr)}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <p style="font-size:13px; color:var(--text-muted); margin:0 0 16px;">일정 ${evs.length}건</p>
       <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
         ${evs.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">등록된 일정이 없습니다.</p>' :
@@ -1479,8 +1257,8 @@ function modalDayDetail(dateStr){
 function modalMeetingNoteForm(){
   const projectOptions = state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
   return `
-    <div class="modal modal-wide">
-      <div class="row"><h3>회의록 작성</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+    <div class="modal" style="width:580px">
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">회의록 작성</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <div class="field"><label>연결 프로젝트</label><select id="mnProject">${projectOptions}</select></div>
       <div class="field"><label>날짜</label><input type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
       <div class="field"><label>회의 내용</label><textarea id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
@@ -1495,8 +1273,8 @@ function modalChecklistDetail(item){
   const internalNames = ['Sena Cheon','Jenna Kwon','Justin Kim'];
   const people = allPeopleFlat();
   return `
-    <div class="modal modal-wide">
-      <div class="row"><h3>체크리스트 상세</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+    <div class="modal" style="width:580px">
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">체크리스트 상세</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="checklistDetailForm">
         <div class="field"><label>내용</label><input type="text" name="text" value="${item.text}" required/></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -1557,7 +1335,7 @@ function modalCompanyForm(company){
   const isEdit = !!company;
   return `
     <div class="modal">
-      <div class="row"><h3>${isEdit?'회사명 편집':'회사 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'회사명 편집':'회사 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="companyForm">
         <div class="field"><label>회사명</label><input type="text" name="name" value="${isEdit?company.name:''}" required/></div>
         <button type="submit" class="primary" style="width:100%;">저장</button>
@@ -1571,7 +1349,7 @@ function modalPersonForm(companyId, person){
   const p = person || {name:'',title:'',email:'',phone:''};
   return `
     <div class="modal">
-      <div class="row"><h3>${isEdit?'담당자 편집':'담당자 추가'}</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'담당자 편집':'담당자 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="personForm">
         <div class="field"><label>이름</label><input type="text" name="name" value="${p.name}" required/></div>
         <div class="field"><label>직함</label><input type="text" name="title" value="${p.title}"/></div>
@@ -1587,7 +1365,7 @@ function modalPersonForm(companyId, person){
 function modalProjectLogForm(projectId){
   return `
     <div class="modal">
-      <div class="row"><h3>프로젝트 로그 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+      <div class="mh"><h3 style="font-size:14px;font-weight:500">프로젝트 로그 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
       <form id="projectLogForm">
         <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
         <div class="field"><label>내용</label><textarea name="text" rows="4" required placeholder="진행 상황, 결정 사항 등을 기록하세요"></textarea></div>
@@ -1886,7 +1664,7 @@ function bindViewEvents(){
   if(addLeaveBtn) addLeaveBtn.addEventListener('click', ()=>{
     openModal(`
       <div class="modal">
-        <div class="row"><h3>연차 사용 기록 추가</h3><i class="ti ti-x close-x" id="closeModal"></i></div>
+        <div class="mh"><h3 style="font-size:14px;font-weight:500">연차 사용 기록 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
         <form id="leaveForm">
           <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
           <div class="field"><label>구분</label><select name="type"><option>연차</option><option>반차</option><option>반반차</option><option>대체휴무</option></select></div>
