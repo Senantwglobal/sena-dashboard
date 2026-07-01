@@ -73,7 +73,8 @@ select.inp{cursor:pointer}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto}
 .modal{background:#fff;border-radius:14px;border:0.5px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
-.mb{padding:18px}
+.mh h3{font-size:14px;font-weight:600}
+.mb{padding:16px 18px}
 .mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1a1a1a;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
 .toast.show{opacity:1}
@@ -320,11 +321,13 @@ function seedData(){
       { id:uid('ev'), date: today.add(8,'day').format('YYYY-MM-DD'), type:'외근', title:'OurBox 창고 방문', time:'14:00', vendorId:'' },
       { id:uid('ev'), date: today.subtract(2,'day').format('YYYY-MM-DD'), type:'연차', title:'반차 (오후)', time:'', vendorId:'' },
     ],
-    leave: { totalGranted:10, compRgranted:1, used:7.5,
+    leave: { 
+      joinDate: '',
       logs:[
         {id:uid('lv'), date: today.subtract(40,'day').format('YYYY-MM-DD'), type:'반차', amount:0.5, memo:'오후'},
         {id:uid('lv'), date: today.subtract(20,'day').format('YYYY-MM-DD'), type:'연차', amount:1, memo:''},
-      ]
+      ],
+      compLogs:[]
     },
     companies: [
       { id:uid('co'), name:'Nordic Naturals',
@@ -893,6 +896,56 @@ function checklistStatusColor(status){
   return {bg:'var(--sf)',text:'var(--muted)'};
 }
 
+function viewCalendar(){
+  const month = dayjs(state.calMonth+'-01');
+  const startDay = month.startOf('month').day();
+  const daysInMonth = month.endOf('month').date();
+  const todayStr = dayjs().format('YYYY-MM-DD');
+  const allEvs = allCalendarEvents();
+  const dowNames = ['일','월','화','수','목','금','토'];
+  let cells = [];
+  for(let i=0;i<startDay;i++) cells.push(null);
+  for(let d=1;d<=daysInMonth;d++) cells.push(d);
+  while(cells.length%7!==0) cells.push(null);
+  const evColors = {
+    '미팅':{bg:'#E6F1FB',text:'#185FA5'},
+    '외근':{bg:'#FAECE7',text:'#993C1D'},
+    '마감':{bg:'#EEEDFE',text:'#534AB7'},
+    '연차':{bg:'#EAF3DE',text:'#3B6D11'},
+  };
+  return `
+    <div class="sh">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
+        <span style="font-size:16px;font-weight:500">${month.format('YYYY년 M월')}</span>
+        <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
+      </div>
+      ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}
+    </div>
+    <div class="legend-row">
+      <span><span class="legend-dot" style="background:#185FA5"></span>미팅</span>
+      <span><span class="legend-dot" style="background:#993C1D"></span>외근</span>
+      <span><span class="legend-dot" style="background:#534AB7"></span>프로젝트 마감</span>
+      <span><span class="legend-dot" style="background:#3B6D11"></span>연차/반차</span>
+    </div>
+    <div class="cal-grid">
+      ${dowNames.map(d=>`<div class="cal-dh">${d}</div>`).join('')}
+      ${cells.map(d=>{
+        if(d===null) return `<div class="cal-cell empty"></div>`;
+        const dateStr = month.date(d).format('YYYY-MM-DD');
+        const evs = allEvs.filter(e=>e.date===dateStr);
+        const isToday = dateStr===todayStr;
+        return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
+          <div class="cal-num${isToday?' today':''}">${d}</div>
+          ${evs.slice(0,3).map(e=>{const c=evColors[e.type]||{bg:'#F1EFE8',text:'#5F5E5A'};return `<span class="cal-ev" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
+          ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+
 function viewLogInput(){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
@@ -920,35 +973,137 @@ function viewLogInput(){
   `;
 }
 
+/* ---------- 연차 계산 로직 ---------- */
+function calcLeave(){
+  const l = state.data.leave;
+  const today = dayjs();
+  let totalGranted = 0;
+  let grantDetails = [];
+
+  if(l.joinDate){
+    const join = dayjs(l.joinDate);
+    const monthsWorked = today.diff(join, 'month');
+    const yearsWorked = today.diff(join, 'year');
+
+    if(yearsWorked < 1){
+      // 1년 미만: 매월 1개 발생 (최대 11개)
+      const months = Math.min(monthsWorked, 11);
+      totalGranted = months;
+      for(let i=1; i<=months; i++){
+        grantDetails.push({label:`입사 ${i}개월차 발생`, amount:1});
+      }
+    } else {
+      // 1년차: 15개
+      // 3년차부터 2년마다 1개 추가 (최대 25개)
+      const base = 15;
+      const extra = yearsWorked >= 3 ? Math.min(Math.floor((yearsWorked - 1) / 2), 10) : 0;
+      const annual = Math.min(base + extra, 25);
+      totalGranted = annual;
+      grantDetails.push({label:`${yearsWorked}년차 연차 발생`, amount:annual});
+    }
+  }
+
+  // 보상 휴가 (휴일근무)
+  const compTotal = (l.compLogs||[]).reduce((sum,c)=>sum+c.amount, 0);
+
+  // 사용 연차
+  const used = (l.logs||[]).reduce((sum,r)=>sum+r.amount, 0);
+
+  const remaining = Math.round((totalGranted + compTotal - used) * 100) / 100;
+
+  return { totalGranted, compTotal, used, remaining, grantDetails };
+}
+
 function viewLeave(){
-  const l=state.data.leave;
-  const remaining=((l.totalGranted+l.compRgranted-l.used)*10/10).toFixed(1).replace(/\.0$/,'');
+  const l = state.data.leave;
+  const { totalGranted, compTotal, used, remaining, grantDetails } = calcLeave();
+  const allLogs = [
+    ...(l.logs||[]).map(r=>({...r, category:'사용'})),
+    ...(l.compLogs||[]).map(r=>({...r, category:'보상발생', type:'휴일근무'}))
+  ].sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+
   return `
     <div class="sh">
       <div style="font-size:16px;font-weight:600">연차 관리</div>
-      ${!isReadOnly()?`<button class="btn btn-o" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>`:''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${!isReadOnly()?`<button class="btn" id="setJoinDateBtn"><i class="ti ti-calendar-plus"></i> 입사일 ${l.joinDate?'수정':'등록'}</button>`:''}
+        ${!isReadOnly()?`<button class="btn" id="addCompLeaveBtn"><i class="ti ti-sun"></i> 휴일근무 등록</button>`:''}
+        ${!isReadOnly()?`<button class="btn btn-o" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>`:''}
+      </div>
     </div>
+
+    ${l.joinDate ? `
+    <div style="background:var(--ol);border:0.5px solid var(--ob);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--od);display:flex;align-items:center;gap:8px">
+      <i class="ti ti-calendar" style="font-size:14px"></i>
+      입사일: <strong>${fmtDate(l.joinDate)}</strong>
+      · 근속: <strong>${dayjs().diff(dayjs(l.joinDate),'year')}년 ${dayjs().diff(dayjs(l.joinDate),'month')%12}개월</strong>
+      ${grantDetails.length?'· '+grantDetails[grantDetails.length-1].label:''}
+    </div>` : `
+    <div style="background:#FEF3C7;border:0.5px solid #FDE68A;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px">
+      <i class="ti ti-alert-triangle" style="font-size:14px"></i>
+      입사일을 등록하면 연차가 자동 계산됩니다.
+    </div>`}
 
     <div class="krow" style="grid-template-columns:repeat(4,1fr);margin-bottom:14px">
-      <div class="kpi"><div class="kn">${l.totalGranted}</div><div class="kl">총 발생 연차</div></div>
-      <div class="kpi"><div class="kn">${l.compRgranted}</div><div class="kl">보상 발생</div></div>
-      <div class="kpi"><div class="kn">${l.used}</div><div class="kl">사용 연차</div></div>
-      <div class="kpi"><div class="kn" style="color:var(--o)">${remaining}</div><div class="kl">잔여 연차</div></div>
+      <div class="kpi">
+        <div class="kn">${totalGranted}</div>
+        <div class="kl">발생 연차</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${l.joinDate?'자동계산':'입사일 등록 필요'}</div>
+      </div>
+      <div class="kpi">
+        <div class="kn" style="color:var(--o)">${compTotal}</div>
+        <div class="kl">보상 휴가</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">휴일근무 ${(l.compLogs||[]).length}건</div>
+      </div>
+      <div class="kpi">
+        <div class="kn">${used}</div>
+        <div class="kl">사용 연차</div>
+      </div>
+      <div class="kpi">
+        <div class="kn" style="color:${remaining<0?'#A32D2D':'var(--o)'}">${remaining}</div>
+        <div class="kl">잔여 연차</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${remaining<0?'⚠️ 초과 사용':remaining===0?'모두 사용':'남은 일수'}</div>
+      </div>
     </div>
 
-    <div class="card" style="padding:0;overflow:hidden">
-      <table class="tbl">
-        <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th></tr></thead>
-        <tbody>
-        ${l.logs.length===0?`<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
-          l.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
-            <tr><td>${fmtDateDow(r.date)}</td><td>${r.type}</td><td>${r.amount}일</td><td style="color:var(--muted)">${r.memo||'-'}</td></tr>
-          `).join('')}
-        </tbody>
-      </table>
+    <div class="two" style="margin-bottom:14px">
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:0.5px solid var(--bd)">사용 기록</div>
+        <table class="tbl">
+          <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th></tr></thead>
+          <tbody>
+          ${(l.logs||[]).length===0?`<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
+            (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
+              <tr>
+                <td>${fmtDateDow(r.date)}</td>
+                <td><span class="badge ${r.type==='연차'?'bo':'bgr'}">${r.type}</span></td>
+                <td>${r.amount}일</td>
+                <td style="color:var(--muted)">${r.memo||'-'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:0.5px solid var(--bd)">휴일근무 보상 기록</div>
+        <table class="tbl">
+          <thead><tr><th>근무일</th><th>시간</th><th>발생</th><th>메모</th></tr></thead>
+          <tbody>
+          ${(l.compLogs||[]).length===0?`<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
+            (l.compLogs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
+              <tr>
+                <td>${fmtDateDow(r.date)}</td>
+                <td>${r.hours}시간</td>
+                <td><span class="badge bg">+${r.amount}일</span></td>
+                <td style="color:var(--muted)">${r.memo||'-'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
+
 
 function viewCompanyList(){
   let companies = state.data.companies.slice();
@@ -1044,66 +1199,80 @@ function modalVendorForm(vendor){
   const v = vendor || {name:'', priority:'보통', status:'전송', contact:{name:'',title:'',email:'',phone:''}, notes:{discount:'',payment:'',moq:'',creditLimit:''}};
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'벤더 편집':'벤더 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="vendorForm">
-        <div class="field"><label>브랜드명</label><input name="name" value="${v.name}" required/></div>
-        <div class="field"><label>우선순위</label><select name="priority">
-          ${['높음','보통','낮음','완료'].map(p=>`<option ${v.priority===p?'selected':''}>${p}</option>`).join('')}
-        </select></div>
-        <div class="field"><label>담당자 이름</label><input name="contactName" value="${v.contact.name}"/></div>
-        <div class="field"><label>직함</label><input name="contactTitle" value="${v.contact.title}"/></div>
-        <div class="field"><label>이메일</label><input name="contactEmail" value="${v.contact.email}"/></div>
-        <div class="field"><label>전화</label><input name="contactPhone" value="${v.contact.phone}"/></div>
-        <div class="field"><label>할인율</label><input name="discount" value="${v.notes.discount}"/></div>
-        <div class="field"><label>결제 조건</label><input name="payment" value="${v.notes.payment}"/></div>
-        <div class="field"><label>MOQ</label><input name="moq" value="${v.notes.moq}"/></div>
-        <div class="field"><label>Credit Limit</label><input name="creditLimit" value="${v.notes.creditLimit}"/></div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          ${isEdit?`<button type="button" id="deleteVendorBtn" class="danger-text" style="flex:1;">삭제</button>`:''}
-          <button type="submit" class="primary" style="flex:1;">저장</button>
-        </div>
-      </form>
+      <div class="mh"><h3>벤더 ${isEdit?'편집':'추가'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="vendorForm">
+          <div class="field"><label class="field-label">브랜드명</label><input class="inp" name="name" value="${v.name}" required/></div>
+          <div class="field"><label class="field-label">우선순위</label><select class="inp" name="priority">
+            ${['높음','보통','낮음','완료'].map(p=>`<option ${v.priority===p?'selected':''}>${p}</option>`).join('')}
+          </select></div>
+          <div class="two">
+            <div class="field"><label class="field-label">담당자 이름</label><input class="inp" name="contactName" value="${v.contact.name}"/></div>
+            <div class="field"><label class="field-label">직함</label><input class="inp" name="contactTitle" value="${v.contact.title}"/></div>
+          </div>
+          <div class="field"><label class="field-label">이메일</label><input class="inp" name="contactEmail" value="${v.contact.email}"/></div>
+          <div class="field"><label class="field-label">전화</label><input class="inp" name="contactPhone" value="${v.contact.phone}"/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">할인율</label><input class="inp" name="discount" value="${v.notes.discount}"/></div>
+            <div class="field"><label class="field-label">결제 조건</label><input class="inp" name="payment" value="${v.notes.payment}"/></div>
+            <div class="field"><label class="field-label">MOQ</label><input class="inp" name="moq" value="${v.notes.moq}"/></div>
+            <div class="field"><label class="field-label">Credit Limit</label><input class="inp" name="creditLimit" value="${v.notes.creditLimit}"/></div>
+          </div>
+        </form>
+      </div>
+      <div class="mf">
+        ${isEdit?`<button type="button" id="deleteVendorBtn" class="btn btn-red">삭제</button>`:''}
+        <button type="submit" form="vendorForm" class="btn btn-o">저장</button>
+      </div>
     </div>
   `;
 }
 
 function modalVendorLogForm(vendorId){
   return `
-    <div class="modal" style="width:580px">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">활동 로그 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="vendorLogForm">
-        <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
-        <div class="field"><label>업데이트 유형</label><select name="type">
-          <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
-          <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
-          <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
-        </select></div>
-        <div class="field"><label>진행 상태</label><select name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
-        <div class="field"><label>우선순위</label><select name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
-        <div class="field"><label>원본 내용 (이메일 전체 등 붙여넣기)</label><textarea name="rawText" id="vlRawText" rows="5" placeholder="이메일 전체 내용 또는 통화/미팅 메모를 붙여넣으세요"></textarea></div>
-        <button type="button" id="vlAiSummarizeBtn" style="display:flex; align-items:center; gap:6px; margin-bottom:12px;"><i class="ti ti-sparkles"></i>AI 요약 생성</button>
-        <div class="field"><label>상황 요약</label><input type="text" name="summary" id="vlSummaryInput" required/></div>
-        <div class="field"><label>다음 액션</label><input type="text" name="nextStep"/></div>
-        <input type="hidden" name="vendorId" value="${vendorId}"/>
-        <button type="submit" class="primary" style="width:100%;">저장</button>
-      </form>
+    <div class="modal" style="width:560px">
+      <div class="mh"><h3>활동 로그 추가</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="vendorLogForm">
+          <div class="two">
+            <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+            <div class="field"><label class="field-label">업데이트 유형</label><select class="inp" name="type">
+              <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
+              <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
+              <option>보고서 작성</option><option>자료 취합</option><option>기타</option>
+            </select></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">진행 상태</label><select class="inp" name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
+            <div class="field"><label class="field-label">우선순위</label><select class="inp" name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
+          </div>
+          <div class="field"><label class="field-label">원본 내용 (이메일 전체 등)</label><textarea class="inp" name="rawText" id="vlRawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요"></textarea></div>
+          <button type="button" id="vlAiSummarizeBtn" class="btn" style="margin-bottom:10px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성</button>
+          <div class="field"><label class="field-label">상황 요약 (한 줄)</label><input class="inp" type="text" name="summary" id="vlSummaryInput" required/></div>
+          <div class="field"><label class="field-label">다음 액션</label><input class="inp" type="text" name="nextStep"/></div>
+          <input type="hidden" name="vendorId" value="${vendorId}"/>
+        </form>
+      </div>
+      <div class="mf"><button type="submit" form="vendorLogForm" class="btn btn-o">저장</button></div>
     </div>
   `;
 }
 
 function modalLogDetail(log, vendorName){
   return `
-    <div class="modal" style="width:580px">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${vendorName} · ${fmtDateDow(log.date)}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <div style="margin-bottom:10px;">
-        <span class="badge" style="background:var(--surface); color:var(--text-muted);">${log.type}</span>
-        <span class="badge" style="background:var(--surface); color:var(--text-muted); margin-left:4px;">${log.status}</span>
+    <div class="modal" style="width:560px">
+      <div class="mh"><h3>${vendorName} · ${fmtDateDow(log.date)}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <span class="badge bgr">${log.type}</span>
+          <span class="badge bgr">${log.status}</span>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">AI 요약</div>
+        <div style="font-size:13px;margin-bottom:12px">${log.summary}</div>
+        ${log.nextStep?`<div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">다음 액션</div><div style="font-size:13px;margin-bottom:12px">${log.nextStep}</div>`:''}
+        <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">원본 내용</div>
+        <div style="background:var(--sf);border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;line-height:1.6">${log.rawText||'원본이 등록되지 않았습니다.'}</div>
       </div>
-      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">AI 요약</p>
-      <p style="font-size:13px; margin:0 0 14px;">${log.summary}</p>
-      ${log.nextStep ? `<p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">다음 액션</p><p style="font-size:13px; margin:0 0 14px;">${log.nextStep}</p>` : ''}
-      <p style="font-size:13px; font-weight:500; color:var(--text-muted); margin:0 0 4px;">원본 내용</p>
-      <div style="background:var(--surface); border-radius:var(--radius); padding:12px; font-size:13px; white-space:pre-wrap; line-height:1.6;">${log.rawText || '원본이 등록되지 않았습니다.'}</div>
     </div>
   `;
 }
@@ -1114,22 +1283,26 @@ function modalProjectForm(project){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${p.vendorId===v.id?'selected':''}>${v.name}</option>`).join('');
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'프로젝트 편집':'새 프로젝트'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="projectForm">
-        <div class="field"><label>제목</label><input name="title" value="${p.title}" required/></div>
-        <div class="field"><label>카테고리</label><select name="category">
-          ${state.data.categories.map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
-          <option value="__new__">+ 새 카테고리 직접 입력</option>
-        </select></div>
-        <div class="field" id="newCatField" style="display:none;"><label>새 카테고리명</label><input name="newCategory"/></div>
-        <div class="field"><label>담당자</label><input name="owner" value="${p.owner}"/></div>
-        <div class="field"><label>마감일</label><input type="date" name="deadline" value="${p.deadline||''}"/></div>
-        <div class="field"><label>연결 벤더 (선택)</label><select name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          ${isEdit?`<button type="button" id="deleteProjectBtn" class="danger-text" style="flex:1;">삭제</button>`:''}
-          <button type="submit" class="primary" style="flex:1;">저장</button>
-        </div>
-      </form>
+      <div class="mh"><h3>프로젝트 ${isEdit?'편집':'추가'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="projectForm">
+          <div class="field"><label class="field-label">제목</label><input class="inp" name="title" value="${p.title}" required/></div>
+          <div class="field"><label class="field-label">카테고리</label><select class="inp" name="category">
+            ${state.data.categories.map(c=>`<option ${p.category===c?'selected':''}>${c}</option>`).join('')}
+            <option value="__new__">+ 새 카테고리 직접 입력</option>
+          </select></div>
+          <div class="field" id="newCatField" style="display:none;"><label class="field-label">새 카테고리명</label><input class="inp" name="newCategory"/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">담당자</label><input class="inp" name="owner" value="${p.owner}"/></div>
+            <div class="field"><label class="field-label">마감일</label><input class="inp" type="date" name="deadline" value="${p.deadline||''}"/></div>
+          </div>
+          <div class="field"><label class="field-label">연결 벤더 (선택)</label><select class="inp" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
+        </form>
+      </div>
+      <div class="mf">
+        ${isEdit?`<button type="button" id="deleteProjectBtn" class="btn btn-red">삭제</button>`:''}
+        <button type="submit" form="projectForm" class="btn btn-o">저장</button>
+      </div>
     </div>
   `;
 }
@@ -1138,39 +1311,45 @@ function modalEventForm(dateStr){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">일정 등록</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="eventForm">
-        <div class="field"><label>날짜</label><input type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
-        <div class="field"><label>종류</label><select name="type"><option>미팅</option><option>외근</option><option>연차</option><option>개인 용무</option></select></div>
-        <div class="field"><label>제목</label><input type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
-        <div class="field"><label>시간 (선택)</label><input type="time" name="time"/></div>
-        <div class="field"><label>관련 벤더 (선택)</label><select name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
-        <button type="submit" class="primary" style="width:100%;">저장</button>
-      </form>
+      <div class="mh"><h3>일정 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="eventForm">
+          <div class="two">
+            <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
+            <div class="field"><label class="field-label">종류</label><select class="inp" name="type"><option>미팅</option><option>외근</option><option>연차</option><option>개인 용무</option></select></div>
+          </div>
+          <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">시간 (선택)</label><input class="inp" type="time" name="time"/></div>
+            <div class="field"><label class="field-label">관련 벤더 (선택)</label><select class="inp" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
+          </div>
+        </form>
+      </div>
+      <div class="mf"><button type="submit" form="eventForm" class="btn btn-o">저장</button></div>
     </div>
   `;
 }
 
 function modalDayDetail(dateStr){
   const evs = eventsOnDate(dateStr);
+  const evColors = {'미팅':'#185FA5','외근':'#993C1D','마감':'#534AB7','연차':'#3B6D11'};
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${fmtDateDow(dateStr)}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <p style="font-size:13px; color:var(--text-muted); margin:0 0 16px;">일정 ${evs.length}건</p>
-      <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
-        ${evs.length===0 ? '<p style="font-size:13px; color:var(--text-muted)">등록된 일정이 없습니다.</p>' :
-          evs.map(e=>{
-            const c = eventColor(e.type);
-            return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex; gap:10px; padding:10px 12px; background:var(--surface); border-radius:var(--radius); border-left:3px solid ${c.dot}; cursor:pointer;">
+      <div class="mh"><h3>${fmtDateDow(dateStr)}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">일정 ${evs.length}건</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+          ${evs.length===0?'<div class="empty-state" style="padding:16px">등록된 일정이 없습니다.</div>':
+            evs.map(e=>{const col=evColors[e.type]||'#888';return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;border-left:3px solid ${col};cursor:pointer">
               <div style="flex:1">
-                <p style="font-size:13px; font-weight:500; margin:0;">${e.title}</p>
-                <p style="font-size:12px; color:var(--text-muted); margin:2px 0 0;">${e.type}${e.time?' · '+e.time:''}</p>
+                <div style="font-size:13px;font-weight:500">${e.title}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.type}${e.time?' · '+e.time:''}</div>
               </div>
-              <i class="ti ti-chevron-right" style="font-size:16px; color:var(--text-muted); align-self:center;"></i>
-            </div>`;
-          }).join('')}
+              <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
+            </div>`;}).join('')}
+        </div>
+        ${!isReadOnly()?`<button id="addEventFromDayBtn" class="btn" style="width:100%;justify-content:center"><i class="ti ti-plus"></i> 이 날짜에 일정 추가</button>`:''}
       </div>
-      ${!isReadOnly() ? `<button id="addEventFromDayBtn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:6px;"><i class="ti ti-plus"></i>이 날짜에 일정 추가</button>` : ''}
     </div>
   `;
 }
@@ -1178,76 +1357,76 @@ function modalDayDetail(dateStr){
 function modalMeetingNoteForm(){
   const projectOptions = state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
   return `
-    <div class="modal" style="width:580px">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">회의록 작성</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <div class="field"><label>연결 프로젝트</label><select id="mnProject">${projectOptions}</select></div>
-      <div class="field"><label>날짜</label><input type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
-      <div class="field"><label>회의 내용</label><textarea id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
-      <button id="mnGenerateBtn" style="display:flex; align-items:center; gap:6px;"><i class="ti ti-sparkles"></i>AI 요약 및 액션 아이템 생성</button>
-      <div id="mnResult" style="margin-top:16px;"></div>
+    <div class="modal" style="width:560px">
+      <div class="mh"><h3>회의록 작성</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <div class="field"><label class="field-label">연결 프로젝트</label><select class="inp" id="mnProject">${projectOptions}</select></div>
+        <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
+        <div class="field"><label class="field-label">회의 내용</label><textarea class="inp" id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
+        <button id="mnGenerateBtn" class="btn" style="margin-bottom:14px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 및 액션 아이템 생성</button>
+        <div id="mnResult"></div>
+      </div>
     </div>
   `;
 }
 
-/* ---------- 체크리스트 상세 모달 ---------- */
 function modalChecklistDetail(item){
   const internalNames = ['Sena Cheon','Jenna Kwon','Justin Kim'];
   const people = allPeopleFlat();
   return `
-    <div class="modal" style="width:580px">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">체크리스트 상세</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="checklistDetailForm">
-        <div class="field"><label>내용</label><input type="text" name="text" value="${item.text}" required/></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="field"><label>상태</label><select name="status">
-            ${['대기','진행중','완료','보류'].map(s=>`<option ${item.status===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-          <div class="field"><label>우선순위</label><select name="priority">
-            ${['높음','보통','낮음'].map(s=>`<option ${item.priority===s?'selected':''}>${s}</option>`).join('')}
-          </select></div>
-          <div class="field"><label>시작일</label><input type="date" name="startDate" value="${item.startDate||''}"/></div>
-          <div class="field"><label>마감일</label><input type="date" name="dueDate" value="${item.dueDate||''}"/></div>
-        </div>
-        <div class="field"><label>요청자</label><input type="text" name="requester" value="${item.requester||''}" placeholder="예: 대표님, Jenna Kwon"/></div>
-        <div class="field">
-          <label>담당자 유형</label>
-          <select name="assigneeType" id="assigneeTypeSelect">
-            <option value="" ${!item.assigneeType?'selected':''}>지정 안함</option>
-            <option value="internal" ${item.assigneeType==='internal'?'selected':''}>내부 담당자</option>
-            <option value="external" ${item.assigneeType==='external'?'selected':''}>외부 컨택 담당자</option>
-          </select>
-        </div>
-        <div class="field" id="assigneeInternalField" style="display:${item.assigneeType==='internal'?'block':'none'};">
-          <label>내부 담당자</label>
-          <select name="assigneeInternal">
-            <option value="">선택하세요</option>
-            ${internalNames.map(n=>`<option value="${n}" ${item.assigneeType==='internal'&&item.assigneeId===n?'selected':''}>${n}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field" id="assigneeExternalField" style="display:${item.assigneeType==='external'?'block':'none'};">
-          <label>외부 컨택 담당자</label>
-          <select name="assigneeExternal">
-            <option value="">선택하세요</option>
-            ${people.map(p=>`<option value="${p.id}" ${item.assigneeType==='external'&&item.assigneeId===p.id?'selected':''}>${p.companyName} · ${p.name}</option>`).join('')}
-          </select>
-          <p style="font-size:11px; color:var(--text-muted); margin:4px 0 0;">컨택 탭에서 회사/담당자를 먼저 등록하세요.</p>
-        </div>
-        <div class="field">
-          <label>관련 자료 (링크 - 원드라이브, 구글드라이브 등)</label>
-          <div id="attachmentList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;">
-            ${(item.attachments||[]).map((a,i)=>`
-              <div style="display:flex; gap:6px; align-items:center;">
-                <input type="text" class="attachment-input" value="${a}" placeholder="https://..." style="flex:1;"/>
-                <i class="ti ti-x remove-attachment" data-idx="${i}" style="cursor:pointer; color:var(--text-muted);"></i>
-              </div>`).join('')}
+    <div class="modal" style="width:560px">
+      <div class="mh"><h3>체크리스트 상세</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="checklistDetailForm">
+          <div class="field"><label class="field-label">내용</label><input class="inp" type="text" name="text" value="${item.text}" required/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">상태</label><select class="inp" name="status">
+              ${['대기','진행중','완료','보류'].map(s=>`<option ${item.status===s?'selected':''}>${s}</option>`).join('')}
+            </select></div>
+            <div class="field"><label class="field-label">우선순위</label><select class="inp" name="priority">
+              ${['높음','보통','낮음'].map(s=>`<option ${item.priority===s?'selected':''}>${s}</option>`).join('')}
+            </select></div>
+            <div class="field"><label class="field-label">시작일</label><input class="inp" type="date" name="startDate" value="${item.startDate||''}"/></div>
+            <div class="field"><label class="field-label">마감일</label><input class="inp" type="date" name="dueDate" value="${item.dueDate||''}"/></div>
           </div>
-          <button type="button" id="addAttachmentBtn" style="font-size:12px; padding:6px 10px;"><i class="ti ti-plus"></i> 링크 추가</button>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:8px;">
-          <button type="button" id="deleteChecklistBtn" class="danger-text" style="flex:1;">삭제</button>
-          <button type="submit" class="primary" style="flex:1;">저장</button>
-        </div>
-      </form>
+          <div class="field"><label class="field-label">요청자</label><input class="inp" type="text" name="requester" value="${item.requester||''}" placeholder="예: 대표님"/></div>
+          <div class="field"><label class="field-label">담당자 유형</label>
+            <select class="inp" name="assigneeType" id="assigneeTypeSelect">
+              <option value="" ${!item.assigneeType?'selected':''}>지정 안함</option>
+              <option value="internal" ${item.assigneeType==='internal'?'selected':''}>내부 담당자</option>
+              <option value="external" ${item.assigneeType==='external'?'selected':''}>외부 컨택 담당자</option>
+            </select>
+          </div>
+          <div class="field" id="assigneeInternalField" style="display:${item.assigneeType==='internal'?'block':'none'}">
+            <label class="field-label">내부 담당자</label>
+            <select class="inp" name="assigneeInternal">
+              <option value="">선택하세요</option>
+              ${internalNames.map(n=>`<option value="${n}" ${item.assigneeType==='internal'&&item.assigneeId===n?'selected':''}>${n}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" id="assigneeExternalField" style="display:${item.assigneeType==='external'?'block':'none'}">
+            <label class="field-label">외부 컨택 담당자</label>
+            <select class="inp" name="assigneeExternal">
+              <option value="">선택하세요</option>
+              ${people.map(p=>`<option value="${p.id}" ${item.assigneeType==='external'&&item.assigneeId===p.id?'selected':''}>${p.companyName} · ${p.name}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">관련 자료 링크</label>
+            <div id="attachmentList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+              ${(item.attachments||[]).map((a,i)=>`<div style="display:flex;gap:6px;align-items:center">
+                <input class="inp attachment-input" type="text" value="${a}" placeholder="https://..." style="flex:1;margin:0"/>
+                <i class="ti ti-x remove-attachment" data-idx="${i}" style="cursor:pointer;color:var(--muted);font-size:16px"></i>
+              </div>`).join('')}
+            </div>
+            <button type="button" id="addAttachmentBtn" class="btn"><i class="ti ti-plus"></i> 링크 추가</button>
+          </div>
+        </form>
+      </div>
+      <div class="mf">
+        <button type="button" id="deleteChecklistBtn" class="btn btn-red">삭제</button>
+        <button type="submit" form="checklistDetailForm" class="btn btn-o">저장</button>
+      </div>
     </div>
   `;
 }
@@ -1256,11 +1435,13 @@ function modalCompanyForm(company){
   const isEdit = !!company;
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'회사명 편집':'회사 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="companyForm">
-        <div class="field"><label>회사명</label><input type="text" name="name" value="${isEdit?company.name:''}" required/></div>
-        <button type="submit" class="primary" style="width:100%;">저장</button>
-      </form>
+      <div class="mh"><h3>회사 ${isEdit?'편집':'추가'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="companyForm">
+          <div class="field"><label class="field-label">회사명</label><input class="inp" type="text" name="name" value="${isEdit?company.name:''}" required/></div>
+        </form>
+      </div>
+      <div class="mf"><button type="submit" form="companyForm" class="btn btn-o">저장</button></div>
     </div>
   `;
 }
@@ -1270,15 +1451,19 @@ function modalPersonForm(companyId, person){
   const p = person || {name:'',title:'',email:'',phone:''};
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">${isEdit?'담당자 편집':'담당자 추가'}</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="personForm">
-        <div class="field"><label>이름</label><input type="text" name="name" value="${p.name}" required/></div>
-        <div class="field"><label>직함</label><input type="text" name="title" value="${p.title}"/></div>
-        <div class="field"><label>이메일</label><input type="text" name="email" value="${p.email}"/></div>
-        <div class="field"><label>전화</label><input type="text" name="phone" value="${p.phone}"/></div>
-        <input type="hidden" name="companyId" value="${companyId}"/>
-        <button type="submit" class="primary" style="width:100%;">저장</button>
-      </form>
+      <div class="mh"><h3>담당자 ${isEdit?'편집':'추가'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="personForm">
+          <div class="two">
+            <div class="field"><label class="field-label">이름</label><input class="inp" type="text" name="name" value="${p.name}" required/></div>
+            <div class="field"><label class="field-label">직함</label><input class="inp" type="text" name="title" value="${p.title}"/></div>
+          </div>
+          <div class="field"><label class="field-label">이메일</label><input class="inp" type="text" name="email" value="${p.email}"/></div>
+          <div class="field"><label class="field-label">전화</label><input class="inp" type="text" name="phone" value="${p.phone}"/></div>
+          <input type="hidden" name="companyId" value="${companyId}"/>
+        </form>
+      </div>
+      <div class="mf"><button type="submit" form="personForm" class="btn btn-o">저장</button></div>
     </div>
   `;
 }
@@ -1286,18 +1471,20 @@ function modalPersonForm(companyId, person){
 function modalProjectLogForm(projectId){
   return `
     <div class="modal">
-      <div class="mh"><h3 style="font-size:14px;font-weight:500">프로젝트 로그 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-      <form id="projectLogForm">
-        <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
-        <div class="field"><label>내용</label><textarea name="text" rows="4" required placeholder="진행 상황, 결정 사항 등을 기록하세요"></textarea></div>
-        <input type="hidden" name="projectId" value="${projectId}"/>
-        <button type="submit" class="primary" style="width:100%;">저장</button>
-      </form>
+      <div class="mh"><h3>프로젝트 로그 추가</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="projectLogForm">
+          <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+          <div class="field"><label class="field-label">내용</label><textarea class="inp" name="text" rows="4" required placeholder="진행 상황, 결정 사항 등을 기록하세요"></textarea></div>
+          <input type="hidden" name="projectId" value="${projectId}"/>
+        </form>
+      </div>
+      <div class="mf"><button type="submit" form="projectLogForm" class="btn btn-o">저장</button></div>
     </div>
   `;
 }
 
-/* 간단한 규칙 기반 요약/액션아이템 추출 (Claude API 연동 시 이 함수를 교체) */
+
 function generateMeetingSummary(text){
   const sentences = text.split(/[.。\n]/).map(s=>s.trim()).filter(Boolean);
   const summary = sentences.slice(0,2).join('. ') + (sentences.length>0?'.':'');
@@ -1581,28 +1768,131 @@ function bindViewEvents(){
   });
 
   // 연차
+  // 입사일 등록
+  const setJoinDateBtn = document.getElementById('setJoinDateBtn');
+  if(setJoinDateBtn) setJoinDateBtn.addEventListener('click', ()=>{
+    openModal(`
+      <div class="modal">
+        <div class="mh"><h3>입사일 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+        <div class="mb">
+          <form id="joinDateForm">
+            <div class="field"><label class="field-label">입사일</label><input class="inp" type="date" name="joinDate" value="${state.data.leave.joinDate||''}" required/></div>
+            <p style="font-size:12px;color:var(--muted);margin-top:4px">
+              입사일 기준으로 연차가 자동 계산됩니다.<br>
+              · 1년 미만: 매월 1개 발생 (최대 11개)<br>
+              · 1년 이상: 15개 발생 (3년차부터 2년마다 1개 추가, 최대 25개)
+            </p>
+          </form>
+        </div>
+        <div class="mf"><button type="submit" form="joinDateForm" class="btn btn-o">저장</button></div>
+      </div>
+    `);
+    bindModalCommon();
+    document.getElementById('joinDateForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      state.data.leave.joinDate = fd.get('joinDate');
+      closeModal(); persist(); showToast('입사일이 등록되었습니다.');
+    });
+  });
+
+  // 휴일근무 보상 등록
+  const addCompLeaveBtn = document.getElementById('addCompLeaveBtn');
+  if(addCompLeaveBtn) addCompLeaveBtn.addEventListener('click', ()=>{
+    openModal(`
+      <div class="modal">
+        <div class="mh"><h3>휴일근무 보상 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+        <div class="mb">
+          <form id="compLeaveForm">
+            <div class="two">
+              <div class="field"><label class="field-label">근무일</label><input class="inp" type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+              <div class="field">
+                <label class="field-label">근무 시간</label>
+                <select class="inp" name="hours" id="compHoursSelect">
+                  <option value="4">4시간 (반차 0.5일)</option>
+                  <option value="8">8시간 (1일)</option>
+                  <option value="2">2시간 (0.25일)</option>
+                  <option value="custom">직접 입력</option>
+                </select>
+              </div>
+            </div>
+            <div class="field" id="customHoursField" style="display:none">
+              <label class="field-label">근무 시간 직접 입력</label>
+              <input class="inp" type="number" name="customHours" min="1" max="12" step="0.5" placeholder="시간 입력"/>
+            </div>
+            <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" placeholder="예: 창고 이전 작업"/></div>
+            <div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">
+              <i class="ti ti-info-circle" style="font-size:13px;color:var(--o)"></i>
+              4시간 미만 = 0.25일 / 4시간 = 0.5일 / 8시간 = 1일 기준으로 자동 환산됩니다.
+            </div>
+          </form>
+        </div>
+        <div class="mf"><button type="submit" form="compLeaveForm" class="btn btn-o">저장</button></div>
+      </div>
+    `);
+    bindModalCommon();
+    document.getElementById('compHoursSelect').addEventListener('change', e=>{
+      document.getElementById('customHoursField').style.display = e.target.value==='custom'?'block':'none';
+    });
+    document.getElementById('compLeaveForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      let hours = fd.get('hours')==='custom' ? parseFloat(fd.get('customHours')||0) : parseFloat(fd.get('hours'));
+      let amount = 0;
+      if(hours >= 8) amount = 1;
+      else if(hours >= 4) amount = 0.5;
+      else amount = 0.25;
+      if(!state.data.leave.compLogs) state.data.leave.compLogs = [];
+      state.data.leave.compLogs.push({id:uid('cl'), date:fd.get('date'), hours, amount, memo:fd.get('memo')||''});
+      closeModal(); persist(); showToast(`휴일근무 ${hours}시간 → 보상휴가 ${amount}일 등록되었습니다.`);
+    });
+  });
+
   const addLeaveBtn = document.getElementById('addLeaveBtn');
   if(addLeaveBtn) addLeaveBtn.addEventListener('click', ()=>{
     openModal(`
       <div class="modal">
-        <div class="mh"><h3 style="font-size:14px;font-weight:500">연차 사용 기록 추가</h3><button class="btn btn-g close-x" id="closeModal" style="padding:4px 8px"><i class="ti ti-x"></i></button></div>
-        <form id="leaveForm">
-          <div class="field"><label>날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
-          <div class="field"><label>구분</label><select name="type"><option>연차</option><option>반차</option><option>반반차</option><option>대체휴무</option></select></div>
-          <div class="field"><label>사용량</label><input type="number" step="0.25" name="amount" value="1" required/></div>
-          <div class="field"><label>메모</label><input type="text" name="memo"/></div>
-          <button type="submit" class="primary" style="width:100%;">저장</button>
-        </form>
+        <div class="mh"><h3>연차 사용 기록 추가</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+        <div class="mb">
+          <form id="leaveForm">
+            <div class="two">
+              <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
+              <div class="field">
+                <label class="field-label">구분</label>
+                <select class="inp" name="type" id="leaveTypeSelect">
+                  <option value="연차" data-amount="1">연차 (1일)</option>
+                  <option value="반차" data-amount="0.5">반차 (0.5일)</option>
+                  <option value="반반차" data-amount="0.25">반반차 (0.25일)</option>
+                  <option value="대체휴무" data-amount="1">대체휴무 (1일)</option>
+                </select>
+              </div>
+            </div>
+            <div class="two">
+              <div class="field">
+                <label class="field-label">사용량</label>
+                <input class="inp" type="number" step="0.25" name="amount" id="leaveAmountInput" value="1" required/>
+                <div style="font-size:11px;color:var(--muted);margin-top:3px">구분 선택 시 자동 입력됩니다</div>
+              </div>
+              <div class="field"><label class="field-label">메모 (오전/오후 등)</label><input class="inp" type="text" name="memo" placeholder="예: 오후 반차"/></div>
+            </div>
+          </form>
+        </div>
+        <div class="mf"><button type="submit" form="leaveForm" class="btn btn-o">저장</button></div>
       </div>
     `);
     bindModalCommon();
+    // 구분 선택 시 amount 자동 세팅
+    document.getElementById('leaveTypeSelect').addEventListener('change', e=>{
+      const opt = e.target.selectedOptions[0];
+      document.getElementById('leaveAmountInput').value = opt.dataset.amount || 1;
+    });
     document.getElementById('leaveForm').addEventListener('submit', e=>{
       e.preventDefault();
       const fd = new FormData(e.target);
       const amount = parseFloat(fd.get('amount'));
+      if(!state.data.leave.logs) state.data.leave.logs = [];
       state.data.leave.logs.push({id:uid('lv'), date:fd.get('date'), type:fd.get('type'), amount, memo:fd.get('memo')||''});
-      state.data.leave.used = Math.round((state.data.leave.used + amount)*100)/100;
-      closeModal(); persist(); showToast('연차 기록이 저장되었습니다.');
+      closeModal(); persist(); showToast(`${fd.get('type')} ${amount}일 등록되었습니다.`);
     });
   });
 }
