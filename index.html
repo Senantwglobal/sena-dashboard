@@ -572,6 +572,34 @@ function seedData(){
     {id:'lv013',date:'2026-03-25',type:'반차',amount:0.5,memo:''},
     {id:'lv014',date:'2026-04-09',type:'반차',amount:0.5,memo:'오후'},
   ];
+
+  // ── PDF 로그 (seedData 보완) ──
+  const pdfLogs = [
+    {id:'pdf_0000',vendorName:'ACI',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'ACI 물류 파트너십 — 관세사 서비스 및 통관 업무 논의',nextStep:'세금계산서 이슈 해결 후 계약 진행',rawText:'[PDF 로그]'},
+    {id:'pdf_0001',vendorName:'Aplusvita',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'A+vita 신규 브랜드 온보딩 검토',nextStep:'샘플 수령 후 내부 검토',rawText:'[PDF 로그]'},
+    {id:'pdf_0002',vendorName:'Arcadia',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Arcadia 파트너십 검토 — 유통 계약 조건 협의',nextStep:'계약 조건 내부 검토 후 회신',rawText:'[PDF 로그]'},
+    {id:'pdf_0003',vendorName:'CJ Logistics',date:'2025-12-22',type:'기타',status:'완료',priority:'보통',summary:'CJ대한통운 물류 계약 논의 — 창고 운영 조건 확인',nextStep:'운영 조건 확인 후 계약 진행',rawText:'[PDF 로그]'},
+    {id:'pdf_0004',vendorName:'Country Life',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Country Life 제품 공급 계약 — 가격 조건 및 MOQ 협의',nextStep:'발주 일정 확정 및 PO 발송',rawText:'[PDF 로그]'},
+    {id:'pdf_0005',vendorName:'Enzymedica',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Enzymedica 계약 체결 완료 — OPLE 플랫폼 론칭 후 YTD 판매 현황 공유',nextStep:'KOL 마케팅 전략 검토 및 Monica와 지원 방안 논의',rawText:'[PDF 로그]'},
+    {id:'pdf_0006',vendorName:'Expeditors',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Expeditors 물류 — 미국 출고 및 한국 통관 서비스 협의',nextStep:'통관 서비스 조건 확인 후 계약 검토',rawText:'[PDF 로그]'},
+    {id:'pdf_0009',vendorName:'Life Extension',date:'2026-06-12',type:'기타',status:'완료',priority:'보통',summary:'Life Extension 유통 계약 — EXPO WEST 후속 제품 공급 협의',nextStep:'공급 조건 확인 후 발주',rawText:'[PDF 로그]'},
+    {id:'pdf_0010',vendorName:'MXN',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'MXN 운영 파트너십 — 플랫폼 연동 및 운영 조건 논의',nextStep:'플랫폼 연동 일정 확인',rawText:'[PDF 로그]'},
+    {id:'pdf_0011',vendorName:'NaturesPlus',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'NaturesPlus 공급 계약 — MOQ 10K 사전 협의 완료',nextStep:'MOQ 조건 재협의 후 발주',rawText:'[PDF 로그]'},
+    {id:'pdf_0013',vendorName:'Nordic Naturals',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Nordic Naturals 잔여 재고 유통기한 팔로업 — Buyback 신청',nextStep:'Buyback 처리 완료 후 재발주 검토',rawText:'[PDF 로그]'},
+    {id:'pdf_0014',vendorName:'Nutrabolt',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Nutrabolt (C4 Energy) Sales decline 관련 미팅 요청',nextStep:'담당자 회신 대기',rawText:'[PDF 로그]'},
+    {id:'pdf_0015',vendorName:'Nyunnie',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Nyunnie 3PL 일 물량 감소 — 주 4.5일 운영 축소 통보',nextStep:'일 900건 이상 회복 시 주 5일 복귀 목표',rawText:'[PDF 로그]'},
+    {id:'pdf_0016',vendorName:'Piping Rock',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Piping Rock 파트너십 — NDA/FCPA 서류 제출 완료 → 내부 검토 중',nextStep:'향후 기회 오픈 상태 유지',rawText:'[PDF 로그]'},
+    {id:'pdf_0017',vendorName:'OPLE Internal',date:'2026-04-21',type:'기타',status:'완료',priority:'보통',summary:'러시아 시장 파트너 Sergei Aliukov 컨택 — CBT 확장 논의',nextStep:'줌미팅 일정 확정 후 진행',rawText:'[PDF 로그]'},
+    {id:'pdf_0018',vendorName:'Solgar',date:'2026-07-22',type:'기타',status:'완료',priority:'보통',summary:'Solgar/Nestle 법인명 변경 7/1부 — PO 마감 6/15, 재개 7/5',nextStep:'7/5 이후 신규 법인 PO 재개',rawText:'[PDF 로그]'},
+    {id:'pdf_0019',vendorName:'UNFI',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'UNFI 담당자 Jamie 교체 — 연료 할증료 $55 협의, Endless Aisle 이슈 해결',nextStep:'Jarett 복귀 후 미팅 진행',rawText:'[PDF 로그]'},
+    {id:'pdf_0020',vendorName:'Vytalogy (Jarrow/Natrol)',date:'2026-05-01',type:'기타',status:'완료',priority:'보통',summary:'Vytalogy FY2026 계획 논의 — EXPO 후속 조건 협의',nextStep:'FY2026 조건 확인 후 발주 계획 수립',rawText:'[PDF 로그]'},
+  ];
+  // vendorId 매핑 후 주입
+  pdfLogs.forEach(l=>{
+    const v=vendors.find(x=>x.name.toLowerCase().includes(l.vendorName.toLowerCase())||l.vendorName.toLowerCase().includes(x.name.toLowerCase()));
+    if(v){ vendorLogs.push({...l,vendorId:v.id}); }
+  });
+
   return {
     vendors,
     vendorLogs,
@@ -603,6 +631,7 @@ const state = {
   projectFilter: '전체',
   vendorSearch: '',
   companySearch: '',
+  companyAlphaFilter: 'ALL',
   vendorTypeFilter: '전체',
   activeProjectVendorTab: null,
   vendorLogExpanded: false,
@@ -797,6 +826,7 @@ function render(){
         <span class="logo">O</span>
         <span style="font-size:14px;font-weight:500">천세나 업무 대시보드</span>
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
+        <span id="quoteText" style="font-size:11px;color:var(--muted);font-style:italic;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
       </div>
       <div class="uinfo">
         ${av('천세나', 30)}
@@ -1014,9 +1044,66 @@ function viewHome(){
           <button class="btn" id="saveMemoBtn" style="font-size:11px;padding:4px 10px">저장</button></div>
           <textarea id="dashMemo" class="inp" rows="4" placeholder="자유롭게 메모하세요..." style="margin:0;border:none;background:var(--sf);border-radius:0;resize:none;padding:12px">${state.data.memo||''}</textarea>
         </div>
+
+        ${(() => {
+          const thisMonth = today.format('YYYY-MM');
+          const monthLeaves = (state.data.leave.logs||[])
+            .filter(l=>l.date.startsWith(thisMonth))
+            .sort((a,b)=>a.date.localeCompare(b.date));
+          if(!monthLeaves.length) return '';
+          const typeLabel = t=>{
+            if(t==='연차') return '종일';
+            if(t==='반차') return '반차';
+            if(t==='반반차') return '반반차';
+            if(t==='오전 반차') return '오전';
+            if(t==='오후 반차') return '오후';
+            return t;
+          };
+          const typeColor = t=>({
+            '연차':'#3B6D11','반차':'#15803D','반반차':'#22C55E','오전 반차':'#0891B2','오후 반차':'#0369A1'
+          }[t]||'#5F5E5A');
+          return `<div class="card">
+            <div class="sh"><div class="st"><i class="ti ti-calendar-heart oi"></i>이번달 연차 예정</div>
+            <span style="font-size:11px;color:var(--muted)">${today.format('M월')} · ${monthLeaves.reduce((s,l)=>s+l.amount,0)}일</span></div>
+            ${monthLeaves.map(l=>`<div class="dash-row">
+              <span style="font-size:12px;color:var(--muted);width:60px;flex-shrink:0">${fmtDate(l.date)}</span>
+              <span style="font-size:10px;padding:1px 8px;border-radius:20px;background:${typeColor(l.type)}22;color:${typeColor(l.type)};font-weight:500">${typeLabel(l.type)}</span>
+              <span style="font-size:12px;flex:1;text-align:right;color:var(--muted)">${l.amount}일 ${l.memo?'· '+l.memo:''}</span>
+            </div>`).join('')}
+          </div>`;
+        })()}
+
       </div>
     </div>
   `;
+}
+
+async function loadQuote(){
+  // 다국어 명언 API (zenquotes.io 또는 fallback)
+  const fallbacks = [
+    '성공은 작은 노력들이 매일 반복된 결과입니다.',
+    '오늘 할 수 있는 일을 내일로 미루지 마세요.',
+    '목표를 향해 한 걸음씩 나아가는 것이 중요합니다.',
+    '어려운 상황이 훌륭한 사람을 만듭니다.',
+    '작은 진전이라도 진전입니다.',
+    '지금 이 순간에 집중하세요.',
+    '성장은 편안함 밖에서 일어납니다.',
+    '끈기는 재능을 이깁니다.',
+    '실패는 성공의 어머니입니다.',
+    '오늘도 최선을 다하면 됩니다.'
+  ];
+  try{
+    const res = await fetch('https://api.quotable.io/random?maxLength=100', {mode:'cors'});
+    if(res.ok){
+      const data = await res.json();
+      const el = document.getElementById('quoteText');
+      if(el) el.textContent = `"${data.content}" — ${data.author}`;
+      return;
+    }
+  }catch(e){}
+  // 폴백: 로컬 명언
+  const el = document.getElementById('quoteText');
+  if(el) el.textContent = fallbacks[new Date().getDate() % fallbacks.length];
 }
 
 function renderLogLinks(links){
@@ -1229,18 +1316,61 @@ function viewVendorDetail(){
 
     <div class="two" style="margin-bottom:14px">
       <div class="card">
-        <div class="sh" style="margin-bottom:10px"><div class="st"><i class="ti ti-user oi"></i>컨택 정보</div></div>
-        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">담당자</span><span style="font-weight:500">${v.contact.name||'-'}</span></div>
-        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">직함</span><span>${v.contact.title||'-'}</span></div>
-        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">이메일</span><a href="mailto:${v.contact.email}" style="color:var(--o)">${v.contact.email||'-'}</a></div>
-        <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">전화</span><span>${v.contact.phone||'-'}</span></div>
+        <div class="sh" style="margin-bottom:10px">
+          <div class="st"><i class="ti ti-user oi"></i>컨택 정보</div>
+          ${(() => {
+            const linkedCo = state.data.companies.find(c=>c.name===v.name);
+            return linkedCo ? `<button class="btn contact-tab-link" data-cid="${linkedCo.id}" style="font-size:11px;padding:4px 8px"><i class="ti ti-address-book"></i> 컨택 전체</button>` : '';
+          })()}
+        </div>
+        ${(() => {
+          const linkedCo = state.data.companies.find(c=>c.name===v.name);
+          if(linkedCo && linkedCo.people.length > 0){
+            const mainP = linkedCo.people.find(p=>p.isMain) || linkedCo.people[0];
+            const otherPeople = linkedCo.people.filter(p=>p.id!==mainP.id);
+            return `
+              <div style="background:var(--sf);border-radius:8px;padding:10px;margin-bottom:8px">
+                <div style="font-size:10px;color:var(--muted);margin-bottom:6px">메인 담당자</div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  ${av(mainP.name,30)}
+                  <div>
+                    <div style="font-weight:500;font-size:13px">${mainP.name}</div>
+                    <div style="font-size:11px;color:var(--muted)">${mainP.title||''}</div>
+                    ${mainP.email?`<a href="mailto:${mainP.email}" style="font-size:11px;color:var(--o)">${mainP.email}</a>`:''}
+                    ${mainP.phone?`<div style="font-size:11px;color:var(--muted)">${mainP.phone}</div>`:''}
+                  </div>
+                </div>
+              </div>
+              ${otherPeople.length>0?`<div style="font-size:11px;color:var(--muted)">외 ${otherPeople.length}명: ${otherPeople.map(p=>p.name).join(', ')}</div>`:''}
+            `;
+          }
+          return `
+            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">담당자</span><span style="font-weight:500">${v.contact.name||'-'}</span></div>
+            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">직함</span><span>${v.contact.title||'-'}</span></div>
+            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">이메일</span><a href="mailto:${v.contact.email}" style="color:var(--o)">${v.contact.email||'-'}</a></div>
+            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">전화</span><span>${v.contact.phone||'-'}</span></div>
+          `;
+        })()}
       </div>
       <div class="card">
-        <div class="sh" style="margin-bottom:10px"><div class="st"><i class="ti ti-notes oi"></i>거래 메모</div></div>
-        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">할인율</span><span>${v.notes.discount||'-'}</span></div>
-        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">결제 조건</span><span>${v.notes.payment||'-'}</span></div>
-        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">MOQ</span><span>${v.notes.moq||'-'}</span></div>
-        <div class="dash-row"><span style="color:var(--muted);width:80px;flex-shrink:0">Credit Limit</span><span>${v.notes.creditLimit||'-'}</span></div>
+        <div class="sh" style="margin-bottom:8px">
+          <div class="st"><i class="ti ti-notes oi"></i>거래 메모</div>
+          ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:11px;padding:4px 8px"><i class="ti ti-plus"></i> 항목 추가</button>`:''}
+        </div>
+        <div id="customNotesList">
+          ${(v.customNotes||[
+            {key:'할인율',val:v.notes.discount||''},
+            {key:'결제 조건',val:v.notes.payment||''},
+            {key:'MOQ',val:v.notes.moq||''},
+            {key:'Credit Limit',val:v.notes.creditLimit||''}
+          ]).map((n,i)=>`
+            <div class="custom-note-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bd)">
+              ${!isReadOnly()?`<input type="text" class="inp note-key" data-idx="${i}" value="${(n.key||'').replace(/"/g,'&quot;')}" style="width:90px;flex-shrink:0;margin:0;font-size:12px;padding:4px 8px;font-weight:500;color:var(--muted)"/>`:`<span style="color:var(--muted);width:90px;flex-shrink:0;font-size:12px">${n.key}</span>`}
+              ${!isReadOnly()?`<input type="text" class="inp note-val" data-idx="${i}" value="${(n.val||'').replace(/"/g,'&quot;')}" style="flex:1;margin:0;font-size:13px;padding:4px 8px"/>`:`<span style="font-size:13px;flex:1">${n.val||'-'}</span>`}
+              ${!isReadOnly()?`<button class="btn btn-red note-del-btn" data-idx="${i}" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-x"></i></button>`:''}
+            </div>`).join('')}
+        </div>
+        ${!isReadOnly()?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:12px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
       </div>
     </div>
 
@@ -1531,10 +1661,12 @@ function viewCalendar(){
 
   return `
     <div class="sh">
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
         <span style="font-size:16px;font-weight:500">${month.format('YYYY년 M월')}</span>
         <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn" id="goTodayBtn" style="font-size:11px;padding:4px 10px;background:var(--ol);color:var(--od);border:0.5px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
+        <span style="font-size:12px;color:var(--muted);padding:4px 8px;background:var(--sf);border-radius:6px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px">
         ${!isReadOnly()?`<button class="btn" id="manageEventTypesBtn"><i class="ti ti-settings"></i> 일정 유형 관리</button>`:''}
@@ -1740,15 +1872,19 @@ function viewLeave(){
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:0.5px solid var(--bd)">사용 기록</div>
         <table class="tbl">
-          <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th></tr></thead>
+          <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
           <tbody>
-          ${(l.logs||[]).length===0?`<tr><td colspan="4"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
+          ${(l.logs||[]).length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
             (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
               <tr>
                 <td>${fmtDateDow(r.date)}</td>
                 <td><span class="badge ${r.type==='연차'?'bo':'bgr'}">${r.type}</span></td>
                 <td>${r.amount}일</td>
                 <td style="color:var(--muted)">${r.memo||'-'}</td>
+                ${!isReadOnly()?`<td style="white-space:nowrap">
+                  <button class="btn leave-edit-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
+                  <button class="btn btn-red leave-del-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
+                </td>`:'<td></td>'}
               </tr>`).join('')}
           </tbody>
         </table>
@@ -1776,12 +1912,23 @@ function viewLeave(){
 
 
 function viewCompanyList(){
+  const alphaFilter = state.companyAlphaFilter || 'ALL';
   let companies = state.data.companies.slice();
   if(state.companySearch){
     const q=state.companySearch.toLowerCase();
     companies=companies.filter(c=>c.name.toLowerCase().includes(q)||c.people.some(p=>p.name.toLowerCase().includes(q)));
   }
+  if(alphaFilter !== 'ALL'){
+    const af = alphaFilter.toLowerCase();
+    companies = companies.filter(c=>c.name.toLowerCase().startsWith(af));
+  }
   companies.sort((a,b)=>a.name.localeCompare(b.name));
+
+  // 알파벳 필터 버튼 생성
+  const allInitials = [...new Set(state.data.companies.map(c=>c.name[0]?.toUpperCase()).filter(Boolean))].sort();
+  const alphaButtons = ['ALL', ...allInitials].map(ch=>
+    `<button class="btn ${alphaFilter===ch?'btn-o':''}" data-alpha="${ch}" style="padding:4px 8px;font-size:11px;min-width:32px">${ch}</button>`
+  ).join('');
 
   return `
     <div class="sh">
@@ -1792,22 +1939,35 @@ function viewCompanyList(){
       ${!isReadOnly()?`<button class="btn btn-o" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>`:''}
     </div>
 
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${alphaButtons}</div>
+
     <div class="krow" style="grid-template-columns:repeat(2,1fr);max-width:320px;margin-bottom:14px">
-      <div class="kpi"><div class="kn">${state.data.companies.length}</div><div class="kl">등록된 회사</div></div>
+      <div class="kpi"><div class="kn">${companies.length}</div><div class="kl">표시 중</div></div>
       <div class="kpi"><div class="kn">${allPeopleFlat().length}</div><div class="kl">등록된 담당자</div></div>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl">
-        <colgroup><col style="width:30%"><col style="width:12%"><col style="width:58%"></colgroup>
-        <thead><tr><th>회사명</th><th>담당자 수</th><th>담당자</th></tr></thead>
+        <colgroup><col style="width:28%"><col style="width:10%"><col style="width:20%"><col style="width:42%"></colgroup>
+        <thead><tr><th>회사명</th><th>담당자 수</th><th>메인 담당자</th><th>담당자 목록</th></tr></thead>
         <tbody>
-        ${companies.length===0?`<tr><td colspan="3"><div class="empty-state">등록된 회사가 없습니다.</div></td></tr>`:
-          companies.map(c=>`<tr class="clickable company-row" data-cid="${c.id}">
-            <td><div style="display:flex;align-items:center;gap:8px">${av(c.name,24)}<span style="font-weight:500">${c.name}</span></div></td>
-            <td>${c.people.length}명</td>
-            <td style="color:var(--muted)">${c.people.map(p=>p.name).join(', ')||'-'}</td>
-          </tr>`).join('')}
+        ${companies.length===0?`<tr><td colspan="4"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>`:
+          companies.map(c=>{
+            const mainP = c.people.find(p=>p.isMain) || c.people[0];
+            // 연결된 거래처 찾기
+            const linkedVendor = state.data.vendors.find(v=>v.name===c.name);
+            return `<tr class="clickable company-row" data-cid="${c.id}">
+              <td><div style="display:flex;align-items:center;gap:8px">
+                ${av(c.name,24)}<div>
+                  <div style="font-weight:500">${c.name}</div>
+                  ${linkedVendor?`<div style="font-size:10px;color:var(--o)">→ 거래처 연결됨</div>`:''}
+                </div>
+              </div></td>
+              <td>${c.people.length}명</td>
+              <td>${mainP?`<div style="display:flex;align-items:center;gap:4px">${av(mainP.name,20)}<span style="font-size:12px">${mainP.name}</span></div>`:'-'}</td>
+              <td style="color:var(--muted);font-size:12px">${c.people.slice(0,3).map(p=>p.name).join(', ')}${c.people.length>3?` 외 ${c.people.length-3}명`:''}</td>
+            </tr>`;
+          }).join('')}
         </tbody>
       </table>
     </div>
@@ -1830,19 +1990,33 @@ function viewCompanyDetail(){
       </div>
     </div>
 
+    ${(() => {
+      const linkedVendor = state.data.vendors.find(v=>v.name===c.name);
+      const mainP = c.people.find(p=>p.isMain) || c.people[0];
+      return linkedVendor ? `<div style="background:var(--ol);border-radius:8px;padding:8px 14px;margin-bottom:12px;font-size:12px;color:var(--od);display:flex;align-items:center;gap:6px">
+        <i class="ti ti-link" style="font-size:13px"></i>
+        <strong>${linkedVendor.name}</strong> 거래처와 연결되어 있습니다.
+        ${mainP ? `· 메인 담당자: <strong>${mainP.name}</strong>` : ''}
+      </div>` : '';
+    })()}
+
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
       ${c.people.length===0?'<div class="empty-state">등록된 담당자가 없습니다.</div>':
-        c.people.map(p=>`<div class="card" style="margin-bottom:0">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        c.people.map(p=>`<div class="card" style="margin-bottom:0;${p.isMain?'border:1.5px solid var(--o)':''}">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
             ${av(p.name,36)}
-            <div>
-              <div style="font-weight:600;font-size:14px">${p.name}</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-weight:600;font-size:14px">${p.name}</span>
+                ${p.isMain?'<span style="font-size:10px;background:var(--ol);color:var(--od);padding:1px 7px;border-radius:20px">메인</span>':''}
+              </div>
               <div style="font-size:12px;color:var(--muted)">${p.title||'-'}</div>
             </div>
           </div>
-          <div class="dash-row"><span style="color:var(--muted);width:48px;flex-shrink:0;font-size:12px">이메일</span><span style="font-size:12px;color:var(--o)">${p.email||'-'}</span></div>
+          <div class="dash-row"><span style="color:var(--muted);width:48px;flex-shrink:0;font-size:12px">이메일</span><a href="mailto:${p.email}" style="font-size:12px;color:var(--o)">${p.email||'-'}</a></div>
           <div class="dash-row"><span style="color:var(--muted);width:48px;flex-shrink:0;font-size:12px">전화</span><span style="font-size:12px">${p.phone||'-'}</span></div>
-          ${!isReadOnly()?`<div style="display:flex;gap:6px;margin-top:10px">
+          ${!isReadOnly()?`<div style="display:flex;gap:4px;margin-top:10px">
+            ${p.isMain?'':'<button class="btn set-main-person-btn" data-pid="'+p.id+'" style="flex:1;font-size:11px"><i class="ti ti-star"></i> 메인 설정</button>'}
             <button class="btn edit-person-btn" data-pid="${p.id}" style="flex:1;font-size:12px">편집</button>
             <button class="btn btn-red delete-person-btn" data-pid="${p.id}" style="flex:1;font-size:12px">삭제</button>
           </div>`:''}
@@ -2014,8 +2188,22 @@ function modalEventForm(dateStr){
             </select></div>
           </div>
           <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
+          <div class="field">
+            <label class="field-label" style="display:flex;align-items:center;gap:10px">
+              시간
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400;cursor:pointer">
+                <input type="checkbox" id="allDayCheckNew" style="accent-color:var(--o)"/> 종일
+              </label>
+            </label>
+            <div id="timeFieldsNew">
+              <div style="display:flex;align-items:center;gap:8px">
+                <input class="inp" type="time" name="startTime" placeholder="시작"/>
+                <span style="font-size:12px;color:var(--muted)">~</span>
+                <input class="inp" type="time" name="endTime" placeholder="종료"/>
+              </div>
+            </div>
+          </div>
           <div class="two">
-            <div class="field"><label class="field-label">시간 (선택)</label><input class="inp" type="time" name="time"/></div>
             <div class="field"><label class="field-label">관련 벤더 (선택)</label><select class="inp" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
           </div>
         </form>
@@ -2424,8 +2612,20 @@ function modalEditEvent(ev){
           <div class="field"><label class="field-label">제목</label>
             <input class="inp" type="text" name="title" value="${(ev.title||'').replace(/"/g,'&quot;')}" required/>
           </div>
-          <div class="field"><label class="field-label">시간 (선택)</label>
-            <input class="inp" type="time" name="time" value="${ev.time||''}"/>
+          <div class="field">
+            <label class="field-label" style="display:flex;align-items:center;gap:10px">
+              시간
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:400;cursor:pointer">
+                <input type="checkbox" id="allDayCheckEdit" ${ev.allDay?'checked':''} style="accent-color:var(--o)"/> 종일
+              </label>
+            </label>
+            <div id="timeFieldsEdit" style="${ev.allDay?'display:none':''}">
+              <div style="display:flex;align-items:center;gap:8px">
+                <input class="inp" type="time" name="startTime" value="${ev.startTime||ev.time||''}"/>
+                <span style="font-size:12px;color:var(--muted)">~</span>
+                <input class="inp" type="time" name="endTime" value="${ev.endTime||''}"/>
+              </div>
+            </div>
           </div>
           <input type="hidden" name="eventId" value="${ev.id}"/>
         </form>
@@ -2939,7 +3139,10 @@ function bindViewEvents(){
               date: fd.get('date'),
               type: fd.get('type'),
               title: fd.get('title'),
-              time: fd.get('time')||''
+              allDay: document.getElementById('allDayCheckEdit')?.checked||false,
+              startTime: fd.get('startTime')||'',
+              endTime: fd.get('endTime')||'',
+              time: document.getElementById('allDayCheckEdit')?.checked ? '종일' : (fd.get('startTime')||(fd.get('endTime')?fd.get('startTime')+'~'+fd.get('endTime'):''))
             };
           }
           closeModal(); persist(); render(); showToast('일정이 수정되었습니다.');
@@ -3039,6 +3242,144 @@ function bindViewEvents(){
     state.data.memo = document.getElementById('dashMemo').value;
     persist(); showToast('메모가 저장되었습니다.');
   });
+
+  // ── 컨택 알파벳 필터 ──
+  document.querySelectorAll('[data-alpha]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.companyAlphaFilter = btn.dataset.alpha;
+      render();
+    });
+  });
+
+  // ── 메인 담당자 설정 ──
+  document.querySelectorAll('.set-main-person-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
+      if(!c) return;
+      c.people.forEach(p=>{ p.isMain = (p.id===btn.dataset.pid); });
+      persist(); render(); showToast('메인 담당자가 설정되었습니다.');
+    });
+  });
+
+  // ── 거래처 컨택 탭 바로가기 ──
+  document.querySelectorAll('.contact-tab-link').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      state.selectedCompanyId = btn.dataset.cid;
+      state.view = 'contacts';
+      render();
+    });
+  });
+
+  // ── 거래 메모 자유 항목 저장 ──
+  const saveNoteFieldsBtn = document.getElementById('saveNoteFieldsBtn');
+  if(saveNoteFieldsBtn) saveNoteFieldsBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const rows = document.querySelectorAll('#customNotesList .custom-note-row');
+    v.customNotes = Array.from(rows).map(row=>({
+      key: row.querySelector('.note-key')?.value?.trim()||'',
+      val: row.querySelector('.note-val')?.value?.trim()||''
+    })).filter(n=>n.key);
+    persist(); showToast('거래 메모가 저장되었습니다.');
+  });
+
+  const addNoteFieldBtn = document.getElementById('addNoteFieldBtn');
+  if(addNoteFieldBtn) addNoteFieldBtn.addEventListener('click', ()=>{
+    const list = document.getElementById('customNotesList');
+    if(!list) return;
+    const idx = list.querySelectorAll('.custom-note-row').length;
+    const row = document.createElement('div');
+    row.className = 'custom-note-row';
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bd)';
+    row.innerHTML = `
+      <input type="text" class="inp note-key" placeholder="항목명" style="width:90px;flex-shrink:0;margin:0;font-size:12px;padding:4px 8px;font-weight:500;color:var(--muted)"/>
+      <input type="text" class="inp note-val" placeholder="내용" style="flex:1;margin:0;font-size:13px;padding:4px 8px"/>
+      <button type="button" class="btn btn-red note-del-btn" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-x"></i></button>
+    `;
+    row.querySelector('.note-del-btn').addEventListener('click', ()=>row.remove());
+    list.appendChild(row);
+  });
+  document.querySelectorAll('.note-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>btn.closest('.custom-note-row')?.remove());
+  });
+
+  // ── 오늘 날짜 버튼 ──
+  const goTodayBtn = document.getElementById('goTodayBtn');
+  if(goTodayBtn) goTodayBtn.addEventListener('click', ()=>{
+    state.calMonth = dayjs().format('YYYY-MM');
+    render();
+    setTimeout(()=>{
+      const todayCell = document.querySelector('.cal-cell.today');
+      if(todayCell) todayCell.scrollIntoView({behavior:'smooth',block:'center'});
+    }, 100);
+  });
+
+  // ── 종일 체크박스 토글 ──
+  ['allDayCheckNew','allDayCheckEdit'].forEach(id=>{
+    const cb = document.getElementById(id);
+    if(!cb) return;
+    const fieldsId = id==='allDayCheckNew'?'timeFieldsNew':'timeFieldsEdit';
+    cb.addEventListener('change', ()=>{
+      const f = document.getElementById(fieldsId);
+      if(f) f.style.display = cb.checked ? 'none' : '';
+    });
+  });
+
+  // ── 연차 수정/삭제 ──
+  document.querySelectorAll('.leave-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(confirm('이 연차 기록을 삭제하시겠습니까?')){
+        state.data.leave.logs = (state.data.leave.logs||[]).filter(l=>l.id!==btn.dataset.lid);
+        persist(); render(); showToast('삭제되었습니다.');
+      }
+    });
+  });
+  document.querySelectorAll('.leave-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const log = (state.data.leave.logs||[]).find(l=>l.id===btn.dataset.lid);
+      if(!log) return;
+      openModal(`
+        <div class="modal">
+          <div class="mh"><h3>연차 기록 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+          <div class="mb">
+            <form id="leaveEditForm">
+              <div class="two">
+                <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${log.date}" required/></div>
+                <div class="field"><label class="field-label">구분</label><select class="inp" name="type">
+                  ${['연차','반차','오전 반차','오후 반차','반반차','대체휴무'].map(t=>`<option ${log.type===t?'selected':''}>${t}</option>`).join('')}
+                </select></div>
+              </div>
+              <div class="two">
+                <div class="field"><label class="field-label">사용량 (일)</label><input class="inp" type="number" name="amount" value="${log.amount}" min="0.25" max="1" step="0.25" required/></div>
+                <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${log.memo||''}"/></div>
+              </div>
+            </form>
+          </div>
+          <div class="mf"><button type="submit" form="leaveEditForm" class="btn btn-o">저장</button></div>
+        </div>
+      `);
+      bindModalCommon();
+      document.getElementById('leaveEditForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const idx = state.data.leave.logs.findIndex(l=>l.id===btn.dataset.lid);
+        if(idx!==-1){
+          state.data.leave.logs[idx] = {
+            ...state.data.leave.logs[idx],
+            date: fd.get('date'),
+            type: fd.get('type'),
+            amount: parseFloat(fd.get('amount')),
+            memo: fd.get('memo')||''
+          };
+        }
+        closeModal(); persist(); render(); showToast('연차 기록이 수정되었습니다.');
+      });
+    });
+  });
+
+
 
   // ── 링크 추가 버튼 공통 헬퍼 ──
   function bindLinkAdder(addBtnId, listId, urlInputId, labelInputId){
@@ -3429,9 +3770,13 @@ function bindEventFormSubmit(){
   document.getElementById('eventForm').addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(e.target);
+    const allDay = document.getElementById('allDayCheckNew')?.checked || false;
+    const startTime = fd.get('startTime')||'';
+    const endTime = fd.get('endTime')||'';
+    const timeLabel = allDay ? '종일' : startTime ? (endTime ? startTime+'~'+endTime : startTime) : '';
     state.data.calendar.push({
       id: uid('ev'), date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
-      time: fd.get('time')||'', vendorId: fd.get('vendorId')||''
+      time: timeLabel, startTime, endTime, allDay, vendorId: fd.get('vendorId')||''
     });
     closeModal(); persist(); showToast('일정이 등록되었습니다.');
   });
@@ -3512,6 +3857,8 @@ async function initApp(){
   try{
     state.data = await loadStoreRemote();
     render();
+    // 명언 로드 (렌더 후 비동기)
+    loadQuote();
   }catch(e){
     console.error('Dashboard error:', e);
     const isNetworkError = e.message.includes('fetch') || e.message.includes('network') || e.message.includes('CORS');
