@@ -896,7 +896,7 @@ function viewHome(){
         const c = h.country==='KR' ? {bg:'#FFF0F0',color:'#CC0000',flag:'🇰🇷'} : {bg:'#F0F4FF',color:'#003087',flag:'🇺🇸'};
         return `<div style="display:flex;align-items:center;gap:6px;background:${c.bg};border:0.5px solid ${c.color}33;border-radius:8px;padding:6px 12px;font-size:12px">
           <span>${c.flag}</span>
-          <span style="font-weight:500;color:${c.color}">${h.title.replace(/🇰🇷|🇺🇸/,'').trim()}</span>
+          <span style="font-weight:500;color:${c.color}">${h.title.replace('🇰🇷','').replace('🇺🇸','').trim()}</span>
           <span style="color:${c.color};font-weight:600">${h.dday===0?'오늘':'D-'+h.dday}</span>
         </div>`;
       }).join('')}
@@ -1019,6 +1019,16 @@ function viewHome(){
   `;
 }
 
+function renderLogLinks(links){
+  if(!links || !links.length) return '';
+  const items = links.map(lk=>{
+    const label = (lk.label||'관련 파일').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const url = (lk.url||'').replace(/"/g,'&quot;');
+    return '<a href="'+url+'" target="_blank" rel="noopener" style="font-size:11px;padding:2px 8px;border-radius:20px;background:#FEF3C7;color:#92400E;text-decoration:none;display:inline-flex;align-items:center;gap:3px;border:0.5px solid #F59E0B"><i class="ti ti-paperclip" style="font-size:10px"></i>'+label+'</a>';
+  });
+  return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+items.join('')+'</div>';
+}
+
 function logTypeBadge(type){
   const map = {
     '이메일':      {bg:'#E6F1FB', color:'#0C6EBD'},
@@ -1042,6 +1052,25 @@ function priorityBadge(p){
   if(p==='보통') return 'bw';
   if(p==='완료') return 'bg';
   return 'bgr';
+}
+
+function projStatusStyle(status){
+  const map = {
+    '진행중': 'background:#EBF0FB;color:#1A3A9E;border-color:#2554C7',
+    '보류':   'background:#FEF3C7;color:#92400E;border-color:#F59E0B',
+    '중단':   'background:#FCEBEB;color:#A32D2D;border-color:#E24B4A',
+    '완료':   'background:#EAF3DE;color:#3B6D11;border-color:#639922',
+  };
+  return map[status]||map['진행중'];
+}
+
+function vendorStatusStyle(status){
+  const map = {
+    'Active':   'background:#EAF3DE;color:#3B6D11;border-color:#3B6D11',
+    'Pending':  'background:#FEF3C7;color:#92400E;border-color:#92400E',
+    'Inactive': 'background:#F1EFE8;color:#5F5E5A;border-color:#ccc',
+  };
+  return map[status]||map['Active'];
 }
 
 function vendorActionBadge(status){
@@ -1109,7 +1138,7 @@ function viewVendorList(){
       <table class="tbl">
         <colgroup><col style="width:16%"><col style="width:8%"><col style="width:7%"><col style="width:22%"><col style="width:13%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:4%"></colgroup>
         <thead><tr>
-          <th>회사명</th><th>유형</th><th>경과일</th><th>최근 상황</th><th>액션 상태</th><th>상태</th><th>우선순위</th><th>담당자</th><th></th>
+          <th>회사명</th><th>거래 상태</th><th>유형</th><th>경과일</th><th>최근 상황</th><th>액션 상태</th><th>우선순위</th><th>담당자</th><th></th>
         </tr></thead>
         <tbody>
         ${vendors.length===0?`<tr><td colspan="9"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>`:
@@ -1120,11 +1149,11 @@ function viewVendorList(){
             const tb = typeBadge(ct);
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
               <td><div style="display:flex;align-items:center;gap:8px">${av(v.name,24)}<span style="font-weight:500">${v.name}</span></div></td>
+              <td><select class="vendor-status-select" data-vid="${v.id}" onclick="event.stopPropagation()" style="font-size:11px;padding:2px 6px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${['Active','Pending','Inactive'].map(s=>`<option value="${s}" ${(v.companyStatus||'Active')===s?'selected':''}>${s}</option>`).join('')}</select></td>
               <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${ct}</span></td>
               <td style="${days>=90?'color:#A32D2D;font-weight:500':''}">${days!==null?days+'일':'-'}</td>
               <td style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:1px">${v.latest?v.latest.summary:'-'}</td>
               <td>${asBadge}</td>
-              <td><span class="badge bgr">${v.latest?v.latest.status:'-'}</span></td>
               <td><span class="badge ${priorityBadge(v.priority)}">${v.priority}</span></td>
               <td style="color:var(--muted)">${v.contact.name||'-'}</td>
               <td><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></td>
@@ -1168,6 +1197,7 @@ function viewVendorDetail(){
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#EBF0FB;color:#1A3A9E">${v.companyType}</span>`:''}
             ${days!==null?`<span class="badge bgr">${days}일 경과</span>`:''}
+            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${['Active','Pending','Inactive'].map(s=>`<option value="${s}" ${(v.companyStatus||'Active')===s?'selected':''}>${s}</option>`).join('')}</select>
           </div>
         </div>
       </div>
@@ -1268,6 +1298,7 @@ function viewVendorDetail(){
                     ${!l.nextStepDone?`<input type="checkbox" class="nextaction-done" data-lid="${l.id}" title="완료 처리" style="accent-color:var(--o);width:13px;height:13px;flex-shrink:0;cursor:pointer;margin-top:1px"/>`:'<span style="font-size:10px;color:#3B6D11">✓ 완료</span>'}
                   </div>`:''}
                   ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text" style="font-size:11px"></i> 원본 보기</div>`:''}
+                  ${renderLogLinks(l.links)}
                 </div>
                 ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
                   <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 8px;font-size:11px" title="수정"><i class="ti ti-pencil" style="font-size:12px"></i></button>
@@ -1313,7 +1344,10 @@ function viewProjects(){
         const col=catColorMap[p.category]||'#2554C7';
         return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px;margin-bottom:0">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <span class="badge" style="background:${col}22;color:${col}">${p.category}</span>
+            <div style="display:flex;gap:4px;align-items:center">
+              <span class="badge" style="background:${col}22;color:${col}">${p.category}</span>
+              <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:10px;padding:1px 6px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
+            </div>
             ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${ddayLabel}</span>`:''}
           </div>
           <div style="font-size:14px;font-weight:600;margin-bottom:4px;line-height:1.4">${p.title}</div>
@@ -1352,6 +1386,7 @@ function viewProjectDetail(){
         <div style="font-size:18px;font-weight:600">${p.title}</div>
         <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
           <span class="badge bo">${p.category}</span>
+          <select class="proj-status-select" data-pid="${p.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
           <span style="font-size:12px;color:var(--muted)">담당: ${p.owner}</span>
           ${p.deadline?`<span class="dlc ${dday!==null&&dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${fmtDate(p.deadline)} (D-${dday})</span>`:''}
           ${linkedVendors.map(v=>`<span style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--sf);padding:2px 8px;border-radius:20px">${av(v.name,16)} ${v.name}</span>`).join('')}
@@ -2404,8 +2439,8 @@ function modalEditEvent(ev){
 }
 
 
-  const sentences = text.split(/[.。\n]/).map(s=>s.trim()).filter(Boolean);
 function generateMeetingSummary(text){
+  const sentences = text.split(/[.。\n\r]/).map(s=>s.trim()).filter(Boolean);
   const summary = sentences.slice(0,2).join('. ') + (sentences.length>0?'.':'');
   const actionKeywords = ['필요','예정','하기로','전달','검토','보고','확인','요청','작성'];
   const candidates = sentences.filter(s=> actionKeywords.some(k=>s.includes(k)));
@@ -2418,7 +2453,7 @@ function generateMeetingSummary(text){
 
 /* 로그 원본 -> 한 줄 요약 (간단 규칙 기반, Claude API 연동 시 교체) */
 function generateOneLineSummary(text){
-  const sentences = text.split(/[.。\n]/).map(s=>s.trim()).filter(Boolean);
+  const sentences = text.split(/[.。\n\r]/).map(s=>s.trim()).filter(Boolean);
   if(sentences.length===0) return '';
   let first = sentences[0];
   if(first.length>60) first = first.slice(0,57)+'...';
@@ -2941,14 +2976,25 @@ function bindViewEvents(){
     const needsApproval = fd.get('needsApproval') === 'on';
     const logId = uid('vl');
 
-    // 1. 로그 저장
-    state.data.vendorLogs.unshift({
+    // 1. 링크 수집
+    const logLinks = [];
+    document.querySelectorAll('#logLinkList .link-row').forEach(row=>{
+      const url = row.querySelector('.link-url')?.value?.trim();
+      const label = row.querySelector('.link-label')?.value?.trim();
+      if(url) logLinks.push({url, label: label||url});
+    });
+
+    // 2. 로그 저장
+    state.data.vendorLogs.push({
       id: logId, vendorId, date: fd.get('date'), type: fd.get('type'),
       status: fd.get('status'), priority: fd.get('priority'),
       summary: fd.get('summary'), nextStep, nextStepDue,
       rawText: fd.get('rawText')||'',
-      needsApproval, nextStepDone: false
+      needsApproval, nextStepDone: false,
+      links: logLinks
     });
+    // 날짜 기준 최신순 정렬
+    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
     // 2. 다음액션이 있으면 해당 벤더의 vendorChecklist에 추가
     if(nextStep.trim()){
@@ -2992,6 +3038,59 @@ function bindViewEvents(){
   if(saveMemoBtn) saveMemoBtn.addEventListener('click', ()=>{
     state.data.memo = document.getElementById('dashMemo').value;
     persist(); showToast('메모가 저장되었습니다.');
+  });
+
+  // ── 링크 추가 버튼 공통 헬퍼 ──
+  function bindLinkAdder(addBtnId, listId, urlInputId, labelInputId){
+    const btn = document.getElementById(addBtnId);
+    if(!btn) return;
+    btn.addEventListener('click', ()=>{
+      const url = document.getElementById(urlInputId)?.value?.trim();
+      const label = document.getElementById(labelInputId)?.value?.trim();
+      if(!url){ showToast('링크 URL을 입력해주세요.'); return; }
+      const list = document.getElementById(listId);
+      if(!list) return;
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.style.cssText = 'display:flex;gap:6px;align-items:center';
+      const cls = listId === 'editLinkList' ? 'edit-link-url' : 'link-url';
+      const lcls = listId === 'editLinkList' ? 'edit-link-label' : 'link-label';
+      const delCls = listId === 'editLinkList' ? 'edit-link-del' : 'link-del';
+      row.innerHTML = `
+        <input type="text" class="inp ${cls}" value="${url.replace(/"/g,'&quot;')}" style="flex:1;margin:0"/>
+        <input type="text" class="inp ${lcls}" value="${(label||'').replace(/"/g,'&quot;')}" placeholder="이름" style="width:120px;margin:0"/>
+        <button type="button" class="btn btn-red ${delCls}" style="padding:5px 8px;flex-shrink:0"><i class="ti ti-x"></i></button>
+      `;
+      row.querySelector(`.${delCls}`).addEventListener('click', ()=>row.remove());
+      list.appendChild(row);
+      if(document.getElementById(urlInputId)) document.getElementById(urlInputId).value = '';
+      if(document.getElementById(labelInputId)) document.getElementById(labelInputId).value = '';
+    });
+    // 기존 삭제 버튼 바인딩
+    document.querySelectorAll(`#${listId} .${listId==='editLinkList'?'edit-link-del':'link-del'}`).forEach(btn=>{
+      btn.addEventListener('click', ()=>btn.closest('.link-row, .edit-link-row')?.remove());
+    });
+  }
+  bindLinkAdder('addLogLinkBtn',  'logLinkList',  'logLinkInput',  'logLinkLabel');
+  bindLinkAdder('addVlLinkBtn',   'vlLinkList',   'vlLinkInput',   'vlLinkLabel');
+  bindLinkAdder('addEditLinkBtn', 'editLinkList', 'editLinkInput', 'editLinkLabel');
+
+  // ── 거래처 상태값 인라인 변경 ──
+  document.querySelectorAll('.vendor-status-select').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      e.stopPropagation();
+      const v = state.data.vendors.find(x=>x.id===sel.dataset.vid);
+      if(v){ v.companyStatus = sel.value; persist(); }
+    });
+  });
+
+  // ── 프로젝트 상태값 인라인 변경 ──
+  document.querySelectorAll('.proj-status-select').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      e.stopPropagation();
+      const p = state.data.projects.find(x=>x.id===sel.dataset.pid);
+      if(p){ p.status = sel.value; persist(); }
+    });
   });
 
   // 대표님 승인 항목 클릭 → 벤더 상세로 이동
