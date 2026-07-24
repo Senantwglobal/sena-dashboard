@@ -2424,7 +2424,6 @@ function viewCalendar(){
 }
 
 
-function viewLogInput(){
 function modalLogForm(preVendorId, preProjectId){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
   // 사전 선택된 벤더에 연결된 프로젝트
