@@ -2199,7 +2199,12 @@ function viewVendorDetail(){
 function viewProjects(){
   let projects = state.data.projects.slice();
   if(state.projectFilter!=='전체') projects = projects.filter(p=>p.category===state.projectFilter);
-  projects.sort((a,b)=>dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01')));
+  const statusOrder = {'진행중':0,'보류':1,'완료':2};
+  projects.sort((a,b)=>{
+    const so = (statusOrder[a.status]??1) - (statusOrder[b.status]??1);
+    if(so!==0) return so;
+    return dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01'));
+  });
 
   const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
   const catColorMap = {};
