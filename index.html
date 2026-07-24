@@ -1932,142 +1932,160 @@ function viewVendorDetail(){
       아직 활동 로그가 없습니다. 로그를 추가해주세요.
     </div>`}
 
-    <div class="two" style="margin-bottom:14px">
-      <div class="card">
-        <div class="sh" style="margin-bottom:10px">
-          <div class="st"><i class="ti ti-users oi"></i>담당자</div>
-          ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 담당자 추가</button>`:''}
-        </div>
-        ${(() => {
-          const people = v.people || [];
-          if(people.length === 0) return `<div class="empty-state" style="padding:14px">등록된 담당자가 없습니다.</div>`;
-          return people.map((p,i) => `
-            <div class="person-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--bd)">
-              ${av(p.name, 32)}
-              <div style="flex:1;min-width:0">
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                  <span style="font-size:13px;font-weight:500">${p.name||'-'}</span>
-                  ${p.isMain?`<span style="font-size:10px;background:var(--ol);color:var(--od);padding:1px 7px;border-radius:20px">메인</span>`:''}
-                </div>
-                ${p.title?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${p.title}</div>`:''}
-                ${p.email?`<a href="mailto:${p.email}" style="font-size:11px;color:var(--o);display:block;margin-top:1px">${p.email}</a>`:''}
-                ${p.phone?`<div style="font-size:11px;color:var(--muted);margin-top:1px"><i class="ti ti-phone" style="font-size:10px"></i> ${p.phone}</div>`:''}
-              </div>
-              ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-                <button class="btn person-edit-btn" data-idx="${i}" style="padding:3px 8px;font-size:11px" title="수정"><i class="ti ti-pencil" style="font-size:11px"></i></button>
-                ${!p.isMain?`<button class="btn person-set-main-btn" data-idx="${i}" style="padding:3px 8px;font-size:10px" title="메인 설정">⭐</button>`:''}
-                <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:3px 8px;font-size:11px" title="삭제"><i class="ti ti-trash" style="font-size:11px"></i></button>
-              </div>`:''}
-            </div>`).join('');
-        })()}
-      </div>
-      <div class="card">
-        <div class="sh" style="margin-bottom:8px">
-          <div class="st"><i class="ti ti-notes oi"></i>거래 메모</div>
-          ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:11px;padding:4px 8px"><i class="ti ti-plus"></i> 항목 추가</button>`:''}
-        </div>
-        <div id="customNotesList">
-          ${(v.customNotes||[
-            {key:'할인율',val:v.notes.discount||''},
-            {key:'결제 조건',val:v.notes.payment||''},
-            {key:'MOQ',val:v.notes.moq||''},
-            {key:'Credit Limit',val:v.notes.creditLimit||''}
-          ]).map((n,i)=>`
-            <div class="custom-note-row" style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bd)">
-              ${!isReadOnly()?`<input type="text" class="inp note-key" data-idx="${i}" value="${(n.key||'').replace(/"/g,'&quot;')}" style="width:90px;flex-shrink:0;margin:0;font-size:12px;padding:4px 8px;font-weight:500;color:var(--muted)"/>`:`<span style="color:var(--muted);width:90px;flex-shrink:0;font-size:12px">${n.key}</span>`}
-              ${!isReadOnly()?`<input type="text" class="inp note-val" data-idx="${i}" value="${(n.val||'').replace(/"/g,'&quot;')}" style="flex:1;margin:0;font-size:13px;padding:4px 8px"/>`:`<span style="font-size:13px;flex:1">${n.val||'-'}</span>`}
-              ${!isReadOnly()?`<button class="btn btn-red note-del-btn" data-idx="${i}" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-x"></i></button>`:''}
-            </div>`).join('')}
-        </div>
-        ${!isReadOnly()?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:12px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
-      </div>
-    </div>
 
-    ${projects.length>0?`<div class="card" style="margin-bottom:14px">
-      <div class="sh"><div class="st"><i class="ti ti-checklist oi"></i>연결된 프로젝트</div></div>
-      ${projects.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
-        <span style="flex:1;font-weight:500">${p.title}</span>
-        <div class="pgb" style="width:80px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
-        <span style="font-size:11px;color:var(--muted);width:32px;text-align:right">${progressOf(p)}%</span>
-      </div>`).join('')}
-    </div>`:''}
+    <!-- ── 사이드바 + 메인 2단 레이아웃 ── -->
+    <div style="display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start">
 
-    <div class="card">
-      ${(() => {
-        // 연도/월 필터
-        const years = [...new Set(logs.map(l=>dayjs(l.date).format('YYYY')))].sort((a,b)=>b-a);
-        const fy = state.vendorLogFilterYear;
-        const fm = state.vendorLogFilterMonth;
-        let filtered = logs;
-        if(fy!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('YYYY')===fy);
-        if(fm!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('M')===fm);
-        const displayLogs = state.vendorLogExpanded ? filtered : filtered.slice(0,5);
-        const groups = {};
-        displayLogs.forEach(l=>{
-          const ym = dayjs(l.date).format('YYYY년 M월');
-          if(!groups[ym]) groups[ym] = [];
-          groups[ym].push(l);
-        });
-        return `
-        <div class="sh">
-          <div class="st"><i class="ti ti-history oi"></i>활동 로그 <span style="font-size:11px;color:var(--muted);font-weight:400">(${filtered.length}/${logs.length}건)</span></div>
-          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
-            <select id="logYearFilter" class="inp" style="font-size:11px;padding:3px 8px;margin:0;width:auto" onchange="state.vendorLogFilterYear=this.value;state.vendorLogExpanded=false;render()">
-              <option value="all" ${fy==='all'?'selected':''}>전체 연도</option>
-              ${years.map(y=>`<option value="${y}" ${fy===y?'selected':''}>${y}년</option>`).join('')}
-            </select>
-            <select id="logMonthFilter" class="inp" style="font-size:11px;padding:3px 8px;margin:0;width:auto" onchange="state.vendorLogFilterMonth=this.value;state.vendorLogExpanded=false;render()">
-              <option value="all" ${fm==='all'?'selected':''}>전체 월</option>
-              ${['1','2','3','4','5','6','7','8','9','10','11','12'].map(m=>`<option value="${m}" ${fm===m?'selected':''}>${m}월</option>`).join('')}
-            </select>
-            <button class="btn ${!state.vendorLogExpanded?'btn-o':''}" id="toggleLogViewBtn" style="font-size:11px;padding:4px 10px">
-              ${state.vendorLogExpanded?'<i class="ti ti-list"></i> 요약':'<i class="ti ti-timeline"></i> 전체'}
-            </button>
-            ${!isReadOnly()?`<button class="btn" id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
+      <!-- 왼쪽 사이드바 -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <!-- 담당자 -->
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
+            ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
           </div>
+          ${(() => {
+            const people = v.people || [];
+            if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
+            return people.map((p,i) => `
+              <div class="person-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd)">
+                ${av(p.name, 28)}
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <span style="font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
+                    ${p.isMain?`<span style="font-size:9px;background:var(--ol);color:var(--od);padding:1px 5px;border-radius:20px;flex-shrink:0">메인</span>`:''}
+                  </div>
+                  ${p.title?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>`:''}
+                  ${p.email?`<a href="mailto:${p.email}" style="font-size:10px;color:var(--o);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</a>`:''}
+                  ${p.phone?`<div style="font-size:10px;color:var(--muted)">${p.phone}</div>`:''}
+                </div>
+                ${!isReadOnly()?`<div style="display:flex;gap:2px;flex-shrink:0">
+                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px"><i class="ti ti-pencil"></i></button>
+                  ${!p.isMain?`<button class="btn person-set-main-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px">⭐</button>`:''}
+                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px"><i class="ti ti-trash"></i></button>
+                </div>`:''}
+              </div>`).join('');
+          })()}
         </div>
 
-        ${filtered.length===0?`<div class="empty-state">해당 기간에 기록이 없습니다.</div>`:
-          Object.entries(groups).map(([ym, glogs])=>`
-          <div style="margin-bottom:4px">
-            <div style="font-size:11px;font-weight:600;color:var(--muted);padding:6px 0 4px;border-bottom:0.5px solid var(--bd);text-transform:uppercase;letter-spacing:.04em">${ym}</div>
-            ${glogs.map(l=>{
-              const tb=logTypeBadge(l.type);
-              return `<div style="display:flex;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--bd);">
-                <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:36px">
-                  <span style="font-size:10px;color:var(--muted);white-space:nowrap">${dayjs(l.date).format('M/D')}</span>
-                  <span style="font-size:9px;color:var(--muted)">${dayjs(l.date).format('(ddd)')}</span>
-                </div>
-                <div style="flex:1;min-width:0">
-                  <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:3px">
-                    <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${l.type}</span>
-                    <span class="badge bgr" style="font-size:9px">${l.status}</span>
-                    ${l.needsApproval?`<span style="font-size:9px;padding:1px 6px;border-radius:20px;background:#FCEBEB;color:#A32D2D">📋 대표님 승인</span>`:''}
-                  </div>
-                  <div style="font-size:13px;line-height:1.4">${l.summary}</div>
-                  ${l.nextStep?`<div style="font-size:12px;margin-top:4px;display:flex;align-items:flex-start;gap:6px">
-                    <span style="color:var(--o);font-size:10px;margin-top:2px">→</span>
-                    <span style="color:${l.nextStepDone?'var(--muted)':'var(--text)'}; text-decoration:${l.nextStepDone?'line-through':'none'}">${l.nextStep}</span>
-                    ${l.nextStepDue?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${fmtDate(l.nextStepDue)}</span>`:''}
-                    ${!l.nextStepDone?`<input type="checkbox" class="nextaction-done" data-lid="${l.id}" title="완료 처리" style="accent-color:var(--o);width:13px;height:13px;flex-shrink:0;cursor:pointer;margin-top:1px"/>`:'<span style="font-size:10px;color:#3B6D11">✓ 완료</span>'}
-                  </div>`:''}
-                  ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text" style="font-size:11px"></i> 원본 보기</div>`:''}
-                  ${renderLogLinks(l.links)}
-                </div>
-                ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
-                  <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 8px;font-size:11px" title="수정"><i class="ti ti-pencil" style="font-size:12px"></i></button>
-                  <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 8px;font-size:11px" title="삭제"><i class="ti ti-trash" style="font-size:12px"></i></button>
-                </div>`:''}
-              </div>`;
-            }).join('')}
+        <!-- 거래 메모 -->
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">거래 메모</span>
+            ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
+          </div>
+          <div id="customNotesList">
+            ${(v.customNotes||[
+              {key:'할인율',val:v.notes.discount||''},
+              {key:'결제 조건',val:v.notes.payment||''},
+              {key:'MOQ',val:v.notes.moq||''},
+              {key:'Credit Limit',val:v.notes.creditLimit||''}
+            ]).map((n,i)=>`
+              <div class="custom-note-row" style="padding:6px 0;border-bottom:0.5px solid var(--bd)">
+                ${!isReadOnly()
+                  ?`<div style="font-size:10px;color:var(--muted);margin-bottom:2px"><input type="text" class="inp note-key" data-idx="${i}" value="${(n.key||'').replace(/"/g,'&quot;')}" style="width:100%;margin:0;font-size:10px;padding:2px 6px;font-weight:500;color:var(--muted)"/></div>
+                    <input type="text" class="inp note-val" data-idx="${i}" value="${(n.val||'').replace(/"/g,'&quot;')}" style="width:100%;margin:0;font-size:12px;padding:3px 6px"/>`
+                  :`<div style="font-size:10px;color:var(--muted)">${n.key}</div>
+                    <div style="font-size:12px;font-weight:500;margin-top:1px">${n.val||'-'}</div>`}
+                ${!isReadOnly()?`<button class="btn btn-red note-del-btn" data-idx="${i}" style="padding:1px 5px;font-size:10px;margin-top:4px"><i class="ti ti-x"></i></button>`:''}
+              </div>`).join('')}
+          </div>
+          ${!isReadOnly()?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
+        </div>
+
+      </div>
+
+      <!-- 오른쪽 메인 -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        ${projects.length>0?`<div class="card" style="padding:12px 16px">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">연결된 프로젝트</div>
+          ${projects.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer;padding:6px 0">
+            <i class="ti ti-checklist" style="font-size:12px;color:var(--o)"></i>
+            <span style="flex:1;font-size:13px;font-weight:500">${p.title}</span>
+            <div class="pgb" style="width:60px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
+            <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
           </div>`).join('')}
-        ${!state.vendorLogExpanded && filtered.length>5?`<div style="text-align:center;padding:10px 0">
-          <button class="btn" id="toggleLogViewBtn2" style="font-size:12px"><i class="ti ti-chevron-down"></i> 전체 ${filtered.length}건 보기</button>
         </div>`:''}
-        `;
-      })()}
+
+        <div class="card" style="padding:0;overflow:hidden">
+          ${(() => {
+            const years = [...new Set(logs.map(l=>dayjs(l.date).format('YYYY')))].sort((a,b)=>b-a);
+            const fy = state.vendorLogFilterYear;
+            const fm = state.vendorLogFilterMonth;
+            let filtered = logs;
+            if(fy!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('YYYY')===fy);
+            if(fm!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('M')===fm);
+            const displayLogs = state.vendorLogExpanded ? filtered : filtered.slice(0,5);
+            const groups = {};
+            displayLogs.forEach(l=>{
+              const ym = dayjs(l.date).format('YYYY년 M월');
+              if(!groups[ym]) groups[ym] = [];
+              groups[ym].push(l);
+            });
+            return `
+            <div class="sh" style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+              <div class="st"><i class="ti ti-history oi"></i>활동 로그 <span style="font-size:11px;color:var(--muted);font-weight:400">(${filtered.length}/${logs.length}건)</span></div>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <select id="logYearFilter" class="inp" style="font-size:11px;padding:3px 8px;margin:0;width:auto" onchange="state.vendorLogFilterYear=this.value;state.vendorLogExpanded=false;render()">
+                  <option value="all" ${fy==='all'?'selected':''}>전체 연도</option>
+                  ${years.map(y=>`<option value="${y}" ${fy===y?'selected':''}>${y}년</option>`).join('')}
+                </select>
+                <select id="logMonthFilter" class="inp" style="font-size:11px;padding:3px 8px;margin:0;width:auto" onchange="state.vendorLogFilterMonth=this.value;state.vendorLogExpanded=false;render()">
+                  <option value="all" ${fm==='all'?'selected':''}>전체 월</option>
+                  ${['1','2','3','4','5','6','7','8','9','10','11','12'].map(m=>`<option value="${m}" ${fm===m?'selected':''}>${m}월</option>`).join('')}
+                </select>
+                <button class="btn ${!state.vendorLogExpanded?'btn-o':''}" id="toggleLogViewBtn" style="font-size:11px;padding:4px 10px">
+                  ${state.vendorLogExpanded?'<i class="ti ti-list"></i> 요약':'<i class="ti ti-timeline"></i> 전체'}
+                </button>
+                ${!isReadOnly()?`<button class="btn" id="addVendorLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
+              </div>
+            </div>
+            ${filtered.length===0?`<div class="empty-state" style="padding:28px">해당 기간에 기록이 없습니다.</div>`:
+              Object.entries(groups).map(([ym, glogs])=>`
+              <div>
+                <div style="font-size:10px;font-weight:600;color:var(--muted);padding:5px 16px;background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.04em;text-transform:uppercase">${ym}</div>
+                ${glogs.map(l=>{
+                  const tb=logTypeBadge(l.type);
+                  return `<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:36px;padding-top:2px">
+                      <span style="font-size:11px;color:var(--muted);white-space:nowrap">${dayjs(l.date).format('M/D')}</span>
+                      <span style="font-size:9px;color:var(--muted)">${dayjs(l.date).format('(ddd)')}</span>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+                        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${l.type}</span>
+                        <span class="badge bgr" style="font-size:9px">${l.status}</span>
+                        ${l.needsApproval?`<span style="font-size:9px;padding:1px 6px;border-radius:20px;background:#FCEBEB;color:#A32D2D">📋 대표님 승인</span>`:''}
+                      </div>
+                      <div style="font-size:13px;line-height:1.4;font-weight:500">${l.summary}</div>
+                      ${l.nextStep?`<div style="font-size:12px;margin-top:4px;display:flex;align-items:flex-start;gap:5px">
+                        <span style="color:var(--o);font-size:10px;margin-top:2px">→</span>
+                        <span style="color:${l.nextStepDone?'var(--muted)':'var(--text)'};text-decoration:${l.nextStepDone?'line-through':'none'}">${l.nextStep}</span>
+                        ${l.nextStepDue?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${fmtDate(l.nextStepDue)}</span>`:''}
+                        ${!l.nextStepDone?`<input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:13px;height:13px;flex-shrink:0;cursor:pointer;margin-top:1px"/>`:'<span style="font-size:10px;color:#3B6D11">✓</span>'}
+                      </div>`:''}
+                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
+                      ${renderLogLinks(l.links)}
+                    </div>
+                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
+                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
+                    </div>`:''}
+                  </div>`;
+                }).join('')}
+              </div>`).join('')}
+            ${!state.vendorLogExpanded && filtered.length>5?`<div style="text-align:center;padding:12px">
+              <button class="btn" id="toggleLogViewBtn2" style="font-size:12px"><i class="ti ti-chevron-down"></i> 전체 ${filtered.length}건 보기</button>
+            </div>`:''}`;
+          })()}
+        </div>
+
+      </div>
     </div>
   `;
+
 }
 
 function viewProjects(){
@@ -3426,12 +3444,21 @@ function bindViewEvents(){
   // 벤더 검색
   const vSearch = document.getElementById('vendorSearchInput');
   if(vSearch){
-    vSearch.addEventListener('input', e=>{
+    let vComposing = false;
+    vSearch.addEventListener('compositionstart', ()=>{ vComposing = true; });
+    vSearch.addEventListener('compositionend', e=>{
+      vComposing = false;
       state.vendorSearch = e.target.value;
       render();
-      document.getElementById('vendorSearchInput').focus();
-      const val = document.getElementById('vendorSearchInput');
-      val.setSelectionRange(val.value.length, val.value.length);
+      const el = document.getElementById('vendorSearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+    vSearch.addEventListener('input', e=>{
+      if(vComposing) return; // 조합 중엔 무시
+      state.vendorSearch = e.target.value;
+      render();
+      const el = document.getElementById('vendorSearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
     });
   }
 
@@ -3937,11 +3964,21 @@ function bindViewEvents(){
   });
   const companySearchInput = document.getElementById('companySearchInput');
   if(companySearchInput){
-    companySearchInput.addEventListener('input', e=>{
+    let coComposing = false;
+    companySearchInput.addEventListener('compositionstart', ()=>{ coComposing = true; });
+    companySearchInput.addEventListener('compositionend', e=>{
+      coComposing = false;
       state.companySearch = e.target.value;
       render();
-      const val = document.getElementById('companySearchInput');
-      val.focus(); val.setSelectionRange(val.value.length, val.value.length);
+      const el = document.getElementById('companySearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+    companySearchInput.addEventListener('input', e=>{
+      if(coComposing) return;
+      state.companySearch = e.target.value;
+      render();
+      const el = document.getElementById('companySearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
     });
   }
   const addCompanyBtn = document.getElementById('addCompanyBtn');
