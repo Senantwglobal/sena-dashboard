@@ -1710,9 +1710,31 @@ async function loadQuote(){
 function renderLogLinks(links){
   if(!links || !links.length) return '';
   const items = links.map(lk=>{
-    const label = (lk.label||'관련 파일').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const label = (lk.label||lk.name||'파일').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if(lk.data){
+      // 직접 업로드 파일 → 아이콘/색상 구분 + 다운로드
+      const t = lk.type||'';
+      const icon = t.includes('image') ? 'ti-photo'
+                 : t.includes('pdf') ? 'ti-file-type-pdf'
+                 : (t.includes('sheet')||label.endsWith('.xlsx')||label.endsWith('.xls')) ? 'ti-file-spreadsheet'
+                 : (t.includes('word')||label.endsWith('.docx')) ? 'ti-file-word'
+                 : 'ti-file';
+      const color = t.includes('image') ? '#0891B2'
+                  : t.includes('pdf') ? '#DC2626'
+                  : (t.includes('sheet')||label.endsWith('.xlsx')) ? '#15803D'
+                  : '#6B21A8';
+      const bg = t.includes('image') ? '#E0F2FE'
+               : t.includes('pdf') ? '#FEE2E2'
+               : (t.includes('sheet')||label.endsWith('.xlsx')) ? '#DCFCE7'
+               : '#F3E8FF';
+      return '<a href="data:'+t+';base64,'+lk.data+'" download="'+label+'" style="font-size:11px;padding:2px 8px;border-radius:20px;background:'+bg+';color:'+color+';text-decoration:none;display:inline-flex;align-items:center;gap:3px;border:0.5px solid '+color+'33"><i class="ti '+icon+'" style="font-size:10px"></i>'+label+'</a>';
+    }
+    // URL 링크
     const url = (lk.url||'').replace(/"/g,'&quot;');
-    return '<a href="'+url+'" target="_blank" rel="noopener" style="font-size:11px;padding:2px 8px;border-radius:20px;background:#FEF3C7;color:#92400E;text-decoration:none;display:inline-flex;align-items:center;gap:3px;border:0.5px solid #F59E0B"><i class="ti ti-paperclip" style="font-size:10px"></i>'+label+'</a>';
+    const isDrive = url.includes('drive.google')||url.includes('docs.google');
+    const isNotion = url.includes('notion.');
+    const urlIcon = isDrive ? 'ti-brand-google-drive' : isNotion ? 'ti-brand-notion' : 'ti-link';
+    return '<a href="'+url+'" target="_blank" rel="noopener" style="font-size:11px;padding:2px 8px;border-radius:20px;background:#FEF3C7;color:#92400E;text-decoration:none;display:inline-flex;align-items:center;gap:3px;border:0.5px solid #F59E0B33"><i class="ti '+urlIcon+'" style="font-size:10px"></i>'+label+'</a>';
   });
   return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">'+items.join('')+'</div>';
 }
@@ -2510,12 +2532,28 @@ function modalLogForm(preVendorId, preProjectId){
 
           <!-- 파일/링크 -->
           <div style="background:var(--sf);border-radius:10px;padding:12px;margin-top:4px">
-            <label class="field-label" style="margin-bottom:8px">관련 파일 링크</label>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <label class="field-label" style="margin:0">파일 &amp; 링크</label>
+              <div style="display:flex;gap:4px">
+                <button type="button" id="lmTabLink" class="btn btn-o" style="font-size:11px;padding:3px 10px">🔗 URL 링크</button>
+                <button type="button" id="lmTabFile" class="btn" style="font-size:11px;padding:3px 10px">📎 파일 업로드</button>
+              </div>
+            </div>
             <div id="lmLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-            <div style="display:flex;gap:6px">
-              <input type="text" id="lmLinkLabel" class="inp" placeholder="파일명" style="flex:1;margin:0"/>
+            <!-- URL 링크 입력 -->
+            <div id="lmLinkArea" style="display:flex;gap:6px">
+              <input type="text" id="lmLinkLabel" class="inp" placeholder="링크 제목 (선택)" style="flex:1;margin:0"/>
               <input type="text" id="lmLinkUrl" class="inp" placeholder="URL (https://...)" style="flex:2;margin:0"/>
               <button type="button" id="lmAddLinkBtn" class="btn" style="padding:7px 10px"><i class="ti ti-plus"></i></button>
+            </div>
+            <!-- 파일 업로드 -->
+            <div id="lmFileArea" style="display:none">
+              <div id="lmFileDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;border:2px dashed var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .2s">
+                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--o)"></i>
+                <span style="font-size:13px;color:var(--muted)">클릭하거나 파일을 드래그하세요</span>
+                <span style="font-size:11px;color:var(--muted)">PDF, Excel, Word, 이미지, CSV · 파일당 최대 2MB</span>
+                <input type="file" id="lmFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif,.zip" style="display:none"/>
+              </div>
             </div>
           </div>
         </form>
@@ -2555,6 +2593,67 @@ function bindLogModal(preVendorId, preProjectId){
     showToast('AI 요약이 생성되었습니다.');
   });
 
+  // 파일/링크 탭 전환
+  const lmTabLink = document.getElementById('lmTabLink');
+  const lmTabFile = document.getElementById('lmTabFile');
+  const lmLinkArea = document.getElementById('lmLinkArea');
+  const lmFileArea = document.getElementById('lmFileArea');
+  if(lmTabLink) lmTabLink.addEventListener('click', ()=>{
+    lmLinkArea.style.display='flex'; lmFileArea.style.display='none';
+    lmTabLink.className='btn btn-o'; lmTabFile.className='btn';
+  });
+  if(lmTabFile) lmTabFile.addEventListener('click', ()=>{
+    lmLinkArea.style.display='none'; lmFileArea.style.display='block';
+    lmTabFile.className='btn btn-o'; lmTabLink.className='btn';
+  });
+
+  // 파일 업로드 처리
+  function addFileToLinkList(file){
+    if(file.size > 2*1024*1024){
+      showToast(`${file.name}: 2MB 초과 파일은 업로드할 수 없습니다.`); return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const base64 = ev.target.result.split(',')[1];
+      const list = document.getElementById('lmLinkList');
+      const row = document.createElement('div');
+      row.className = 'link-row';
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff;border-radius:8px;border:0.5px solid var(--bd)';
+      const ext = file.name.split('.').pop().toLowerCase();
+      const icon = ['jpg','jpeg','png','gif','webp'].includes(ext) ? '🖼️'
+                 : ext === 'pdf' ? '📄'
+                 : ['xlsx','xls','csv'].includes(ext) ? '📊'
+                 : ['docx','doc'].includes(ext) ? '📝' : '📎';
+      row.innerHTML = `<span style="font-size:16px">${icon}</span>
+        <input type="hidden" class="link-label" value="${file.name}"/>
+        <input type="hidden" class="link-url" value=""/>
+        <input type="hidden" class="link-data" value="${base64}"/>
+        <input type="hidden" class="link-type" value="${file.type||'application/octet-stream'}"/>
+        <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</span>
+        <span style="font-size:10px;color:var(--muted);flex-shrink:0">${(file.size/1024).toFixed(0)}KB</span>
+        <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px;flex-shrink:0" onclick="this.closest('.link-row').remove()"><i class="ti ti-x"></i></button>`;
+      list.appendChild(row);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  const lmFileInput = document.getElementById('lmFileInput');
+  const lmDropZone = document.getElementById('lmFileDropZone');
+  if(lmDropZone){
+    lmDropZone.addEventListener('click', ()=>lmFileInput?.click());
+    lmDropZone.addEventListener('dragover', e=>{ e.preventDefault(); lmDropZone.style.borderColor='var(--o)'; lmDropZone.style.background='var(--ol)'; });
+    lmDropZone.addEventListener('dragleave', ()=>{ lmDropZone.style.borderColor='var(--bd)'; lmDropZone.style.background='#fff'; });
+    lmDropZone.addEventListener('drop', e=>{
+      e.preventDefault();
+      lmDropZone.style.borderColor='var(--bd)'; lmDropZone.style.background='#fff';
+      Array.from(e.dataTransfer.files).forEach(addFileToLinkList);
+    });
+  }
+  if(lmFileInput) lmFileInput.addEventListener('change', e=>{
+    Array.from(e.target.files).forEach(addFileToLinkList);
+    e.target.value='';
+  });
+
   // 파일 링크 추가
   const addLinkBtn = document.getElementById('lmAddLinkBtn');
   if(addLinkBtn) addLinkBtn.addEventListener('click', ()=>{
@@ -2587,12 +2686,20 @@ function bindLogModal(preVendorId, preProjectId){
     const nextStep = fd.get('nextStep')||'';
     const needsApproval = fd.get('needsApproval')==='on';
 
-    // 링크 수집
+    // 링크+파일 수집
     const links = [];
     document.querySelectorAll('#lmLinkList .link-row').forEach(row=>{
-      const url = row.querySelector('.link-url')?.value?.trim();
       const label = row.querySelector('.link-label')?.value?.trim();
-      if(url) links.push({url, label:label||url});
+      const url   = row.querySelector('.link-url')?.value?.trim();
+      const data  = row.querySelector('.link-data')?.value?.trim();
+      const type  = row.querySelector('.link-type')?.value?.trim();
+      if(data){
+        // 직접 업로드 파일
+        links.push({label: label||'파일', url:'', data, type});
+      } else if(url){
+        // URL 링크
+        links.push({label: label||url, url});
+      }
     });
 
     const newLog = {
