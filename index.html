@@ -1480,12 +1480,19 @@ function viewHome(){
           <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div></div>
           ${pendingActions.map(l=>{
             const v = state.data.vendors.find(x=>x.id===l.vendorId);
+            const linkedProj = l.linkedProjectId ? state.data.projects.find(p=>p.id===l.linkedProjectId) : null;
             return `<div class="dash-row" style="align-items:flex-start;gap:8px">
               <input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:15px;height:15px;margin-top:2px;flex-shrink:0;cursor:pointer"/>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:500">${l.nextStep}</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px">${v?v.name:''} · ${fmtDate(l.date)}</div>
+              <div style="flex:1;min-width:0;cursor:pointer" class="pending-action-link" data-vid="${l.vendorId}" data-pid="${l.linkedProjectId||''}">
+                <div style="font-size:13px;font-weight:500;color:var(--text)">${l.nextStep}</div>
+                <div style="font-size:11px;color:var(--o);margin-top:2px;display:flex;align-items:center;gap:4px">
+                  <i class="ti ti-building-store" style="font-size:10px"></i>
+                  <span>${v?v.name:''}</span>
+                  <span style="color:var(--muted)">· ${fmtDate(l.date)}</span>
+                  ${linkedProj?`<span style="color:var(--muted)">· <i class="ti ti-checklist" style="font-size:10px"></i> ${linkedProj.title}</span>`:''}
+                </div>
               </div>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:3px;flex-shrink:0"></i>
             </div>`;
           }).join('')}
         </div>` : ''}
@@ -3719,6 +3726,24 @@ function bindViewEvents(){
     el.addEventListener('change', ()=>{
       const log = state.data.vendorLogs.find(l=>l.id===el.dataset.lid);
       if(log){ log.nextStepDone = el.checked; persist(); if(el.checked) showToast('완료 처리되었습니다!'); }
+    });
+  });
+
+  // 미완료 다음 액션 → 거래처 또는 프로젝트 상세로 이동
+  document.querySelectorAll('.pending-action-link').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const pid = el.dataset.pid;
+      const vid = el.dataset.vid;
+      if(pid){
+        // 연결 프로젝트 있으면 프로젝트 상세로
+        state.selectedProjectId = pid;
+        state.view = 'projects';
+      } else if(vid){
+        // 거래처 상세로
+        state.selectedVendorId = vid;
+        state.view = 'vendors';
+      }
+      render();
     });
   });
 
