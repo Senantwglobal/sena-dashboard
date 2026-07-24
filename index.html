@@ -1941,9 +1941,13 @@ function viewVendorDetail(){
   const activeBrand = hasBrands ? brands.find(b=>b.id===activeBrandId) : null;
 
   // 브랜드별 또는 전체 데이터
+  // 브랜드별 로그 필터링
+  // - 브랜드 탭 선택 시: 해당 brandId 로그 + brandId 없는 로그 모두 표시
+  // - 브랜드 없는 거래처: 전체 로그
+  const allVendorLogs = logsForVendor(v.id);
   const bLogs = hasBrands && activeBrandId
-    ? logsForVendor(v.id).filter(l=>l.brandId===activeBrandId)
-    : logsForVendor(v.id);
+    ? allVendorLogs.filter(l => l.brandId === activeBrandId || !l.brandId)
+    : allVendorLogs;
   const logs = bLogs;
   const projects = projectsForVendor(v.id);
   const latest = logs[0] || logsForVendor(v.id)[0];
@@ -2002,15 +2006,19 @@ function viewVendorDetail(){
 
     ${hasBrands ? `
     <!-- 브랜드 탭 -->
-    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;border-bottom:1.5px solid var(--bd);flex-wrap:wrap">
-      ${brands.map(b=>`
-        <div style="display:flex;align-items:center;margin-bottom:-1.5px">
-          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:7px 12px;font-size:13px;font-weight:${b.id===activeBrandId?'600':'400'};color:${b.id===activeBrandId?'var(--o)':'var(--muted)'};background:none;border:none;border-bottom:${b.id===activeBrandId?'2px solid var(--o)':'2px solid transparent'};cursor:pointer;display:flex;align-items:center;gap:6px">
-            ${av(b.name||b.id, 16)}
+    <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;border-bottom:2px solid var(--bd);flex-wrap:wrap">
+      ${brands.map(b=>{
+        const isActive = b.id===activeBrandId;
+        const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
+        return `<div style="display:flex;align-items:center;border-bottom:${isActive?'2px solid var(--o)':'2px solid transparent'};margin-bottom:-2px">
+          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:8px 14px;font-size:13px;font-weight:${isActive?'600':'400'};color:${isActive?'var(--o)':'var(--muted)'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
+            ${av(b.name||b.id, 18)}
             ${b.name||b.id}
+            ${bLogCount>0?`<span style="font-size:10px;background:${isActive?'var(--ol)':'var(--sf)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 5px;border-radius:10px">${bLogCount}</span>`:''}
           </button>
-          ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" title="브랜드 삭제" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 4px;opacity:.5"><i class="ti ti-x"></i></button>`:''}
-        </div>`).join('')}
+          ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 브랜드 삭제" style="padding:4px 6px;margin-right:6px;font-size:11px;color:#DC2626;background:#FEE2E2;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px"><i class="ti ti-trash" style="font-size:11px"></i></button>`:''}
+        </div>`;
+      }).join('')}
     </div>` : ``}
 
     ${latest ? `
@@ -2200,6 +2208,10 @@ function viewVendorDetail(){
         })()}
 
         <div class="card" style="padding:0;overflow:hidden">
+          ${hasBrands && allVendorLogs.filter(l=>!l.brandId).length > 0 ? `
+          <div style="background:#FEF3C7;border-bottom:0.5px solid #F59E0B44;padding:8px 16px">
+            <span style="font-size:11px;color:#92400E"><i class="ti ti-info-circle" style="font-size:11px"></i> 브랜드 미배정 로그 ${allVendorLogs.filter(l=>!l.brandId).length}건은 모든 탭에서 표시됩니다.</span>
+          </div>` : ''}
           ${(() => {
             const years = [...new Set(logs.map(l=>dayjs(l.date).format('YYYY')))].sort((a,b)=>b-a);
             const fy = state.vendorLogFilterYear;
@@ -3570,7 +3582,14 @@ function modalEditLog(log){
     `<option value="${v.id}" ${v.id===log.vendorId?'selected':''}>${v.name}</option>`
   ).join('');
 
-  // 이 로그의 벤더가 연결된 프로젝트만 필터 (vendorIds 포함 프로젝트)
+  // 브랜드 옵션 (해당 거래처의 브랜드)
+  const logVendor = state.data.vendors.find(v=>v.id===log.vendorId);
+  const vendorBrands = logVendor?.brands || [];
+  const brandOptions = vendorBrands.map(b=>
+    `<option value="${b.id}" ${log.brandId===b.id?'selected':''}>${b.name}</option>`
+  ).join('');
+
+  // 이 로그의 벤더가 연결된 프로젝트만 필터
   const relatedProjects = state.data.projects.filter(p=>{
     const ids = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
     return ids.includes(log.vendorId);
@@ -3591,12 +3610,22 @@ function modalEditLog(log){
             <div class="field"><label class="field-label">날짜</label>
               <input class="inp" type="date" name="date" value="${log.date}" required/>
             </div>
-            <div class="field"><label class="field-label">거래처 (변경 시 해당 회사로 이동)</label>
+            <div class="field"><label class="field-label">거래처</label>
               <select class="inp" name="vendorId" required>
                 <option value="">선택하세요</option>${vendorOptions}
               </select>
             </div>
           </div>
+          ${vendorBrands.length > 0 ? `
+          <div class="field">
+            <label class="field-label" style="display:flex;align-items:center;gap:6px">
+              <i class="ti ti-brand-tabs" style="font-size:14px;color:var(--o)"></i>
+              브랜드
+            </label>
+            <select class="inp" name="brandId">
+              <option value="">브랜드 없음 (미배정)</option>${brandOptions}
+            </select>
+          </div>` : ''}
           ${relatedProjects.length > 0 ? `
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
@@ -4080,6 +4109,7 @@ function bindViewEvents(){
         // 로그 업데이트
         const idx = state.data.vendorLogs.findIndex(l=>l.id===btn.dataset.lid);
         const newLinkedProjectId = fd.get('linkedProjectId')||'';
+        const newBrandId = fd.get('brandId')||'';
         if(idx !== -1){
           state.data.vendorLogs[idx] = {
             ...state.data.vendorLogs[idx],
@@ -4094,6 +4124,7 @@ function bindViewEvents(){
             rawText: fd.get('rawText')||'',
             needsApproval: fd.get('needsApproval')==='on',
             linkedProjectId: newLinkedProjectId,
+            brandId: newBrandId,
           };
         }
         // 연결 프로젝트 vendorLogs에도 반영
@@ -4305,6 +4336,46 @@ function bindViewEvents(){
     });
   });
 
+  // ── 미배정 로그 브랜드 배정 ──
+  const assignUntaggedBtn = document.getElementById('assignUntaggedBtn');
+  if(assignUntaggedBtn) assignUntaggedBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v?.brands?.length) return;
+    const untagged = state.data.vendorLogs.filter(l=>l.vendorId===v.id && !l.brandId);
+    if(!untagged.length){ showToast('미배정 로그가 없습니다.'); return; }
+
+    const brandOptions = v.brands.map(b=>`<option value="${b.id}">${b.name}</option>`).join('');
+    openModal(`
+      <div class="modal" style="width:480px">
+        <div class="mh"><h3>미배정 로그 브랜드 배정</h3>
+          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="mb">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px">미배정 로그 <b>${untagged.length}건</b>을 어느 브랜드로 배정할까요?</div>
+          <div style="background:var(--sf);border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;margin-bottom:12px">
+            ${untagged.map(l=>`<div style="font-size:12px;padding:4px 0;border-bottom:0.5px solid var(--bd);color:var(--muted)">${l.date} · ${l.summary?.slice(0,50)}</div>`).join('')}
+          </div>
+          <div class="field">
+            <label class="field-label">배정할 브랜드</label>
+            <select id="assignBrandSelect" class="inp">${brandOptions}</select>
+          </div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px">* 전체 일괄 배정됩니다. 개별 변경은 로그 수정에서 가능합니다.</div>
+        </div>
+        <div class="mf" style="gap:8px">
+          <button class="btn" id="closeModal">취소</button>
+          <button class="btn btn-o" id="confirmAssignBtn">배정</button>
+        </div>
+      </div>`);
+    bindModalCommon();
+    document.getElementById('confirmAssignBtn').addEventListener('click', ()=>{
+      const brandId = document.getElementById('assignBrandSelect').value;
+      untagged.forEach(l => { l.brandId = brandId; });
+      closeModal(); persist(); render();
+      const brand = v.brands.find(b=>b.id===brandId);
+      showToast(`${untagged.length}건이 "${brand?.name}"에 배정되었습니다.`);
+    });
+  });
+
   // ── 브랜드 탭 전환 ──
   document.querySelectorAll('.brand-tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -4339,11 +4410,11 @@ function bindViewEvents(){
       e.stopPropagation();
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
       if(!v?.brands) return;
-      const brand = v.brands.find(b=>b.id===btn.dataset.bid);
-      if(!confirm(`"${brand?.name}" 브랜드를 삭제하시겠습니까?\n(이 브랜드의 담당자/메모가 삭제됩니다. 로그는 유지됩니다.)`)) return;
+      const bname = btn.dataset.bname || btn.dataset.bid;
+      if(!confirm(`"${bname}" 브랜드를 삭제하시겠습니까?\n담당자와 거래 메모가 삭제됩니다. 로그는 유지됩니다.`)) return;
       v.brands = v.brands.filter(b=>b.id!==btn.dataset.bid);
       if(state.activeBrandId===btn.dataset.bid) state.activeBrandId = v.brands[0]?.id || null;
-      persist(); render(); showToast('브랜드가 삭제되었습니다.');
+      persist(); render(); showToast(`"${bname}" 브랜드가 삭제되었습니다.`);
     });
   });
 
