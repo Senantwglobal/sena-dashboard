@@ -1993,7 +1993,8 @@ function viewVendorDetail(){
           </div>
         </div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;align-items:center">
+        ${!isReadOnly()?`<button class="btn" id="addBrandTabBtn" style="font-size:11px;padding:5px 10px"><i class="ti ti-brand-tabs"></i> 브랜드 추가</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-red" id="deleteVendorBtn"><i class="ti ti-trash"></i> 삭제</button>`:''}
         ${!isReadOnly()?`<button class="btn" id="editVendorBtn"><i class="ti ti-pencil"></i> 편집</button>`:''}
       </div>
@@ -2001,19 +2002,16 @@ function viewVendorDetail(){
 
     ${hasBrands ? `
     <!-- 브랜드 탭 -->
-    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;border-bottom:1.5px solid var(--bd);padding-bottom:0;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;border-bottom:1.5px solid var(--bd);flex-wrap:wrap">
       ${brands.map(b=>`
-        <button class="brand-tab-btn" data-bid="${b.id}" style="padding:7px 14px;font-size:13px;font-weight:${b.id===activeBrandId?'600':'400'};color:${b.id===activeBrandId?'var(--o)':'var(--muted)'};background:none;border:none;border-bottom:${b.id===activeBrandId?'2px solid var(--o)':'2px solid transparent'};cursor:pointer;margin-bottom:-1.5px;display:flex;align-items:center;gap:6px">
-          ${av(b.name||b.id, 16)}
-          ${b.name||b.id}
-        </button>`).join('')}
-      ${!isReadOnly()?`<button id="addBrandTabBtn" style="padding:7px 10px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;margin-bottom:-1.5px"><i class="ti ti-plus"></i> 브랜드 추가</button>`:''}
-    </div>` : `
-    <!-- 브랜드 없음: 브랜드 추가 버튼만 -->
-    ${!isReadOnly()?`<div style="margin-bottom:10px">
-      <button id="addBrandTabBtn" style="font-size:11px;color:var(--muted);background:none;border:0.5px dashed var(--bd);border-radius:8px;padding:4px 12px;cursor:pointer"><i class="ti ti-plus"></i> 브랜드 탭 추가</button>
-    </div>`:''}
-    `}
+        <div style="display:flex;align-items:center;margin-bottom:-1.5px">
+          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:7px 12px;font-size:13px;font-weight:${b.id===activeBrandId?'600':'400'};color:${b.id===activeBrandId?'var(--o)':'var(--muted)'};background:none;border:none;border-bottom:${b.id===activeBrandId?'2px solid var(--o)':'2px solid transparent'};cursor:pointer;display:flex;align-items:center;gap:6px">
+            ${av(b.name||b.id, 16)}
+            ${b.name||b.id}
+          </button>
+          ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" title="브랜드 삭제" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 4px;opacity:.5"><i class="ti ti-x"></i></button>`:''}
+        </div>`).join('')}
+    </div>` : ``}
 
     ${latest ? `
     <div style="background:${currentStatus.bg};border:0.5px solid ${currentStatus.color}22;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
@@ -4333,6 +4331,20 @@ function bindViewEvents(){
     v.brands.push(newBrand);
     state.activeBrandId = newBrand.id;
     persist(); render(); showToast(`브랜드 "${name.trim()}" 추가됨`);
+  });
+
+  // 브랜드 탭 삭제
+  document.querySelectorAll('.brand-del-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v?.brands) return;
+      const brand = v.brands.find(b=>b.id===btn.dataset.bid);
+      if(!confirm(`"${brand?.name}" 브랜드를 삭제하시겠습니까?\n(이 브랜드의 담당자/메모가 삭제됩니다. 로그는 유지됩니다.)`)) return;
+      v.brands = v.brands.filter(b=>b.id!==btn.dataset.bid);
+      if(state.activeBrandId===btn.dataset.bid) state.activeBrandId = v.brands[0]?.id || null;
+      persist(); render(); showToast('브랜드가 삭제되었습니다.');
+    });
   });
 
   // ── 거래처 파일&링크 직접 추가 ──
