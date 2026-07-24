@@ -1053,21 +1053,30 @@ function seedData(){
     {id:'co059',name:'Nutrabolt',people:[{id:'p05900',name:'Aaron Chun',title:'Sr. Director, Market Development',email:'achun@nutrabolt.com',phone:''}]},
   ];
   const leaveLogs = [
-    {id:'lv000',date:'2025-10-24',type:'반차',amount:0.5,memo:'오후'},
-    {id:'lv001',date:'2025-11-11',type:'연차',amount:1.0,memo:''},
-    {id:'lv002',date:'2025-11-05',type:'반차',amount:0.5,memo:'오후'},
-    {id:'lv003',date:'2025-11-19',type:'반차',amount:0.5,memo:'오전'},
-    {id:'lv004',date:'2025-12-26',type:'연차',amount:1.0,memo:''},
-    {id:'lv005',date:'2025-12-24',type:'반차',amount:0.5,memo:'오후'},
-    {id:'lv006',date:'2026-01-15',type:'반차',amount:0.5,memo:'오후'},
+    {id:'lv000',date:'2025-10-24',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv001',date:'2025-11-05',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv002',date:'2025-11-11',type:'연차',amount:1.0,memo:'연차 신청'},
+    {id:'lv003',date:'2025-11-19',type:'오전 반차',amount:0.5,memo:'오전 반차'},
+    {id:'lv004',date:'2025-12-24',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv005',date:'2025-12-26',type:'연차',amount:1.0,memo:''},
+    {id:'lv006',date:'2026-01-15',type:'오후 반차',amount:0.5,memo:'오후 반차'},
     {id:'lv007',date:'2026-01-23',type:'연차',amount:1.0,memo:''},
-    {id:'lv008',date:'2026-02-09',type:'반반차',amount:0.25,memo:'오후'},
-    {id:'lv009',date:'2026-02-13',type:'반반차',amount:0.25,memo:'오후'},
-    {id:'lv010',date:'2026-03-01',type:'대체휴무',amount:1.0,memo:'삼일절 근무'},
-    {id:'lv011',date:'2026-03-17',type:'반차',amount:0.5,memo:'오후'},
-    {id:'lv012',date:'2026-03-18',type:'연차',amount:1.0,memo:''},
-    {id:'lv013',date:'2026-03-25',type:'반차',amount:0.5,memo:''},
-    {id:'lv014',date:'2026-04-09',type:'반차',amount:0.5,memo:'오후'},
+    {id:'lv008',date:'2026-02-09',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv009',date:'2026-02-13',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv010',date:'2026-03-17',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv011',date:'2026-03-18',type:'연차',amount:1.0,memo:''},
+    {id:'lv012',date:'2026-03-25',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv013',date:'2026-03-25',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv014',date:'2026-04-10',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv015',date:'2026-04-15',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv016',date:'2026-04-22',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv017',date:'2026-05-04',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv018',date:'2026-05-08',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv019',date:'2026-05-19',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv020',date:'2026-06-02',type:'오후 반차',amount:0.5,memo:'오후 반차'},
+    {id:'lv021',date:'2026-07-02',type:'연차',amount:1.0,memo:''},
+    {id:'lv022',date:'2026-07-06',type:'오후 반반차',amount:0.25,memo:'오후 반반차'},
+    {id:'lv023',date:'2026-07-20',type:'연차',amount:1.0,memo:''},
   ];
 
   // ── PDF 로그 (seedData 보완) ──
@@ -1327,7 +1336,6 @@ function render(){
     {view:'vendors', icon:'ti-building-store', label:'거래처'},
     {view:'projects', icon:'ti-checklist', label:'프로젝트'},
     {view:'calendar', icon:'ti-calendar', label:'캘린더'},
-    {view:'log', icon:'ti-pencil-plus', label:'로그 입력'},
     {view:'leave', icon:'ti-beach', label:'연차'},
   ];
 
@@ -2009,6 +2017,28 @@ function viewVendorDetail(){
           </div>`).join('')}
         </div>`:''}
 
+        <!-- 파일/링크 섹션 -->
+        ${(() => {
+          const allLinks = logs.flatMap(l=>(l.links||[]).map(lk=>({...lk, logDate:l.date, logSummary:l.summary})));
+          return `<div class="card" style="padding:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
+              <span style="font-size:10px;color:var(--muted)">${allLinks.length}건</span>
+            </div>
+            ${allLinks.length===0
+              ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">로그에 첨부된 파일/링크가 없습니다.</div>`
+              : allLinks.map(lk=>`
+                <a href="${lk.url}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd);text-decoration:none;color:inherit">
+                  <i class="ti ti-${lk.url.includes('drive.google')?'brand-google-drive':lk.url.includes('notion')?'brand-notion':'link'}" style="font-size:14px;color:var(--o);flex-shrink:0"></i>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:12px;font-weight:500;color:var(--o);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||lk.url}</div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:1px">${fmtDate(lk.logDate)} · ${lk.logSummary.slice(0,30)}${lk.logSummary.length>30?'…':''}</div>
+                  </div>
+                  <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
+                </a>`).join('')}
+          </div>`;
+        })()}
+
         <div class="card" style="padding:0;overflow:hidden">
           ${(() => {
             const years = [...new Set(logs.map(l=>dayjs(l.date).format('YYYY')))].sort((a,b)=>b-a);
@@ -2395,70 +2425,213 @@ function viewCalendar(){
 
 
 function viewLogInput(){
-  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+function modalLogForm(preVendorId, preProjectId){
+  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
+  // 사전 선택된 벤더에 연결된 프로젝트
+  const relProjects = preVendorId ? state.data.projects.filter(p=>{
+    const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
+    return ids.includes(preVendorId);
+  }) : [];
+  const projOptions = relProjects.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
+
   return `
-    <div class="sh" style="margin-bottom:20px"><div style="font-size:16px;font-weight:600">로그 입력</div></div>
-    <div class="card" style="max-width:600px">
-      <form id="logForm">
-        <div class="two">
-          <div class="field"><label class="field-label">날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" class="inp" required/></div>
-          <div class="field"><label class="field-label">거래처</label><select name="vendorId" class="inp" required><option value="">선택하세요</option>${vendorOptions}</select></div>
-        </div>
-        <div class="two">
-          <div class="field"><label class="field-label">업데이트 유형</label><select name="type" class="inp">
-            <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
-            <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
-            <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
-          </select></div>
-          <div class="field"><label class="field-label">진행 상태</label><select name="status" class="inp"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
-        </div>
-        <div class="field"><label class="field-label">우선순위</label><select name="priority" class="inp" style="width:160px"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
-
-        <div class="field">
-          <label class="field-label" style="display:flex;align-items:center;gap:6px">
-            <i class="ti ti-clipboard-list" style="font-size:14px;color:var(--o)"></i>
-            연결 프로젝트 <span style="font-size:11px;color:var(--muted);font-weight:400">(거래처 선택 시 해당 프로젝트만 표시)</span>
-          </label>
-          <select name="linkedProjectId" id="logProjectSelect" class="inp">
-            <option value="">거래처를 먼저 선택하세요</option>
-          </select>
-        </div>
-
-        <div class="field"><label class="field-label">원본 내용 (이메일 전체 등)</label><textarea name="rawText" id="logRawText" rows="4" class="inp" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요"></textarea></div>
-        <button type="button" id="logAiSummarizeBtn" class="btn" style="margin-bottom:10px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성</button>
-        <div class="field"><label class="field-label">상황 요약 (한 줄)</label><input type="text" name="summary" id="logSummaryInput" class="inp" placeholder="예: 잔여 재고 유통기한 관련 팔로업 요청" required/></div>
-
-        <div style="background:var(--sf);border-radius:10px;padding:14px;margin-bottom:12px">
-          <label class="field-label" style="margin-bottom:8px">다음 액션 (벤더 체크리스트에 자동 생성됩니다)</label>
-          <input type="text" name="nextStep" class="inp" placeholder="예: 회신 대기, 4월 6일까지 답변 필요" style="margin-bottom:8px"/>
-          <div class="two" style="margin-bottom:8px">
-            <div><label class="field-label">마감일 (선택)</label><input type="date" name="nextStepDue" class="inp" style="margin:0"/></div>
-            <div style="display:flex;align-items:flex-end;gap:8px;padding-bottom:1px">
-              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:8px 12px;background:white;border-radius:8px;border:1.5px solid var(--bd)">
-                <input type="checkbox" name="needsApproval" style="accent-color:#A32D2D;width:16px;height:16px"/>
-                <span style="color:#A32D2D;font-weight:500">📋 대표님 승인 필요</span>
-              </label>
+    <div class="modal" style="width:600px">
+      <div class="mh">
+        <h3>로그 추가</h3>
+        <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="mb" style="max-height:70vh;overflow-y:auto">
+        <form id="logModalForm">
+          <div class="two">
+            <div class="field"><label class="field-label">날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" class="inp" required/></div>
+            <div class="field"><label class="field-label">거래처</label>
+              <select name="vendorId" id="lmVendorSel" class="inp" required>
+                <option value="">선택하세요</option>${vendorOptions}
+              </select>
             </div>
           </div>
-          <div style="font-size:11px;color:var(--muted)"><i class="ti ti-info-circle" style="font-size:11px"></i> 다음 액션을 입력하면 해당 벤더의 체크리스트에 자동으로 추가됩니다. 대표님 승인 필요 체크 시 대시보드에 별도 표시됩니다.</div>
-        </div>
-
-        <button type="submit" class="btn btn-o" style="width:100%"><i class="ti ti-device-floppy"></i> 저장</button>
-
-        <!-- 관련 파일 링크 -->
-        <div style="margin-top:14px;background:var(--sf);border-radius:10px;padding:14px">
-          <label class="field-label" style="margin-bottom:10px">관련 파일 링크 (선택)</label>
-          <div id="logLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
-          <div style="display:flex;gap:6px;align-items:center">
-            <input type="text" id="logLinkLabel" class="inp" placeholder="파일명 (예: 견적서_2026)" style="flex:1;margin:0"/>
-            <input type="text" id="logLinkInput" class="inp" placeholder="URL (https://...)" style="flex:2;margin:0"/>
-            <button type="button" id="addLogLinkBtn" class="btn" style="flex-shrink:0;padding:7px 12px"><i class="ti ti-plus"></i></button>
+          <div class="field">
+            <label class="field-label" style="display:flex;align-items:center;gap:6px">
+              <i class="ti ti-clipboard-list" style="font-size:13px;color:var(--o)"></i>
+              연결 프로젝트
+              <span style="font-size:11px;color:var(--muted);font-weight:400">(거래처 선택 시 자동 표시)</span>
+            </label>
+            <select name="linkedProjectId" id="lmProjSel" class="inp">
+              <option value="">없음</option>${projOptions}
+            </select>
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:6px"><i class="ti ti-info-circle" style="font-size:11px"></i> Google Drive, Notion, Dropbox 등 링크를 추가하세요</div>
-        </div>
-      </form>
+          <div class="two">
+            <div class="field"><label class="field-label">업데이트 유형</label><select name="type" class="inp">
+              <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
+              <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option>
+              <option>보고서 작성</option><option>자료 취합</option><option>담당자 배정</option><option>기타</option>
+            </select></div>
+            <div class="field"><label class="field-label">진행 상태</label><select name="status" class="inp">
+              <option>전송</option><option>수신</option><option>완료</option><option>대기</option><option>진행중</option>
+            </select></div>
+          </div>
+          <div class="field"><label class="field-label">우선순위</label>
+            <select name="priority" class="inp" style="width:160px">
+              <option>높음</option><option>보통</option><option>낮음</option><option>완료</option>
+            </select>
+          </div>
+          <div class="field"><label class="field-label">원본 내용 (이메일 전체 등)</label>
+            <textarea class="inp" id="lmRawText" name="rawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요" style="resize:vertical"></textarea>
+          </div>
+          <div style="text-align:right;margin-bottom:6px">
+            <button type="button" class="btn" id="lmAiBtn" style="font-size:12px;padding:5px 12px">
+              <i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성
+            </button>
+          </div>
+          <div class="field"><label class="field-label">상황 요약 (한 줄)</label>
+            <input class="inp" type="text" name="summary" id="lmSummary" placeholder="예: 잔여 재고 유통기한 관련 팔로업 요청" required/>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">다음 액션</label>
+              <input class="inp" type="text" name="nextStep" id="lmNextStep" placeholder="예: 회신 대기 / 견적 검토 후 보고"/>
+            </div>
+            <div class="field"><label class="field-label">다음 액션 마감일</label>
+              <input class="inp" type="date" name="nextStepDue"/>
+            </div>
+          </div>
+          <div class="field">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px">
+              <input type="checkbox" name="needsApproval" style="accent-color:var(--o);width:15px;height:15px"/>
+              <i class="ti ti-clipboard-check" style="color:#A32D2D"></i>
+              <span style="color:#A32D2D">대표님 승인 필요</span>
+            </label>
+          </div>
+
+          <!-- 파일/링크 -->
+          <div style="background:var(--sf);border-radius:10px;padding:12px;margin-top:4px">
+            <label class="field-label" style="margin-bottom:8px">관련 파일 링크</label>
+            <div id="lmLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="lmLinkLabel" class="inp" placeholder="파일명" style="flex:1;margin:0"/>
+              <input type="text" id="lmLinkUrl" class="inp" placeholder="URL (https://...)" style="flex:2;margin:0"/>
+              <button type="button" id="lmAddLinkBtn" class="btn" style="padding:7px 10px"><i class="ti ti-plus"></i></button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="mf">
+        <button type="submit" form="logModalForm" class="btn btn-o" style="min-width:100px"><i class="ti ti-device-floppy"></i> 저장</button>
+      </div>
     </div>
   `;
+}
+
+function bindLogModal(preVendorId, preProjectId){
+  bindModalCommon();
+
+  // 거래처 변경 → 프로젝트 드롭다운 동적 업데이트
+  const vendorSel = document.getElementById('lmVendorSel');
+  const projSel = document.getElementById('lmProjSel');
+  function updateProjects(vid){
+    if(!projSel) return;
+    const rel = state.data.projects.filter(p=>{
+      const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
+      return vid && ids.includes(vid);
+    });
+    projSel.innerHTML = `<option value="">없음</option>`
+      + rel.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
+  }
+  if(vendorSel) vendorSel.addEventListener('change', ()=>updateProjects(vendorSel.value));
+
+  // AI 요약
+  const aiBtn = document.getElementById('lmAiBtn');
+  if(aiBtn) aiBtn.addEventListener('click', ()=>{
+    const raw = document.getElementById('lmRawText')?.value?.trim();
+    if(!raw){ showToast('원본 내용을 먼저 입력해주세요.'); return; }
+    const summary = generateOneLineSummary(raw);
+    const summEl = document.getElementById('lmSummary');
+    if(summEl) summEl.value = summary;
+    showToast('AI 요약이 생성되었습니다.');
+  });
+
+  // 파일 링크 추가
+  const addLinkBtn = document.getElementById('lmAddLinkBtn');
+  if(addLinkBtn) addLinkBtn.addEventListener('click', ()=>{
+    const label = document.getElementById('lmLinkLabel').value.trim();
+    const url = document.getElementById('lmLinkUrl').value.trim();
+    if(!url){ showToast('URL을 입력해주세요.'); return; }
+    const list = document.getElementById('lmLinkList');
+    const id = uid('lk');
+    const row = document.createElement('div');
+    row.className = 'link-row';
+    row.dataset.id = id;
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--sf);border-radius:6px';
+    row.innerHTML = `<i class="ti ti-paperclip" style="font-size:12px;color:var(--muted)"></i>
+      <input type="hidden" class="link-label" value="${label||url}"/>
+      <input type="hidden" class="link-url" value="${url}"/>
+      <span style="font-size:12px;flex:1">${label||url}</span>
+      <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px" onclick="this.closest('.link-row').remove()"><i class="ti ti-x"></i></button>`;
+    list.appendChild(row);
+    document.getElementById('lmLinkLabel').value = '';
+    document.getElementById('lmLinkUrl').value = '';
+  });
+
+  // 폼 제출
+  const form = document.getElementById('logModalForm');
+  if(form) form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    const vendorId = fd.get('vendorId');
+    const linkedProjectId = fd.get('linkedProjectId')||'';
+    const nextStep = fd.get('nextStep')||'';
+    const needsApproval = fd.get('needsApproval')==='on';
+
+    // 링크 수집
+    const links = [];
+    document.querySelectorAll('#lmLinkList .link-row').forEach(row=>{
+      const url = row.querySelector('.link-url')?.value?.trim();
+      const label = row.querySelector('.link-label')?.value?.trim();
+      if(url) links.push({url, label:label||url});
+    });
+
+    const newLog = {
+      id: uid('vl'), vendorId, date: fd.get('date'),
+      type: fd.get('type'), status: fd.get('status'), priority: fd.get('priority'),
+      summary: fd.get('summary'), nextStep,
+      nextStepDue: fd.get('nextStepDue')||'',
+      rawText: fd.get('rawText')||'',
+      needsApproval, nextStepDone: false,
+      links, linkedProjectId
+    };
+
+    state.data.vendorLogs.push(newLog);
+    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
+
+    // 다음액션 → 벤더 체크리스트 자동 생성
+    if(nextStep && vendorId){
+      const vendor = state.data.vendors.find(v=>v.id===vendorId);
+      if(vendor){
+        if(!vendor.checklist) vendor.checklist = [];
+        vendor.checklist.push({id:uid('ck'), text:nextStep, done:false, fromLog:newLog.id});
+      }
+    }
+
+    // 대표님 승인
+    if(needsApproval){
+      if(!state.data.approvalItems) state.data.approvalItems = [];
+      state.data.approvalItems.push({id:uid('ap'), vendorId, content: fd.get('summary'), date: fd.get('date'), approved:false});
+    }
+
+    // 연결 프로젝트에 자동 반영
+    if(linkedProjectId){
+      const proj = state.data.projects.find(p=>p.id===linkedProjectId);
+      if(proj){
+        if(!proj.vendorLogs) proj.vendorLogs = {};
+        if(!proj.vendorLogs[vendorId]) proj.vendorLogs[vendorId] = [];
+        proj.vendorLogs[vendorId].unshift(newLog);
+      }
+    }
+
+    closeModal();
+    persist();
+    render();
+    showToast('로그가 저장되었습니다.');
+  });
 }
 
 
@@ -3552,25 +3725,8 @@ function bindViewEvents(){
 
   const addVendorLogBtn = document.getElementById('addVendorLogBtn');
   if(addVendorLogBtn) addVendorLogBtn.addEventListener('click', ()=>{
-    openModal(modalVendorLogForm(state.selectedVendorId)); bindModalCommon();
-    document.getElementById('vlAiSummarizeBtn').addEventListener('click', ()=>{
-      const raw = document.getElementById('vlRawText').value.trim();
-      if(!raw){ showToast('원본 내용을 입력해주세요.'); return; }
-      document.getElementById('vlSummaryInput').value = generateOneLineSummary(raw);
-      showToast('AI 요약이 생성되었습니다.');
-    });
-    document.getElementById('vendorLogForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      state.data.vendorLogs.push({
-        id: uid('vl'), vendorId: fd.get('vendorId'), date: fd.get('date'), type: fd.get('type'),
-        status: fd.get('status'), priority: fd.get('priority'), summary: fd.get('summary'), nextStep: fd.get('nextStep')||'',
-        rawText: fd.get('rawText')||''
-      });
-      const v = state.data.vendors.find(x=>x.id===fd.get('vendorId'));
-      if(v) v.priority = fd.get('priority');
-      closeModal(); persist(); showToast('로그가 저장되었습니다.');
-    });
+    openModal(modalLogForm(state.selectedVendorId, null));
+    bindLogModal(state.selectedVendorId, null);
   });
 
   // 로그 상세 (원본 보기)
@@ -3769,74 +3925,10 @@ function bindViewEvents(){
   const addVendorProjectLogBtn = document.getElementById('addVendorProjectLogBtn');
   if(addVendorProjectLogBtn) addVendorProjectLogBtn.addEventListener('click', ()=>{
     const vid = addVendorProjectLogBtn.dataset.vid;
-    const vendor = state.data.vendors.find(v=>v.id===vid);
-    openModal(`
-      <div class="modal" style="width:560px">
-        <div class="mh">
-          <div style="display:flex;align-items:center;gap:8px">
-            ${av(vendor?vendor.name:'?', 24)}
-            <h3>${vendor?vendor.name:''} 로그 추가</h3>
-          </div>
-          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="mb">
-          <div style="background:var(--ol);border-radius:8px;padding:8px 12px;font-size:12px;color:var(--od);margin-bottom:12px">
-            <i class="ti ti-info-circle" style="font-size:12px;margin-right:4px"></i>
-            이 로그는 프로젝트와 <strong>${vendor?vendor.name:''} 벤더</strong> 양쪽에 모두 기록됩니다.
-          </div>
-          <form id="vendorProjectLogForm">
-            <div class="two">
-              <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
-              <div class="field"><label class="field-label">유형</label><select class="inp" name="type">
-                <option>이메일</option><option>전화/콜</option><option>온라인 미팅</option><option>외부 미팅</option>
-                <option>발주</option><option>견적/계약</option><option>이슈/리스크</option><option>내부 회의</option><option>기타</option>
-              </select></div>
-            </div>
-            <div class="two">
-              <div class="field"><label class="field-label">진행 상태</label><select class="inp" name="status"><option>전송</option><option>수신</option><option>진행중</option><option>완료</option><option>대기</option><option>보류</option></select></div>
-              <div class="field"><label class="field-label">우선순위</label><select class="inp" name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
-            </div>
-            <div class="field"><label class="field-label">상황 요약</label><input class="inp" type="text" name="summary" required placeholder="핵심 내용 한 줄 요약"/></div>
-            <div class="field"><label class="field-label">다음 액션</label><input class="inp" type="text" name="nextStep" placeholder="예: 회신 대기, 다음 주 미팅 예정"/></div>
-            <div class="field"><label class="field-label">상세 내용 (선택)</label><textarea class="inp" name="rawText" rows="3" placeholder="상세 내용 메모"></textarea></div>
-          </form>
-        </div>
-        <div class="mf"><button type="submit" form="vendorProjectLogForm" class="btn btn-o">저장</button></div>
-      </div>
-    `);
-    bindModalCommon();
-    document.getElementById('vendorProjectLogForm').addEventListener('submit', e=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const logEntry = {
-        id: uid('vpl'),
-        date: fd.get('date'),
-        type: fd.get('type'),
-        status: fd.get('status'),
-        priority: fd.get('priority'),
-        summary: fd.get('summary'),
-        nextStep: fd.get('nextStep')||'',
-        rawText: fd.get('rawText')||''
-      };
-
-      // 1. 프로젝트 내 벤더별 로그에 저장
-      const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
-      if(!proj.vendorLogs) proj.vendorLogs = {};
-      if(!proj.vendorLogs[vid]) proj.vendorLogs[vid] = [];
-      proj.vendorLogs[vid].unshift(logEntry);
-
-      // 2. 글로벌 vendorLogs에도 동시 저장
-      state.data.vendorLogs.unshift({
-        ...logEntry,
-        id: uid('vl'),
-        vendorId: vid
-      });
-
-      closeModal();
-      persist();
-      showToast(`로그가 ${vendor?vendor.name:''} 벤더와 프로젝트 양쪽에 저장되었습니다.`);
-    });
+    openModal(modalLogForm(vid, state.selectedProjectId));
+    bindLogModal(vid, state.selectedProjectId);
   });
+
 
   // 체크리스트 토글/삭제/상세
   document.querySelectorAll('.checklist-toggle').forEach(el=>{
@@ -4007,16 +4099,6 @@ function bindViewEvents(){
     });
   });
 
-  // 로그 입력 폼 - AI 요약
-  const logAiSummarizeBtn = document.getElementById('logAiSummarizeBtn');
-  if(logAiSummarizeBtn) logAiSummarizeBtn.addEventListener('click', ()=>{
-    const raw = document.getElementById('logRawText').value.trim();
-    if(!raw){ showToast('원본 내용을 입력해주세요.'); return; }
-    document.getElementById('logSummaryInput').value = generateOneLineSummary(raw);
-    showToast('AI 요약이 생성되었습니다.');
-  });
-
-
   // 캘린더
   const prevMonth = document.getElementById('prevMonth');
   if(prevMonth) prevMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').subtract(1,'month').format('YYYY-MM'); render(); });
@@ -4093,302 +4175,6 @@ function bindViewEvents(){
   if(manageCompanyTypesBtn) manageCompanyTypesBtn.addEventListener('click', ()=>{
     openModal(modalCompanyTypesManager()); bindModalCommon(); bindCompanyTypesManager();
   });
-
-  // 로그 입력 폼 — 거래처 변경 시 연결 프로젝트 드롭다운 동적 업데이트
-  const logVendorSel = document.querySelector('#logForm select[name="vendorId"]');
-  const logProjSel = document.getElementById('logProjectSelect');
-  function updateLogProjectOptions(vendorId){
-    if(!logProjSel) return;
-    const relProjects = state.data.projects.filter(p=>{
-      const ids = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
-      return vendorId && ids.includes(vendorId);
-    });
-    if(relProjects.length === 0){
-      logProjSel.innerHTML = `<option value="">${vendorId?'이 거래처는 연결된 프로젝트 없음':'거래처를 먼저 선택하세요'}</option>`;
-    } else {
-      logProjSel.innerHTML = `<option value="">선택 안 함</option>`
-        + relProjects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
-    }
-  }
-  if(logVendorSel) logVendorSel.addEventListener('change', ()=>updateLogProjectOptions(logVendorSel.value));
-
-  // 로그 입력 폼 — 다음액션→벤더 체크리스트 + 대표님 승인 자동 처리
-  const logForm = document.getElementById('logForm');
-  if(logForm) logForm.addEventListener('submit', e=>{
-    e.preventDefault();
-    const fd = new FormData(e.target);
-    const vendorId = fd.get('vendorId');
-    const nextStep = fd.get('nextStep')||'';
-    const nextStepDue = fd.get('nextStepDue')||'';
-    const needsApproval = fd.get('needsApproval') === 'on';
-    const linkedProjectId = fd.get('linkedProjectId')||'';
-    const logId = uid('vl');
-
-    // 1. 링크 수집
-    const logLinks = [];
-    document.querySelectorAll('#logLinkList .link-row').forEach(row=>{
-      const url = row.querySelector('.link-url')?.value?.trim();
-      const label = row.querySelector('.link-label')?.value?.trim();
-      if(url) logLinks.push({url, label: label||url});
-    });
-
-    // 2. 로그 저장
-    const newLog = {
-      id: logId, vendorId, date: fd.get('date'), type: fd.get('type'),
-      status: fd.get('status'), priority: fd.get('priority'),
-      summary: fd.get('summary'), nextStep, nextStepDue,
-      rawText: fd.get('rawText')||'',
-      needsApproval, nextStepDone: false,
-      links: logLinks, linkedProjectId
-    };
-    state.data.vendorLogs.push(newLog);
-
-    // 연결 프로젝트 vendorLogs에도 자동 반영
-    if(linkedProjectId){
-      const proj = state.data.projects.find(p=>p.id===linkedProjectId);
-      if(proj){
-        if(!proj.vendorLogs) proj.vendorLogs = {};
-        if(!proj.vendorLogs[vendorId]) proj.vendorLogs[vendorId] = [];
-        proj.vendorLogs[vendorId].unshift(newLog);
-      }
-    }
-    // 날짜 기준 최신순 정렬
-    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
-
-    // 2. 다음액션이 있으면 해당 벤더의 vendorChecklist에 추가
-    if(nextStep.trim()){
-      if(!state.data.vendorChecklists) state.data.vendorChecklists = {};
-      if(!state.data.vendorChecklists[vendorId]) state.data.vendorChecklists[vendorId] = [];
-      state.data.vendorChecklists[vendorId].unshift({
-        id: uid('vc'), text: nextStep, done: false,
-        dueDate: nextStepDue, logId, date: fd.get('date'),
-        status: '진행중'
-      });
-    }
-
-    // 3. 대표님 승인 필요 항목 등록
-    if(needsApproval && nextStep.trim()){
-      if(!state.data.approvalItems) state.data.approvalItems = [];
-      state.data.approvalItems.unshift({
-        id: uid('ap'), vendorId, date: fd.get('date'),
-        content: nextStep, summary: fd.get('summary'),
-        logId, approved: false
-      });
-    }
-
-    const v = state.data.vendors.find(x=>x.id===vendorId);
-    if(v) v.priority = fd.get('priority');
-    e.target.reset();
-    persist();
-    showToast(`로그 저장됨${nextStep?' · 체크리스트 추가됨':''}${needsApproval?' · 대표님 승인 등록됨':''}`);
-  });
-
-  // 로그 입력 탭 AI 요약
-  const logAiBtn = document.getElementById('logAiSummarizeBtn');
-  if(logAiBtn) logAiBtn.addEventListener('click', ()=>{
-    const raw = document.getElementById('logRawText').value.trim();
-    if(!raw){ showToast('원본 내용을 입력해주세요.'); return; }
-    document.getElementById('logSummaryInput').value = generateOneLineSummary(raw);
-    showToast('AI 요약이 생성되었습니다.');
-  });
-
-  // 대시보드 메모 저장
-  const saveMemoBtn = document.getElementById('saveMemoBtn');
-  if(saveMemoBtn) saveMemoBtn.addEventListener('click', ()=>{
-    state.data.memo = document.getElementById('dashMemo').value;
-    persist(); showToast('메모가 저장되었습니다.');
-  });
-
-  // ── 컨택 알파벳 필터 ──
-  document.querySelectorAll('[data-alpha]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      state.companyAlphaFilter = btn.dataset.alpha;
-      render();
-    });
-  });
-
-  // ── 메인 담당자 설정 ──
-  document.querySelectorAll('.set-main-person-btn').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
-      if(!c) return;
-      c.people.forEach(p=>{ p.isMain = (p.id===btn.dataset.pid); });
-      persist(); render(); showToast('메인 담당자가 설정되었습니다.');
-    });
-  });
-
-  // ── 거래처 컨택 탭 바로가기 ──
-  document.querySelectorAll('.contact-tab-link').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      state.selectedCompanyId = btn.dataset.cid;
-      state.view = 'contacts';
-      render();
-    });
-  });
-
-  // ── 거래 메모 자유 항목 저장 ──
-  const saveNoteFieldsBtn = document.getElementById('saveNoteFieldsBtn');
-  if(saveNoteFieldsBtn) saveNoteFieldsBtn.addEventListener('click', ()=>{
-    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    if(!v) return;
-    const rows = document.querySelectorAll('#customNotesList .custom-note-row');
-    v.customNotes = Array.from(rows).map(row=>({
-      key: row.querySelector('.note-key')?.value?.trim()||'',
-      val: row.querySelector('.note-val')?.value?.trim()||''
-    })).filter(n=>n.key);
-    persist(); showToast('거래 메모가 저장되었습니다.');
-  });
-
-  const addNoteFieldBtn = document.getElementById('addNoteFieldBtn');
-  if(addNoteFieldBtn) addNoteFieldBtn.addEventListener('click', ()=>{
-    const list = document.getElementById('customNotesList');
-    if(!list) return;
-    const idx = list.querySelectorAll('.custom-note-row').length;
-    const row = document.createElement('div');
-    row.className = 'custom-note-row';
-    row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid var(--bd)';
-    row.innerHTML = `
-      <input type="text" class="inp note-key" placeholder="항목명" style="width:90px;flex-shrink:0;margin:0;font-size:12px;padding:4px 8px;font-weight:500;color:var(--muted)"/>
-      <input type="text" class="inp note-val" placeholder="내용" style="flex:1;margin:0;font-size:13px;padding:4px 8px"/>
-      <button type="button" class="btn btn-red note-del-btn" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-x"></i></button>
-    `;
-    row.querySelector('.note-del-btn').addEventListener('click', ()=>row.remove());
-    list.appendChild(row);
-  });
-  document.querySelectorAll('.note-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>btn.closest('.custom-note-row')?.remove());
-  });
-
-  // ── 오늘 날짜 버튼 ──
-  const goTodayBtn = document.getElementById('goTodayBtn');
-  if(goTodayBtn) goTodayBtn.addEventListener('click', ()=>{
-    state.calMonth = dayjs().format('YYYY-MM');
-    render();
-    setTimeout(()=>{
-      const todayCell = document.querySelector('.cal-cell.today');
-      if(todayCell) todayCell.scrollIntoView({behavior:'smooth',block:'center'});
-    }, 100);
-  });
-
-  // ── 종일 체크박스 토글 ──
-  ['allDayCheckNew','allDayCheckEdit'].forEach(id=>{
-    const cb = document.getElementById(id);
-    if(!cb) return;
-    const fieldsId = id==='allDayCheckNew'?'timeFieldsNew':'timeFieldsEdit';
-    cb.addEventListener('change', ()=>{
-      const f = document.getElementById(fieldsId);
-      if(f) f.style.display = cb.checked ? 'none' : '';
-    });
-  });
-
-  // ── 연차 수정/삭제 ──
-  document.querySelectorAll('.leave-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(confirm('이 연차 기록을 삭제하시겠습니까?')){
-        state.data.leave.logs = (state.data.leave.logs||[]).filter(l=>l.id!==btn.dataset.lid);
-        persist(); render(); showToast('삭제되었습니다.');
-      }
-    });
-  });
-  document.querySelectorAll('.leave-edit-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const log = (state.data.leave.logs||[]).find(l=>l.id===btn.dataset.lid);
-      if(!log) return;
-      openModal(`
-        <div class="modal">
-          <div class="mh"><h3>연차 기록 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
-          <div class="mb">
-            <form id="leaveEditForm">
-              <div class="two">
-                <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${log.date}" required/></div>
-                <div class="field"><label class="field-label">구분</label><select class="inp" name="type">
-                  ${['연차','반차','오전 반차','오후 반차','반반차','대체휴무'].map(t=>`<option ${log.type===t?'selected':''}>${t}</option>`).join('')}
-                </select></div>
-              </div>
-              <div class="two">
-                <div class="field"><label class="field-label">사용량 (일)</label><input class="inp" type="number" name="amount" value="${log.amount}" min="0.25" max="1" step="0.25" required/></div>
-                <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${log.memo||''}"/></div>
-              </div>
-            </form>
-          </div>
-          <div class="mf"><button type="submit" form="leaveEditForm" class="btn btn-o">저장</button></div>
-        </div>
-      `);
-      bindModalCommon();
-      document.getElementById('leaveEditForm').addEventListener('submit', e=>{
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const idx = state.data.leave.logs.findIndex(l=>l.id===btn.dataset.lid);
-        if(idx!==-1){
-          state.data.leave.logs[idx] = {
-            ...state.data.leave.logs[idx],
-            date: fd.get('date'),
-            type: fd.get('type'),
-            amount: parseFloat(fd.get('amount')),
-            memo: fd.get('memo')||''
-          };
-        }
-        closeModal(); persist(); render(); showToast('연차 기록이 수정되었습니다.');
-      });
-    });
-  });
-
-
-
-  // ── 휴일근무 삭제 ──
-  document.querySelectorAll('.comp-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(confirm('이 휴일근무 기록을 삭제하시겠습니까?')){
-        state.data.leave.compLogs = (state.data.leave.compLogs||[]).filter(l=>l.id!==btn.dataset.lid);
-        persist(); render(); showToast('삭제되었습니다.');
-      }
-    });
-  });
-
-  // ── 휴일근무 수정 ──
-  document.querySelectorAll('.comp-edit-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const log = (state.data.leave.compLogs||[]).find(l=>l.id===btn.dataset.lid);
-      if(!log) return;
-      openModal(`
-        <div class="modal">
-          <div class="mh"><h3>휴일근무 기록 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
-          <div class="mb">
-            <form id="compEditForm">
-              <div class="two">
-                <div class="field"><label class="field-label">근무일</label><input class="inp" type="date" name="date" value="${log.date}" required/></div>
-                <div class="field"><label class="field-label">근무 시간</label><input class="inp" type="number" name="hours" value="${log.hours}" min="1" max="24" required/></div>
-              </div>
-              <div class="two">
-                <div class="field"><label class="field-label">보상 발생 (일)</label><input class="inp" type="number" name="amount" value="${log.amount}" min="0.25" step="0.25" required/></div>
-                <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${log.memo||''}"/></div>
-              </div>
-            </form>
-          </div>
-          <div class="mf"><button type="submit" form="compEditForm" class="btn btn-o">저장</button></div>
-        </div>
-      `);
-      bindModalCommon();
-      document.getElementById('compEditForm').addEventListener('submit', e=>{
-        e.preventDefault();
-        const fd = new FormData(e.target);
-        const idx = (state.data.leave.compLogs||[]).findIndex(l=>l.id===btn.dataset.lid);
-        if(idx!==-1){
-          state.data.leave.compLogs[idx] = {
-            ...state.data.leave.compLogs[idx],
-            date: fd.get('date'),
-            hours: parseFloat(fd.get('hours')),
-            amount: parseFloat(fd.get('amount')),
-            memo: fd.get('memo')||''
-          };
-        }
-        closeModal(); persist(); render(); showToast('휴일근무 기록이 수정되었습니다.');
-      });
-    });
-  });
-
 
   function bindLinkAdder(addBtnId, listId, urlInputId, labelInputId){
     const btn = document.getElementById(addBtnId);
