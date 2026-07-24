@@ -593,13 +593,23 @@ function seedData(){
       ],
       meetingNotes:[
         {id:'mn401',date:'2025-10-17',text:'Nyunnie 화상 미팅 약 2시간 (바이넥스 × 니언니 × OPLE)\n- 물량 감소로 주 4.5일 운영 축소 통보\n- 가격 협상 관련 회의 진행\n- 회의록 작성 및 요율 사전 검토 4,6,7월 기록 기반',summary:'일 900건 이상 회복 시 주 5일 복귀 목표 합의'},
+        {id:'mn402',date:'2025-11-14',text:'요율 협상 최종 조율 화상미팅\n- 천세나 제안: $1.235 / 니언니 제안: $1.385\n- 바이넥스 관계 고려 중간안 $1.299 제시\n- 750건/일 처리 실증 확인',summary:'$1.299/Box + SKU $0.60 + Bubble $0.39 합의'},
       ],
       logs:[
-        {id:'plog401',date:'2025-10-15',text:'바이넥스에서 온 관련 이메일에 대한 사실 확인 필요'},
-        {id:'plog402',date:'2025-10-17',text:'미팅 아젠다 확정 및 필요 자료 준비 — 보관료 관련 시애들과 소통'},
-        {id:'plog403',date:'2025-10-21',text:'원가 계산기 최종 만들기 + 자료 조사 — 버블랙, 다품종 4-6월 데이터 기준 시뮬레이션'},
-        {id:'plog404',date:'2025-11-01',text:'가격 시뮬레이션 보고서 작성 완료'},
-        {id:'plog405',date:'2025-11-07',text:'Nyunnie 회신 — 가격 제안서에 대한 답변 수신, 내부 검토 + 데이터 전송'},
+        {id:'plog401',date:'2025-07-18',text:'Sean Chung 견적 메일 수신 — 출고단가 $0.60/$0.75/건, Labeling $0.30, Pallet보관료 $38/월, B2B 출고 무상(2일내/10팔렛)'},
+        {id:'plog402',date:'2025-10-15',text:'바이넥스 이슈 이메일 사실 확인 필요'},
+        {id:'plog403',date:'2025-10-17',text:'미팅 아젠다 확정 및 필요 자료 준비 — 보관료 관련 시애틀과 소통'},
+        {id:'plog404',date:'2025-10-21',text:'원가 계산기 작성 완료 — 버블랩, 다품종 4-6월 데이터 기준 시뮬레이션'},
+        {id:'plog405',date:'2025-10-29',text:'10/29 Nyunnie 8명 풀타임 근무 기준 310건 처리 — 1인당 38건, 셀브 정리 병행했다 해도 납득 어려운 수치. 출고 누적 심각'},
+        {id:'plog406',date:'2025-10-30',text:'천세나→Nyunnie: 창고 사용률 80% 근거 자료 요청, 1인 최소 200건(일 2,000건) 기준 원가 재산정 요청, 주문서 당일 폐기 요청'},
+        {id:'plog407',date:'2025-11-07',text:'김미숙 회신 — 총비용 $51,900/월($36,960인건+$13,440창고+$1,500고정비), 1,500건/일 기준 손익분기 $1.57 → $1.60/order 요청'},
+        {id:'plog408',date:'2025-11-08',text:'천세나 최초 제안: Base $1.20/Box + Add SKU $0.55 + Bubble $0.39. 팔레타이징/사무용품 별도 청구 불가 입장'},
+        {id:'plog409',date:'2025-11-10',text:'김미숙 수정 제안 — $1.385/Box (팔레타이징 절반 반영), Bubble $0.39 수용. 2주내 인력 충원 약속'},
+        {id:'plog410',date:'2025-11-11',text:'천세나 최종 제안: Base $1.235($1.20+팔레타이징$0.035) + SKU $0.60 + Bubble $0.39. 전용인력 10명 전제, 전량출고일 NEW요율/미달일 구요율($0.92) 적용 원칙'},
+        {id:'plog411',date:'2025-11-14',text:'김미숙 중간안: $1.299/Box (바이넥스 관계 고려 최종 양보). 750건+/일 처리 확인. 추가인력없이 현인원 기준 550-700건/일'},
+        {id:'plog412',date:'2025-11-17',text:'천세나 최종 수용 — Base $1.299 + SKU $0.60 + Bubble $0.39 합의. 파손률 KPI 0.2% 제안(Nyunnie과실 명확한 경우만 보상)'},
+        {id:'plog413',date:'2025-11-19',text:'Nyunnie: Zero Backlog 11/17~19 처리 계획, 파손률 KPI 0.75% 역제안, Bubble SKU 리스트 이번주 공유 예정, 단가협상 완료시 3주→2주 인력충원 단축'},
+        {id:'plog414',date:'2025-11-21',text:'천세나: Zero Backlog 11/21 마감 요청, 1500건 KPI 기준 재확인(합포/단품 무관 전용인력 10명 기준), 파손률 0.5% 역제안, 라벨지 Processing Fee 포함 요청. 11/21 미발송 1,734건 확인'},
       ],vendorLogs:{},vendorMeetings:{}},
 
     {id:'p005',
@@ -1128,6 +1138,7 @@ const state = {
   activeVendorSubTab: 'log',
   vendorLogFilterYear: 'all',
   vendorLogFilterMonth: 'all',
+  dashProjPage: 0,
   vendorLogExpanded: false,
 };
 
@@ -1505,20 +1516,34 @@ function viewHome(){
         </div>
 
         <div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-checklist oi"></i>프로젝트 진행률</div></div>
-          ${state.data.projects.length===0 ? '<div class="empty-state" style="padding:16px">프로젝트를 추가해주세요.</div>' :
-            state.data.projects.map((p,i)=>{
-              const prog = progressOf(p);
-              const col = projColors[i % projColors.length];
-              const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
-              return `<div class="prog-row proj-link" data-pid="${p.id}" style="cursor:pointer">
-                <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>
-                <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</span>
-                <div class="pgb" style="width:80px;flex-shrink:0"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
-                <span style="font-size:11px;color:var(--muted);width:30px;text-align:right">${prog}%</span>
-                ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="font-size:9px">D-${dday}</span>`:''}
-              </div>`;
-            }).join('')}
+          ${(()=>{
+            const PER_PAGE = 6;
+            const page = state.dashProjPage || 0;
+            const activeProjs = state.data.projects.filter(p=>p.status==='진행중');
+            const total = activeProjs.length;
+            const totalPages = Math.ceil(total/PER_PAGE);
+            const slice = activeProjs.slice(page*PER_PAGE, page*PER_PAGE+PER_PAGE);
+            const navHtml = totalPages>1 ? `<div style="display:flex;gap:4px;align-items:center">
+              <button class="btn dash-proj-prev" style="padding:3px 8px;font-size:12px" ${page===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+              <span style="font-size:11px;color:var(--muted)">${page+1}/${totalPages}</span>
+              <button class="btn dash-proj-next" style="padding:3px 8px;font-size:12px" ${page>=totalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+            </div>` : '';
+            const rowsHtml = total===0 ? '<div class="empty-state" style="padding:16px">진행중인 프로젝트가 없습니다.</div>' :
+              slice.map(p=>{
+                const idx = state.data.projects.indexOf(p);
+                const prog = progressOf(p);
+                const col = projColors[idx % projColors.length];
+                const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
+                const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">D-'+dday+'</span>' : '';
+                return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
+                  +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
+                  +'<span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.title+'</span>'
+                  +'<div class="pgb" style="width:80px;flex-shrink:0"><div class="pgf" style="width:'+prog+'%;background:'+col+'"></div></div>'
+                  +'<span style="font-size:11px;color:var(--muted);width:30px;text-align:right">'+prog+'%</span>'
+                  +ddayBadge+'</div>';
+              }).join('');
+            return '<div class="sh"><div class="st"><i class="ti ti-checklist oi"></i>프로젝트 진행률 <span style="font-size:11px;color:var(--muted);font-weight:400">진행중 '+total+'개</span></div>'+navHtml+'</div>'+rowsHtml;
+          })()}
         </div>
 
         <div class="card">
@@ -1741,16 +1766,25 @@ function vendorActionBadge(status){
 function viewVendorList(){
   const companyTypes = ['전체', ...(state.data.companyTypes||['벤더','물류사','파트너','기타'])];
   const activeType = state.vendorTypeFilter || '전체';
+  const statusFilter = state.vendorStatusFilter || '전체';
+  const priorityFilter = state.vendorPriorityFilter || '전체';
   let vendors = state.data.vendors.map(v=>({...v, latest:latestLogForVendor(v.id)}));
 
   if(state.vendorSearch){
     const q = state.vendorSearch.toLowerCase();
     vendors = vendors.filter(v=>v.name.toLowerCase().includes(q)||(v.contact.name||'').toLowerCase().includes(q));
   }
-  if(activeType !== '전체'){
-    vendors = vendors.filter(v=>(v.companyType||'벤더') === activeType);
-  }
-  vendors.sort((a,b)=>(b.latest?daysAgo(b.latest.date):-1)-(a.latest?daysAgo(a.latest.date):-1));
+  if(activeType !== '전체') vendors = vendors.filter(v=>(v.companyType||'벤더') === activeType);
+  if(statusFilter !== '전체') vendors = vendors.filter(v=>(v.companyStatus||'Active') === statusFilter);
+  if(priorityFilter !== '전체') vendors = vendors.filter(v=>v.priority === priorityFilter);
+
+  // 거래중 상단 정렬
+  const statusOrder = {'Active':0,'Pending':1,'Inactive':2};
+  vendors.sort((a,b)=>{
+    const so = (statusOrder[a.companyStatus]??1) - (statusOrder[b.companyStatus]??1);
+    if(so!==0) return so;
+    return (b.latest?daysAgo(b.latest.date):-1)-(a.latest?daysAgo(a.latest.date):-1);
+  });
 
   const highCount = vendors.filter(v=>v.priority==='높음').length;
   const waitingCount = vendors.filter(v=>{const l=latestLogForVendor(v.id);return l&&(l.status==='전송'||l.status==='수신');}).length;
@@ -1772,8 +1806,22 @@ function viewVendorList(){
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCompanyTypesBtn"><i class="ti ti-settings"></i> 유형 관리</button><button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 회사 추가</button></div>`:''}
     </div>
 
-    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
       ${companyTypes.map(t=>`<button class="btn ${activeType===t?'btn-o':''}" data-vendor-type="${t}">${t}${t!=='전체'?` (${state.data.vendors.filter(v=>(v.companyType||'벤더')===t).length})`:` (${state.data.vendors.length})`}</button>`).join('')}
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <select class="inp" id="vendorStatusFilter" style="font-size:11px;padding:3px 8px;margin:0;width:auto">
+          <option value="전체" ${statusFilter==='전체'?'selected':''}>거래상태 전체</option>
+          <option value="Active" ${statusFilter==='Active'?'selected':''}>거래중</option>
+          <option value="Pending" ${statusFilter==='Pending'?'selected':''}>대기중</option>
+          <option value="Inactive" ${statusFilter==='Inactive'?'selected':''}>거래중단</option>
+        </select>
+        <select class="inp" id="vendorPriorityFilter" style="font-size:11px;padding:3px 8px;margin:0;width:auto">
+          <option value="전체" ${priorityFilter==='전체'?'selected':''}>우선순위 전체</option>
+          <option value="높음" ${priorityFilter==='높음'?'selected':''}>높음</option>
+          <option value="보통" ${priorityFilter==='보통'?'selected':''}>보통</option>
+          <option value="낮음" ${priorityFilter==='낮음'?'selected':''}>낮음</option>
+        </select>
+      </div>
     </div>
 
     <div class="krow" style="grid-template-columns:repeat(4,1fr)">
@@ -2883,7 +2931,10 @@ function modalEventForm(dateStr){
           </div>
           <div class="two">
             <div class="field"><label class="field-label">관련 벤더 (선택)</label><select class="inp" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
+            <div class="field"><label class="field-label">장소</label><input class="inp" type="text" name="location" placeholder="예: 강남역 카페, Zoom"/></div>
           </div>
+          <div class="field"><label class="field-label">담당자</label><input class="inp" type="text" name="attendees" placeholder="예: 천세나, Troy Taylor"/></div>
+          <div class="field"><label class="field-label">메모</label><textarea class="inp" name="memo" rows="2" placeholder="일정 관련 메모" style="resize:vertical"></textarea></div>
         </form>
       </div>
       <div class="mf"><button type="submit" form="eventForm" class="btn btn-o">저장</button></div>
@@ -3423,6 +3474,12 @@ function bindViewEvents(){
     });
   });
 
+  // 거래상태/우선순위 필터
+  const vendorStatusFilter = document.getElementById('vendorStatusFilter');
+  if(vendorStatusFilter) vendorStatusFilter.addEventListener('change', ()=>{ state.vendorStatusFilter=vendorStatusFilter.value; render(); });
+  const vendorPriorityFilter = document.getElementById('vendorPriorityFilter');
+  if(vendorPriorityFilter) vendorPriorityFilter.addEventListener('change', ()=>{ state.vendorPriorityFilter=vendorPriorityFilter.value; render(); });
+
   // 액션 상태 드롭다운 즉시 저장
   const actionStatusSelect = document.getElementById('actionStatusSelect');
   if(actionStatusSelect) actionStatusSelect.addEventListener('change', e=>{
@@ -3627,6 +3684,12 @@ function bindViewEvents(){
     state.activeProjectVendorTab = null;
     render();
   });
+
+  // 대시보드 프로젝트 페이지네이션
+  const prevBtn = document.querySelector('.dash-proj-prev');
+  const nextBtn = document.querySelector('.dash-proj-next');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.dashProjPage = Math.max(0,(state.dashProjPage||0)-1); render(); });
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.dashProjPage = (state.dashProjPage||0)+1; render(); });
 
   // 벤더 탭 전환
   document.querySelectorAll('.proj-vendor-tab').forEach(el=>{
@@ -4648,7 +4711,8 @@ function bindEventFormSubmit(){
     const timeLabel = allDay ? '종일' : startTime ? (endTime ? startTime+'~'+endTime : startTime) : '';
     state.data.calendar.push({
       id: uid('ev'), date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
-      time: timeLabel, startTime, endTime, allDay, vendorId: fd.get('vendorId')||''
+      time: timeLabel, startTime, endTime, allDay, vendorId: fd.get('vendorId')||'',
+      location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
     });
     closeModal(); persist(); showToast('일정이 등록되었습니다.');
   });
