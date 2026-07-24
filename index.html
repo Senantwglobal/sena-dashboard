@@ -4049,6 +4049,47 @@ function bindViewEvents(){
     });
   });
 
+  // ── 거래 메모 저장 / 삭제 / 추가 ──
+  const saveNoteBtn = document.getElementById('saveNoteFieldsBtn');
+  if(saveNoteBtn) saveNoteBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const keys = document.querySelectorAll('.note-key');
+    const vals = document.querySelectorAll('.note-val');
+    v.customNotes = Array.from(keys).map((k,i)=>({
+      key: k.value, val: vals[i]?.value || ''
+    })).filter(n=>n.key);
+    persist(); showToast('메모가 저장되었습니다.');
+  });
+
+  document.querySelectorAll('.note-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v) return;
+      const notes = v.customNotes || [];
+      notes.splice(parseInt(btn.dataset.idx), 1);
+      v.customNotes = notes;
+      persist(); render(); showToast('항목이 삭제되었습니다.');
+    });
+  });
+
+  const addNoteBtn = document.getElementById('addNoteFieldBtn');
+  if(addNoteBtn) addNoteBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    // 현재 입력된 값 먼저 저장
+    const keys = document.querySelectorAll('.note-key');
+    const vals = document.querySelectorAll('.note-val');
+    v.customNotes = Array.from(keys).map((k,i)=>({
+      key: k.value, val: vals[i]?.value || ''
+    })).filter(n=>n.key);
+    v.customNotes.push({key:'새 항목', val:''});
+    persist(); render();
+    // 마지막 key input에 포커스
+    const allKeys = document.querySelectorAll('.note-key');
+    if(allKeys.length) allKeys[allKeys.length-1].focus();
+  });
+
   // 컨택 (회사/담당자)
   document.querySelectorAll('.company-row').forEach(el=>{
     el.addEventListener('click', ()=>{ state.selectedCompanyId = el.dataset.cid; render(); });
