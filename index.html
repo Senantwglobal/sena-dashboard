@@ -218,7 +218,25 @@ async function supabaseFetch(path, options={}){
 async function loadStoreRemote(){
   const rows = await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}&select=data`);
   if(rows && rows.length>0 && rows[0].data && Object.keys(rows[0].data).length>0){
-    return rows[0].data;
+    const d = rows[0].data;
+    // ── 마이그레이션: calendarEventTypes가 없거나 연차/반차가 빠진 경우 보완 ──
+    const defaultEventTypes = [
+      {name:'미팅', color:'#2554C7'},{name:'외근', color:'#D85A30'},
+      {name:'마감', color:'#7C3AED'},{name:'연차', color:'#059669'},
+      {name:'반차', color:'#0891B2'},{name:'반반차', color:'#65A30D'},
+      {name:'개인 용무', color:'#F59E0B'},{name:'전화 통화', color:'#38BDF8'},
+    ];
+    if(!d.calendarEventTypes || d.calendarEventTypes.length < 3){
+      d.calendarEventTypes = defaultEventTypes;
+    } else {
+      // 기존 유형에 없는 기본 유형만 앞에 추가
+      const existingNames = d.calendarEventTypes.map(t=>t.name);
+      const missing = defaultEventTypes.filter(t=>!existingNames.includes(t.name));
+      if(missing.length > 0){
+        d.calendarEventTypes = [...missing, ...d.calendarEventTypes];
+      }
+    }
+    return d;
   }
   // 행이 비어있으면 시드 데이터로 초기 저장
   const seed = seedData();
@@ -612,6 +630,10 @@ function seedData(){
     calendarEventTypes: [
       {name:'미팅', color:'#2554C7'},
       {name:'외근', color:'#D85A30'},
+      {name:'마감', color:'#7C3AED'},
+      {name:'연차', color:'#059669'},
+      {name:'반차', color:'#0891B2'},
+      {name:'반반차', color:'#65A30D'},
       {name:'개인 용무', color:'#F59E0B'},
       {name:'전화 통화', color:'#38BDF8'},
     ],
@@ -1520,7 +1542,8 @@ function viewProjectDetail(){
   const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
 
   // 현재 선택된 벤더 탭 (state에서 관리)
-  const activeVendorId = state.activeProjectVendorTab || vendorIds[0] || null;
+  const activeVendorId = state.activeProjectVendorTab ||
+    (vendorIds.length > 0 ? vendorIds[0] : '__meeting__');
   const vendorLogs = p.vendorLogs || {};
   const activeVendorLogs = activeVendorId ? (vendorLogs[activeVendorId] || []) : [];
   const activeVendor = linkedVendors.find(v=>v.id===activeVendorId);
@@ -1570,25 +1593,44 @@ function viewProjectDetail(){
         }).join('')}
     </div>
 
-    ${linkedVendors.length > 0 ? `
-    <div class="card" style="margin-bottom:14px">
-      <div class="sh">
-        <div class="st"><i class="ti ti-building-store oi"></i>벤더별 진행 현황</div>
-        ${!isReadOnly() && activeVendorId ? `<button class="btn btn-o" id="addVendorProjectLogBtn" data-vid="${activeVendorId}"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
-      </div>
+    <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
 
-      <!-- 벤더 탭 -->
-      <div style="display:flex;gap:4px;padding:0 16px;border-bottom:0.5px solid var(--bd);margin-bottom:0">
-        ${linkedVendors.map(v=>`
+      <!-- ── 벤더 탭 행 ── -->
+      <div style="display:flex;align-items:center;border-bottom:0.5px solid var(--bd);overflow-x:auto;background:var(--card)">
+        ${linkedVendors.length > 0 ? linkedVendors.map(v=>`
           <button class="proj-vendor-tab ${v.id===activeVendorId?'active':''}" data-vid="${v.id}"
-            style="display:flex;align-items:center;gap:6px;padding:9px 14px;border:none;background:none;cursor:pointer;font-size:13px;border-bottom:2.5px solid ${v.id===activeVendorId?'var(--o)':'transparent'};color:${v.id===activeVendorId?'var(--o)':'var(--muted)'};font-weight:${v.id===activeVendorId?'600':'400'};margin-bottom:-0.5px;font-family:inherit">
-            ${av(v.name,20)}${v.name}
+            style="display:flex;align-items:center;gap:6px;padding:11px 16px;border:none;background:none;cursor:pointer;font-size:13px;white-space:nowrap;border-bottom:2.5px solid ${v.id===activeVendorId?'var(--o)':'transparent'};color:${v.id===activeVendorId?'var(--o)':'var(--muted)'};font-weight:${v.id===activeVendorId?'600':'400'};margin-bottom:-0.5px;font-family:inherit;flex-shrink:0">
+            ${av(v.name,18)}${v.name}
             <span style="font-size:10px;background:${v.id===activeVendorId?'var(--ol)':'var(--sf)'};color:${v.id===activeVendorId?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${(vendorLogs[v.id]||[]).length}</span>
-          </button>`).join('')}
+          </button>`).join('') :
+          `<div style="padding:11px 16px;font-size:13px;color:var(--muted)">연결된 벤더 없음</div>`
+        }
+        <!-- 회의록 탭 + 전체 로그 탭 -->
+        <button class="proj-vendor-tab ${activeVendorId==='__meeting__'?'active':''}" data-vid="__meeting__"
+          style="display:flex;align-items:center;gap:5px;padding:11px 16px;border:none;background:none;cursor:pointer;font-size:13px;white-space:nowrap;border-bottom:2.5px solid ${activeVendorId==='__meeting__'?'var(--o)':'transparent'};color:${activeVendorId==='__meeting__'?'var(--o)':'var(--muted)'};font-weight:${activeVendorId==='__meeting__'?'600':'400'};margin-bottom:-0.5px;font-family:inherit;flex-shrink:0">
+          <i class="ti ti-notes" style="font-size:14px"></i>회의록
+          <span style="font-size:10px;background:${activeVendorId==='__meeting__'?'var(--ol)':'var(--sf)'};color:${activeVendorId==='__meeting__'?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${(p.meetingNotes||[]).length}</span>
+        </button>
+        <button class="proj-vendor-tab ${activeVendorId==='__log__'?'active':''}" data-vid="__log__"
+          style="display:flex;align-items:center;gap:5px;padding:11px 16px;border:none;background:none;cursor:pointer;font-size:13px;white-space:nowrap;border-bottom:2.5px solid ${activeVendorId==='__log__'?'var(--o)':'transparent'};color:${activeVendorId==='__log__'?'var(--o)':'var(--muted)'};font-weight:${activeVendorId==='__log__'?'600':'400'};margin-bottom:-0.5px;font-family:inherit;flex-shrink:0">
+          <i class="ti ti-history" style="font-size:14px"></i>전체 로그
+          <span style="font-size:10px;background:${activeVendorId==='__log__'?'var(--ol)':'var(--sf)'};color:${activeVendorId==='__log__'?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${(p.logs||[]).length}</span>
+        </button>
+
+        <!-- 우측 액션 버튼 -->
+        <div style="margin-left:auto;padding:6px 12px;flex-shrink:0">
+          ${!isReadOnly() && activeVendorId && activeVendorId!=='__meeting__' && activeVendorId!=='__log__' ?
+            `<button class="btn btn-o" id="addVendorProjectLogBtn" data-vid="${activeVendorId}" style="font-size:12px;padding:5px 12px"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+          ${!isReadOnly() && activeVendorId==='__meeting__' ?
+            `<button class="btn btn-o" id="addMeetingNoteBtn" style="font-size:12px;padding:5px 12px"><i class="ti ti-plus"></i> 회의록 작성</button>` : ''}
+          ${!isReadOnly() && activeVendorId==='__log__' ?
+            `<button class="btn" id="addProjectLogBtn" style="font-size:12px;padding:5px 12px"><i class="ti ti-plus"></i> 로그 추가</button>` : ''}
+        </div>
       </div>
 
-      <!-- 선택된 벤더 로그 -->
-      <div style="padding:0">
+      <!-- ── 탭 컨텐츠 ── -->
+
+      ${/* 벤더 로그 탭 */ activeVendorId && activeVendorId!=='__meeting__' && activeVendorId!=='__log__' ? `
         ${activeVendor ? `
           <div style="padding:10px 16px 6px;background:var(--sf);display:flex;align-items:center;gap:8px;border-bottom:0.5px solid var(--bd)">
             ${av(activeVendor.name, 22)}
@@ -1596,45 +1638,43 @@ function viewProjectDetail(){
             ${activeVendorLogs.length > 0 ? `<span style="font-size:11px;color:var(--muted)">· ${activeVendorLogs.length}건의 기록</span>` : ''}
           </div>
           ${activeVendorLogs.length===0 ?
-            `<div class="empty-state" style="padding:20px">아직 기록이 없습니다. 로그 추가 버튼으로 기록을 시작하세요.</div>` :
+            `<div class="empty-state" style="padding:24px">아직 기록이 없습니다. 로그 추가 버튼으로 기록을 시작하세요.</div>` :
             activeVendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
-              <div style="padding:10px 16px;border-bottom:0.5px solid var(--bd)">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+              <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
                   <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
                   <span class="badge bgr" style="font-size:10px">${l.status}</span>
                 </div>
-                <div style="font-size:13px;font-weight:500">${l.summary}</div>
-                ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:3px">→ ${l.nextStep}</div>`:''}
+                <div style="font-size:13px;font-weight:500;line-height:1.5">${l.summary}</div>
+                ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
+                ${renderLogLinks(l.links)}
               </div>`).join('')}
-        ` : '<div class="empty-state">벤더 탭을 선택하세요.</div>'}
-      </div>
-    </div>` : ''}
+        ` : `<div class="empty-state" style="padding:24px">벤더 탭을 선택하세요.</div>`}
+      ` : ''}
 
-    <div class="card" style="margin-bottom:14px">
-      <div class="sh">
-        <div class="st"><i class="ti ti-notes oi"></i>회의록</div>
-        ${!isReadOnly()?`<button class="btn btn-o" id="addMeetingNoteBtn"><i class="ti ti-plus"></i> 회의록 작성</button>`:''}
-      </div>
-      ${(!p.meetingNotes||p.meetingNotes.length===0)?'<div class="empty-state">작성된 회의록이 없습니다.</div>':
-        p.meetingNotes.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
-          <div style="border-top:0.5px solid var(--bd);padding:12px 0">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${fmtDateDow(m.date)}</div>
-            <div style="font-size:13px;white-space:pre-wrap;line-height:1.6">${m.text}</div>
-            ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted);margin-top:8px"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
-          </div>`).join('')}
-    </div>
+      ${/* 회의록 탭 */ activeVendorId==='__meeting__' ? `
+        ${(!p.meetingNotes||p.meetingNotes.length===0) ?
+          `<div class="empty-state" style="padding:28px">작성된 회의록이 없습니다.</div>` :
+          p.meetingNotes.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
+            <div style="padding:14px 16px;border-bottom:0.5px solid var(--bd)">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
+              </div>
+              <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${m.text}</div>
+              ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:10px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
+            </div>`).join('')}
+      ` : ''}
 
-    <div class="card">
-      <div class="sh">
-        <div class="st"><i class="ti ti-history oi"></i>전체 활동 로그</div>
-        ${!isReadOnly()?`<button class="btn" id="addProjectLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
-      </div>
-      ${(!p.logs||p.logs.length===0)?'<div class="empty-state">기록된 활동이 없습니다.</div>':
-        p.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
-          <div style="border-top:0.5px solid var(--bd);padding:10px 0">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${fmtDateDow(l.date)}</div>
-            <div style="font-size:13px">${l.text}</div>
-          </div>`).join('')}
+      ${/* 전체 로그 탭 */ activeVendorId==='__log__' ? `
+        ${(!p.logs||p.logs.length===0) ?
+          `<div class="empty-state" style="padding:28px">기록된 활동이 없습니다.</div>` :
+          p.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
+            <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${fmtDateDow(l.date)}</div>
+              <div style="font-size:13px;line-height:1.5">${l.text}</div>
+            </div>`).join('')}
+      ` : ''}
+
     </div>
   `;
 }
@@ -1671,9 +1711,12 @@ function viewCalendar(){
   const monthEvs = allEvs.filter(e=>e.date.startsWith(monthStr)).sort((a,b)=>a.date.localeCompare(b.date));
   const todayEvs = allEvs.filter(e=>e.date===todayStr);
 
-  // 커스텀 이벤트 타입 + 기본 타입
-  const defaultTypes = ['미팅','외근','마감','연차','반차','반반차','개인 용무','전화 통화'];
-  const customTypes = (state.data.calendarEventTypes||[]).filter(t=>!defaultTypes.includes(t.name));
+  // 모든 이벤트 타입 (calendarEventTypes에서)
+  const allEventTypes = state.data.calendarEventTypes || [
+    {name:'미팅',color:'#2554C7'},{name:'외근',color:'#D85A30'},{name:'마감',color:'#7C3AED'},
+    {name:'연차',color:'#059669'},{name:'반차',color:'#0891B2'},{name:'반반차',color:'#65A30D'},
+    {name:'개인 용무',color:'#F59E0B'},{name:'전화 통화',color:'#38BDF8'}
+  ];
 
   return `
     <div class="sh">
@@ -1691,8 +1734,8 @@ function viewCalendar(){
     </div>
 
     <div class="legend-row" style="flex-wrap:wrap">
-      ${[...defaultTypes.filter(t=>!['반차','반반차'].includes(t)), ...customTypes.map(t=>t.name)].map(t=>{
-        const c=eventColor(t); return `<span><span class="legend-dot" style="background:${c.dot}"></span>${t}</span>`;
+      ${allEventTypes.filter(t=>!['반차','반반차'].includes(t.name)).map(t=>{
+        const c=eventColor(t.name); return `<span><span class="legend-dot" style="background:${c.dot}"></span>${t.name}</span>`;
       }).join('')}
     </div>
 
@@ -2199,8 +2242,7 @@ function modalEventForm(dateStr){
           <div class="two">
             <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
             <div class="field"><label class="field-label">종류</label><select class="inp" name="type">
-              <option>미팅</option><option>외근</option><option>연차</option><option>반차</option><option>반반차</option><option>개인 용무</option><option>전화 통화</option>
-              ${(state.data.calendarEventTypes||[]).filter(t=>!['미팅','외근','연차','반차','반반차','개인 용무','전화 통화'].includes(t.name)).map(t=>`<option>${t.name}</option>`).join('')}
+              ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option>${t.name}</option>`).join('')}
             </select></div>
           </div>
           <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
@@ -2606,10 +2648,9 @@ function bindCompanyTypesManager(){
 
 // 캘린더 이벤트 수정 모달
 function modalEditEvent(ev){
-  const allTypes = [
-    '미팅','외근','연차','반차','반반차','개인 용무','전화 통화',
-    ...(state.data.calendarEventTypes||[]).map(t=>t.name)
-  ].filter((v,i,a)=>a.indexOf(v)===i);
+  const allTypes = (state.data.calendarEventTypes||[
+    {name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}
+  ]).map(t=>t.name);
   return `
     <div class="modal">
       <div class="mh"><h3>일정 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
