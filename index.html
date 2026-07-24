@@ -4471,21 +4471,27 @@ function bindVendorFormSubmit(existingVendor){
   document.getElementById('vendorForm').addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(e.target);
-    const obj = {
-      id: existingVendor ? existingVendor.id : uid('v'),
+    const updates = {
       name: fd.get('name'),
       priority: fd.get('priority'),
       companyType: fd.get('companyType') || '벤더',
-      status: existingVendor?existingVendor.status:'전송',
-      actionStatus: existingVendor?existingVendor.actionStatus:'',
       contact:{name:fd.get('contactName'), title:fd.get('contactTitle'), email:fd.get('contactEmail'), phone:fd.get('contactPhone')},
       notes:{discount:fd.get('discount'), payment:fd.get('payment'), moq:fd.get('moq'), creditLimit:fd.get('creditLimit')}
     };
     if(existingVendor){
       const idx = state.data.vendors.findIndex(v=>v.id===existingVendor.id);
-      state.data.vendors[idx] = obj;
+      // 기존 데이터(people, customNotes, logoUrl, companyStatus 등) 보존하고 편집 필드만 업데이트
+      state.data.vendors[idx] = { ...state.data.vendors[idx], ...updates };
     } else {
-      state.data.vendors.push(obj);
+      state.data.vendors.push({
+        id: uid('v'),
+        status: '전송',
+        actionStatus: '',
+        companyStatus: 'Active',
+        people: [],
+        customNotes: [],
+        ...updates
+      });
     }
     closeModal(); persist(); showToast('회사 정보가 저장되었습니다.');
   });
