@@ -1571,7 +1571,6 @@ function viewHome(){
           <div class="sh"><div class="st"><i class="ti ti-building-store oi"></i>Company 현황</div></div>
           ${state.data.vendors.slice(0,6).map(v=>{
             const latest=latestLogForVendor(v.id);
-            const days=latest?daysAgo(latest.date):null;
             const pc=priorityBadge(v.priority);
             return `<div class="dash-row vendor-link" data-vid="${v.id}" style="cursor:pointer">
               ${av(v.name,26)}
@@ -1580,7 +1579,7 @@ function viewHome(){
                   <span style="font-weight:500">${v.name}</span>
                   <span class="badge ${pc}">${v.priority}</span>
                 </div>
-                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${days!==null?days+'일 경과':'기록 없음'}${latest?' · '+latest.summary.slice(0,28)+'…':''}</div>
+                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest?latest.summary.slice(0,35)+'…':'기록 없음'}</div>
               </div>
             </div>`;
           }).join('')}
@@ -1879,23 +1878,25 @@ function viewVendorList(){
       <table class="tbl">
         <colgroup><col style="width:16%"><col style="width:8%"><col style="width:7%"><col style="width:22%"><col style="width:13%"><col style="width:9%"><col style="width:9%"><col style="width:12%"><col style="width:4%"></colgroup>
         <thead><tr>
-          <th>회사명</th><th>거래 상태</th><th>유형</th><th>경과일</th><th>최근 상황</th><th>액션 상태</th><th>우선순위</th><th>담당자</th><th></th>
+          <th>회사명</th><th>거래 상태</th><th>유형</th><th>최근 상황</th><th>액션 상태</th><th>우선순위</th><th>담당자</th><th></th>
         </tr></thead>
         <tbody>
-        ${vendors.length===0?`<tr><td colspan="9"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>`:
+        ${vendors.length===0?`<tr><td colspan="8"><div class="empty-state">검색 결과가 없습니다.</div></td></tr>`:
           vendors.map(v=>{
-            const days=v.latest?daysAgo(v.latest.date):null;
             const asBadge = v.actionStatus ? vendorActionBadge(v.actionStatus) : '';
             const ct = v.companyType||'벤더';
             const tb = typeBadge(ct);
+            const isInactive = (v.companyStatus||'Active') === 'Inactive';
+            const priorityCell = isInactive
+              ? `<span style="color:var(--muted)">-</span>`
+              : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
               <td><div style="display:flex;align-items:center;gap:8px">${av(v.name,24)}<span style="font-weight:500">${v.name}</span></div></td>
               <td><select class="vendor-status-select" data-vid="${v.id}" onclick="event.stopPropagation()" style="font-size:11px;padding:2px 6px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${['Active','Pending','Inactive'].map(s=>`<option value="${s}" ${(v.companyStatus||'Active')===s?'selected':''}>${s}</option>`).join('')}</select></td>
               <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${ct}</span></td>
-              <td style="${days>=90?'color:#A32D2D;font-weight:500':''}">${days!==null?days+'일':'-'}</td>
               <td style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:1px">${v.latest?v.latest.summary:'-'}</td>
               <td>${asBadge}</td>
-              <td><span class="badge ${priorityBadge(v.priority)}">${v.priority}</span></td>
+              <td>${priorityCell}</td>
               <td style="color:var(--muted)">${v.contact.name||'-'}</td>
               <td><i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i></td>
             </tr>`;
