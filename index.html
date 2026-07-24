@@ -271,6 +271,7 @@ async function doSaveStore(){
   }catch(e){
     console.error('저장 실패:', e);
     setSyncStatus('error');
+    showToast('⚠️ 저장 실패! 네트워크 연결을 확인해주세요.');
   }finally{
     saveInFlight = false;
     if(savePending){ savePending = false; doSaveStore(); }
@@ -1151,7 +1152,13 @@ const state = {
   vendorLogExpanded: false,
 };
 
-function persist(){ setSyncStatus('saving'); saveStore(); render(); }
+function persist(){
+  setSyncStatus('saving');
+  // 즉시 저장 (디바운스 없이) — 로그 추가/수정 시 데이터 유실 방지
+  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
+  doSaveStore();
+  render();
+}
 
 function showToast(msg){
   const t = document.getElementById('toast');
