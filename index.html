@@ -2056,22 +2056,62 @@ function viewVendorDetail(){
         <!-- 파일/링크 섹션 -->
         ${(() => {
           const allLinks = logs.flatMap(l=>(l.links||[]).map(lk=>({...lk, logDate:l.date, logSummary:l.summary})));
+          // vendor.links (거래처 직접 첨부)
+          const vendorLinks = v.links || [];
+          const combinedLinks = [...vendorLinks.map(lk=>({...lk, isDirect:true})), ...allLinks];
           return `<div class="card" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
-              <span style="font-size:10px;color:var(--muted)">${allLinks.length}건</span>
+              <div style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:10px;color:var(--muted)">${combinedLinks.length}건</span>
+                ${!isReadOnly()?`
+                <button class="btn" id="addVendorLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
+                <label class="btn" id="addVendorFileLabelBtn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
+                  <input type="file" id="addVendorFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
+                </label>`:''}
+              </div>
             </div>
-            ${allLinks.length===0
-              ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">로그에 첨부된 파일/링크가 없습니다.</div>`
-              : allLinks.map(lk=>`
-                <a href="${lk.url}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd);text-decoration:none;color:inherit">
-                  <i class="ti ti-${lk.url.includes('drive.google')?'brand-google-drive':lk.url.includes('notion')?'brand-notion':'link'}" style="font-size:14px;color:var(--o);flex-shrink:0"></i>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:12px;font-weight:500;color:var(--o);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||lk.url}</div>
-                    <div style="font-size:10px;color:var(--muted);margin-top:1px">${fmtDate(lk.logDate)} · ${lk.logSummary.slice(0,30)}${lk.logSummary.length>30?'…':''}</div>
-                  </div>
-                  <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
-                </a>`).join('')}
+            <!-- URL 입력창 (숨김) -->
+            <div id="vendorLinkUrlArea" style="display:none;gap:6px;margin-bottom:8px">
+              <input type="text" id="vendorLinkUrlInput" class="inp" placeholder="URL (https://...)" style="flex:1;margin:0;font-size:12px"/>
+              <input type="text" id="vendorLinkLabelInput" class="inp" placeholder="제목 (선택)" style="width:120px;margin:0;font-size:12px"/>
+              <button class="btn btn-o" id="vendorLinkUrlSaveBtn" style="font-size:11px;padding:4px 10px">추가</button>
+              <button class="btn" id="vendorLinkUrlCancelBtn" style="font-size:11px;padding:4px 8px">취소</button>
+            </div>
+            ${combinedLinks.length===0
+              ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px 0">
+                  <i class="ti ti-paperclip" style="font-size:20px;display:block;margin-bottom:6px;opacity:.3"></i>
+                  파일이나 링크를 추가해보세요
+                </div>`
+              : combinedLinks.map((lk,idx)=>{
+                  if(lk.data){
+                    // 직접 업로드 파일
+                    const t = lk.type||'';
+                    const icon = t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
+                    const color = t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
+                    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
+                      <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
+                      <div style="flex:1;min-width:0">
+                        <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="font-size:12px;font-weight:500;color:${color};text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
+                        ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${fmtDate(lk.logDate)} · ${(lk.logSummary||'').slice(0,25)}</span>`}
+                      </div>
+                      ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+                    </div>`;
+                  }
+                  const url = (lk.url||'').replace(/"/g,'&quot;');
+                  const isDrive = url.includes('drive.google')||url.includes('docs.google');
+                  const isNotion = url.includes('notion.');
+                  const icon2 = isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
+                  return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
+                    <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+                    <div style="flex:1;min-width:0">
+                      <a href="${url}" target="_blank" style="font-size:12px;font-weight:500;color:var(--o);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
+                      ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${fmtDate(lk.logDate)} · ${(lk.logSummary||'').slice(0,25)}</span>`}
+                    </div>
+                    <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
+                    ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+                  </div>`;
+                }).join('')}
           </div>`;
         })()}
 
@@ -4119,6 +4159,68 @@ function bindViewEvents(){
       if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
       const result = generateMeetingSummary(text);
       renderMeetingResult(result, text);
+    });
+  });
+
+  // ── 거래처 파일&링크 직접 추가 ──
+  const addUrlBtn = document.getElementById('addVendorLinkUrlBtn');
+  const urlArea   = document.getElementById('vendorLinkUrlArea');
+  const urlInput  = document.getElementById('vendorLinkUrlInput');
+  const lblInput  = document.getElementById('vendorLinkLabelInput');
+  const urlSave   = document.getElementById('vendorLinkUrlSaveBtn');
+  const urlCancel = document.getElementById('vendorLinkUrlCancelBtn');
+
+  if(addUrlBtn) addUrlBtn.addEventListener('click', ()=>{
+    if(!urlArea) return;
+    urlArea.style.display = urlArea.style.display==='flex' ? 'none' : 'flex';
+    if(urlInput) urlInput.focus();
+  });
+  if(urlCancel) urlCancel.addEventListener('click', ()=>{
+    if(urlArea) urlArea.style.display='none';
+    if(urlInput) urlInput.value='';
+    if(lblInput) lblInput.value='';
+  });
+  if(urlSave) urlSave.addEventListener('click', ()=>{
+    const url = urlInput?.value?.trim();
+    if(!url){ showToast('URL을 입력해주세요.'); return; }
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    if(!v.links) v.links = [];
+    v.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url});
+    urlArea.style.display='none';
+    urlInput.value=''; if(lblInput) lblInput.value='';
+    persist(); render(); showToast('링크가 추가되었습니다.');
+  });
+  if(urlInput) urlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') urlSave?.click(); });
+
+  // 파일 직접 업로드
+  const fileInput2 = document.getElementById('addVendorFileInput');
+  if(fileInput2) fileInput2.addEventListener('change', e=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    if(!v.links) v.links = [];
+    Array.from(e.target.files).forEach(file=>{
+      if(file.size > 2*1024*1024){ showToast(`${file.name}: 2MB 초과`); return; }
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        const base64 = ev.target.result.split(',')[1];
+        v.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type});
+        persist(); render(); showToast(`${file.name} 추가됨`);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value='';
+  });
+
+  // 거래처 파일/링크 삭제
+  document.querySelectorAll('.vendor-link-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v?.links) return;
+      // idx는 combinedLinks 기준 → 앞쪽이 vendorLinks (직접 첨부)
+      const directIdx = parseInt(btn.dataset.idx);
+      v.links.splice(directIdx, 1);
+      persist(); render(); showToast('삭제되었습니다.');
     });
   });
 
