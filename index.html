@@ -1922,7 +1922,9 @@ function viewVendorDetail(){
     {value:'발주 예정', label:'🛒 발주 예정', bg:'#EBF0FB', color:'#1A3A9E'},
     {value:'계약 진행중', label:'📝 계약 진행중', bg:'#FEF3C7', color:'#92400E'},
     {value:'팔로업 필요', label:'🔔 팔로업 필요', bg:'#FCEBEB', color:'#A32D2D'},
+    {value:'신규 브랜드 검토', label:'🔍 신규 브랜드 검토', bg:'#F3E8FF', color:'#6B21A8'},
     {value:'협의 완료', label:'✅ 협의 완료', bg:'#EAF3DE', color:'#3B6D11'},
+    {value:'계약 중단', label:'🚫 계약 중단', bg:'#F1F5F9', color:'#475569'},
     {value:'보류', label:'⏸ 보류', bg:'var(--sf)', color:'var(--muted)'},
   ];
   const currentStatus = actionStatuses.find(s=>s.value===v.actionStatus) || actionStatuses[0];
@@ -4496,7 +4498,15 @@ function bindViewEvents(){
     sel.addEventListener('change', e=>{
       e.stopPropagation();
       const v = state.data.vendors.find(x=>x.id===sel.dataset.vid);
-      if(v){ v.companyStatus = sel.value; persist(); }
+      if(!v) return;
+      v.companyStatus = sel.value;
+      // Inactive 선택 시 우선순위 낮음 + 액션상태 계약중단 자동 설정
+      if(sel.value === 'Inactive'){
+        v.priority = '낮음';
+        if(!v.actionStatus || v.actionStatus === '') v.actionStatus = '계약 중단';
+      }
+      persist();
+      render();
     });
   });
 
