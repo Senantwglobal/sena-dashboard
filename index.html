@@ -4656,17 +4656,14 @@ async function initApp(){
   }catch(e){
     console.error('Dashboard error:', e);
     const isNetworkError = e.message.includes('fetch') || e.message.includes('network') || e.message.includes('CORS');
-    app.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:2rem;text-align:center;">
-      <div style="font-size:32px;">⚠️</div>
-      <p style="font-size:15px;font-weight:600;color:var(--danger);">데이터를 불러오지 못했습니다</p>
-      <p style="font-size:12px;color:var(--text-muted);max-width:400px;">${e.message}</p>
-      ${isNetworkError ? `<p style="font-size:12px;color:var(--text-muted);background:var(--bg);padding:10px 16px;border-radius:8px;max-width:400px;">
-        Supabase 대시보드 → Project Settings → API → <strong>Allowed origins</strong>에<br>
-        <code style="background:#eee;padding:2px 6px;border-radius:4px;">https://senantwglobal.github.io</code><br>
-        를 추가했는지 확인해주세요.
-      </p>` : ''}
-      <button id="retryBtn" class="btn btn-primary">다시 시도</button>
-    </div>`;
+    const errMsg = isNetworkError ? '<p style="font-size:12px;background:#f1f1f1;padding:8px 12px;border-radius:8px;margin-top:4px;">Supabase → Project Settings → API → Allowed origins에 <b>https://senantwglobal.github.io</b> 추가 필요</p>' : '';
+    app.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:2rem;text-align:center;">' +
+      '<div style="font-size:32px;">⚠️</div>' +
+      '<p style="font-size:15px;font-weight:600;color:#dc2626;">데이터를 불러오지 못했습니다</p>' +
+      '<p style="font-size:12px;color:#888;max-width:400px;">' + e.message + '</p>' +
+      errMsg +
+      '<button id="retryBtn" class="btn btn-primary" style="margin-top:8px;padding:8px 20px;background:#2554C7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">다시 시도</button>' +
+      '</div>';
     document.getElementById('retryBtn').addEventListener('click', initApp);
   }
 }
