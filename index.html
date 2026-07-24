@@ -1149,6 +1149,7 @@ const state = {
   vendorLogFilterYear: 'all',
   vendorLogFilterMonth: 'all',
   dashProjPage: 0,
+  activeBrandId: null,
   vendorLogExpanded: false,
 };
 
@@ -1924,10 +1925,35 @@ function viewVendorList(){
 function viewVendorDetail(){
   const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
   if(!v) return '<div class="empty-state">벤더를 찾을 수 없습니다.</div>';
-  const logs = logsForVendor(v.id);
+
+  // 브랜드 탭 처리
+  const brands = v.brands || [];
+  const hasBrands = brands.length > 0;
+
+  // 활성 브랜드 결정 (없으면 null = 전체/기본)
+  let activeBrandId = state.activeBrandId;
+  if(hasBrands && !brands.find(b=>b.id===activeBrandId)){
+    activeBrandId = brands[0].id;
+    state.activeBrandId = activeBrandId;
+  }
+  if(!hasBrands) activeBrandId = null;
+
+  const activeBrand = hasBrands ? brands.find(b=>b.id===activeBrandId) : null;
+
+  // 브랜드별 또는 전체 데이터
+  const bLogs = hasBrands && activeBrandId
+    ? logsForVendor(v.id).filter(l=>l.brandId===activeBrandId)
+    : logsForVendor(v.id);
+  const logs = bLogs;
   const projects = projectsForVendor(v.id);
-  const latest = logs[0];
+  const latest = logs[0] || logsForVendor(v.id)[0];
   const days = latest?daysAgo(latest.date):null;
+
+  // 브랜드별 담당자/메모 (없으면 vendor 레벨)
+  const people = (activeBrand?.people?.length ? activeBrand.people : null) || v.people || [];
+  const customNotes = (activeBrand?.customNotes?.length ? activeBrand.customNotes : null) || v.customNotes || [];
+  const vendorTerms = activeBrand?.vendorTerms || v.vendorTerms || {};
+  const bId = activeBrandId; // 현재 브랜드 ID (로그 필터용)
 
   const actionStatuses = [
     {value:'', label:'상태 미지정', bg:'var(--sf)', color:'var(--muted)'},
@@ -1973,6 +1999,22 @@ function viewVendorDetail(){
       </div>
     </div>
 
+    ${hasBrands ? `
+    <!-- 브랜드 탭 -->
+    <div style="display:flex;align-items:center;gap:4px;margin-bottom:14px;border-bottom:1.5px solid var(--bd);padding-bottom:0;flex-wrap:wrap">
+      ${brands.map(b=>`
+        <button class="brand-tab-btn" data-bid="${b.id}" style="padding:7px 14px;font-size:13px;font-weight:${b.id===activeBrandId?'600':'400'};color:${b.id===activeBrandId?'var(--o)':'var(--muted)'};background:none;border:none;border-bottom:${b.id===activeBrandId?'2px solid var(--o)':'2px solid transparent'};cursor:pointer;margin-bottom:-1.5px;display:flex;align-items:center;gap:6px">
+          ${av(b.name||b.id, 16)}
+          ${b.name||b.id}
+        </button>`).join('')}
+      ${!isReadOnly()?`<button id="addBrandTabBtn" style="padding:7px 10px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;margin-bottom:-1.5px"><i class="ti ti-plus"></i> 브랜드 추가</button>`:''}
+    </div>` : `
+    <!-- 브랜드 없음: 브랜드 추가 버튼만 -->
+    ${!isReadOnly()?`<div style="margin-bottom:10px">
+      <button id="addBrandTabBtn" style="font-size:11px;color:var(--muted);background:none;border:0.5px dashed var(--bd);border-radius:8px;padding:4px 12px;cursor:pointer"><i class="ti ti-plus"></i> 브랜드 탭 추가</button>
+    </div>`:''}
+    `}
+
     ${latest ? `
     <div style="background:${currentStatus.bg};border:0.5px solid ${currentStatus.color}22;border-radius:10px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
       <div style="flex:1;min-width:0">
@@ -2007,7 +2049,6 @@ function viewVendorDetail(){
             ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
           </div>
           ${(() => {
-            const people = v.people || [];
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
               <div class="person-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd)">
@@ -2040,7 +2081,7 @@ function viewVendorDetail(){
           <!-- 벤더 필수 필드 -->
           <div style="font-size:10px;font-weight:600;color:var(--o);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">벤더 조건</div>
           ${(() => {
-            const vn = v.vendorTerms || {};
+            // vendorTerms는 상단에서 activeBrand 기반으로 결정됨
             const fields = [
               {key:'discount', label:'할인율', placeholder:'예: 25%', suffix:''},
               {key:'payment',  label:'거래 조건', placeholder:'예: NET30/ACH'},
@@ -2052,8 +2093,8 @@ function viewVendorDetail(){
               <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bd)">
                 <span style="font-size:11px;color:var(--muted);width:90px;flex-shrink:0">${f.label}</span>
                 ${!isReadOnly()
-                  ?`<input type="text" class="inp vterm-input" data-key="${f.key}" value="${((vn[f.key]||v.notes?.[f.key])||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder}" style="flex:1;margin:0;font-size:12px;padding:3px 8px"/>`
-                  :`<span style="font-size:12px;font-weight:500;flex:1">${vn[f.key]||v.notes?.[f.key]||'-'}</span>`}
+                  ?`<input type="text" class="inp vterm-input" data-key="${f.key}" value="${((vendorTerms[f.key]||v.notes?.[f.key])||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder}" style="flex:1;margin:0;font-size:12px;padding:3px 8px"/>`
+                  :`<span style="font-size:12px;font-weight:500;flex:1">${vendorTerms[f.key]||v.notes?.[f.key]||'-'}</span>`}
               </div>`).join('');
           })()}
           ${!isReadOnly()?`<button class="btn btn-o" id="saveVendorTermsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 조건 저장</button>`:''}
@@ -2066,14 +2107,9 @@ function viewVendorDetail(){
             ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:2px 7px"><i class="ti ti-plus"></i></button>`:''}
           </div>
           <div id="customNotesList">
-            ${(v.customNotes||[]).length===0&&(v.companyType==='벤더'||!v.companyType)
+            ${customNotes.length===0&&(v.companyType==='벤더'||!v.companyType)
               ?`<div style="font-size:11px;color:var(--muted);padding:4px 0">추가 메모 없음</div>`
-              :(v.customNotes||[
-                {key:'할인율',val:v.notes?.discount||''},
-                {key:'결제 조건',val:v.notes?.payment||''},
-                {key:'MOQ',val:v.notes?.moq||''},
-                {key:'Credit Limit',val:v.notes?.creditLimit||''}
-              ].filter(n=>v.companyType&&v.companyType!=='벤더')).map((n,i)=>`
+              :customNotes.map((n,i)=>`
               <div class="custom-note-row" style="padding:6px 0;border-bottom:0.5px solid var(--bd)">
                 ${!isReadOnly()
                   ?`<div style="font-size:10px;color:var(--muted);margin-bottom:2px">
@@ -2085,7 +2121,7 @@ function viewVendorDetail(){
                 ${!isReadOnly()?`<button class="btn btn-red note-del-btn" data-idx="${i}" style="padding:1px 5px;font-size:10px;margin-top:4px"><i class="ti ti-x"></i></button>`:''}
               </div>`).join('')}
           </div>
-          ${!isReadOnly()&&(v.customNotes||[]).length>0?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
+          ${!isReadOnly()&&customNotes.length>0?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
         </div>
 
       </div>
@@ -2434,6 +2470,59 @@ function viewProjectDetail(){
       ` : `<div class="empty-state" style="padding:24px">벤더를 선택하세요.</div>`}
 
     </div>` : ''}
+
+    <!-- 파일 & 링크 -->
+    ${(() => {
+      const pLinks = p.links || [];
+      const dotColor = cs=>'var(--o)';
+      return `<div class="card" style="margin-bottom:14px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;color:var(--muted)">${pLinks.length}건</span>
+            ${!isReadOnly()?`
+            <button class="btn" id="addProjLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
+            <label class="btn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
+              <input type="file" id="addProjFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
+            </label>`:''}
+          </div>
+        </div>
+        <div id="projLinkUrlArea" style="display:none;gap:6px;margin-bottom:8px">
+          <input type="text" id="projLinkUrlInput" class="inp" placeholder="URL (https://...)" style="flex:1;margin:0;font-size:12px"/>
+          <input type="text" id="projLinkLabelInput" class="inp" placeholder="제목 (선택)" style="width:120px;margin:0;font-size:12px"/>
+          <button class="btn btn-o" id="projLinkUrlSaveBtn" style="font-size:11px;padding:4px 10px">추가</button>
+          <button class="btn" id="projLinkUrlCancelBtn" style="font-size:11px;padding:4px 8px">취소</button>
+        </div>
+        ${pLinks.length===0
+          ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:14px 0">
+              <i class="ti ti-paperclip" style="font-size:18px;display:block;margin-bottom:4px;opacity:.3"></i>
+              파일이나 링크를 추가해보세요
+            </div>`
+          : pLinks.map((lk,idx)=>{
+              if(lk.data){
+                const t=lk.type||'';
+                const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
+                const color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
+                const bg=t.includes('image')?'#E0F2FE':t.includes('pdf')?'#FEE2E2':'#DCFCE7';
+                return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
+                  <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
+                  <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="flex:1;font-size:12px;font-weight:500;color:${color};text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
+                  ${!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+                </div>`;
+              }
+              const url=(lk.url||'').replace(/"/g,'&quot;');
+              const isDrive=url.includes('drive.google')||url.includes('docs.google');
+              const isNotion=url.includes('notion.');
+              const icon2=isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
+              return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
+                <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+                <a href="${url}" target="_blank" style="flex:1;font-size:12px;font-weight:500;color:var(--o);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
+                <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
+                ${!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+              </div>`;
+            }).join('')}
+      </div>`;
+    })()}
 
     <!-- 전체 활동 로그 (맨 아래) -->
     <div class="card">
@@ -2811,7 +2900,8 @@ function bindLogModal(preVendorId, preProjectId){
       nextStepDue: fd.get('nextStepDue')||'',
       rawText: fd.get('rawText')||'',
       needsApproval, nextStepDone: false,
-      links, linkedProjectId
+      links, linkedProjectId,
+      brandId: state.activeBrandId || ''
     };
 
     state.data.vendorLogs.push(newLog);
@@ -4217,6 +4307,34 @@ function bindViewEvents(){
     });
   });
 
+  // ── 브랜드 탭 전환 ──
+  document.querySelectorAll('.brand-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.activeBrandId = btn.dataset.bid;
+      render();
+    });
+  });
+
+  // 브랜드 추가
+  const addBrandTabBtn = document.getElementById('addBrandTabBtn');
+  if(addBrandTabBtn) addBrandTabBtn.addEventListener('click', ()=>{
+    const name = prompt('브랜드명을 입력하세요 (예: Nordic Naturals, Solgar)');
+    if(!name || !name.trim()) return;
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    if(!v.brands) v.brands = [];
+    const newBrand = {
+      id: uid('br'),
+      name: name.trim(),
+      people: [],
+      vendorTerms: {},
+      customNotes: [],
+    };
+    v.brands.push(newBrand);
+    state.activeBrandId = newBrand.id;
+    persist(); render(); showToast(`브랜드 "${name.trim()}" 추가됨`);
+  });
+
   // ── 거래처 파일&링크 직접 추가 ──
   const addUrlBtn = document.getElementById('addVendorLinkUrlBtn');
   const urlArea   = document.getElementById('vendorLinkUrlArea');
@@ -4281,9 +4399,13 @@ function bindViewEvents(){
 
   // ── 거래처 담당자 관리 (vendor.people) ──
   function openPersonModal(vendorId, person, idx){
+    const v = state.data.vendors.find(x=>x.id===vendorId);
+    const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
+    const targetLabel = brand ? ` — ${brand.name}` : '';
     openModal(`
       <div class="modal">
-        <div class="mh"><h3>${person?'담당자 수정':'담당자 추가'}</h3>
+        <div class="mh"><h3>${person?'담당자 수정':'담당자 추가'}${targetLabel}</h3>
           <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
         </div>
         <div class="mb">
@@ -4302,17 +4424,16 @@ function bindViewEvents(){
     document.getElementById('personForm').addEventListener('submit', e=>{
       e.preventDefault();
       const fd = new FormData(e.target);
-      const v = state.data.vendors.find(x=>x.id===vendorId);
-      if(!v) return;
-      if(!v.people) v.people = [];
+      if(!target.people) target.people = [];
       if(person && idx !== undefined){
-        v.people[idx] = {...v.people[idx], name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone')};
+        target.people[idx] = {...target.people[idx], name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone')};
       } else {
-        v.people.push({id:'p_'+uid('px'), name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone'), isMain:v.people.length===0});
+        target.people.push({id:'p_'+uid('px'), name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone'), isMain:target.people.length===0});
       }
       closeModal(); persist(); render(); showToast('담당자가 저장되었습니다.');
     });
   }
+
 
   const addPersonBtn = document.getElementById('addPersonBtn');
   if(addPersonBtn) addPersonBtn.addEventListener('click', ()=>openPersonModal(state.selectedVendorId, null));
@@ -4328,9 +4449,11 @@ function bindViewEvents(){
   document.querySelectorAll('.person-set-main-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(!v?.people) return;
+      const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = brand || v;
+      if(!target?.people) return;
       const idx = parseInt(btn.dataset.idx);
-      v.people.forEach((p,i)=>p.isMain = i===idx);
+      target.people.forEach((p,i)=>p.isMain = i===idx);
       persist(); render(); showToast('메인 담당자로 설정되었습니다.');
     });
   });
@@ -4339,8 +4462,10 @@ function bindViewEvents(){
     btn.addEventListener('click', ()=>{
       if(!confirm('이 담당자를 삭제하시겠습니까?')) return;
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(!v?.people) return;
-      v.people.splice(parseInt(btn.dataset.idx), 1);
+      const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = brand || v;
+      if(!target?.people) return;
+      target.people.splice(parseInt(btn.dataset.idx), 1);
       persist(); render(); showToast('삭제되었습니다.');
     });
   });
@@ -4350,18 +4475,20 @@ function bindViewEvents(){
   if(saveVendorTermsBtn) saveVendorTermsBtn.addEventListener('click', ()=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
-    if(!v.vendorTerms) v.vendorTerms = {};
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
+    if(!target.vendorTerms) target.vendorTerms = {};
     document.querySelectorAll('.vterm-input').forEach(inp=>{
-      v.vendorTerms[inp.dataset.key] = inp.value.trim();
+      target.vendorTerms[inp.dataset.key] = inp.value.trim();
     });
-    // 기존 notes 필드도 동기화
-    v.notes = v.notes || {};
-    v.notes.discount = v.vendorTerms.discount || '';
-    v.notes.payment  = v.vendorTerms.payment  || '';
-    v.notes.moq      = v.vendorTerms.moq      || '';
-    v.notes.creditLimit = v.vendorTerms.creditLimit || '';
-    persist();
-    showToast('벤더 조건이 저장되었습니다.');
+    if(!brand){
+      v.notes = v.notes || {};
+      v.notes.discount = target.vendorTerms.discount || '';
+      v.notes.payment  = target.vendorTerms.payment  || '';
+      v.notes.moq      = target.vendorTerms.moq      || '';
+      v.notes.creditLimit = target.vendorTerms.creditLimit || '';
+    }
+    persist(); showToast('벤더 조건이 저장되었습니다.');
   });
 
   // ── 거래 메모 저장 / 삭제 / 추가 ──
@@ -4369,11 +4496,11 @@ function bindViewEvents(){
   if(saveNoteBtn) saveNoteBtn.addEventListener('click', ()=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
-    v.customNotes = Array.from(keys).map((k,i)=>({
-      key: k.value, val: vals[i]?.value || ''
-    })).filter(n=>n.key);
+    target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
     persist(); showToast('메모가 저장되었습니다.');
   });
 
@@ -4381,9 +4508,11 @@ function bindViewEvents(){
     btn.addEventListener('click', ()=>{
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
       if(!v) return;
-      const notes = v.customNotes || [];
+      const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = brand || v;
+      const notes = target.customNotes || [];
       notes.splice(parseInt(btn.dataset.idx), 1);
-      v.customNotes = notes;
+      target.customNotes = notes;
       persist(); render(); showToast('항목이 삭제되었습니다.');
     });
   });
@@ -4392,18 +4521,17 @@ function bindViewEvents(){
   if(addNoteBtn) addNoteBtn.addEventListener('click', ()=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
-    // 현재 입력된 값 먼저 저장
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
-    v.customNotes = Array.from(keys).map((k,i)=>({
-      key: k.value, val: vals[i]?.value || ''
-    })).filter(n=>n.key);
-    v.customNotes.push({key:'새 항목', val:''});
+    target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
+    target.customNotes.push({key:'새 항목', val:''});
     persist(); render();
-    // 마지막 key input에 포커스
     const allKeys = document.querySelectorAll('.note-key');
     if(allKeys.length) allKeys[allKeys.length-1].focus();
   });
+
 
   // 컨택 (회사/담당자)
   document.querySelectorAll('.company-row').forEach(el=>{
@@ -4438,6 +4566,66 @@ function bindViewEvents(){
   if(editCompanyBtn) editCompanyBtn.addEventListener('click', ()=>{
     const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
     openModal(modalCompanyForm(c)); bindModalCommon(); bindCompanyFormSubmit(c);
+  });
+
+  // ── 프로젝트 파일 & 링크 ──
+  const addProjLinkUrlBtn = document.getElementById('addProjLinkUrlBtn');
+  const projLinkUrlArea   = document.getElementById('projLinkUrlArea');
+  const projUrlInput      = document.getElementById('projLinkUrlInput');
+  const projLabelInput    = document.getElementById('projLinkLabelInput');
+  const projLinkSaveBtn   = document.getElementById('projLinkUrlSaveBtn');
+  const projLinkCancelBtn = document.getElementById('projLinkUrlCancelBtn');
+
+  if(addProjLinkUrlBtn) addProjLinkUrlBtn.addEventListener('click', ()=>{
+    if(!projLinkUrlArea) return;
+    projLinkUrlArea.style.display = projLinkUrlArea.style.display==='flex' ? 'none' : 'flex';
+    if(projUrlInput) projUrlInput.focus();
+  });
+  if(projLinkCancelBtn) projLinkCancelBtn.addEventListener('click', ()=>{
+    if(projLinkUrlArea) projLinkUrlArea.style.display='none';
+    if(projUrlInput) projUrlInput.value='';
+    if(projLabelInput) projLabelInput.value='';
+  });
+  if(projLinkSaveBtn) projLinkSaveBtn.addEventListener('click', ()=>{
+    const url = projUrlInput?.value?.trim();
+    if(!url){ showToast('URL을 입력해주세요.'); return; }
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj) return;
+    if(!proj.links) proj.links = [];
+    proj.links.push({id:uid('pkl'), url, label:projLabelInput?.value?.trim()||url});
+    projLinkUrlArea.style.display='none';
+    projUrlInput.value=''; if(projLabelInput) projLabelInput.value='';
+    persist(); render(); showToast('링크가 추가되었습니다.');
+  });
+  if(projUrlInput) projUrlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') projLinkSaveBtn?.click(); });
+
+  // 프로젝트 파일 업로드
+  const projFileInput = document.getElementById('addProjFileInput');
+  if(projFileInput) projFileInput.addEventListener('change', e=>{
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj) return;
+    if(!proj.links) proj.links = [];
+    Array.from(e.target.files).forEach(file=>{
+      if(file.size > 2*1024*1024){ showToast(`${file.name}: 2MB 초과`); return; }
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        const base64 = ev.target.result.split(',')[1];
+        proj.links.push({id:uid('pkf'), label:file.name, url:'', data:base64, type:file.type});
+        persist(); render(); showToast(`${file.name} 추가됨`);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value='';
+  });
+
+  // 프로젝트 파일/링크 삭제
+  document.querySelectorAll('.proj-link-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      if(!proj?.links) return;
+      proj.links.splice(parseInt(btn.dataset.idx), 1);
+      persist(); render(); showToast('삭제되었습니다.');
+    });
   });
 
   // 프로젝트 활동 로그
