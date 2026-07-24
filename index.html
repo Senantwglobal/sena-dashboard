@@ -1306,11 +1306,11 @@ function av(name, size=28, logoUrl){
     return v?.logoUrl || null;
   })();
   if(url){
-    return `<img src="${url}" alt="${name}" style="width:${size}px;height:${size}px;border-radius:${size<=24?'6px':'8px'};object-fit:contain;background:#fff;border:0.5px solid var(--bd);flex-shrink:0"/>`;
+    return `<img src="${url}" alt="${name}" style="width:${size}px;height:${size}px;border-radius:50%;object-fit:cover;background:#fff;border:0.5px solid var(--bd);flex-shrink:0"/>`;
   }
   const initials = (name||'?').split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const bg = avatarColor(name);
-  return `<div class="av" style="width:${size}px;height:${size}px;background:${bg};font-size:${size<=24?9:11}px;flex-shrink:0">${initials}</div>`;
+  return `<div class="av" style="width:${size}px;height:${size}px;background:${bg};font-size:${size<=24?9:11}px;flex-shrink:0;border-radius:50%">${initials}</div>`;
 }
 function avatarEl(name, size=28){ return av(name, size); }
 
@@ -1782,7 +1782,8 @@ function viewVendorList(){
   vendors.sort((a,b)=>{
     const so = (statusOrder[a.companyStatus]??1) - (statusOrder[b.companyStatus]??1);
     if(so!==0) return so;
-    return (b.latest?daysAgo(b.latest.date):-1)-(a.latest?daysAgo(a.latest.date):-1);
+    // 이름 가나다/ABC 순
+    return a.name.localeCompare(b.name, ['ko','en'], {sensitivity:'base'});
   });
 
   const highCount = vendors.filter(v=>v.priority==='높음').length;
