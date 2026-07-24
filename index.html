@@ -1325,7 +1325,6 @@ function render(){
   const tabs = [
     {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
     {view:'vendors', icon:'ti-building-store', label:'거래처'},
-    {view:'contacts', icon:'ti-address-book', label:'컨택'},
     {view:'projects', icon:'ti-checklist', label:'프로젝트'},
     {view:'calendar', icon:'ti-calendar', label:'캘린더'},
     {view:'log', icon:'ti-pencil-plus', label:'로그 입력'},
@@ -1935,39 +1934,30 @@ function viewVendorDetail(){
     <div class="two" style="margin-bottom:14px">
       <div class="card">
         <div class="sh" style="margin-bottom:10px">
-          <div class="st"><i class="ti ti-user oi"></i>컨택 정보</div>
-          ${(() => {
-            const linkedCo = state.data.companies.find(c=>c.name===v.name);
-            return linkedCo ? `<button class="btn contact-tab-link" data-cid="${linkedCo.id}" style="font-size:11px;padding:4px 8px"><i class="ti ti-address-book"></i> 컨택 전체</button>` : '';
-          })()}
+          <div class="st"><i class="ti ti-users oi"></i>담당자</div>
+          ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 담당자 추가</button>`:''}
         </div>
         ${(() => {
-          const linkedCo = state.data.companies.find(c=>c.name===v.name);
-          if(linkedCo && linkedCo.people.length > 0){
-            const mainP = linkedCo.people.find(p=>p.isMain) || linkedCo.people[0];
-            const otherPeople = linkedCo.people.filter(p=>p.id!==mainP.id);
-            return `
-              <div style="background:var(--sf);border-radius:8px;padding:10px;margin-bottom:8px">
-                <div style="font-size:10px;color:var(--muted);margin-bottom:6px">메인 담당자</div>
-                <div style="display:flex;align-items:center;gap:8px">
-                  ${av(mainP.name,30)}
-                  <div>
-                    <div style="font-weight:500;font-size:13px">${mainP.name}</div>
-                    <div style="font-size:11px;color:var(--muted)">${mainP.title||''}</div>
-                    ${mainP.email?`<a href="mailto:${mainP.email}" style="font-size:11px;color:var(--o)">${mainP.email}</a>`:''}
-                    ${mainP.phone?`<div style="font-size:11px;color:var(--muted)">${mainP.phone}</div>`:''}
-                  </div>
+          const people = v.people || [];
+          if(people.length === 0) return `<div class="empty-state" style="padding:14px">등록된 담당자가 없습니다.</div>`;
+          return people.map((p,i) => `
+            <div class="person-row" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--bd)">
+              ${av(p.name, 32)}
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                  <span style="font-size:13px;font-weight:500">${p.name||'-'}</span>
+                  ${p.isMain?`<span style="font-size:10px;background:var(--ol);color:var(--od);padding:1px 7px;border-radius:20px">메인</span>`:''}
                 </div>
+                ${p.title?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${p.title}</div>`:''}
+                ${p.email?`<a href="mailto:${p.email}" style="font-size:11px;color:var(--o);display:block;margin-top:1px">${p.email}</a>`:''}
+                ${p.phone?`<div style="font-size:11px;color:var(--muted);margin-top:1px"><i class="ti ti-phone" style="font-size:10px"></i> ${p.phone}</div>`:''}
               </div>
-              ${otherPeople.length>0?`<div style="font-size:11px;color:var(--muted)">외 ${otherPeople.length}명: ${otherPeople.map(p=>p.name).join(', ')}</div>`:''}
-            `;
-          }
-          return `
-            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">담당자</span><span style="font-weight:500">${v.contact.name||'-'}</span></div>
-            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">직함</span><span>${v.contact.title||'-'}</span></div>
-            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">이메일</span><a href="mailto:${v.contact.email}" style="color:var(--o)">${v.contact.email||'-'}</a></div>
-            <div class="dash-row"><span style="color:var(--muted);width:70px;flex-shrink:0">전화</span><span>${v.contact.phone||'-'}</span></div>
-          `;
+              ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+                <button class="btn person-edit-btn" data-idx="${i}" style="padding:3px 8px;font-size:11px" title="수정"><i class="ti ti-pencil" style="font-size:11px"></i></button>
+                ${!p.isMain?`<button class="btn person-set-main-btn" data-idx="${i}" style="padding:3px 8px;font-size:10px" title="메인 설정">⭐</button>`:''}
+                <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:3px 8px;font-size:11px" title="삭제"><i class="ti ti-trash" style="font-size:11px"></i></button>
+              </div>`:''}
+            </div>`).join('');
         })()}
       </div>
       <div class="card">
@@ -3874,6 +3864,72 @@ function bindViewEvents(){
     });
   });
 
+  // ── 거래처 담당자 관리 (vendor.people) ──
+  function openPersonModal(vendorId, person, idx){
+    openModal(`
+      <div class="modal">
+        <div class="mh"><h3>${person?'담당자 수정':'담당자 추가'}</h3>
+          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="mb">
+          <form id="personForm">
+            <div class="two">
+              <div class="field"><label class="field-label">이름</label><input class="inp" name="name" value="${person?.name||''}" required/></div>
+              <div class="field"><label class="field-label">직함</label><input class="inp" name="title" value="${person?.title||''}"/></div>
+            </div>
+            <div class="field"><label class="field-label">이메일</label><input class="inp" type="email" name="email" value="${person?.email||''}"/></div>
+            <div class="field"><label class="field-label">전화</label><input class="inp" name="phone" value="${person?.phone||''}"/></div>
+          </form>
+        </div>
+        <div class="mf"><button type="submit" form="personForm" class="btn btn-o"><i class="ti ti-device-floppy"></i> 저장</button></div>
+      </div>`);
+    bindModalCommon();
+    document.getElementById('personForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const v = state.data.vendors.find(x=>x.id===vendorId);
+      if(!v) return;
+      if(!v.people) v.people = [];
+      if(person && idx !== undefined){
+        v.people[idx] = {...v.people[idx], name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone')};
+      } else {
+        v.people.push({id:'p_'+uid('px'), name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone'), isMain:v.people.length===0});
+      }
+      closeModal(); persist(); render(); showToast('담당자가 저장되었습니다.');
+    });
+  }
+
+  const addPersonBtn = document.getElementById('addPersonBtn');
+  if(addPersonBtn) addPersonBtn.addEventListener('click', ()=>openPersonModal(state.selectedVendorId, null));
+
+  document.querySelectorAll('.person-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      const idx = parseInt(btn.dataset.idx);
+      openPersonModal(state.selectedVendorId, v?.people?.[idx], idx);
+    });
+  });
+
+  document.querySelectorAll('.person-set-main-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v?.people) return;
+      const idx = parseInt(btn.dataset.idx);
+      v.people.forEach((p,i)=>p.isMain = i===idx);
+      persist(); render(); showToast('메인 담당자로 설정되었습니다.');
+    });
+  });
+
+  document.querySelectorAll('.person-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('이 담당자를 삭제하시겠습니까?')) return;
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v?.people) return;
+      v.people.splice(parseInt(btn.dataset.idx), 1);
+      persist(); render(); showToast('삭제되었습니다.');
+    });
+  });
+
   // 컨택 (회사/담당자)
   document.querySelectorAll('.company-row').forEach(el=>{
     el.addEventListener('click', ()=>{ state.selectedCompanyId = el.dataset.cid; render(); });
@@ -3897,27 +3953,6 @@ function bindViewEvents(){
   if(editCompanyBtn) editCompanyBtn.addEventListener('click', ()=>{
     const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
     openModal(modalCompanyForm(c)); bindModalCommon(); bindCompanyFormSubmit(c);
-  });
-
-  const addPersonBtn = document.getElementById('addPersonBtn');
-  if(addPersonBtn) addPersonBtn.addEventListener('click', ()=>{
-    openModal(modalPersonForm(state.selectedCompanyId, null)); bindModalCommon(); bindPersonFormSubmit(null);
-  });
-  document.querySelectorAll('.edit-person-btn').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
-      const person = c.people.find(p=>p.id===el.dataset.pid);
-      openModal(modalPersonForm(c.id, person)); bindModalCommon(); bindPersonFormSubmit(person);
-    });
-  });
-  document.querySelectorAll('.delete-person-btn').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      if(confirm('이 담당자를 삭제하시겠습니까?')){
-        const c = state.data.companies.find(x=>x.id===state.selectedCompanyId);
-        c.people = c.people.filter(p=>p.id!==el.dataset.pid);
-        persist(); showToast('담당자가 삭제되었습니다.');
-      }
-    });
   });
 
   // 프로젝트 활동 로그
