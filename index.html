@@ -1784,6 +1784,7 @@ function vendorStatusStyle(status){
   const map = {
     'Active':   'background:#EAF3DE;color:#3B6D11;border-color:#3B6D11',
     'Pending':  'background:#FEF3C7;color:#92400E;border-color:#92400E',
+    'Review':   'background:#EBF0FB;color:#1A3A9E;border-color:#2554C7',
     'Inactive': 'background:#F1EFE8;color:#5F5E5A;border-color:#ccc',
   };
   return map[status]||map['Active'];
@@ -1894,13 +1895,13 @@ function viewVendorList(){
               ? `<span style="color:var(--muted)">-</span>`
               : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             // 거래 상태 dot
-            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : '#DC2626';
-            const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : '거래중단';
+            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#2554C7' : '#DC2626';
+            const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : '거래중단';
             const statusDot = `<div style="display:flex;align-items:center;gap:5px;cursor:pointer" class="status-dot-wrap" data-vid="${v.id}" onclick="event.stopPropagation()">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
               <span style="font-size:12px;color:${dotColor};font-weight:500">${dotLabel}</span>
               <select class="vendor-status-select" data-vid="${v.id}" onclick="event.stopPropagation()" style="position:absolute;opacity:0;width:80px;cursor:pointer">
-                ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${cs===s.v?'selected':''}>${s.l}</option>`).join('')}
+                ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${cs===s.v?'selected':''}>${s.l}</option>`).join('')}
               </select>
             </div>`;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
@@ -1960,8 +1961,8 @@ function viewVendorDetail(){
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#EBF0FB;color:#1A3A9E">${v.companyType}</span>`:''}
-            ${days!==null?`<span class="badge bgr">${days}일 경과</span>`:''}
-            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
+            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
+            ${days!==null?`<span style="font-size:11px;color:var(--muted)"><i class="ti ti-clock" style="font-size:10px"></i> ${days}일 경과</span>`:''}
             ${v.logoUrl?`<button id="removeLogoBtn" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0"><i class="ti ti-photo-off"></i> 로고 삭제</button>`:''}
           </div>
         </div>
@@ -2031,27 +2032,60 @@ function viewVendorDetail(){
 
         <!-- 거래 메모 -->
         <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
             <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">거래 메모</span>
-            ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
+          </div>
+
+          ${(v.companyType==='벤더'||!v.companyType)?`
+          <!-- 벤더 필수 필드 -->
+          <div style="font-size:10px;font-weight:600;color:var(--o);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">벤더 조건</div>
+          ${(() => {
+            const vn = v.vendorTerms || {};
+            const fields = [
+              {key:'discount', label:'할인율', placeholder:'예: 25%', suffix:''},
+              {key:'payment',  label:'거래 조건', placeholder:'예: NET30/ACH'},
+              {key:'moq',      label:'MOQ', placeholder:'예: $500'},
+              {key:'creditLimit', label:'Credit Limit', placeholder:'예: $10,000'},
+              {key:'shipping', label:'Shipping Terms', placeholder:'예: FOB, DDP'},
+            ];
+            return fields.map(f=>`
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bd)">
+                <span style="font-size:11px;color:var(--muted);width:90px;flex-shrink:0">${f.label}</span>
+                ${!isReadOnly()
+                  ?`<input type="text" class="inp vterm-input" data-key="${f.key}" value="${((vn[f.key]||v.notes?.[f.key])||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder}" style="flex:1;margin:0;font-size:12px;padding:3px 8px"/>`
+                  :`<span style="font-size:12px;font-weight:500;flex:1">${vn[f.key]||v.notes?.[f.key]||'-'}</span>`}
+              </div>`).join('');
+          })()}
+          ${!isReadOnly()?`<button class="btn btn-o" id="saveVendorTermsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 조건 저장</button>`:''}
+          <div style="height:12px"></div>
+          `:''}
+
+          <!-- 자유 메모 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">추가 메모</span>
+            ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:2px 7px"><i class="ti ti-plus"></i></button>`:''}
           </div>
           <div id="customNotesList">
-            ${(v.customNotes||[
-              {key:'할인율',val:v.notes.discount||''},
-              {key:'결제 조건',val:v.notes.payment||''},
-              {key:'MOQ',val:v.notes.moq||''},
-              {key:'Credit Limit',val:v.notes.creditLimit||''}
-            ]).map((n,i)=>`
+            ${(v.customNotes||[]).length===0&&(v.companyType==='벤더'||!v.companyType)
+              ?`<div style="font-size:11px;color:var(--muted);padding:4px 0">추가 메모 없음</div>`
+              :(v.customNotes||[
+                {key:'할인율',val:v.notes?.discount||''},
+                {key:'결제 조건',val:v.notes?.payment||''},
+                {key:'MOQ',val:v.notes?.moq||''},
+                {key:'Credit Limit',val:v.notes?.creditLimit||''}
+              ].filter(n=>v.companyType&&v.companyType!=='벤더')).map((n,i)=>`
               <div class="custom-note-row" style="padding:6px 0;border-bottom:0.5px solid var(--bd)">
                 ${!isReadOnly()
-                  ?`<div style="font-size:10px;color:var(--muted);margin-bottom:2px"><input type="text" class="inp note-key" data-idx="${i}" value="${(n.key||'').replace(/"/g,'&quot;')}" style="width:100%;margin:0;font-size:10px;padding:2px 6px;font-weight:500;color:var(--muted)"/></div>
+                  ?`<div style="font-size:10px;color:var(--muted);margin-bottom:2px">
+                      <input type="text" class="inp note-key" data-idx="${i}" value="${(n.key||'').replace(/"/g,'&quot;')}" style="width:100%;margin:0;font-size:10px;padding:2px 6px;font-weight:500;color:var(--muted)"/>
+                    </div>
                     <input type="text" class="inp note-val" data-idx="${i}" value="${(n.val||'').replace(/"/g,'&quot;')}" style="width:100%;margin:0;font-size:12px;padding:3px 6px"/>`
                   :`<div style="font-size:10px;color:var(--muted)">${n.key}</div>
                     <div style="font-size:12px;font-weight:500;margin-top:1px">${n.val||'-'}</div>`}
                 ${!isReadOnly()?`<button class="btn btn-red note-del-btn" data-idx="${i}" style="padding:1px 5px;font-size:10px;margin-top:4px"><i class="ti ti-x"></i></button>`:''}
               </div>`).join('')}
           </div>
-          ${!isReadOnly()?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
+          ${!isReadOnly()&&(v.customNotes||[]).length>0?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
         </div>
 
       </div>
@@ -4309,6 +4343,25 @@ function bindViewEvents(){
       v.people.splice(parseInt(btn.dataset.idx), 1);
       persist(); render(); showToast('삭제되었습니다.');
     });
+  });
+
+  // ── 벤더 조건 저장 ──
+  const saveVendorTermsBtn = document.getElementById('saveVendorTermsBtn');
+  if(saveVendorTermsBtn) saveVendorTermsBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    if(!v.vendorTerms) v.vendorTerms = {};
+    document.querySelectorAll('.vterm-input').forEach(inp=>{
+      v.vendorTerms[inp.dataset.key] = inp.value.trim();
+    });
+    // 기존 notes 필드도 동기화
+    v.notes = v.notes || {};
+    v.notes.discount = v.vendorTerms.discount || '';
+    v.notes.payment  = v.vendorTerms.payment  || '';
+    v.notes.moq      = v.vendorTerms.moq      || '';
+    v.notes.creditLimit = v.vendorTerms.creditLimit || '';
+    persist();
+    showToast('벤더 조건이 저장되었습니다.');
   });
 
   // ── 거래 메모 저장 / 삭제 / 추가 ──
