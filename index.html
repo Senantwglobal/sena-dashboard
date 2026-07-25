@@ -1940,10 +1940,11 @@ function viewVendorDetail(){
 
   const activeBrand = hasBrands ? brands.find(b=>b.id===activeBrandId) : null;
 
-  // 브랜드별 또는 전체 데이터
-  // 브랜드별 로그 필터링
-  // - 브랜드 탭 선택 시: 해당 brandId 로그 + brandId 없는 로그 모두 표시
-  // - 브랜드 없는 거래처: 전체 로그
+  // 상속 모드(기본): 벤더 마스터 정보 사용
+  // 독립 모드: 브랜드 자체 정보 사용 (brand.inherit === false)
+  const isInherit = activeBrand ? (activeBrand.inherit !== false) : true;
+
+  // 로그 필터
   const allVendorLogs = logsForVendor(v.id);
   const bLogs = hasBrands && activeBrandId
     ? allVendorLogs.filter(l => l.brandId === activeBrandId || !l.brandId)
@@ -1953,11 +1954,11 @@ function viewVendorDetail(){
   const latest = logs[0] || logsForVendor(v.id)[0];
   const days = latest?daysAgo(latest.date):null;
 
-  // 브랜드별 담당자/메모 (없으면 vendor 레벨)
-  const people = (activeBrand?.people?.length ? activeBrand.people : null) || v.people || [];
-  const customNotes = (activeBrand?.customNotes?.length ? activeBrand.customNotes : null) || v.customNotes || [];
-  const vendorTerms = activeBrand?.vendorTerms || v.vendorTerms || {};
-  const bId = activeBrandId; // 현재 브랜드 ID (로그 필터용)
+  // 담당자/메모/거래조건: 독립 모드일 때만 브랜드 자체 정보, 상속 모드면 벤더 마스터
+  const people      = (!isInherit && activeBrand?.people?.length) ? activeBrand.people : v.people || [];
+  const customNotes = (!isInherit && activeBrand?.customNotes?.length) ? activeBrand.customNotes : v.customNotes || [];
+  const vendorTerms = (!isInherit && activeBrand?.vendorTerms && Object.keys(activeBrand.vendorTerms||{}).length) ? activeBrand.vendorTerms : (v.vendorTerms || {});
+  const bId = activeBrandId;
 
   const actionStatuses = [
     {value:'', label:'상태 미지정', bg:'var(--sf)', color:'var(--muted)'},
@@ -2048,12 +2049,40 @@ function viewVendorDetail(){
       <!-- 왼쪽 사이드바 -->
       <div style="display:flex;flex-direction:column;gap:12px">
 
+        <!-- 브랜드 모드 토글 (브랜드가 있을 때만) -->
+        ${hasBrands && activeBrand ? `
+        <div class="card" style="padding:10px 14px">
+          <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
+            <i class="ti ti-settings" style="font-size:11px"></i> ${activeBrand.name} 설정
+          </div>
+          <div style="display:flex;gap:6px">
+            <button id="inheritModeBtn" class="btn ${isInherit?'btn-o':''}" style="flex:1;font-size:11px;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px">
+              <i class="ti ti-link" style="font-size:12px"></i>
+              벤더 마스터 상속
+            </button>
+            <button id="independentModeBtn" class="btn ${!isInherit?'btn-o':''}" style="flex:1;font-size:11px;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px">
+              <i class="ti ti-user-check" style="font-size:12px"></i>
+              브랜드 독립
+            </button>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5">
+            ${isInherit
+              ? '<i class="ti ti-info-circle" style="font-size:10px"></i> 벤더 마스터의 담당자·거래조건·메모를 공유합니다.'
+              : '<i class="ti ti-user-check" style="font-size:10px;color:var(--o)"></i> 이 브랜드만의 담당자·거래조건·메모를 설정합니다.'}
+          </div>
+        </div>` : ''}
+
         <!-- 담당자 -->
         <div class="card" style="padding:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
             <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
-            ${!isReadOnly()?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
+            ${!isReadOnly()&&(!hasBrands||!isInherit)?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
           </div>
+          ${hasBrands && isInherit && activeBrand ? `
+          <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
+            <i class="ti ti-link" style="font-size:10px;color:var(--o)"></i>
+            벤더 마스터에서 상속 중
+          </div>` : ''}
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
@@ -4374,6 +4403,28 @@ function bindViewEvents(){
       const brand = v.brands.find(b=>b.id===brandId);
       showToast(`${untagged.length}건이 "${brand?.name}"에 배정되었습니다.`);
     });
+  });
+
+  // ── 브랜드 상속/독립 모드 토글 ──
+  const inheritBtn = document.getElementById('inheritModeBtn');
+  const independentBtn = document.getElementById('independentModeBtn');
+  if(inheritBtn) inheritBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+    if(!brand) return;
+    brand.inherit = true;
+    persist(); render(); showToast('벤더 마스터 정보를 상속합니다.');
+  });
+  if(independentBtn) independentBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+    if(!brand) return;
+    brand.inherit = false;
+    // 벤더 마스터 정보를 브랜드 초기값으로 복사
+    if(!brand.people?.length) brand.people = JSON.parse(JSON.stringify(v.people||[])).map(p=>({...p,id:uid('bp')}));
+    if(!brand.vendorTerms||!Object.keys(brand.vendorTerms||{}).length) brand.vendorTerms = {...(v.vendorTerms||{})};
+    if(!brand.customNotes?.length) brand.customNotes = JSON.parse(JSON.stringify(v.customNotes||[]));
+    persist(); render(); showToast('브랜드 독립 모드로 전환됐습니다. 담당자/조건을 별도로 설정하세요.');
   });
 
   // ── 브랜드 탭 전환 ──
