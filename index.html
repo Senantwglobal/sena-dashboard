@@ -1573,6 +1573,7 @@ function viewHome(){
           ${state.data.vendors.slice(0,6).map(v=>{
             const latest=latestLogForVendor(v.id);
             const pc=priorityBadge(v.priority);
+            const brandNames = (v.brands||[]).map(b=>b.name).filter(Boolean);
             return `<div class="dash-row vendor-link" data-vid="${v.id}" style="cursor:pointer">
               ${av(v.name,26)}
               <div style="flex:1;min-width:0">
@@ -1580,7 +1581,9 @@ function viewHome(){
                   <span style="font-weight:500">${v.name}</span>
                   <span class="badge ${pc}">${v.priority}</span>
                 </div>
-                <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest?latest.summary.slice(0,35)+'…':'기록 없음'}</div>
+                ${brandNames.length>0
+                  ? `<div style="font-size:10px;color:var(--o);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${brandNames.join(' · ')}</div>`
+                  : `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest?latest.summary.slice(0,35)+'…':'기록 없음'}</div>`}
               </div>
             </div>`;
           }).join('')}
@@ -1818,7 +1821,13 @@ function viewVendorList(){
 
   if(state.vendorSearch){
     const q = state.vendorSearch.toLowerCase();
-    vendors = vendors.filter(v=>v.name.toLowerCase().includes(q)||(v.contact.name||'').toLowerCase().includes(q));
+    vendors = vendors.filter(v=>{
+      if(v.name.toLowerCase().includes(q)) return true;
+      if((v.contact?.name||'').toLowerCase().includes(q)) return true;
+      // 브랜드명으로도 검색
+      if(v.brands?.some(b=>(b.name||'').toLowerCase().includes(q))) return true;
+      return false;
+    });
   }
   if(activeType !== '전체') vendors = vendors.filter(v=>(v.companyType||'벤더') === activeType);
   if(statusFilter !== '전체') vendors = vendors.filter(v=>(v.companyStatus||'Active') === statusFilter);
@@ -1906,7 +1915,7 @@ function viewVendorList(){
               </select>
             </div>`;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
-              <td><div style="display:flex;align-items:center;gap:10px">${av(v.name,28)}<span style="font-weight:500;font-size:13px">${v.name}</span></div></td>
+              <td><div style="display:flex;align-items:center;gap:10px">${av(v.name,28)}<div><div style="font-weight:500;font-size:13px">${v.name}</div>${(v.brands||[]).length>0?`<div style="font-size:10px;color:var(--o);margin-top:1px"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${v.brands.map(b=>b.name).filter(Boolean).join(' · ')}</div>`:''}</div></div></td>
               <td style="position:relative">${statusDot}</td>
               <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${ct}</span></td>
               <td style="color:#6B7280;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:1px">${v.latest?v.latest.summary:'-'}</td>
@@ -2055,6 +2064,33 @@ function viewVendorDetail(){
           <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
             <i class="ti ti-settings" style="font-size:11px"></i> ${activeBrand.name} 설정
           </div>
+          <!-- 브랜드 로고 -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:6px">브랜드 로고</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="position:relative;flex-shrink:0">
+                ${activeBrand.logoUrl
+                  ? `<img src="${activeBrand.logoUrl}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid var(--bd)"/>`
+                  : `<div style="width:36px;height:36px;border-radius:50%;background:var(--sf);display:flex;align-items:center;justify-content:center;border:1px dashed var(--bd);font-size:11px;color:var(--muted)">${(activeBrand.name||'?')[0].toUpperCase()}</div>`}
+                ${!isReadOnly()?`<label style="position:absolute;bottom:-2px;right:-2px;width:16px;height:16px;background:var(--o);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px solid white">
+                  <i class="ti ti-camera" style="font-size:9px;color:#fff"></i>
+                  <input type="file" id="brandLogoInput" accept="image/*" style="display:none"/>
+                </label>`:''}
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11px;font-weight:500">${activeBrand.name}</div>
+                ${activeBrand.logoUrl&&!isReadOnly()?`<button id="removeBrandLogoBtn" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0"><i class="ti ti-photo-off"></i> 로고 삭제</button>`:''}
+              </div>
+            </div>
+          </div>
+          <!-- 브랜드 상태 -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:4px">브랜드 거래 상태</div>
+            <select id="brandStatusSelect" style="width:100%;font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--bd);outline:none;cursor:pointer;${vendorStatusStyle(activeBrand.companyStatus||'Active')}">
+              ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(activeBrand.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}
+            </select>
+          </div>
+          <!-- 정보 모드 -->
           <div style="display:flex;gap:6px">
             <button id="inheritModeBtn" class="btn ${isInherit?'btn-o':''}" style="flex:1;font-size:11px;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:4px">
               <i class="ti ti-link" style="font-size:12px"></i>
@@ -4405,6 +4441,42 @@ function bindViewEvents(){
     });
   });
 
+  // ── 브랜드 로고 업로드/삭제 ──
+  const brandLogoInput = document.getElementById('brandLogoInput');
+  if(brandLogoInput) brandLogoInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 1*1024*1024){ showToast('1MB 이하 이미지만 가능합니다.'); return; }
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+      if(!brand) return;
+      brand.logoUrl = ev.target.result;
+      persist(); render(); showToast('브랜드 로고가 업데이트됐습니다.');
+    };
+    reader.readAsDataURL(file);
+    e.target.value='';
+  });
+  const removeBrandLogoBtn = document.getElementById('removeBrandLogoBtn');
+  if(removeBrandLogoBtn) removeBrandLogoBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+    if(!brand) return;
+    delete brand.logoUrl;
+    persist(); render(); showToast('로고가 삭제됐습니다.');
+  });
+
+  // ── 브랜드 상태 변경 ──
+  const brandStatusSel = document.getElementById('brandStatusSelect');
+  if(brandStatusSel) brandStatusSel.addEventListener('change', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+    if(!brand) return;
+    brand.companyStatus = brandStatusSel.value;
+    persist(); render(); showToast('브랜드 상태가 변경되었습니다.');
+  });
+
   // ── 브랜드 상속/독립 모드 토글 ──
   const inheritBtn = document.getElementById('inheritModeBtn');
   const independentBtn = document.getElementById('independentModeBtn');
@@ -4419,12 +4491,14 @@ function bindViewEvents(){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
     if(!brand) return;
+    if(brand.inherit === false) return; // 이미 독립 모드
+    if(!confirm(`"${brand.name}" 브랜드를 독립 모드로 전환하시겠습니까?\n담당자·거래조건·메모가 초기화됩니다.`)) return;
     brand.inherit = false;
-    // 벤더 마스터 정보를 브랜드 초기값으로 복사
-    if(!brand.people?.length) brand.people = JSON.parse(JSON.stringify(v.people||[])).map(p=>({...p,id:uid('bp')}));
-    if(!brand.vendorTerms||!Object.keys(brand.vendorTerms||{}).length) brand.vendorTerms = {...(v.vendorTerms||{})};
-    if(!brand.customNotes?.length) brand.customNotes = JSON.parse(JSON.stringify(v.customNotes||[]));
-    persist(); render(); showToast('브랜드 독립 모드로 전환됐습니다. 담당자/조건을 별도로 설정하세요.');
+    // 초기화 (빈 상태)
+    brand.people = [];
+    brand.vendorTerms = {};
+    brand.customNotes = [];
+    persist(); render(); showToast(`"${brand.name}" 독립 모드 전환 완료. 담당자/조건을 새로 설정해주세요.`);
   });
 
   // ── 브랜드 탭 전환 ──
