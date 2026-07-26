@@ -1153,12 +1153,11 @@ const state = {
   vendorLogExpanded: false,
 };
 
-function persist(){
+function persist(shouldRender=true){
   setSyncStatus('saving');
-  // 즉시 저장 (디바운스 없이) — 로그 추가/수정 시 데이터 유실 방지
   if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
   doSaveStore();
-  render();
+  if(shouldRender) render();
 }
 
 function showToast(msg){
@@ -1372,7 +1371,7 @@ function render(){
   `;
 
   document.getElementById('roleSelect').addEventListener('change', e=>{
-    state.data.role = e.target.value; persist();
+    state.data.role = e.target.value; persist(false);
   });
   document.querySelectorAll('.nb').forEach(el=>{
     el.addEventListener('click', ()=>{
@@ -1789,6 +1788,7 @@ function vendorStatusStyle(status){
     'Active':   'background:#EAF3DE;color:#3B6D11;border-color:#3B6D11',
     'Pending':  'background:#FEF3C7;color:#92400E;border-color:#92400E',
     'Review':   'background:#EBF0FB;color:#1A3A9E;border-color:#2554C7',
+    'Hold':     'background:#FFF0E8;color:#C2410C;border-color:#EA580C',
     'Inactive': 'background:#F1EFE8;color:#5F5E5A;border-color:#ccc',
   };
   return map[status]||map['Active'];
@@ -1905,13 +1905,13 @@ function viewVendorList(){
               ? `<span style="color:var(--muted)">-</span>`
               : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             // 거래 상태 dot
-            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#2554C7' : '#DC2626';
-            const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : '거래중단';
+            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#2554C7' : cs==='Hold' ? '#EA580C' : '#DC2626';
+            const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : cs==='Hold' ? '거래보류' : '거래중단';
             const statusDot = `<div style="display:flex;align-items:center;gap:5px;cursor:pointer" class="status-dot-wrap" data-vid="${v.id}" onclick="event.stopPropagation()">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
               <span style="font-size:12px;color:${dotColor};font-weight:500">${dotLabel}</span>
               <select class="vendor-status-select" data-vid="${v.id}" onclick="event.stopPropagation()" style="position:absolute;opacity:0;width:80px;cursor:pointer">
-                ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${cs===s.v?'selected':''}>${s.l}</option>`).join('')}
+                ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${cs===s.v?'selected':''}>${s.l}</option>`).join('')}
               </select>
             </div>`;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
@@ -1956,7 +1956,12 @@ function viewVendorDetail(){
   // 로그 필터
   const allVendorLogs = logsForVendor(v.id);
   const bLogs = hasBrands && activeBrandId
-    ? allVendorLogs.filter(l => l.brandId === activeBrandId || !l.brandId)
+    ? allVendorLogs.filter(l => {
+        if(!l.brandId && (!l.brandIds || l.brandIds.length===0)) return true; // 미태깅 로그
+        if(l.brandIds && l.brandIds.includes(activeBrandId)) return true; // 멀티선택
+        if(l.brandId === activeBrandId) return true; // 단일선택 (기존 호환)
+        return false;
+      })
     : allVendorLogs;
   const logs = bLogs;
   const projects = projectsForVendor(v.id);
@@ -2001,7 +2006,7 @@ function viewVendorDetail(){
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#EBF0FB;color:#1A3A9E">${v.companyType}</span>`:''}
-            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
+            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
             ${days!==null?`<span style="font-size:11px;color:var(--muted)"><i class="ti ti-clock" style="font-size:10px"></i> ${days}일 경과</span>`:''}
             ${v.logoUrl?`<button id="removeLogoBtn" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0"><i class="ti ti-photo-off"></i> 로고 삭제</button>`:''}
           </div>
@@ -2087,7 +2092,7 @@ function viewVendorDetail(){
           <div style="margin-bottom:8px">
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">브랜드 거래 상태</div>
             <select id="brandStatusSelect" style="width:100%;font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--bd);outline:none;cursor:pointer;${vendorStatusStyle(activeBrand.companyStatus||'Active')}">
-              ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(activeBrand.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}
+              ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(activeBrand.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}
             </select>
           </div>
           <!-- 정보 모드 -->
@@ -2178,7 +2183,7 @@ function viewVendorDetail(){
             ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:2px 7px"><i class="ti ti-plus"></i></button>`:''}
           </div>
           <div id="customNotesList">
-            ${customNotes.length===0&&(v.companyType==='벤더'||!v.companyType)
+            ${customNotes.length===0
               ?`<div style="font-size:11px;color:var(--muted);padding:4px 0">추가 메모 없음</div>`
               :customNotes.map((n,i)=>`
               <div class="custom-note-row" style="padding:6px 0;border-bottom:0.5px solid var(--bd)">
@@ -2721,12 +2726,31 @@ function viewCalendar(){
 
 function modalLogForm(preVendorId, preProjectId){
   const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
-  // 사전 선택된 벤더에 연결된 프로젝트
   const relProjects = preVendorId ? state.data.projects.filter(p=>{
     const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
     return ids.includes(preVendorId);
   }) : [];
   const projOptions = relProjects.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
+
+  // 현재 선택된 벤더의 브랜드 목록 (멀티선택용)
+  const preBrands = preVendorId ? (state.data.vendors.find(v=>v.id===preVendorId)?.brands||[]) : [];
+  const preActiveBrand = state.activeBrandId;
+  const brandCheckboxes = preBrands.length > 0
+    ? `<div class="field" id="lmBrandSection">
+        <label class="field-label" style="display:flex;align-items:center;gap:6px">
+          <i class="ti ti-brand-abstract" style="font-size:13px;color:var(--o)"></i>
+          관련 브랜드 <span style="font-size:11px;color:var(--muted);font-weight:400">(복수 선택 가능)</span>
+        </label>
+        <div id="lmBrandCheckboxes" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--sf);border-radius:8px">
+          ${preBrands.map(b=>`
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid var(--bd);font-size:12px">
+              <input type="checkbox" name="brandIds" value="${b.id}" ${b.id===preActiveBrand?'checked':''} style="accent-color:var(--o);width:13px;height:13px"/>
+              ${b.logoUrl?`<img src="${b.logoUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover"/>`:''}
+              ${b.name}
+            </label>`).join('')}
+        </div>
+      </div>`
+    : `<div id="lmBrandSection" style="display:none"></div>`;
 
   return `
     <div class="modal" style="width:600px">
@@ -2744,6 +2768,7 @@ function modalLogForm(preVendorId, preProjectId){
               </select>
             </div>
           </div>
+          ${brandCheckboxes}
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
               <i class="ti ti-clipboard-list" style="font-size:13px;color:var(--o)"></i>
@@ -2845,6 +2870,25 @@ function bindLogModal(preVendorId, preProjectId){
     });
     projSel.innerHTML = `<option value="">없음</option>`
       + rel.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
+    // 브랜드 체크박스 동적 업데이트
+    const brandSection = document.getElementById('lmBrandSection');
+    const brandCheckboxes = document.getElementById('lmBrandCheckboxes');
+    if(!brandSection) return;
+    const vendor = vid ? state.data.vendors.find(v=>v.id===vid) : null;
+    const brands = vendor?.brands || [];
+    if(brands.length === 0){
+      brandSection.style.display = 'none';
+      return;
+    }
+    brandSection.style.display = 'block';
+    if(brandCheckboxes){
+      brandCheckboxes.innerHTML = brands.map(b=>`
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid var(--bd);font-size:12px">
+          <input type="checkbox" name="brandIds" value="${b.id}" ${b.id===state.activeBrandId?'checked':''} style="accent-color:var(--o);width:13px;height:13px"/>
+          ${b.logoUrl?`<img src="${b.logoUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover"/>`:''}
+          ${b.name}
+        </label>`).join('');
+    }
   }
   if(vendorSel) vendorSel.addEventListener('change', ()=>updateProjects(vendorSel.value));
 
@@ -2968,6 +3012,9 @@ function bindLogModal(preVendorId, preProjectId){
       }
     });
 
+    // 선택된 브랜드 ID 수집 (복수)
+    const checkedBrands = Array.from(document.querySelectorAll('#lmBrandCheckboxes input[name="brandIds"]:checked')).map(cb=>cb.value);
+
     const newLog = {
       id: uid('vl'), vendorId, date: fd.get('date'),
       type: fd.get('type'), status: fd.get('status'), priority: fd.get('priority'),
@@ -2976,7 +3023,8 @@ function bindLogModal(preVendorId, preProjectId){
       rawText: fd.get('rawText')||'',
       needsApproval, nextStepDone: false,
       links, linkedProjectId,
-      brandId: state.activeBrandId || ''
+      brandId: checkedBrands.length === 1 ? checkedBrands[0] : '',  // 단일 선택 호환
+      brandIds: checkedBrands  // 복수 선택
     };
 
     state.data.vendorLogs.push(newLog);
@@ -3008,7 +3056,7 @@ function bindLogModal(preVendorId, preProjectId){
     }
 
     closeModal();
-    persist();
+    persist(false);
     render();
     showToast('로그가 저장되었습니다.');
   });
@@ -3823,7 +3871,7 @@ function bindEventTypesManager(){
       name: r.querySelector('.event-type-name').value.trim(),
       color: r.querySelector('.event-type-color').value
     })).filter(t=>t.name);
-    closeModal(); persist(); showToast('일정 유형이 저장되었습니다.');
+    closeModal(); persist(false); showToast('일정 유형이 저장되었습니다.');
   });
 }
 
@@ -3868,7 +3916,7 @@ function bindCategoriesManager(){
   });
   document.getElementById('saveCatsBtn').addEventListener('click', ()=>{
     state.data.categories = Array.from(document.querySelectorAll('.cat-name-input')).map(i=>i.value.trim()).filter(Boolean);
-    closeModal(); persist(); showToast('카테고리가 저장되었습니다.');
+    closeModal(); persist(false); showToast('카테고리가 저장되었습니다.');
   });
 }
 
@@ -3915,7 +3963,7 @@ function bindCompanyTypesManager(){
   });
   document.getElementById('saveCompanyTypesBtn').addEventListener('click', ()=>{
     state.data.companyTypes = Array.from(document.querySelectorAll('.ctype-input')).map(i=>i.value.trim()).filter(Boolean);
-    closeModal(); persist(); render(); showToast('거래처 유형이 저장되었습니다.');
+    closeModal(); persist(false); render(); showToast('거래처 유형이 저장되었습니다.');
   });
 }
 
@@ -4050,7 +4098,7 @@ function bindViewEvents(){
     if(confirm(`"${v.name}"을(를) 삭제하시겠습니까?\n연결된 로그 데이터는 유지됩니다.`)){
       state.data.vendors = state.data.vendors.filter(x=>x.id!==state.selectedVendorId);
       state.selectedVendorId = null;
-      persist(); render(); showToast('삭제되었습니다.');
+      persist(false); render(); showToast('삭제되었습니다.');
     }
   });
 
@@ -4072,7 +4120,7 @@ function bindViewEvents(){
   const actionStatusSelect = document.getElementById('actionStatusSelect');
   if(actionStatusSelect) actionStatusSelect.addEventListener('change', e=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    if(v){ v.actionStatus = e.target.value; persist(); showToast('액션 상태가 저장되었습니다.'); }
+    if(v){ v.actionStatus = e.target.value; persist(false); showToast('액션 상태가 저장되었습니다.'); }
   });
 
   const backToVendors = document.getElementById('backToVendors');
@@ -4092,7 +4140,7 @@ function bindViewEvents(){
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
       if(!v) return;
       v.logoUrl = ev.target.result; // Base64 저장
-      persist(); render(); showToast('로고가 저장되었습니다.');
+      persist(false); render(); showToast('로고가 저장되었습니다.');
     };
     reader.readAsDataURL(file);
   });
@@ -4102,7 +4150,7 @@ function bindViewEvents(){
   if(removeLogoBtn) removeLogoBtn.addEventListener('click', ()=>{
     if(confirm('로고를 삭제하시겠습니까?')){
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(v){ delete v.logoUrl; persist(); render(); showToast('로고가 삭제되었습니다.'); }
+      if(v){ delete v.logoUrl; persist(false); render(); showToast('로고가 삭제되었습니다.'); }
     }
   });
 
@@ -4116,7 +4164,7 @@ function bindViewEvents(){
   document.querySelectorAll('.nextaction-done').forEach(el=>{
     el.addEventListener('change', ()=>{
       const log = state.data.vendorLogs.find(l=>l.id===el.dataset.lid);
-      if(log){ log.nextStepDone = el.checked; persist(); if(el.checked) showToast('완료 처리되었습니다!'); }
+      if(log){ log.nextStepDone = el.checked; persist(false); if(el.checked) showToast('완료 처리되었습니다!'); }
     });
   });
 
@@ -4211,12 +4259,12 @@ function bindViewEvents(){
           state.selectedVendorId = newVendorId;
           state.vendorLogExpanded = true;
           closeModal();
-          persist();
+          persist(false);
           showToast(`로그가 ${(state.data.vendors.find(v=>v.id===newVendorId)||{}).name||''}(으)로 이동됐습니다.`);
           render();
         } else {
           closeModal();
-          persist();
+          persist(false);
           showToast('로그가 수정되었습니다.');
           render();
         }
@@ -4227,7 +4275,7 @@ function bindViewEvents(){
       if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
         if(confirm('이 로그를 삭제하시겠습니까?')){
           state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==btn.dataset.lid);
-          closeModal(); persist(); render();
+          closeModal(); persist(false); render();
           showToast('로그가 삭제되었습니다.');
         }
       });
@@ -4240,7 +4288,7 @@ function bindViewEvents(){
       e.stopPropagation();
       if(confirm('이 로그를 삭제하시겠습니까?')){
         state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==btn.dataset.lid);
-        persist(); render();
+        persist(false); render();
         showToast('로그가 삭제되었습니다.');
       }
     });
@@ -4334,7 +4382,7 @@ function bindViewEvents(){
       if(!p.vendorMeetings) p.vendorMeetings = {};
       if(!p.vendorMeetings[vid]) p.vendorMeetings[vid] = [];
       p.vendorMeetings[vid].unshift({ id:uid('vm'), date, text, summary:'' });
-      closeModal(); persist(); render(); showToast('회의록이 저장되었습니다.');
+      closeModal(); persist(false); render(); showToast('회의록이 저장되었습니다.');
     });
   });
 
@@ -4355,7 +4403,7 @@ function bindViewEvents(){
       const item = p.checklist.find(c=>c.id===el.dataset.cid);
       item.done = el.checked;
       item.status = el.checked ? '완료' : (item.status==='완료' ? '진행중' : item.status);
-      persist();
+      persist(false);
     });
   });
   document.querySelectorAll('.checklist-delete').forEach(el=>{
@@ -4363,7 +4411,7 @@ function bindViewEvents(){
       e.stopPropagation();
       const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
       p.checklist = p.checklist.filter(c=>c.id!==el.dataset.cid);
-      persist();
+      persist(false);
     });
   });
   document.querySelectorAll('.checklist-card').forEach(el=>{
@@ -4435,7 +4483,7 @@ function bindViewEvents(){
     document.getElementById('confirmAssignBtn').addEventListener('click', ()=>{
       const brandId = document.getElementById('assignBrandSelect').value;
       untagged.forEach(l => { l.brandId = brandId; });
-      closeModal(); persist(); render();
+      closeModal(); persist(false); render();
       const brand = v.brands.find(b=>b.id===brandId);
       showToast(`${untagged.length}건이 "${brand?.name}"에 배정되었습니다.`);
     });
@@ -4453,7 +4501,7 @@ function bindViewEvents(){
       const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
       if(!brand) return;
       brand.logoUrl = ev.target.result;
-      persist(); render(); showToast('브랜드 로고가 업데이트됐습니다.');
+      persist(false); render(); showToast('브랜드 로고가 업데이트됐습니다.');
     };
     reader.readAsDataURL(file);
     e.target.value='';
@@ -4464,7 +4512,7 @@ function bindViewEvents(){
     const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
     if(!brand) return;
     delete brand.logoUrl;
-    persist(); render(); showToast('로고가 삭제됐습니다.');
+    persist(false); render(); showToast('로고가 삭제됐습니다.');
   });
 
   // ── 브랜드 상태 변경 ──
@@ -4474,7 +4522,7 @@ function bindViewEvents(){
     const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
     if(!brand) return;
     brand.companyStatus = brandStatusSel.value;
-    persist(); render(); showToast('브랜드 상태가 변경되었습니다.');
+    persist(false); render(); showToast('브랜드 상태가 변경되었습니다.');
   });
 
   // ── 브랜드 상속/독립 모드 토글 ──
@@ -4485,7 +4533,7 @@ function bindViewEvents(){
     const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
     if(!brand) return;
     brand.inherit = true;
-    persist(); render(); showToast('벤더 마스터 정보를 상속합니다.');
+    persist(false); render(); showToast('벤더 마스터 정보를 상속합니다.');
   });
   if(independentBtn) independentBtn.addEventListener('click', ()=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
@@ -4494,11 +4542,12 @@ function bindViewEvents(){
     if(brand.inherit === false) return; // 이미 독립 모드
     if(!confirm(`"${brand.name}" 브랜드를 독립 모드로 전환하시겠습니까?\n담당자·거래조건·메모가 초기화됩니다.`)) return;
     brand.inherit = false;
-    // 초기화 (빈 상태)
     brand.people = [];
     brand.vendorTerms = {};
     brand.customNotes = [];
-    persist(); render(); showToast(`"${brand.name}" 독립 모드 전환 완료. 담당자/조건을 새로 설정해주세요.`);
+    persist(false);
+    render();
+    showToast(`"${brand.name}" 독립 모드 전환 완료. 담당자/조건을 새로 설정해주세요.`);
   });
 
   // ── 브랜드 탭 전환 ──
@@ -4526,7 +4575,7 @@ function bindViewEvents(){
     };
     v.brands.push(newBrand);
     state.activeBrandId = newBrand.id;
-    persist(); render(); showToast(`브랜드 "${name.trim()}" 추가됨`);
+    persist(false); render(); showToast(`브랜드 "${name.trim()}" 추가됨`);
   });
 
   // 브랜드 탭 삭제
@@ -4539,7 +4588,7 @@ function bindViewEvents(){
       if(!confirm(`"${bname}" 브랜드를 삭제하시겠습니까?\n담당자와 거래 메모가 삭제됩니다. 로그는 유지됩니다.`)) return;
       v.brands = v.brands.filter(b=>b.id!==btn.dataset.bid);
       if(state.activeBrandId===btn.dataset.bid) state.activeBrandId = v.brands[0]?.id || null;
-      persist(); render(); showToast(`"${bname}" 브랜드가 삭제되었습니다.`);
+      persist(false); render(); showToast(`"${bname}" 브랜드가 삭제되었습니다.`);
     });
   });
 
@@ -4570,7 +4619,7 @@ function bindViewEvents(){
     v.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url});
     urlArea.style.display='none';
     urlInput.value=''; if(lblInput) lblInput.value='';
-    persist(); render(); showToast('링크가 추가되었습니다.');
+    persist(false); render(); showToast('링크가 추가되었습니다.');
   });
   if(urlInput) urlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') urlSave?.click(); });
 
@@ -4586,7 +4635,7 @@ function bindViewEvents(){
       reader.onload = ev=>{
         const base64 = ev.target.result.split(',')[1];
         v.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type});
-        persist(); render(); showToast(`${file.name} 추가됨`);
+        persist(false); render(); showToast(`${file.name} 추가됨`);
       };
       reader.readAsDataURL(file);
     });
@@ -4601,7 +4650,7 @@ function bindViewEvents(){
       // idx는 combinedLinks 기준 → 앞쪽이 vendorLinks (직접 첨부)
       const directIdx = parseInt(btn.dataset.idx);
       v.links.splice(directIdx, 1);
-      persist(); render(); showToast('삭제되었습니다.');
+      persist(false); render(); showToast('삭제되었습니다.');
     });
   });
 
@@ -4638,7 +4687,7 @@ function bindViewEvents(){
       } else {
         target.people.push({id:'p_'+uid('px'), name:fd.get('name'), title:fd.get('title'), email:fd.get('email'), phone:fd.get('phone'), isMain:target.people.length===0});
       }
-      closeModal(); persist(); render(); showToast('담당자가 저장되었습니다.');
+      closeModal(); persist(false); render(); showToast('담당자가 저장되었습니다.');
     });
   }
 
@@ -4662,7 +4711,7 @@ function bindViewEvents(){
       if(!target?.people) return;
       const idx = parseInt(btn.dataset.idx);
       target.people.forEach((p,i)=>p.isMain = i===idx);
-      persist(); render(); showToast('메인 담당자로 설정되었습니다.');
+      persist(false); render(); showToast('메인 담당자로 설정되었습니다.');
     });
   });
 
@@ -4674,7 +4723,7 @@ function bindViewEvents(){
       const target = brand || v;
       if(!target?.people) return;
       target.people.splice(parseInt(btn.dataset.idx), 1);
-      persist(); render(); showToast('삭제되었습니다.');
+      persist(false); render(); showToast('삭제되었습니다.');
     });
   });
 
@@ -4696,7 +4745,7 @@ function bindViewEvents(){
       v.notes.moq      = target.vendorTerms.moq      || '';
       v.notes.creditLimit = target.vendorTerms.creditLimit || '';
     }
-    persist(); showToast('벤더 조건이 저장되었습니다.');
+    persist(false); showToast('벤더 조건이 저장되었습니다.');
   });
 
   // ── 거래 메모 저장 / 삭제 / 추가 ──
@@ -4709,7 +4758,7 @@ function bindViewEvents(){
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
     target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
-    persist(); showToast('메모가 저장되었습니다.');
+    persist(false); showToast('메모가 저장되었습니다.');
   });
 
   document.querySelectorAll('.note-del-btn').forEach(btn=>{
@@ -4721,7 +4770,7 @@ function bindViewEvents(){
       const notes = target.customNotes || [];
       notes.splice(parseInt(btn.dataset.idx), 1);
       target.customNotes = notes;
-      persist(); render(); showToast('항목이 삭제되었습니다.');
+      persist(false); render(); showToast('항목이 삭제되었습니다.');
     });
   });
 
@@ -4735,7 +4784,7 @@ function bindViewEvents(){
     const vals = document.querySelectorAll('.note-val');
     target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
     target.customNotes.push({key:'새 항목', val:''});
-    persist(); render();
+    persist(false); render();
     const allKeys = document.querySelectorAll('.note-key');
     if(allKeys.length) allKeys[allKeys.length-1].focus();
   });
@@ -4803,7 +4852,7 @@ function bindViewEvents(){
     proj.links.push({id:uid('pkl'), url, label:projLabelInput?.value?.trim()||url});
     projLinkUrlArea.style.display='none';
     projUrlInput.value=''; if(projLabelInput) projLabelInput.value='';
-    persist(); render(); showToast('링크가 추가되었습니다.');
+    persist(false); render(); showToast('링크가 추가되었습니다.');
   });
   if(projUrlInput) projUrlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') projLinkSaveBtn?.click(); });
 
@@ -4819,7 +4868,7 @@ function bindViewEvents(){
       reader.onload = ev=>{
         const base64 = ev.target.result.split(',')[1];
         proj.links.push({id:uid('pkf'), label:file.name, url:'', data:base64, type:file.type});
-        persist(); render(); showToast(`${file.name} 추가됨`);
+        persist(false); render(); showToast(`${file.name} 추가됨`);
       };
       reader.readAsDataURL(file);
     });
@@ -4832,7 +4881,7 @@ function bindViewEvents(){
       const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
       if(!proj?.links) return;
       proj.links.splice(parseInt(btn.dataset.idx), 1);
-      persist(); render(); showToast('삭제되었습니다.');
+      persist(false); render(); showToast('삭제되었습니다.');
     });
   });
 
@@ -4846,7 +4895,7 @@ function bindViewEvents(){
       const p = state.data.projects.find(x=>x.id===fd.get('projectId'));
       if(!p.logs) p.logs = [];
       p.logs.push({id:uid('pl'), date:fd.get('date'), text:fd.get('text')});
-      closeModal(); persist(); showToast('프로젝트 로그가 저장되었습니다.');
+      closeModal(); persist(false); showToast('프로젝트 로그가 저장되었습니다.');
     });
   });
 
@@ -4904,12 +4953,12 @@ function bindViewEvents(){
               time: document.getElementById('allDayCheckEdit')?.checked ? '종일' : (fd.get('startTime')||(fd.get('endTime')?fd.get('startTime')+'~'+fd.get('endTime'):''))
             };
           }
-          closeModal(); persist(); render(); showToast('일정이 수정되었습니다.');
+          closeModal(); persist(false); render(); showToast('일정이 수정되었습니다.');
         });
         document.getElementById('deleteEventBtn').addEventListener('click', ()=>{
           if(confirm('이 일정을 삭제하시겠습니까?')){
             state.data.calendar = state.data.calendar.filter(x=>x.id!==eid);
-            closeModal(); persist(); render(); showToast('일정이 삭제되었습니다.');
+            closeModal(); persist(false); render(); showToast('일정이 삭제되었습니다.');
           }
         });
       }
@@ -4982,7 +5031,7 @@ function bindViewEvents(){
         v.priority = '낮음';
         if(!v.actionStatus || v.actionStatus === '') v.actionStatus = '계약 중단';
       }
-      persist();
+      persist(false);
       render();
     });
   });
@@ -4992,7 +5041,7 @@ function bindViewEvents(){
     sel.addEventListener('change', e=>{
       e.stopPropagation();
       const p = state.data.projects.find(x=>x.id===sel.dataset.pid);
-      if(p){ p.status = sel.value; persist(); }
+      if(p){ p.status = sel.value; persist(false); }
     });
   });
 
@@ -5038,7 +5087,7 @@ function bindViewEvents(){
       e.preventDefault();
       const fd = new FormData(e.target);
       state.data.leave.joinDate = fd.get('joinDate');
-      closeModal(); persist(); showToast('입사일이 등록되었습니다.');
+      closeModal(); persist(false); showToast('입사일이 등록되었습니다.');
     });
   });
 
@@ -5090,7 +5139,7 @@ function bindViewEvents(){
       else amount = 0.25;
       if(!state.data.leave.compLogs) state.data.leave.compLogs = [];
       state.data.leave.compLogs.push({id:uid('cl'), date:fd.get('date'), hours, amount, memo:fd.get('memo')||''});
-      closeModal(); persist(); showToast(`휴일근무 ${hours}시간 → 보상휴가 ${amount}일 등록되었습니다.`);
+      closeModal(); persist(false); showToast(`휴일근무 ${hours}시간 → 보상휴가 ${amount}일 등록되었습니다.`);
     });
   });
 
@@ -5138,7 +5187,7 @@ function bindViewEvents(){
       const amount = parseFloat(fd.get('amount'));
       if(!state.data.leave.logs) state.data.leave.logs = [];
       state.data.leave.logs.push({id:uid('lv'), date:fd.get('date'), type:fd.get('type'), amount, memo:fd.get('memo')||''});
-      closeModal(); persist(); showToast(`${fd.get('type')} ${amount}일 등록되었습니다.`);
+      closeModal(); persist(false); showToast(`${fd.get('type')} ${amount}일 등록되었습니다.`);
     });
   });
 }
@@ -5190,14 +5239,14 @@ function bindChecklistDetailForm(item){
     else if(aType==='external') target.assigneeId = fd.get('assigneeExternal')||'';
     else target.assigneeId = '';
     target.attachments = Array.from(document.querySelectorAll('.attachment-input')).map(i=>i.value.trim()).filter(Boolean);
-    closeModal(); persist(); showToast('체크리스트 항목이 저장되었습니다.');
+    closeModal(); persist(false); showToast('체크리스트 항목이 저장되었습니다.');
   });
   const deleteBtn = document.getElementById('deleteChecklistBtn');
   if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
     if(confirm('이 항목을 삭제하시겠습니까?')){
       const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
       p.checklist = p.checklist.filter(c=>c.id!==item.id);
-      closeModal(); persist(); showToast('항목이 삭제되었습니다.');
+      closeModal(); persist(false); showToast('항목이 삭제되었습니다.');
     }
   });
 }
@@ -5211,7 +5260,7 @@ function bindCompanyFormSubmit(existingCompany){
     } else {
       state.data.companies.push({id:uid('co'), name:fd.get('name'), people:[]});
     }
-    closeModal(); persist(); showToast('회사 정보가 저장되었습니다.');
+    closeModal(); persist(false); showToast('회사 정보가 저장되었습니다.');
   });
 }
 
@@ -5227,7 +5276,7 @@ function bindPersonFormSubmit(existingPerson){
     } else {
       company.people.push(obj);
     }
-    closeModal(); persist(); showToast('담당자 정보가 저장되었습니다.');
+    closeModal(); persist(false); showToast('담당자 정보가 저장되었습니다.');
   });
 }
 
@@ -5262,7 +5311,7 @@ function bindVendorFormSubmit(existingVendor){
         ...updates
       });
     }
-    closeModal(); persist(); showToast('회사 정보가 저장되었습니다.');
+    closeModal(); persist(false); showToast('회사 정보가 저장되었습니다.');
   });
   // 모달 내 삭제 버튼 (편집 모달에서)
   const deleteBtn = document.getElementById('deleteVendorBtn');
@@ -5270,7 +5319,7 @@ function bindVendorFormSubmit(existingVendor){
     if(confirm(`"${existingVendor.name}"을(를) 삭제하시겠습니까?\n연결된 로그 데이터는 유지됩니다.`)){
       state.data.vendors = state.data.vendors.filter(v=>v.id!==existingVendor.id);
       state.selectedVendorId = null;
-      closeModal(); persist(); render(); showToast('삭제되었습니다.');
+      closeModal(); persist(false); render(); showToast('삭제되었습니다.');
     }
   });
 }
@@ -5321,7 +5370,7 @@ function bindProjectFormSubmit(existingProject){
     } else {
       state.data.projects.push(obj);
     }
-    closeModal(); persist(); showToast('프로젝트가 저장되었습니다.');
+    closeModal(); persist(false); showToast('프로젝트가 저장되었습니다.');
   });
 
   const deleteBtn = document.getElementById('deleteProjectBtn');
@@ -5329,7 +5378,7 @@ function bindProjectFormSubmit(existingProject){
     if(confirm('이 프로젝트를 삭제하시겠습니까?')){
       state.data.projects = state.data.projects.filter(p=>p.id!==existingProject.id);
       state.selectedProjectId = null;
-      closeModal(); persist(); showToast('프로젝트가 삭제되었습니다.');
+      closeModal(); persist(false); showToast('프로젝트가 삭제되었습니다.');
     }
   });
 }
@@ -5347,7 +5396,7 @@ function bindEventFormSubmit(){
       time: timeLabel, startTime, endTime, allDay, vendorId: fd.get('vendorId')||'',
       location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
     });
-    closeModal(); persist(); showToast('일정이 등록되었습니다.');
+    closeModal(); persist(false); showToast('일정이 등록되었습니다.');
   });
 }
 
@@ -5414,7 +5463,7 @@ function renderMeetingResult(result, originalText){
     p.meetingNotes.push({id:uid('mn'), date, text:originalText, summary:result.summary});
 
     closeModal();
-    persist();
+    persist(false);
     showToast(`회의록이 저장되고 체크리스트에 ${addedCount}건 추가되었습니다.`);
   });
 }
