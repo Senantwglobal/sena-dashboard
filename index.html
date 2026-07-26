@@ -4579,18 +4579,7 @@ function bindViewEvents(){
   });
 
   // 브랜드 탭 삭제
-  document.querySelectorAll('.brand-del-btn').forEach(btn=>{
-    btn.addEventListener('click', e=>{
-      e.stopPropagation();
-      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(!v?.brands) return;
-      const bname = btn.dataset.bname || btn.dataset.bid;
-      if(!confirm(`"${bname}" 브랜드를 삭제하시겠습니까?\n담당자와 거래 메모가 삭제됩니다. 로그는 유지됩니다.`)) return;
-      v.brands = v.brands.filter(b=>b.id!==btn.dataset.bid);
-      if(state.activeBrandId===btn.dataset.bid) state.activeBrandId = v.brands[0]?.id || null;
-      persist(false); render(); showToast(`"${bname}" 브랜드가 삭제되었습니다.`);
-    });
-  });
+  // document.querySelectorAll → 전역 위임 처리
 
   // ── 거래처 파일&링크 직접 추가 ──
   const addUrlBtn = document.getElementById('addVendorLinkUrlBtn');
@@ -4643,16 +4632,7 @@ function bindViewEvents(){
   });
 
   // 거래처 파일/링크 삭제
-  document.querySelectorAll('.vendor-link-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(!v?.links) return;
-      // idx는 combinedLinks 기준 → 앞쪽이 vendorLinks (직접 첨부)
-      const directIdx = parseInt(btn.dataset.idx);
-      v.links.splice(directIdx, 1);
-      persist(false); render(); showToast('삭제되었습니다.');
-    });
-  });
+  // document.querySelectorAll → 전역 위임 처리
 
   // ── 거래처 담당자 관리 (vendor.people) ──
   function openPersonModal(vendorId, person, idx){
@@ -4703,29 +4683,7 @@ function bindViewEvents(){
     });
   });
 
-  document.querySelectorAll('.person-set-main-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-      const target = brand || v;
-      if(!target?.people) return;
-      const idx = parseInt(btn.dataset.idx);
-      target.people.forEach((p,i)=>p.isMain = i===idx);
-      persist(false); render(); showToast('메인 담당자로 설정되었습니다.');
-    });
-  });
-
-  document.querySelectorAll('.person-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(!confirm('이 담당자를 삭제하시겠습니까?')) return;
-      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-      const target = brand || v;
-      if(!target?.people) return;
-      target.people.splice(parseInt(btn.dataset.idx), 1);
-      persist(false); render(); showToast('삭제되었습니다.');
-    });
-  });
+  // person-set-main-btn, person-del-btn → 전역 위임 처리
 
   // ── 벤더 조건 저장 ──
   const saveVendorTermsBtn = document.getElementById('saveVendorTermsBtn');
@@ -4762,18 +4720,8 @@ function bindViewEvents(){
     persist(false); showToast('메모가 저장되었습니다.');
   });
 
-  document.querySelectorAll('.note-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-      if(!v) return;
-      const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-      const target = brand || v;
-      // customNotes가 없으면 빈 배열로 초기화 후 target에 직접 설정
-      if(!target.customNotes) target.customNotes = [];
-      target.customNotes.splice(parseInt(btn.dataset.idx), 1);
-      persist(false); render(); showToast('항목이 삭제되었습니다.');
-    });
-  });
+  // (note-del-btn, person-del-btn, person-set-main-btn, brand-del-btn,
+  //  vendor-link-del-btn, proj-link-del-btn 는 전역 이벤트 위임으로 처리)
 
   const addNoteBtn = document.getElementById('addNoteFieldBtn');
   if(addNoteBtn) addNoteBtn.addEventListener('click', ()=>{
@@ -4878,14 +4826,7 @@ function bindViewEvents(){
   });
 
   // 프로젝트 파일/링크 삭제
-  document.querySelectorAll('.proj-link-del-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
-      if(!proj?.links) return;
-      proj.links.splice(parseInt(btn.dataset.idx), 1);
-      persist(false); render(); showToast('삭제되었습니다.');
-    });
-  });
+  // document.querySelectorAll → 전역 위임 처리
 
   // 프로젝트 활동 로그
   const addProjectLogBtn = document.getElementById('addProjectLogBtn');
@@ -5469,6 +5410,102 @@ function renderMeetingResult(result, originalText){
     showToast(`회의록이 저장되고 체크리스트에 ${addedCount}건 추가되었습니다.`);
   });
 }
+
+/* ---------- 이벤트 위임 (전역 1회 등록) ---------- */
+// render() 후 새로 생긴 버튼들도 동작하도록 document.body에 위임
+document.addEventListener('click', function(e){
+  // ── 메모 삭제 ──
+  const noteDelBtn = e.target.closest('.note-del-btn');
+  if(noteDelBtn){
+    e.stopPropagation();
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
+    if(!target.customNotes) target.customNotes = [];
+    const idx = parseInt(noteDelBtn.dataset.idx);
+    if(!isNaN(idx)){
+      target.customNotes.splice(idx, 1);
+      persist(false); render();
+      showToast('항목이 삭제되었습니다.');
+    }
+    return;
+  }
+
+  // ── 담당자 삭제 ──
+  const personDelBtn = e.target.closest('.person-del-btn');
+  if(personDelBtn){
+    e.stopPropagation();
+    if(!confirm('이 담당자를 삭제하시겠습니까?')) return;
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
+    if(!target.people) target.people = [];
+    const idx = parseInt(personDelBtn.dataset.idx);
+    if(!isNaN(idx)){
+      target.people.splice(idx, 1);
+      persist(false); render();
+      showToast('담당자가 삭제되었습니다.');
+    }
+    return;
+  }
+
+  // ── 담당자 메인 설정 ──
+  const personMainBtn = e.target.closest('.person-set-main-btn');
+  if(personMainBtn){
+    e.stopPropagation();
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = brand || v;
+    if(!target.people) return;
+    const idx = parseInt(personMainBtn.dataset.idx);
+    target.people.forEach((p,i) => p.isMain = i===idx);
+    persist(false); render();
+    showToast('메인 담당자로 설정되었습니다.');
+    return;
+  }
+
+  // ── 브랜드 삭제 ──
+  const brandDelBtn = e.target.closest('.brand-del-btn');
+  if(brandDelBtn){
+    e.stopPropagation();
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v?.brands) return;
+    const bname = brandDelBtn.dataset.bname || brandDelBtn.dataset.bid;
+    if(!confirm(`"${bname}" 브랜드를 삭제하시겠습니까?\n담당자와 거래 메모가 삭제됩니다. 로그는 유지됩니다.`)) return;
+    v.brands = v.brands.filter(b=>b.id!==brandDelBtn.dataset.bid);
+    if(state.activeBrandId===brandDelBtn.dataset.bid) state.activeBrandId = v.brands[0]?.id || null;
+    persist(false); render();
+    showToast(`"${bname}" 브랜드가 삭제되었습니다.`);
+    return;
+  }
+
+  // ── 거래처 파일/링크 삭제 ──
+  const vendorLinkDelBtn = e.target.closest('.vendor-link-del-btn');
+  if(vendorLinkDelBtn){
+    e.stopPropagation();
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v?.links) return;
+    v.links.splice(parseInt(vendorLinkDelBtn.dataset.idx), 1);
+    persist(false); render();
+    showToast('삭제되었습니다.');
+    return;
+  }
+
+  // ── 프로젝트 파일/링크 삭제 ──
+  const projLinkDelBtn = e.target.closest('.proj-link-del-btn');
+  if(projLinkDelBtn){
+    e.stopPropagation();
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj?.links) return;
+    proj.links.splice(parseInt(projLinkDelBtn.dataset.idx), 1);
+    persist(false); render();
+    showToast('삭제되었습니다.');
+    return;
+  }
+});
 
 /* ---------- 앱 초기화 ---------- */
 async function initApp(){
