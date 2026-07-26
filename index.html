@@ -4734,15 +4734,16 @@ function bindViewEvents(){
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
     const target = brand || v;
+    // 직접 초기화 보장
     if(!target.vendorTerms) target.vendorTerms = {};
     document.querySelectorAll('.vterm-input').forEach(inp=>{
       target.vendorTerms[inp.dataset.key] = inp.value.trim();
     });
     if(!brand){
-      v.notes = v.notes || {};
-      v.notes.discount = target.vendorTerms.discount || '';
-      v.notes.payment  = target.vendorTerms.payment  || '';
-      v.notes.moq      = target.vendorTerms.moq      || '';
+      if(!v.notes) v.notes = {};
+      v.notes.discount    = target.vendorTerms.discount    || '';
+      v.notes.payment     = target.vendorTerms.payment     || '';
+      v.notes.moq         = target.vendorTerms.moq         || '';
       v.notes.creditLimit = target.vendorTerms.creditLimit || '';
     }
     persist(false); showToast('벤더 조건이 저장되었습니다.');
@@ -4767,9 +4768,9 @@ function bindViewEvents(){
       if(!v) return;
       const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
       const target = brand || v;
-      const notes = target.customNotes || [];
-      notes.splice(parseInt(btn.dataset.idx), 1);
-      target.customNotes = notes;
+      // customNotes가 없으면 빈 배열로 초기화 후 target에 직접 설정
+      if(!target.customNotes) target.customNotes = [];
+      target.customNotes.splice(parseInt(btn.dataset.idx), 1);
       persist(false); render(); showToast('항목이 삭제되었습니다.');
     });
   });
@@ -4780,6 +4781,7 @@ function bindViewEvents(){
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
     const target = brand || v;
+    // 현재 화면의 값 먼저 저장
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
     target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
