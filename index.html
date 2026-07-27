@@ -2823,7 +2823,10 @@ function viewCalendar(){
     ${todayEvs.length>0 ? `
     <div class="card" style="margin-bottom:14px;border-left:3px solid var(--o)">
       <div class="sh"><div class="st"><i class="ti ti-sun oi"></i>오늘 일정 (${todayStr})</div></div>
-      ${todayEvs.map(e=>{const c=eventColor(e.type); return `<div class="dash-row">
+      ${todayEvs.map(e=>{
+        const c=eventColor(e.type);
+        const isEditable = state.data.calendar.some(x=>x.id===e.id);
+        return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
         <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
         <span style="font-size:13px;font-weight:500">${e.title}</span>
         ${e.time?`<span style="font-size:12px;color:var(--muted);margin-left:auto">${e.time}</span>`:''}
@@ -2838,7 +2841,11 @@ function viewCalendar(){
     <div class="card">
       <div class="sh"><div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
       <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span></div>
-      ${monthEvs.map(e=>{const c=eventColor(e.type);const isToday=e.date===todayStr;return `<div class="dash-row">
+      ${monthEvs.map(e=>{
+        const c=eventColor(e.type);
+        const isToday=e.date===todayStr;
+        const isEditable = state.data.calendar.some(x=>x.id===e.id);
+        return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
         <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'600':'400'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
         <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
         <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
