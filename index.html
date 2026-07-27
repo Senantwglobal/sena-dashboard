@@ -1969,9 +1969,10 @@ function viewVendorDetail(){
   const days = latest?daysAgo(latest.date):null;
 
   // 담당자/메모/거래조건: 독립 모드일 때만 브랜드 자체 정보, 상속 모드면 벤더 마스터
-  const people      = (!isInherit && activeBrand?.people?.length) ? activeBrand.people : v.people || [];
-  const customNotes = (!isInherit && activeBrand?.customNotes?.length) ? activeBrand.customNotes : v.customNotes || [];
-  const vendorTerms = (!isInherit && activeBrand?.vendorTerms && Object.keys(activeBrand.vendorTerms||{}).length) ? activeBrand.vendorTerms : (v.vendorTerms || {});
+  const useBrandData = hasBrands && activeBrand && !isInherit;
+  const people      = useBrandData ? (activeBrand.people || []) : (v.people || []);
+  const customNotes = useBrandData ? (activeBrand.customNotes || []) : (v.customNotes || []);
+  const vendorTerms = useBrandData ? (activeBrand.vendorTerms || {}) : (v.vendorTerms || {});
   const bId = activeBrandId;
 
   const actionStatuses = [
@@ -2027,10 +2028,11 @@ function viewVendorDetail(){
         const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
         return `<div style="display:flex;align-items:center;border-bottom:${isActive?'2px solid var(--o)':'2px solid transparent'};margin-bottom:-2px">
           <button class="brand-tab-btn" data-bid="${b.id}" style="padding:8px 14px;font-size:13px;font-weight:${isActive?'600':'400'};color:${isActive?'var(--o)':'var(--muted)'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
-            ${av(b.name||b.id, 18)}
+            ${av(b.name||b.id, 18, b.logoUrl)}
             ${b.name||b.id}
             ${bLogCount>0?`<span style="font-size:10px;background:${isActive?'var(--ol)':'var(--sf)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 5px;border-radius:10px">${bLogCount}</span>`:''}
           </button>
+          ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px 6px;font-size:11px;color:var(--muted);background:var(--sf);border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
           ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 브랜드 삭제" style="padding:4px 6px;margin-right:6px;font-size:11px;color:#DC2626;background:#FEE2E2;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px"><i class="ti ti-trash" style="font-size:11px"></i></button>`:''}
         </div>`;
       }).join('')}
@@ -2219,7 +2221,7 @@ function viewVendorDetail(){
         ${(() => {
           const allLinks = logs.flatMap(l=>(l.links||[]).map(lk=>({...lk, logDate:l.date, logSummary:l.summary})));
           // vendor.links (거래처 직접 첨부)
-          const vendorLinks = v.links || [];
+          const vendorLinks = useBrandData ? (activeBrand.links || []) : (v.links || []);
           const combinedLinks = [...vendorLinks.map(lk=>({...lk, isDirect:true})), ...allLinks];
           return `<div class="card" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -2538,14 +2540,15 @@ function viewProjectDetail(){
         ${activeSubTab==='meeting' ? `
           ${activeVendorMeetings.length===0
             ? `<div class="empty-state" style="padding:28px">이 벤더의 회의록이 없습니다. 회의록 작성 버튼으로 시작하세요.</div>`
-            : activeVendorMeetings.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
-              <div style="padding:14px 16px;border-bottom:0.5px solid var(--bd)">
-                <div style="font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                  <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
-                </div>
-                <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${m.text}</div>
-                ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:10px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
-              </div>`).join('')}
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px 16px">
+                ${activeVendorMeetings.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
+                  <div class="meeting-card-btn" data-vid="${activeVendorId}" data-mid="${m.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:6px;min-height:88px">
+                    <div style="font-size:11px;color:var(--o);font-weight:600;display:flex;align-items:center;gap:5px">
+                      <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
+                    </div>
+                    <div style="font-size:12px;line-height:1.5;color:var(--fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${(m.summary||m.text||'').replace(/</g,'&lt;')}</div>
+                  </div>`).join('')}
+              </div>`}
         ` : ''}
       ` : `<div class="empty-state" style="padding:24px">벤더를 선택하세요.</div>`}
 
@@ -2554,13 +2557,30 @@ function viewProjectDetail(){
     <!-- 파일 & 링크 -->
     ${(() => {
       const pLinks = p.links || [];
-      const dotColor = cs=>'var(--o)';
+      const importedRefs = p.importedVendorLinks || [];
+      function resolveVendorLink(ref, refIdx){
+        const vend = state.data.vendors.find(x=>x.id===ref.vendorId);
+        if(!vend) return null;
+        let link = (vend.links||[]).find(l=>l.id===ref.linkId);
+        let sourceLabel = vend.name;
+        if(!link && vend.brands){
+          for(const b of vend.brands){
+            link = (b.links||[]).find(l=>l.id===ref.linkId);
+            if(link){ sourceLabel = `${vend.name} · ${b.name}`; break; }
+          }
+        }
+        if(!link) return null;
+        return {...link, _imported:true, _refIdx: refIdx, _sourceLabel: sourceLabel};
+      }
+      const resolvedImports = importedRefs.map((r,i)=>resolveVendorLink(r,i)).filter(Boolean);
+      const totalCount = pLinks.length + resolvedImports.length;
       return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
           <div style="display:flex;align-items:center;gap:6px">
-            <span style="font-size:10px;color:var(--muted)">${pLinks.length}건</span>
+            <span style="font-size:10px;color:var(--muted)">${totalCount}건</span>
             ${!isReadOnly()?`
+            ${linkedVendors.length>0?`<button class="btn" id="importVendorLinksBtn" style="font-size:10px;padding:2px 8px"><i class="ti ti-building-store" style="font-size:11px"></i> 거래처에서 가져오기</button>`:''}
             <button class="btn" id="addProjLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
             <label class="btn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
               <input type="file" id="addProjFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
@@ -2573,21 +2593,25 @@ function viewProjectDetail(){
           <button class="btn btn-o" id="projLinkUrlSaveBtn" style="font-size:11px;padding:4px 10px">추가</button>
           <button class="btn" id="projLinkUrlCancelBtn" style="font-size:11px;padding:4px 8px">취소</button>
         </div>
-        ${pLinks.length===0
+        ${totalCount===0
           ? `<div style="font-size:12px;color:var(--muted);text-align:center;padding:14px 0">
               <i class="ti ti-paperclip" style="font-size:18px;display:block;margin-bottom:4px;opacity:.3"></i>
               파일이나 링크를 추가해보세요
             </div>`
-          : pLinks.map((lk,idx)=>{
+          : [...pLinks.map((lk,idx)=>({...lk,_idx:idx})), ...resolvedImports].map((lk)=>{
+              const delBtn = lk._imported
+                ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
+                : (!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${lk._idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:'');
+              const sourceTag = lk._imported?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
               if(lk.data){
                 const t=lk.type||'';
                 const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
                 const color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
-                const bg=t.includes('image')?'#E0F2FE':t.includes('pdf')?'#FEE2E2':'#DCFCE7';
                 return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
                   <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
                   <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="flex:1;font-size:12px;font-weight:500;color:${color};text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
-                  ${!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+                  ${sourceTag}
+                  ${delBtn}
                 </div>`;
               }
               const url=(lk.url||'').replace(/"/g,'&quot;');
@@ -2598,7 +2622,8 @@ function viewProjectDetail(){
                 <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
                 <a href="${url}" target="_blank" style="flex:1;font-size:12px;font-weight:500;color:var(--o);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
                 <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
-                ${!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+                ${sourceTag}
+                ${delBtn}
               </div>`;
             }).join('')}
       </div>`;
@@ -4604,8 +4629,10 @@ function bindViewEvents(){
     if(!url){ showToast('URL을 입력해주세요.'); return; }
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
-    if(!v.links) v.links = [];
-    v.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url});
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = (brand && brand.inherit === false) ? brand : v;
+    if(!target.links) target.links = [];
+    target.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url});
     urlArea.style.display='none';
     urlInput.value=''; if(lblInput) lblInput.value='';
     persist(false); render(); showToast('링크가 추가되었습니다.');
@@ -4617,13 +4644,15 @@ function bindViewEvents(){
   if(fileInput2) fileInput2.addEventListener('change', e=>{
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
-    if(!v.links) v.links = [];
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = (brand && brand.inherit === false) ? brand : v;
+    if(!target.links) target.links = [];
     Array.from(e.target.files).forEach(file=>{
       if(file.size > 2*1024*1024){ showToast(`${file.name}: 2MB 초과`); return; }
       const reader = new FileReader();
       reader.onload = ev=>{
         const base64 = ev.target.result.split(',')[1];
-        v.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type});
+        target.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type});
         persist(false); render(); showToast(`${file.name} 추가됨`);
       };
       reader.readAsDataURL(file);
@@ -4638,7 +4667,7 @@ function bindViewEvents(){
   function openPersonModal(vendorId, person, idx){
     const v = state.data.vendors.find(x=>x.id===vendorId);
     const brand = state.activeBrandId && v?.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     const targetLabel = brand ? ` — ${brand.name}` : '';
     openModal(`
       <div class="modal">
@@ -4691,7 +4720,7 @@ function bindViewEvents(){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     // 직접 초기화 보장
     if(!target.vendorTerms) target.vendorTerms = {};
     document.querySelectorAll('.vterm-input').forEach(inp=>{
@@ -4713,7 +4742,7 @@ function bindViewEvents(){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
     target.customNotes = Array.from(keys).map((k,i)=>({key:k.value,val:vals[i]?.value||''})).filter(n=>n.key);
@@ -4728,7 +4757,7 @@ function bindViewEvents(){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     // 현재 화면의 값 먼저 저장
     const keys = document.querySelectorAll('.note-key');
     const vals = document.querySelectorAll('.note-val');
@@ -4805,6 +4834,57 @@ function bindViewEvents(){
     persist(false); render(); showToast('링크가 추가되었습니다.');
   });
   if(projUrlInput) projUrlInput.addEventListener('keydown', e=>{ if(e.key==='Enter') projLinkSaveBtn?.click(); });
+
+  // ── 거래처에서 파일/링크 가져오기 ──
+  const importVendorLinksBtn = document.getElementById('importVendorLinksBtn');
+  if(importVendorLinksBtn) importVendorLinksBtn.addEventListener('click', ()=>{
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj) return;
+    const vendorIds = proj.vendorIds || (proj.vendorId ? [proj.vendorId] : []);
+    const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
+    const existingRefs = proj.importedVendorLinks || [];
+    const isChecked = (vendorId, linkId) => existingRefs.some(r=>r.vendorId===vendorId && r.linkId===linkId);
+
+    const rows = [];
+    linkedVendors.forEach(vend=>{
+      (vend.links||[]).forEach(lk=>{
+        rows.push({vendorId:vend.id, linkId:lk.id, label:lk.label||lk.url||'파일', sourceLabel:vend.name});
+      });
+      (vend.brands||[]).forEach(b=>{
+        (b.links||[]).forEach(lk=>{
+          rows.push({vendorId:vend.id, linkId:lk.id, label:lk.label||lk.url||'파일', sourceLabel:`${vend.name} · ${b.name}`});
+        });
+      });
+    });
+
+    openModal(`
+      <div class="modal">
+        <div class="mh"><h3><i class="ti ti-building-store" style="color:var(--o)"></i> 거래처 파일/링크 가져오기</h3>
+          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="mb">
+          ${rows.length===0
+            ? `<div class="empty-state" style="padding:20px">연결된 거래처에 등록된 파일/링크가 없습니다.</div>`
+            : `<div style="display:flex;flex-direction:column;gap:4px;max-height:360px;overflow-y:auto">
+                ${rows.map((r,i)=>`
+                  <label style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:0.5px solid var(--bd);border-radius:8px;cursor:pointer">
+                    <input type="checkbox" class="import-link-cb" data-vid="${r.vendorId}" data-lid="${r.linkId}" ${isChecked(r.vendorId,r.linkId)?'checked':''} style="margin:0"/>
+                    <span style="flex:1;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.label}</span>
+                    <span style="font-size:10px;color:var(--o);background:var(--ol);padding:1px 6px;border-radius:8px;flex-shrink:0">${r.sourceLabel}</span>
+                  </label>`).join('')}
+              </div>`}
+        </div>
+        ${rows.length>0?`<div class="mf"><button class="btn btn-o" id="confirmImportLinksBtn"><i class="ti ti-check"></i> 선택 반영</button></div>`:''}
+      </div>`);
+    bindModalCommon();
+    const confirmBtn = document.getElementById('confirmImportLinksBtn');
+    if(confirmBtn) confirmBtn.addEventListener('click', ()=>{
+      const checked = Array.from(document.querySelectorAll('.import-link-cb:checked')).map(cb=>({vendorId:cb.dataset.vid, linkId:cb.dataset.lid}));
+      proj.importedVendorLinks = checked;
+      closeModal(); persist(false); render();
+      showToast(`거래처 파일/링크 ${checked.length}건이 반영되었습니다.`);
+    });
+  });
 
   // 프로젝트 파일 업로드
   const projFileInput = document.getElementById('addProjFileInput');
@@ -5421,7 +5501,7 @@ document.addEventListener('click', function(e){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     if(!target.customNotes) target.customNotes = [];
     const idx = parseInt(noteDelBtn.dataset.idx);
     if(!isNaN(idx)){
@@ -5440,7 +5520,7 @@ document.addEventListener('click', function(e){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     if(!target.people) target.people = [];
     const idx = parseInt(personDelBtn.dataset.idx);
     if(!isNaN(idx)){
@@ -5458,7 +5538,7 @@ document.addEventListener('click', function(e){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = brand || v;
+    const target = (brand && brand.inherit === false) ? brand : v;
     if(!target.people) return;
     const idx = parseInt(personMainBtn.dataset.idx);
     target.people.forEach((p,i) => p.isMain = i===idx);
@@ -5482,13 +5562,32 @@ document.addEventListener('click', function(e){
     return;
   }
 
+  // ── 브랜드 이름 편집 ──
+  const brandEditBtn = e.target.closest('.brand-edit-btn');
+  if(brandEditBtn){
+    e.stopPropagation();
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===brandEditBtn.dataset.bid);
+    if(!brand) return;
+    const newName = prompt('브랜드명을 수정하세요', brand.name || '');
+    if(newName === null) return;
+    if(!newName.trim()){ showToast('브랜드명을 입력해주세요.'); return; }
+    brand.name = newName.trim();
+    persist(false); render();
+    showToast('브랜드명이 수정되었습니다.');
+    return;
+  }
+
   // ── 거래처 파일/링크 삭제 ──
   const vendorLinkDelBtn = e.target.closest('.vendor-link-del-btn');
   if(vendorLinkDelBtn){
     e.stopPropagation();
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    if(!v?.links) return;
-    v.links.splice(parseInt(vendorLinkDelBtn.dataset.idx), 1);
+    if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = (brand && brand.inherit === false) ? brand : v;
+    if(!target.links) return;
+    target.links.splice(parseInt(vendorLinkDelBtn.dataset.idx), 1);
     persist(false); render();
     showToast('삭제되었습니다.');
     return;
@@ -5503,6 +5602,42 @@ document.addEventListener('click', function(e){
     proj.links.splice(parseInt(projLinkDelBtn.dataset.idx), 1);
     persist(false); render();
     showToast('삭제되었습니다.');
+    return;
+  }
+
+  // ── 가져온 거래처 링크 연결 해제 ──
+  const projLinkUnlinkBtn = e.target.closest('.proj-link-unlink-btn');
+  if(projLinkUnlinkBtn){
+    e.stopPropagation();
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj?.importedVendorLinks) return;
+    proj.importedVendorLinks.splice(parseInt(projLinkUnlinkBtn.dataset.refidx), 1);
+    persist(false); render();
+    showToast('가져오기가 해제되었습니다. (원본은 거래처에 그대로 남아있습니다)');
+    return;
+  }
+
+  // ── 회의록 카드 클릭 → 전체 내용 모달 ──
+  const meetingCardBtn = e.target.closest('.meeting-card-btn');
+  if(meetingCardBtn){
+    e.stopPropagation();
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    const vid = meetingCardBtn.dataset.vid;
+    const mid = meetingCardBtn.dataset.mid;
+    const m = proj?.vendorMeetings?.[vid]?.find(x=>x.id===mid);
+    if(!m) return;
+    const vendor = state.data.vendors.find(x=>x.id===vid);
+    openModal(`
+      <div class="modal">
+        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${vendor?.name||''} 회의록 — ${fmtDateDow(m.date)}</h3>
+          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="mb">
+          <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(m.text||'').replace(/</g,'&lt;')}</div>
+          ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
+        </div>
+      </div>`);
+    bindModalCommon();
     return;
   }
 });
