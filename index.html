@@ -1445,10 +1445,13 @@ function viewHome(){
   const projColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
 
   // 미완료 다음액션 (nextStep이 있고, 완료 아닌 로그들)
-  const pendingActions = state.data.vendorLogs
+  const pendingActionsAll = state.data.vendorLogs
     .filter(l=>l.nextStep && l.nextStep.trim() && !l.nextStepDone)
-    .sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)))
-    .slice(0,5);
+    .sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+  const PA_PER_PAGE = 5;
+  const paPage = state.dashActionPage || 0;
+  const paTotalPages = Math.ceil(pendingActionsAll.length / PA_PER_PAGE);
+  const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
 
   return `
     <div class="krow">
@@ -1496,8 +1499,8 @@ function viewHome(){
             }).join('')}
         </div>
 
-        ${pendingActions.length>0 ? `<div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div></div>
+        ${pendingActionsAll.length>0 ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div><span style="font-size:10px;color:var(--muted)">${pendingActionsAll.length}건</span></div>
           ${pendingActions.map(l=>{
             const v = state.data.vendors.find(x=>x.id===l.vendorId);
             const linkedProj = l.linkedProjectId ? state.data.projects.find(p=>p.id===l.linkedProjectId) : null;
@@ -1508,20 +1511,25 @@ function viewHome(){
             const dueColor = dueDday===null ? '' : dueDday<0 ? '#A32D2D' : dueDday<=2 ? '#A32D2D' : dueDday<=5 ? '#92400E' : '#15803D';
             const dueBg = dueDday===null ? '' : dueDday<0 ? '#FCEBEB' : dueDday<=2 ? '#FCEBEB' : dueDday<=5 ? '#FEF3C7' : '#E6F4EA';
             const dueLabel = dueDday===null ? '' : dueDday<0 ? `마감 ${Math.abs(dueDday)}일 지남` : dueDday===0 ? '오늘 마감' : `마감 D-${dueDday}`;
-            return `<div class="dash-row" style="align-items:flex-start;gap:10px;padding:11px 0">
-              <input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:16px;height:16px;margin-top:3px;flex-shrink:0;cursor:pointer"/>
+            return `<div class="dash-row" style="align-items:flex-start;gap:9px;padding:9px 0">
+              <input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:14px;height:14px;margin-top:3px;flex-shrink:0;cursor:pointer"/>
               <div style="flex:1;min-width:0;cursor:pointer" class="pending-action-link" data-vid="${l.vendorId}" data-pid="${l.linkedProjectId||''}">
-                <div style="font-size:13.5px;font-weight:600;color:var(--text);line-height:1.45;margin-bottom:6px">${l.nextStep}</div>
-                <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-                  ${v?`<span style="display:flex;align-items:center;gap:4px;font-size:11px;font-weight:500;background:var(--ol);color:var(--od);padding:2px 8px 2px 3px;border-radius:20px">${av(v.name,14)}${v.name}</span>`:''}
-                  ${linkedProj?`<span style="display:flex;align-items:center;gap:3px;font-size:11px;background:var(--sf);color:var(--muted);padding:2px 8px;border-radius:20px"><i class="ti ti-checklist" style="font-size:10px"></i>${linkedProj.title}</span>`:''}
-                  <span style="font-size:11px;font-weight:500;background:${urgentBg};color:${urgentColor};padding:2px 8px;border-radius:20px">${fmtDate(l.date)} · ${elapsed}일 경과</span>
-                  ${dueDday!==null?`<span style="font-size:11px;font-weight:600;background:${dueBg};color:${dueColor};padding:2px 8px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:10px"></i> ${dueLabel}</span>`:''}
+                <div style="font-size:12.5px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:5px">${l.nextStep}</div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  ${v?`<span style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:500;background:var(--ol);color:var(--od);padding:1px 7px 1px 2px;border-radius:20px">${av(v.name,12)}${v.name}</span>`:''}
+                  ${linkedProj?`<span style="display:flex;align-items:center;gap:3px;font-size:10px;background:var(--sf);color:var(--muted);padding:1px 7px;border-radius:20px"><i class="ti ti-checklist" style="font-size:9px"></i>${linkedProj.title}</span>`:''}
+                  <span style="font-size:10px;font-weight:500;background:${urgentBg};color:${urgentColor};padding:1px 7px;border-radius:20px">${fmtDate(l.date)} · ${elapsed}일 경과</span>
+                  ${dueDday!==null?`<span style="font-size:10px;font-weight:600;background:${dueBg};color:${dueColor};padding:1px 7px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:9px"></i> ${dueLabel}</span>`:''}
                 </div>
               </div>
-              <i class="ti ti-chevron-right" style="font-size:13px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
             </div>`;
           }).join('')}
+          ${paTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+            <button class="btn dash-action-page-btn" data-page="${Math.max(0,paPage-1)}" style="padding:3px 8px;font-size:11px" ${paPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            ${Array.from({length:paTotalPages}).map((_,i)=>`<button class="btn dash-action-page-btn ${i===paPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+            <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>`:''}
         </div>` : ''}
 
         ${deadlines.length>0 ? `<div class="card">
@@ -4664,6 +4672,14 @@ function bindViewEvents(){
     state.dashProjCategoryFilter = e.target.value;
     state.dashProjPage = 0;
     render();
+  });
+
+  // 미완료 다음 액션 페이지네이션
+  document.querySelectorAll('.dash-action-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashActionPage = parseInt(btn.dataset.page);
+      render();
+    });
   });
 
   // 벤더 탭 전환
