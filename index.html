@@ -1316,6 +1316,18 @@ function avatarColor(name){
   let h = 0; for(let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xFFFFFF;
   return colors[Math.abs(h) % colors.length];
 }
+function typeColorFor(t){
+  const custom = state.data.companyTypeColors?.[t];
+  if(custom) return custom;
+  const defaults = {
+    '벤더':  {bg:'#EBF0FB',color:'#1A3A9E'},
+    '물류사':{bg:'#EAF3DE',color:'#3B6D11'},
+    '파트너':{bg:'#FEF3C7',color:'#92400E'},
+    '기타':  {bg:'#F1EFE8',color:'#5F5E5A'},
+  };
+  return defaults[t] || {bg:'#F1EFE8',color:'#5F5E5A'};
+}
+
 function av(name, size=28, logoUrl){
   // logoUrl 우선 → vendor 데이터에서 자동 탐색 → 이니셜 폴백
   const url = logoUrl || (() => {
@@ -1854,12 +1866,7 @@ function viewVendorList(){
   const waitingCount = vendors.filter(v=>{const l=latestLogForVendor(v.id);return l&&(l.status==='전송'||l.status==='수신');}).length;
   const staleCount = vendors.filter(v=>v.latest&&daysAgo(v.latest.date)>=90).length;
 
-  const typeBadge = t=>({
-    '벤더':  {bg:'#EBF0FB',color:'#1A3A9E'},
-    '물류사':{bg:'#EAF3DE',color:'#3B6D11'},
-    '파트너':{bg:'#FEF3C7',color:'#92400E'},
-    '기타':  {bg:'#F1EFE8',color:'#5F5E5A'},
-  }[t]||{bg:'#F1EFE8',color:'#5F5E5A'});
+  const typeBadge = t=>typeColorFor(t);
 
   return `
     <div class="sh">
@@ -2014,7 +2021,7 @@ function viewVendorDetail(){
           <div style="font-size:18px;font-weight:600">${v.name}</div>
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
-            ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:#EBF0FB;color:#1A3A9E">${v.companyType}</span>`:''}
+            ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${typeColorFor(v.companyType).bg};color:${typeColorFor(v.companyType).color}">${v.companyType}</span>`:''}
             <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
             ${days!==null?`<span style="font-size:11px;color:var(--muted)"><i class="ti ti-clock" style="font-size:10px"></i> ${days}일 경과</span>`:''}
             ${v.logoUrl?`<button id="removeLogoBtn" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0"><i class="ti ti-photo-off"></i> 로고 삭제</button>`:''}
@@ -4016,18 +4023,22 @@ function bindCategoriesManager(){
 function modalCompanyTypesManager(){
   const types = state.data.companyTypes || ['벤더','물류사','파트너','기타'];
   return `
-    <div class="modal" style="width:400px">
+    <div class="modal" style="width:440px">
       <div class="mh"><h3>거래처 유형 관리</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">거래처 탭의 유형 필터를 관리합니다. (벤더, 물류사, 파트너 등)</p>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:12px">거래처 탭의 유형 필터를 관리합니다. 이름을 바꾸면 해당 유형으로 지정된 거래처들도 자동으로 새 이름으로 업데이트됩니다.</p>
         <div id="companyTypeList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
-          ${types.map((t,i)=>`
-            <div class="ctype-row" style="display:flex;align-items:center;gap:8px">
+          ${types.map((t,i)=>{
+            const c = typeColorFor(t);
+            return `
+            <div class="ctype-row" data-old-name="${t.replace(/"/g,'&quot;')}" style="display:flex;align-items:center;gap:8px">
+              <input type="color" class="ctype-color" value="${c.color}" title="색상 선택" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/>
               <input type="text" value="${t}" class="inp ctype-input" style="flex:1;margin:0"/>
               <button class="btn btn-red ctype-delete" data-idx="${i}" style="padding:5px 8px"><i class="ti ti-x"></i></button>
-            </div>`).join('')}
+            </div>`;}).join('')}
         </div>
         <div style="display:flex;gap:8px">
+          <input type="color" id="newCompanyTypeColor" value="#5F5E5A" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/>
           <input type="text" id="newCompanyType" class="inp" placeholder="새 유형 (예: IT파트너)" style="flex:1;margin:0"/>
           <button class="btn btn-o" id="addCompanyTypeBtn"><i class="ti ti-plus"></i> 추가</button>
         </div>
@@ -4041,11 +4052,13 @@ function bindCompanyTypesManager(){
   document.getElementById('addCompanyTypeBtn').addEventListener('click', ()=>{
     const name = document.getElementById('newCompanyType').value.trim();
     if(!name) return;
+    const color = document.getElementById('newCompanyTypeColor').value;
     const list = document.getElementById('companyTypeList');
     const row = document.createElement('div');
     row.className = 'ctype-row';
+    row.dataset.oldName = ''; // 신규 항목 (이름 변경 추적 대상 아님)
     row.style.cssText = 'display:flex;align-items:center;gap:8px';
-    row.innerHTML = `<input type="text" value="${name}" class="inp ctype-input" style="flex:1;margin:0"/><button class="btn btn-red ctype-delete" style="padding:5px 8px"><i class="ti ti-x"></i></button>`;
+    row.innerHTML = `<input type="color" class="ctype-color" value="${color}" title="색상 선택" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/><input type="text" value="${name}" class="inp ctype-input" style="flex:1;margin:0"/><button class="btn btn-red ctype-delete" style="padding:5px 8px"><i class="ti ti-x"></i></button>`;
     list.appendChild(row);
     row.querySelector('.ctype-delete').addEventListener('click', ()=>row.remove());
     document.getElementById('newCompanyType').value = '';
@@ -4054,8 +4067,33 @@ function bindCompanyTypesManager(){
     btn.addEventListener('click', ()=>btn.closest('.ctype-row').remove());
   });
   document.getElementById('saveCompanyTypesBtn').addEventListener('click', ()=>{
-    state.data.companyTypes = Array.from(document.querySelectorAll('.ctype-input')).map(i=>i.value.trim()).filter(Boolean);
-    closeModal(); persist(false); render(); showToast('거래처 유형이 저장되었습니다.');
+    const rows = Array.from(document.querySelectorAll('.ctype-row'));
+    const newTypes = [];
+    const newColors = {};
+    const renameMap = {}; // 옛이름 -> 새이름
+    rows.forEach(row=>{
+      const newName = row.querySelector('.ctype-input').value.trim();
+      if(!newName) return;
+      const colorHex = row.querySelector('.ctype-color').value;
+      const oldName = row.dataset.oldName || '';
+      newTypes.push(newName);
+      newColors[newName] = {bg: colorHex+'1a', color: colorHex};
+      if(oldName && oldName !== newName) renameMap[oldName] = newName;
+    });
+
+    // 이름이 바뀐 유형을 사용 중인 거래처 전부 새 이름으로 갱신
+    let updatedCount = 0;
+    if(Object.keys(renameMap).length > 0){
+      state.data.vendors.forEach(v=>{
+        const ct = v.companyType || '벤더';
+        if(renameMap[ct]){ v.companyType = renameMap[ct]; updatedCount++; }
+      });
+    }
+
+    state.data.companyTypes = newTypes;
+    state.data.companyTypeColors = newColors;
+    closeModal(); persist(false); render();
+    showToast(updatedCount>0 ? `거래처 유형이 저장되었습니다. (거래처 ${updatedCount}곳 자동 업데이트됨)` : '거래처 유형이 저장되었습니다.');
   });
 }
 
