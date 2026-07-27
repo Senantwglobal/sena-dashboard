@@ -2794,6 +2794,7 @@ function viewCalendar(){
         <span style="font-size:12px;color:var(--muted);padding:4px 8px;background:var(--sf);border-radius:6px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
         ${!isReadOnly()?`<button class="btn" id="manageEventTypesBtn"><i class="ti ti-settings"></i> 일정 유형 관리</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}
       </div>
@@ -5169,6 +5170,12 @@ function bindViewEvents(){
     });
   });
 
+  const viewAllMeetingNotesBtn = document.getElementById('viewAllMeetingNotesBtn');
+  if(viewAllMeetingNotesBtn) viewAllMeetingNotesBtn.addEventListener('click', ()=>{
+    openModal(modalAllMeetingNotes());
+    bindModalCommon();
+  });
+
   const addEventBtnTop = document.getElementById('addEventBtnTop');
   if(addEventBtnTop) addEventBtnTop.addEventListener('click', ()=>{
     openModal(modalEventForm(null)); bindModalCommon(); bindEventFormSubmit();
@@ -5605,6 +5612,33 @@ function bindVendorPersonChecklists(vendorListId, personListId, searchInputId){
   });
 }
 
+function modalAllMeetingNotes(){
+  const notesEvents = (state.data.calendar||[])
+    .filter(e=>e.meetingNote && e.meetingNote.trim())
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  return `
+    <div class="modal" style="width:640px">
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> 회의록 모아보기</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        ${notesEvents.length===0
+          ? `<div class="empty-state" style="padding:24px">아직 작성된 회의록이 없습니다. 일정 상세에서 회의록을 작성해보세요.</div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
+              ${notesEvents.map(e=>{
+                const c = eventColor(e.type);
+                return `<div class="meeting-note-card-btn" data-eid="${e.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:6px;min-height:96px">
+                  <div style="font-size:11px;color:var(--o);font-weight:600;display:flex;align-items:center;gap:5px">
+                    <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(e.date)}
+                  </div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
+                  <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${(e.meetingSummary||e.meetingNote||'').replace(/</g,'&lt;')}</div>
+                </div>`;
+              }).join('')}
+            </div>`}
+      </div>
+    </div>
+  `;
+}
+
 function modalEventDetail(ev){
   const c = eventColor(ev.type);
   const vendorIds = ev.vendorIds && ev.vendorIds.length ? ev.vendorIds : (ev.vendorId ? [ev.vendorId] : []);
@@ -5649,6 +5683,25 @@ function modalEventDetail(ev){
           ${row('ti-users','추가 참석자', ev.attendees)}
           ${row('ti-note','메모', ev.memo ? ev.memo.replace(/\\n/g,'<br/>') : '')}
         </div>
+
+        <div style="margin-top:6px;border-top:0.5px solid var(--bd);padding-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-notes" style="font-size:12px"></i> 회의록</span>
+            ${!isReadOnly()?`<button class="btn" id="toggleMeetingNoteBtn" style="font-size:10px;padding:2px 8px">${ev.meetingNote?'수정':'작성'}</button>`:''}
+          </div>
+          <div id="meetingNoteDisplay" style="${ev.meetingNote?'':'display:none'}">
+            ${ev.meetingSummary?`<div style="background:var(--sf);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted);margin-bottom:8px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:11px;margin-right:4px"></i>${ev.meetingSummary}</div>`:''}
+            <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(ev.meetingNote||'').replace(/</g,'&lt;')}</div>
+          </div>
+          <div id="meetingNoteEmpty" style="${ev.meetingNote?'display:none;':''}font-size:12px;color:var(--muted)">아직 작성된 회의록이 없습니다.</div>
+          <div id="meetingNoteEditArea" style="display:none;margin-top:8px">
+            <textarea id="meetingNoteTextarea" class="inp" rows="5" placeholder="회의 내용을 입력하세요" style="resize:vertical">${ev.meetingNote||''}</textarea>
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px">
+              <button class="btn" id="cancelMeetingNoteBtn" style="font-size:11px;padding:4px 10px">취소</button>
+              <button class="btn btn-o" id="saveMeetingNoteBtn" style="font-size:11px;padding:4px 10px">저장</button>
+            </div>
+          </div>
+        </div>
       </div>
       ${!isReadOnly()?`<div class="mf">
         <button type="button" id="detailDeleteEventBtn" class="btn btn-red"><i class="ti ti-trash"></i> 삭제</button>
@@ -5673,6 +5726,38 @@ function bindEventDetailModal(eid){
       state.data.calendar = state.data.calendar.filter(x=>x.id!==eid);
       closeModal(); persist(false); render(); showToast('일정이 삭제되었습니다.');
     }
+  });
+
+  const toggleBtn = document.getElementById('toggleMeetingNoteBtn');
+  const displayEl = document.getElementById('meetingNoteDisplay');
+  const emptyEl = document.getElementById('meetingNoteEmpty');
+  const editArea = document.getElementById('meetingNoteEditArea');
+  if(toggleBtn) toggleBtn.addEventListener('click', ()=>{
+    if(displayEl) displayEl.style.display = 'none';
+    if(emptyEl) emptyEl.style.display = 'none';
+    if(editArea) editArea.style.display = '';
+    document.getElementById('meetingNoteTextarea')?.focus();
+  });
+  const cancelBtn = document.getElementById('cancelMeetingNoteBtn');
+  if(cancelBtn) cancelBtn.addEventListener('click', ()=>{
+    if(editArea) editArea.style.display = 'none';
+    const ev = state.data.calendar.find(x=>x.id===eid);
+    if(ev?.meetingNote){ if(displayEl) displayEl.style.display=''; }
+    else { if(emptyEl) emptyEl.style.display=''; }
+  });
+  const saveMeetingBtn = document.getElementById('saveMeetingNoteBtn');
+  if(saveMeetingBtn) saveMeetingBtn.addEventListener('click', ()=>{
+    const text = document.getElementById('meetingNoteTextarea').value.trim();
+    const ev = state.data.calendar.find(x=>x.id===eid);
+    if(!ev) return;
+    ev.meetingNote = text;
+    ev.meetingSummary = text ? generateOneLineSummary(text) : '';
+    persist(false); render();
+    showToast('회의록이 저장되었습니다.');
+    closeModal();
+    openModal(modalEventDetail(ev));
+    bindModalCommon();
+    bindEventDetailModal(eid);
   });
 }
 
@@ -5869,6 +5954,18 @@ document.addEventListener('click', function(e){
     openModal(modalEventDetail(evData));
     bindModalCommon();
     bindEventDetailModal(calEventLink.dataset.eid);
+    return;
+  }
+
+  const meetingNoteCardBtn = e.target.closest('.meeting-note-card-btn');
+  if(meetingNoteCardBtn){
+    e.stopPropagation();
+    const evData = state.data.calendar.find(x=>x.id===meetingNoteCardBtn.dataset.eid);
+    if(!evData) return;
+    closeModal();
+    openModal(modalEventDetail(evData));
+    bindModalCommon();
+    bindEventDetailModal(meetingNoteCardBtn.dataset.eid);
     return;
   }
 
