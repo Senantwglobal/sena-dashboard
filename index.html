@@ -1889,7 +1889,7 @@ function viewVendorList(){
 
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl">
-        <colgroup><col style="width:18%"><col style="width:8%"><col style="width:7%"><col style="width:23%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:8%"><col style="width:4%"></colgroup>
+        <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:8%"><col style="width:4%"></colgroup>
         <thead><tr>
           <th>회사명</th><th>거래 상태</th><th>유형</th><th>최근 상황</th><th>액션 상태</th><th>우선순위</th><th>담당자</th><th></th>
         </tr></thead>
@@ -1917,7 +1917,7 @@ function viewVendorList(){
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
               <td><div style="display:flex;align-items:center;gap:10px">${av(v.name,28)}<div><div style="font-weight:500;font-size:13px">${v.name}</div>${(v.brands||[]).length>0?`<div style="font-size:10px;color:var(--o);margin-top:1px"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${v.brands.map(b=>b.name).filter(Boolean).join(' · ')}</div>`:''}</div></div></td>
               <td style="position:relative">${statusDot}</td>
-              <td><span style="font-size:10px;padding:2px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500">${ct}</span></td>
+              <td><span style="font-size:10px;padding:3px 8px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:500;white-space:nowrap;display:inline-block">${ct}</span></td>
               <td style="color:#6B7280;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:1px">${v.latest?v.latest.summary:'-'}</td>
               <td>${asBadge}</td>
               <td>${priorityCell}</td>
