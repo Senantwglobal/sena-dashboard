@@ -5782,20 +5782,25 @@ function modalEventDetail(ev){
   const vendorIds = ev.vendorIds && ev.vendorIds.length ? ev.vendorIds : (ev.vendorId ? [ev.vendorId] : []);
   const evVendors = vendorIds.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
   const personIds = ev.attendeePersonIds && ev.attendeePersonIds.length ? ev.attendeePersonIds : (ev.attendeePersonId ? [ev.attendeePersonId] : []);
-  const personNames = [];
-  evVendors.forEach(v=>{
-    personIds.forEach(pid=>{
-      const p = (v.people||[]).find(x=>x.id===pid);
-      if(p) personNames.push(`${p.name}${p.title?' ('+p.title+')':''} — ${v.name}`);
-    });
-  });
   const proj = ev.projectId ? state.data.projects.find(p=>p.id===ev.projectId) : null;
+
+  const vendorPill = v => `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--sf);padding:3px 12px 3px 4px;border-radius:20px;font-size:12px;font-weight:500;margin:2px 5px 2px 0">${av(v.name,20)}${v.name}</span>`;
+  const vendorPillsHtml = evVendors.map(vendorPill).join('');
+
+  const personGroups = evVendors
+    .map(v=>({vendor:v, people: personIds.map(pid=>(v.people||[]).find(x=>x.id===pid)).filter(Boolean)}))
+    .filter(g=>g.people.length>0);
+  const personGroupsHtml = personGroups.map(g=>`
+    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px">
+      ${vendorPill(g.vendor)}
+      <span style="font-size:13px;color:var(--text);line-height:1.7;padding-top:3px">${g.people.map(p=>p.name+(p.title?' ('+p.title+')':'')).join(', ')}</span>
+    </div>`).join('');
 
   const row = (icon, label, value) => value ? `
     <div style="display:flex;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--bd)">
       <i class="ti ${icon}" style="font-size:14px;color:var(--muted);flex-shrink:0;margin-top:1px"></i>
       <div style="flex:1;min-width:0">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">${label}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:4px">${label}</div>
         <div style="font-size:13px;color:var(--text);line-height:1.5">${value}</div>
       </div>
     </div>` : '';
@@ -5816,8 +5821,8 @@ function modalEventDetail(ev){
           ${row('ti-clock','시간', ev.allDay ? '종일' : (ev.time||''))}
           ${row('ti-map-pin','장소', ev.location)}
           ${row('ti-clipboard-list','연결 프로젝트', proj?proj.title:'')}
-          ${row('ti-building-store','관련 거래처', evVendors.map(v=>v.name).join(', '))}
-          ${row('ti-user','담당자', personNames.join('<br/>'))}
+          ${row('ti-building-store','관련 거래처', vendorPillsHtml)}
+          ${row('ti-user','담당자', personGroupsHtml)}
           ${row('ti-users','추가 참석자', ev.attendees)}
           ${row('ti-note','메모', ev.memo ? ev.memo.replace(/\\n/g,'<br/>') : '')}
         </div>
