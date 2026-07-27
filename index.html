@@ -1269,6 +1269,43 @@ function getPublicHolidays(year){
   us.push({date:fmt(nthWeekday(year,11,4,4)),name:'Thanksgiving'});  // 11월 넷째 목
   us.forEach(h=>holidays.push({...h,country:'US'}));
 
+  // ── 대체공휴일 (한국) ──
+  // 대상: 설날/추석(연휴), 어린이날, 삼일절, 광복절, 개천절, 한글날, 부처님오신날
+  // 신정/현충일/크리스마스는 대체공휴일 대상 아님
+  const dowOf = dateStr => new Date(dateStr+'T00:00:00').getDay();
+  const krDates = new Set(holidays.filter(h=>h.country==='KR').map(h=>h.date));
+  function nextFreeWeekday(fromDateStr){
+    const d = new Date(fromDateStr+'T00:00:00');
+    d.setDate(d.getDate()+1);
+    while(true){
+      const dow = d.getDay();
+      const ds = fmt(d);
+      if(dow!==0 && dow!==6 && !krDates.has(ds)) return ds;
+      d.setDate(d.getDate()+1);
+    }
+  }
+  const substituteEligibleSingle = ['어린이날','삼일절','광복절','개천절','한글날','부처님 오신 날'];
+  const substitutes = [];
+  holidays.forEach(h=>{
+    if(h.country!=='KR' || !substituteEligibleSingle.includes(h.name)) return;
+    const dow = dowOf(h.date);
+    if(dow===0 || dow===6){
+      const subDate = nextFreeWeekday(h.date);
+      substitutes.push({date:subDate, name:h.name+' 대체공휴일', country:'KR'});
+      krDates.add(subDate);
+    }
+  });
+  ['설날','추석'].forEach(label=>{
+    const days = holidays.filter(h=>h.country==='KR' && h.name.startsWith(label)).sort((a,b)=>a.date.localeCompare(b.date));
+    if(days.length===0) return;
+    if(days.some(h=>dowOf(h.date)===0)){
+      const subDate = nextFreeWeekday(days[days.length-1].date);
+      substitutes.push({date:subDate, name:label+' 대체공휴일', country:'KR'});
+      krDates.add(subDate);
+    }
+  });
+  holidays.push(...substitutes);
+
   return holidays;
 }
 
@@ -1531,6 +1568,50 @@ function viewHome(){
             <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
           </div>`:''}
         </div>` : ''}
+
+        ${(() => {
+          const months = [];
+          for(let i=5;i>=0;i--) months.push(dayjs().subtract(i,'month').format('YYYY-MM'));
+          const data = months.map(m=>({
+            month: m,
+            events: state.data.calendar.filter(e=>e.date && e.date.startsWith(m) && !e.isHoliday).length,
+            leaves: (state.data.leave?.logs||[]).filter(l=>l.date && l.date.startsWith(m)).length,
+            logs: state.data.vendorLogs.filter(l=>l.date && l.date.startsWith(m)).length,
+          }));
+          const maxVal = Math.max(1, ...data.flatMap(d=>[d.events,d.leaves,d.logs]));
+          const CH = 56; // 차트 영역 높이(px)
+          const GW = 46; // 월 그룹 너비
+          const BW = 9;  // 막대 너비
+          const series = [
+            {key:'events', color:'#2554C7', label:'일정'},
+            {key:'leaves', color:'#059669', label:'연차'},
+            {key:'logs', color:'#D97706', label:'로그'},
+          ];
+          const svgW = GW * data.length;
+          const bars = data.map((d,i)=>{
+            const gx = i*GW;
+            return series.map((s,si)=>{
+              const val = d[s.key];
+              const h = maxVal>0 ? Math.max(val>0?3:0, (val/maxVal)*CH) : 0;
+              const x = gx + 6 + si*(BW+2);
+              const y = CH - h;
+              return `<rect x="${x}" y="${y}" width="${BW}" height="${h}" rx="2" fill="${s.color}">
+                <title>${s.label} ${val}건 (${d.month})</title>
+              </rect>`;
+            }).join('');
+          }).join('');
+          const labels = data.map((d,i)=>`<text x="${i*GW+GW/2}" y="${CH+14}" font-size="9" fill="var(--muted)" text-anchor="middle">${parseInt(d.month.split('-')[1])}월</text>`).join('');
+          return `<div class="card">
+            <div class="sh"><div class="st"><i class="ti ti-chart-bar oi"></i>월별 활동 추이</div></div>
+            <div style="display:flex;gap:12px;margin-bottom:8px;padding-left:2px">
+              ${series.map(s=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.label}</span>`).join('')}
+            </div>
+            <svg viewBox="0 0 ${svgW} ${CH+20}" style="width:100%;height:${CH+20}px;overflow:visible">
+              ${bars}
+              ${labels}
+            </svg>
+          </div>`;
+        })()}
 
         ${deadlines.length>0 ? `<div class="card">
           <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>마감 임박 프로젝트</div></div>
@@ -2922,8 +3003,9 @@ function viewCalendar(){
         const dateStr = month.date(d).format('YYYY-MM-DD');
         const evs = allEvs.filter(e=>e.date===dateStr);
         const isToday = dateStr===todayStr;
+        const isHoliday = evs.some(e=>e.isHoliday);
         return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
-          <div class="cal-num${isToday?' today':''}">${d}</div>
+          <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
           ${evs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
           ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
         </div>`;
