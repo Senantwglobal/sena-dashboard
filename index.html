@@ -1544,7 +1544,7 @@ function viewHome(){
             const PER_PAGE = 6;
             const page = state.dashProjPage || 0;
             const catFilter = state.dashProjCategoryFilter || '전체';
-            const allActiveProjs = state.data.projects.filter(p=>p.status==='진행중');
+            const allActiveProjs = state.data.projects.filter(p=>(p.status||'진행중')==='진행중');
             const activeProjs = catFilter==='전체' ? allActiveProjs : allActiveProjs.filter(p=>p.category===catFilter);
             const total = activeProjs.length;
             const totalPages = Math.ceil(total/PER_PAGE);
