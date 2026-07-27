@@ -2576,12 +2576,15 @@ function viewProjectDetail(){
             const ddayLabel = dday===0?'오늘':`D-${dday}`;
             const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
             const evVendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
-            const vendorNames = evVendors.map(v=>v.name).join(', ');
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="flex-shrink:0">${ddayLabel}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
-                <div style="font-size:11px;color:var(--muted)">${fmtDateDow(e.date)}${e.time?' · '+e.time:''}${vendorNames?' · '+vendorNames:''}${e.location?' · '+e.location:''}</div>
+                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  <span>${fmtDateDow(e.date)}${e.time?' · '+e.time:''}</span>
+                  ${evVendors.map(v=>`<span style="display:flex;align-items:center;gap:3px">${av(v.name,14)}${v.name}</span>`).join('')}
+                  ${e.location?`<span>${e.location}</span>`:''}
+                </div>
               </div>
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
@@ -2607,13 +2610,16 @@ function viewProjectDetail(){
           ${past.map(e=>{
             const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
             const evVendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
-            const vendorNames = evVendors.map(v=>v.name).join(', ');
             const hasNote = e.meetingNote && e.meetingNote.trim();
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
-              <span style="font-size:10px;color:var(--muted);flex-shrink:0;width:44px">${fmtDate(e.date)}</span>
+              <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?' <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 있음"></i>':''}</div>
-                <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${vendorNames?vendorNames+' · ':''}${hasNote?(e.meetingSummary||'회의록 있음'):(e.location||'')}</div>
+                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  ${e.time?`<span>${e.time}</span>`:''}
+                  ${evVendors.map(v=>`<span style="display:flex;align-items:center;gap:3px">${av(v.name,14)}${v.name}</span>`).join('')}
+                  ${hasNote?`<span>${e.meetingSummary||'회의록 있음'}</span>`:(e.location?`<span>${e.location}</span>`:'')}
+                </div>
               </div>
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
@@ -2629,23 +2635,36 @@ function viewProjectDetail(){
         ${!isReadOnly()?`<button class="btn" id="addChecklistItemBtn"><i class="ti ti-plus"></i> 항목 추가</button>`:''}
       </div>
       ${p.checklist.length===0?'<div class="empty-state">체크리스트 항목이 없습니다.</div>':
-        p.checklist.map(c=>{
-          const sc=checklistStatusColor(c.status);
-          const assignee=checklistAssigneeName(c);
-          return `<div class="checklist-card ck-item" data-cid="${c.id}">
-            <input type="checkbox" class="checklist-toggle ck-cb" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
-            <div class="ck-body">
-              <div class="ck-title ${c.done?'done':''}">${c.text}</div>
-              <div class="ck-meta">
-                ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
-                ${c.priority?`<span class="badge ${priorityBadge(c.priority)}">${c.priority}</span>`:''}
-                ${c.dueDate?`<span><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
-                ${assignee?`<span><i class="ti ti-user" style="font-size:10px"></i> ${assignee}</span>`:''}
+        (() => {
+          const CK_PAGE = 4;
+          const showAllCk = !!state.projChecklistShowAll;
+          const ckList = showAllCk ? p.checklist : p.checklist.slice(0, CK_PAGE);
+          const rowsHtml = ckList.map(c=>{
+            const sc=checklistStatusColor(c.status);
+            const assignee=checklistAssigneeName(c);
+            return `<div class="checklist-card ck-item" data-cid="${c.id}">
+              <input type="checkbox" class="checklist-toggle ck-cb" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
+              <div class="ck-body">
+                <div class="ck-title ${c.done?'done':''}">${c.text}</div>
+                <div class="ck-meta">
+                  ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
+                  ${c.priority?`<span class="badge ${priorityBadge(c.priority)}">${c.priority}</span>`:''}
+                  ${c.dueDate?`<span><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
+                  ${assignee?`<span><i class="ti ti-user" style="font-size:10px"></i> ${assignee}</span>`:''}
+                </div>
               </div>
-            </div>
-            ${!isReadOnly()?`<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px;color:var(--muted);cursor:pointer;flex-shrink:0"></i>`:''}
-          </div>`;
-        }).join('')}
+              ${!isReadOnly()?`<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px;color:var(--muted);cursor:pointer;flex-shrink:0"></i>`:''}
+            </div>`;
+          }).join('');
+          const moreBtn = p.checklist.length > CK_PAGE
+            ? `<div style="text-align:center;padding:10px 16px">
+                <button class="btn" id="toggleChecklistShowAllBtn" style="font-size:11px;padding:5px 14px">
+                  ${showAllCk ? `<i class="ti ti-chevron-up"></i> 접기` : `<i class="ti ti-chevron-down"></i> 더보기 (${p.checklist.length - CK_PAGE}건 더)`}
+                </button>
+              </div>`
+            : '';
+          return rowsHtml + moreBtn;
+        })()}
     </div>
 
     <!-- 벤더별 탭 카드 -->
@@ -2909,11 +2928,12 @@ function viewCalendar(){
       ${todayEvs.map(e=>{
         const c=eventColor(e.type);
         const isEditable = state.data.calendar.some(x=>x.id===e.id);
-        return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
+        return `<div class="dash-row" style="gap:8px">
         <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
         <span style="font-size:13px;font-weight:500">${e.title}</span>
         ${e.time?`<span style="font-size:12px;color:var(--muted);margin-left:auto">${e.time}</span>`:''}
         <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
+        ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
       </div>`;}).join('')}
     </div>` : `
     <div class="card" style="margin-bottom:14px;background:var(--sf)">
@@ -2928,11 +2948,12 @@ function viewCalendar(){
         const c=eventColor(e.type);
         const isToday=e.date===todayStr;
         const isEditable = state.data.calendar.some(x=>x.id===e.id);
-        return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
+        return `<div class="dash-row" style="gap:8px">
         <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'600':'400'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
         <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
         <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
         <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
+        ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
       </div>`;}).join('')}
     </div>` : ''}
   `;
@@ -4363,6 +4384,7 @@ function bindViewEvents(){
     el.addEventListener('click', ()=>{
       state.selectedProjectId = el.dataset.pid;
       state.view = 'projects';
+      state.projChecklistShowAll = false;
       render();
     });
   });
@@ -4666,6 +4688,12 @@ function bindViewEvents(){
   const toggleProjLogShowAllBtn = document.getElementById('toggleProjLogShowAllBtn');
   if(toggleProjLogShowAllBtn) toggleProjLogShowAllBtn.addEventListener('click', ()=>{
     state.projLogShowAll = !state.projLogShowAll;
+    render();
+  });
+
+  const toggleChecklistShowAllBtn = document.getElementById('toggleChecklistShowAllBtn');
+  if(toggleChecklistShowAllBtn) toggleChecklistShowAllBtn.addEventListener('click', ()=>{
+    state.projChecklistShowAll = !state.projChecklistShowAll;
     render();
   });
 
