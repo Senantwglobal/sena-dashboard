@@ -2727,7 +2727,8 @@ function viewProjectDetail(){
                     <div style="font-size:11px;color:var(--o);font-weight:600;display:flex;align-items:center;gap:5px">
                       <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
                     </div>
-                    <div style="font-size:12px;line-height:1.5;color:var(--fg);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${(m.summary||m.text||'').replace(/</g,'&lt;')}</div>
+                    <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
+                    <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(m.summary||m.text||'').replace(/</g,'&lt;')}</div>
                   </div>`).join('')}
               </div>`}
         ` : ''}
@@ -4683,6 +4684,9 @@ function bindViewEvents(){
           <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
         </div>
         <div class="mb">
+          <div class="field"><label class="field-label">제목 <span style="color:#DC2626">*</span></label>
+            <input class="inp" type="text" id="vmTitle" placeholder="예: 8월 정기 미팅" required/>
+          </div>
           <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="vmDate" value="${dayjs().format('YYYY-MM-DD')}" required/></div>
           <div class="field"><label class="field-label">회의 내용</label>
             <textarea class="inp" id="vmText" rows="7" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="resize:vertical;line-height:1.6"></textarea>
@@ -4695,14 +4699,16 @@ function bindViewEvents(){
     `);
     bindModalCommon();
     document.getElementById('vmSaveBtn').addEventListener('click', ()=>{
+      const title = document.getElementById('vmTitle').value.trim();
       const text = document.getElementById('vmText').value.trim();
       const date = document.getElementById('vmDate').value;
+      if(!title){ showToast('제목을 입력해주세요.'); return; }
       if(!text){ showToast('내용을 입력해주세요.'); return; }
       const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
       if(!p) return;
       if(!p.vendorMeetings) p.vendorMeetings = {};
       if(!p.vendorMeetings[vid]) p.vendorMeetings[vid] = [];
-      p.vendorMeetings[vid].unshift({ id:uid('vm'), date, text, summary:'' });
+      p.vendorMeetings[vid].unshift({ id:uid('vm'), title, date, text, summary:'' });
       closeModal(); persist(false); render(); showToast('회의록이 저장되었습니다.');
     });
   });
@@ -5701,6 +5707,20 @@ function bindVendorPersonChecklists(vendorListId, personListId, searchInputId){
   });
 }
 
+function modalMeetingNoteFull(ev){
+  return `
+    <div class="modal">
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${(ev.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</h3>
+        <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="mb">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${ev.title||''} · ${fmtDateDow(ev.date)}</div>
+        <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(ev.meetingNote||'').replace(/</g,'&lt;')}</div>
+      </div>
+    </div>
+  `;
+}
+
 function modalAllMeetingNotes(){
   const notesEvents = (state.data.calendar||[])
     .filter(e=>e.meetingNote && e.meetingNote.trim())
@@ -5718,8 +5738,9 @@ function modalAllMeetingNotes(){
                   <div style="font-size:11px;color:var(--o);font-weight:600;display:flex;align-items:center;gap:5px">
                     <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(e.date)}
                   </div>
-                  <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
-                  <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical">${(e.meetingSummary||e.meetingNote||'').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(e.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
+                  <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(e.meetingSummary||e.meetingNote||'').replace(/</g,'&lt;')}</div>
                 </div>`;
               }).join('')}
             </div>`}
@@ -5779,11 +5800,19 @@ function modalEventDetail(ev){
             ${!isReadOnly()?`<button class="btn" id="toggleMeetingNoteBtn" style="font-size:10px;padding:2px 8px">${ev.meetingNote?'수정':'작성'}</button>`:''}
           </div>
           <div id="meetingNoteDisplay" style="${ev.meetingNote?'':'display:none'}">
-            ${ev.meetingSummary?`<div style="background:var(--sf);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted);margin-bottom:8px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:11px;margin-right:4px"></i>${ev.meetingSummary}</div>`:''}
-            <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(ev.meetingNote||'').replace(/</g,'&lt;')}</div>
+            <div class="meeting-note-card-btn" data-eid="${ev.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:5px">
+              <div style="font-size:11px;color:var(--o);font-weight:600;display:flex;align-items:center;gap:5px">
+                <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(ev.date)}
+              </div>
+              <div style="font-size:13px;font-weight:600;color:var(--text)">${(ev.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
+              <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(ev.meetingSummary||ev.meetingNote||'').replace(/</g,'&lt;')}</div>
+            </div>
           </div>
           <div id="meetingNoteEmpty" style="${ev.meetingNote?'display:none;':''}font-size:12px;color:var(--muted)">아직 작성된 회의록이 없습니다.</div>
           <div id="meetingNoteEditArea" style="display:none;margin-top:8px">
+            <div class="field" style="margin-bottom:8px"><label class="field-label">제목 <span style="color:#DC2626">*</span></label>
+              <input class="inp" type="text" id="meetingNoteTitleInput" value="${(ev.meetingTitle||'').replace(/"/g,'&quot;')}" placeholder="예: 8월 정기 미팅" style="margin:0"/>
+            </div>
             <textarea id="meetingNoteTextarea" class="inp" rows="5" placeholder="회의 내용을 입력하세요" style="resize:vertical">${ev.meetingNote||''}</textarea>
             <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:6px">
               <button class="btn" id="cancelMeetingNoteBtn" style="font-size:11px;padding:4px 10px">취소</button>
@@ -5836,11 +5865,15 @@ function bindEventDetailModal(eid){
   });
   const saveMeetingBtn = document.getElementById('saveMeetingNoteBtn');
   if(saveMeetingBtn) saveMeetingBtn.addEventListener('click', ()=>{
+    const title = document.getElementById('meetingNoteTitleInput').value.trim();
     const text = document.getElementById('meetingNoteTextarea').value.trim();
+    if(!title){ showToast('회의록 제목을 입력해주세요.'); return; }
+    if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
     const ev = state.data.calendar.find(x=>x.id===eid);
     if(!ev) return;
+    ev.meetingTitle = title;
     ev.meetingNote = text;
-    ev.meetingSummary = text ? generateOneLineSummary(text) : '';
+    ev.meetingSummary = generateOneLineSummary(text);
     persist(false); render();
     showToast('회의록이 저장되었습니다.');
     closeModal();
@@ -6052,9 +6085,8 @@ document.addEventListener('click', function(e){
     const evData = state.data.calendar.find(x=>x.id===meetingNoteCardBtn.dataset.eid);
     if(!evData) return;
     closeModal();
-    openModal(modalEventDetail(evData));
+    openModal(modalMeetingNoteFull(evData));
     bindModalCommon();
-    bindEventDetailModal(meetingNoteCardBtn.dataset.eid);
     return;
   }
 
@@ -6140,10 +6172,11 @@ document.addEventListener('click', function(e){
     const vendor = state.data.vendors.find(x=>x.id===vid);
     openModal(`
       <div class="modal">
-        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${vendor?.name||''} 회의록 — ${fmtDateDow(m.date)}</h3>
+        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${m.title||vendor?.name||''}</h3>
           <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
         </div>
         <div class="mb">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${vendor?.name||''} · ${fmtDateDow(m.date)}</div>
           <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(m.text||'').replace(/</g,'&lt;')}</div>
           ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
         </div>
