@@ -1842,14 +1842,8 @@ function viewVendorList(){
   if(statusFilter !== '전체') vendors = vendors.filter(v=>(v.companyStatus||'Active') === statusFilter);
   if(priorityFilter !== '전체') vendors = vendors.filter(v=>v.priority === priorityFilter);
 
-  // 거래중 상단 정렬
-  const statusOrder = {'Active':0,'Pending':1,'Inactive':2};
-  vendors.sort((a,b)=>{
-    const so = (statusOrder[a.companyStatus]??1) - (statusOrder[b.companyStatus]??1);
-    if(so!==0) return so;
-    // 이름 가나다/ABC 순
-    return a.name.localeCompare(b.name, ['ko','en'], {sensitivity:'base'});
-  });
+  // 이름 가나다/ABC 순 정렬
+  vendors.sort((a,b)=>a.name.localeCompare(b.name, ['ko','en'], {sensitivity:'base'}));
 
   const highCount = vendors.filter(v=>v.priority==='높음').length;
   const waitingCount = vendors.filter(v=>{const l=latestLogForVendor(v.id);return l&&(l.status==='전송'||l.status==='수신');}).length;
@@ -2397,32 +2391,45 @@ function viewProjects(){
     </div>
 
     ${projects.length===0?'<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>':
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
       ${projects.map(p=>{
         const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
         const prog=progressOf(p);
         const ddayLabel=dday===null?'':(dday<0?`D+${Math.abs(dday)}`:`D-${dday}`);
         const col=catColorMap[p.category]||'#2554C7';
-        return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px;margin-bottom:0">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div style="display:flex;gap:4px;align-items:center">
-              <span class="badge" style="background:${col}22;color:${col}">${p.category}</span>
+        const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
+        const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
+        const VMAX = 3;
+        return `<div class="card proj-card" data-pid="${p.id}" style="padding:16px;margin-bottom:0;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="badge" style="background:${col}1a;color:${col};font-weight:600">${p.category}</span>
               <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:10px;padding:1px 6px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
             </div>
             ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${ddayLabel}</span>`:''}
           </div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:4px;line-height:1.4">${p.title}</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">담당: ${p.owner}</div>
-          ${(() => {
-            const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
-            const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
-            if(linkedVendors.length===0) return `<div style="font-size:12px;color:var(--muted);padding:4px 0">연결된 거래처 없음</div>`;
-            return `<div style="display:flex;flex-wrap:wrap;gap:5px">
-              ${linkedVendors.map(v=>`<span style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--sf);padding:3px 8px 3px 4px;border-radius:20px">${av(v.name,16)} ${v.name}</span>`).join('')}
-            </div>`;
-          })()}
-          <div class="pgb" style="margin-top:10px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
-          <div style="font-size:10px;color:var(--muted);text-align:right;margin-top:3px">${prog}%</div>
+
+          <div style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px;color:var(--text)">${p.title}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:4px">
+            <i class="ti ti-user" style="font-size:11px"></i>${p.owner}
+          </div>
+
+          <div style="flex:1;margin-bottom:14px">
+            ${linkedVendors.length===0
+              ? `<div style="font-size:11px;color:var(--muted)">연결된 거래처 없음</div>`
+              : `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+                  ${linkedVendors.slice(0,VMAX).map(v=>`<span style="font-size:11px;font-weight:500;color:var(--text);background:var(--sf);padding:4px 10px;border-radius:20px">${v.name}</span>`).join('')}
+                  ${linkedVendors.length>VMAX?`<span style="font-size:11px;color:var(--muted)">+${linkedVendors.length-VMAX}개</span>`:''}
+                </div>`}
+          </div>
+
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+              <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">진행률</span>
+              <span style="font-size:13px;font-weight:700;color:${col}">${prog}%</span>
+            </div>
+            <div class="pgb"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+          </div>
         </div>`;
       }).join('')}
     </div>`}
