@@ -2076,7 +2076,10 @@ function viewVendorDetail(){
     ${(() => {
       const today = dayjs().format('YYYY-MM-DD');
       const upcoming = (state.data.calendar||[])
-        .filter(e=>e.vendorId===v.id && e.date>=today)
+        .filter(e=>{
+          const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
+          return vids.includes(v.id) && e.date>=today;
+        })
         .sort((a,b)=>a.date.localeCompare(b.date))
         .slice(0,4);
       if(upcoming.length===0) return '';
@@ -2090,12 +2093,14 @@ function viewVendorDetail(){
           ${upcoming.map(e=>{
             const dday = dayjs(e.date).diff(dayjs().startOf('day'),'day');
             const ddayLabel = dday===0?'오늘':`D-${dday}`;
-            const person = e.attendeePersonId ? (v.people||[]).find(p=>p.id===e.attendeePersonId) : null;
+            const pids = e.attendeePersonIds && e.attendeePersonIds.length ? e.attendeePersonIds : (e.attendeePersonId ? [e.attendeePersonId] : []);
+            const personNames = pids.map(pid=>(v.people||[]).find(p=>p.id===pid)?.name).filter(Boolean).join(', ');
+            const proj = e.projectId ? state.data.projects.find(p=>p.id===e.projectId) : null;
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="flex-shrink:0">${ddayLabel}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
-                <div style="font-size:11px;color:var(--muted)">${fmtDateDow(e.date)}${e.time?' · '+e.time:''}${person?' · '+person.name:''}${e.location?' · '+e.location:''}</div>
+                <div style="font-size:11px;color:var(--muted)">${fmtDateDow(e.date)}${e.time?' · '+e.time:''}${personNames?' · '+personNames:''}${e.location?' · '+e.location:''}${proj?' · <span style="color:var(--o)">'+proj.title+'</span>':''}</div>
               </div>
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
@@ -2434,7 +2439,7 @@ function viewProjects(){
     </div>
 
     ${projects.length===0?'<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>':
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
       ${projects.map(p=>{
         const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
         const prog=progressOf(p);
@@ -2442,36 +2447,36 @@ function viewProjects(){
         const col=catColorMap[p.category]||'#2554C7';
         const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
         const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
-        const VMAX = 3;
-        return `<div class="card proj-card" data-pid="${p.id}" style="padding:16px;margin-bottom:0;display:flex;flex-direction:column">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-            <div style="display:flex;gap:6px;align-items:center">
-              <span class="badge" style="background:${col}1a;color:${col};font-weight:600">${p.category}</span>
-              <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:10px;padding:1px 6px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
+        const VMAX = 2;
+        return `<div class="card proj-card" data-pid="${p.id}" style="padding:12px;margin-bottom:0;display:flex;flex-direction:column">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+            <div style="display:flex;gap:5px;align-items:center;min-width:0">
+              <span class="badge" style="background:${col}1a;color:${col};font-weight:600;font-size:10px;padding:2px 7px">${p.category}</span>
+              <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
             </div>
-            ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${ddayLabel}</span>`:''}
+            ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="font-size:9px;flex-shrink:0">${ddayLabel}</span>`:''}
           </div>
 
-          <div style="font-size:15px;font-weight:700;line-height:1.4;margin-bottom:4px;color:var(--text)">${p.title}</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:4px">
-            <i class="ti ti-user" style="font-size:11px"></i>${p.owner}
+          <div style="font-size:13px;font-weight:700;line-height:1.35;margin-bottom:3px;color:var(--text)">${p.title}</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:3px">
+            <i class="ti ti-user" style="font-size:10px"></i>${p.owner}
           </div>
 
-          <div style="flex:1;margin-bottom:14px">
+          <div style="flex:1;margin-bottom:10px">
             ${linkedVendors.length===0
-              ? `<div style="font-size:11px;color:var(--muted)">연결된 거래처 없음</div>`
-              : `<div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-                  ${linkedVendors.slice(0,VMAX).map(v=>`<span style="font-size:11px;font-weight:500;color:var(--text);background:var(--sf);padding:4px 10px;border-radius:20px">${v.name}</span>`).join('')}
-                  ${linkedVendors.length>VMAX?`<span style="font-size:11px;color:var(--muted)">+${linkedVendors.length-VMAX}개</span>`:''}
+              ? `<div style="font-size:10px;color:var(--muted)">연결된 거래처 없음</div>`
+              : `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+                  ${linkedVendors.slice(0,VMAX).map(v=>`<span style="font-size:10px;font-weight:500;color:var(--text);background:var(--sf);padding:3px 8px;border-radius:20px">${v.name}</span>`).join('')}
+                  ${linkedVendors.length>VMAX?`<span style="font-size:10px;color:var(--muted)">+${linkedVendors.length-VMAX}개</span>`:''}
                 </div>`}
           </div>
 
           <div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
-              <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">진행률</span>
-              <span style="font-size:13px;font-weight:700;color:${col}">${prog}%</span>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
+              <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">진행률</span>
+              <span style="font-size:12px;font-weight:700;color:${col}">${prog}%</span>
             </div>
-            <div class="pgb"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+            <div class="pgb" style="height:5px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
           </div>
         </div>`;
       }).join('')}
@@ -2516,6 +2521,39 @@ function viewProjectDetail(){
     <div class="pgb" style="margin-bottom:14px;height:8px;border-radius:4px">
       <div class="pgf" style="width:${prog}%;background:var(--o);border-radius:4px"></div>
     </div>
+
+    ${(() => {
+      const today = dayjs().format('YYYY-MM-DD');
+      const upcoming = (state.data.calendar||[])
+        .filter(e=>e.projectId===p.id && e.date>=today)
+        .sort((a,b)=>a.date.localeCompare(b.date))
+        .slice(0,4);
+      if(upcoming.length===0) return '';
+      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--o)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
+          <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
+          <span style="font-size:11px;color:var(--muted)">${upcoming.length}건</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${upcoming.map(e=>{
+            const dday = dayjs(e.date).diff(dayjs().startOf('day'),'day');
+            const ddayLabel = dday===0?'오늘':`D-${dday}`;
+            const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
+            const evVendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
+            const vendorNames = evVendors.map(v=>v.name).join(', ');
+            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+              <span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="flex-shrink:0">${ddayLabel}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
+                <div style="font-size:11px;color:var(--muted)">${fmtDateDow(e.date)}${e.time?' · '+e.time:''}${vendorNames?' · '+vendorNames:''}${e.location?' · '+e.location:''}</div>
+              </div>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })()}
 
     <!-- 체크리스트 -->
     <div class="card" style="margin-bottom:14px">
@@ -3597,15 +3635,36 @@ function modalProjectForm(project){
   `;
 }
 
-function personOptionsForVendor(vendorId, selectedId){
-  const v = state.data.vendors.find(x=>x.id===vendorId);
-  const people = v?.people || [];
-  if(people.length===0) return `<option value="">등록된 담당자 없음</option>`;
-  return `<option value="">담당자 선택</option>` + people.map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.name}${p.title?' ('+p.title+')':''}</option>`).join('');
+function eventVendorCheckListHtml(selectedIds){
+  const vendors = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  return vendors.map(v=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;border-radius:6px;font-size:12px" class="ev-vendor-check-row">
+      <input type="checkbox" class="ev-vendor-cb" value="${v.id}" ${selectedIds.includes(v.id)?'checked':''} style="accent-color:var(--o);width:14px;height:14px;flex-shrink:0"/>
+      <span style="display:flex;align-items:center;gap:6px">${av(v.name,18)} ${v.name}</span>
+    </label>`).join('');
+}
+
+function eventPersonCheckListHtml(vendorIds, selectedPersonIds){
+  const rows = [];
+  vendorIds.forEach(vid=>{
+    const v = state.data.vendors.find(x=>x.id===vid);
+    if(!v) return;
+    (v.people||[]).forEach(p=>rows.push({vendorName:v.name, person:p}));
+  });
+  if(rows.length===0) return `<div style="font-size:12px;color:var(--muted);padding:6px 2px">거래처를 먼저 선택하면 등록된 담당자가 표시됩니다.</div>`;
+  return rows.map(r=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:5px 8px;cursor:pointer;border-radius:6px;font-size:12px" class="ev-person-check-row">
+      <input type="checkbox" class="ev-person-cb" value="${r.person.id}" ${selectedPersonIds.includes(r.person.id)?'checked':''} style="accent-color:var(--o);width:14px;height:14px;flex-shrink:0"/>
+      <span>${r.person.name}${r.person.title?' ('+r.person.title+')':''} <span style="color:var(--muted)">— ${r.vendorName}</span></span>
+    </label>`).join('');
+}
+
+function eventProjectOptionsHtml(selectedProjectId){
+  const projects = state.data.projects.slice().sort((a,b)=>a.title.localeCompare(b.title,'ko'));
+  return `<option value="">없음</option>` + projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?'selected':''}>${p.title}</option>`).join('');
 }
 
 function modalEventForm(dateStr){
-  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
     <div class="modal">
       <div class="mh"><h3>일정 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
@@ -3634,15 +3693,23 @@ function modalEventForm(dateStr){
             </div>
           </div>
           <div class="two">
-            <div class="field"><label class="field-label">관련 거래처 (선택)</label><select class="inp" id="eventVendorSelect" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
             <div class="field"><label class="field-label">장소</label><input class="inp" type="text" name="location" placeholder="예: 강남역 카페, Zoom"/></div>
+            <div class="field"><label class="field-label">연결 프로젝트 (선택)</label><select class="inp" name="projectId">${eventProjectOptionsHtml('')}</select></div>
           </div>
-          <div class="two">
-            <div class="field"><label class="field-label">담당자 (거래처 등록 담당자 중 선택)</label>
-              <select class="inp" id="eventAttendeePersonSelect" name="attendeePersonId">${personOptionsForVendor('', '')}</select>
+          <div class="field">
+            <label class="field-label">관련 거래처 (복수 선택 가능)</label>
+            <div class="search-wrap" style="margin-bottom:6px"><i class="ti ti-search"></i><input class="inp" id="evVendorSearchNew" placeholder="거래처 검색..." style="margin:0"/></div>
+            <div id="evVendorCheckListNew" style="max-height:140px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventVendorCheckListHtml([])}
             </div>
-            <div class="field"><label class="field-label">추가 참석자 (직접 입력)</label><input class="inp" type="text" name="attendees" placeholder="예: 천세나, Troy Taylor"/></div>
           </div>
+          <div class="field">
+            <label class="field-label">담당자 (선택한 거래처의 등록 담당자 중 복수 선택)</label>
+            <div id="evPersonCheckListNew" style="max-height:120px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventPersonCheckListHtml([], [])}
+            </div>
+          </div>
+          <div class="field"><label class="field-label">추가 참석자 (직접 입력)</label><input class="inp" type="text" name="attendees" placeholder="예: 천세나, Troy Taylor"/></div>
           <div class="field"><label class="field-label">메모</label><textarea class="inp" name="memo" rows="2" placeholder="일정 관련 메모" style="resize:vertical"></textarea></div>
         </form>
       </div>
@@ -4102,7 +4169,8 @@ function modalEditEvent(ev){
   const allTypes = (state.data.calendarEventTypes||[
     {name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}
   ]).map(t=>t.name);
-  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}" ${v.id===ev.vendorId?'selected':''}>${v.name}</option>`).join('');
+  const evVendorIds = ev.vendorIds && ev.vendorIds.length ? ev.vendorIds : (ev.vendorId ? [ev.vendorId] : []);
+  const evPersonIds = ev.attendeePersonIds && ev.attendeePersonIds.length ? ev.attendeePersonIds : (ev.attendeePersonId ? [ev.attendeePersonId] : []);
   return `
     <div class="modal">
       <div class="mh"><h3>일정 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
@@ -4137,15 +4205,23 @@ function modalEditEvent(ev){
             </div>
           </div>
           <div class="two">
-            <div class="field"><label class="field-label">관련 거래처 (선택)</label><select class="inp" id="editEventVendorSelect" name="vendorId"><option value="">없음</option>${vendorOptions}</select></div>
             <div class="field"><label class="field-label">장소</label><input class="inp" type="text" name="location" value="${(ev.location||'').replace(/"/g,'&quot;')}" placeholder="예: 강남역 카페, Zoom"/></div>
+            <div class="field"><label class="field-label">연결 프로젝트 (선택)</label><select class="inp" name="projectId">${eventProjectOptionsHtml(ev.projectId||'')}</select></div>
           </div>
-          <div class="two">
-            <div class="field"><label class="field-label">담당자 (거래처 등록 담당자 중 선택)</label>
-              <select class="inp" id="editEventAttendeePersonSelect" name="attendeePersonId">${personOptionsForVendor(ev.vendorId, ev.attendeePersonId)}</select>
+          <div class="field">
+            <label class="field-label">관련 거래처 (복수 선택 가능)</label>
+            <div class="search-wrap" style="margin-bottom:6px"><i class="ti ti-search"></i><input class="inp" id="evVendorSearchEdit" placeholder="거래처 검색..." style="margin:0"/></div>
+            <div id="evVendorCheckListEdit" style="max-height:140px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventVendorCheckListHtml(evVendorIds)}
             </div>
-            <div class="field"><label class="field-label">추가 참석자 (직접 입력)</label><input class="inp" type="text" name="attendees" value="${(ev.attendees||'').replace(/"/g,'&quot;')}" placeholder="예: 천세나, Troy Taylor"/></div>
           </div>
+          <div class="field">
+            <label class="field-label">담당자 (선택한 거래처의 등록 담당자 중 복수 선택)</label>
+            <div id="evPersonCheckListEdit" style="max-height:120px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventPersonCheckListHtml(evVendorIds, evPersonIds)}
+            </div>
+          </div>
+          <div class="field"><label class="field-label">추가 참석자 (직접 입력)</label><input class="inp" type="text" name="attendees" value="${(ev.attendees||'').replace(/"/g,'&quot;')}" placeholder="예: 천세나, Troy Taylor"/></div>
           <div class="field"><label class="field-label">메모</label><textarea class="inp" name="memo" rows="2" placeholder="일정 관련 메모" style="resize:vertical">${ev.memo||''}</textarea></div>
           <input type="hidden" name="eventId" value="${ev.id}"/>
         </form>
@@ -5083,40 +5159,7 @@ function bindViewEvents(){
         if(!evData) return;
         openModal(modalEditEvent(evData));
         bindModalCommon();
-        const editVendorSelect = document.getElementById('editEventVendorSelect');
-        if(editVendorSelect) editVendorSelect.addEventListener('change', ()=>{
-          const attendeeSelect = document.getElementById('editEventAttendeePersonSelect');
-          if(attendeeSelect) attendeeSelect.innerHTML = personOptionsForVendor(editVendorSelect.value, '');
-        });
-        document.getElementById('editEventForm').addEventListener('submit', e2=>{
-          e2.preventDefault();
-          const fd = new FormData(e2.target);
-          const idx = state.data.calendar.findIndex(x=>x.id===eid);
-          if(idx!==-1){
-            state.data.calendar[idx] = {
-              ...state.data.calendar[idx],
-              date: fd.get('date'),
-              type: fd.get('type'),
-              title: fd.get('title'),
-              allDay: document.getElementById('allDayCheckEdit')?.checked||false,
-              startTime: fd.get('startTime')||'',
-              endTime: fd.get('endTime')||'',
-              time: document.getElementById('allDayCheckEdit')?.checked ? '종일' : (fd.get('startTime')||(fd.get('endTime')?fd.get('startTime')+'~'+fd.get('endTime'):'')),
-              vendorId: fd.get('vendorId')||'',
-              attendeePersonId: fd.get('attendeePersonId')||'',
-              location: fd.get('location')||'',
-              attendees: fd.get('attendees')||'',
-              memo: fd.get('memo')||''
-            };
-          }
-          closeModal(); persist(false); render(); showToast('일정이 수정되었습니다.');
-        });
-        document.getElementById('deleteEventBtn').addEventListener('click', ()=>{
-          if(confirm('이 일정을 삭제하시겠습니까?')){
-            state.data.calendar = state.data.calendar.filter(x=>x.id!==eid);
-            closeModal(); persist(false); render(); showToast('일정이 삭제되었습니다.');
-          }
-        });
+        bindEditEventModal(eid);
       }
     });
   });
@@ -5539,12 +5582,63 @@ function bindProjectFormSubmit(existingProject){
   });
 }
 
-function bindEventFormSubmit(){
-  const vendorSelect = document.getElementById('eventVendorSelect');
-  if(vendorSelect) vendorSelect.addEventListener('change', ()=>{
-    const attendeeSelect = document.getElementById('eventAttendeePersonSelect');
-    if(attendeeSelect) attendeeSelect.innerHTML = personOptionsForVendor(vendorSelect.value, '');
+function bindVendorPersonChecklists(vendorListId, personListId, searchInputId){
+  const vendorList = document.getElementById(vendorListId);
+  const personList = document.getElementById(personListId);
+  const searchInput = searchInputId ? document.getElementById(searchInputId) : null;
+  if(searchInput) searchInput.addEventListener('input', e=>{
+    const q = e.target.value.toLowerCase();
+    vendorList.querySelectorAll('.ev-vendor-check-row').forEach(row=>{
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
   });
+  if(vendorList) vendorList.addEventListener('change', e=>{
+    if(!e.target.classList.contains('ev-vendor-cb')) return;
+    const checkedVendorIds = Array.from(vendorList.querySelectorAll('.ev-vendor-cb:checked')).map(cb=>cb.value);
+    const stillCheckedPersonIds = personList ? Array.from(personList.querySelectorAll('.ev-person-cb:checked')).map(cb=>cb.value) : [];
+    if(personList) personList.innerHTML = eventPersonCheckListHtml(checkedVendorIds, stillCheckedPersonIds);
+  });
+}
+
+function bindEditEventModal(eid){
+  bindVendorPersonChecklists('evVendorCheckListEdit', 'evPersonCheckListEdit', 'evVendorSearchEdit');
+  document.getElementById('editEventForm').addEventListener('submit', e2=>{
+    e2.preventDefault();
+    const fd = new FormData(e2.target);
+    const idx = state.data.calendar.findIndex(x=>x.id===eid);
+    if(idx!==-1){
+      const vendorIds = Array.from(document.querySelectorAll('#evVendorCheckListEdit .ev-vendor-cb:checked')).map(cb=>cb.value);
+      const attendeePersonIds = Array.from(document.querySelectorAll('#evPersonCheckListEdit .ev-person-cb:checked')).map(cb=>cb.value);
+      state.data.calendar[idx] = {
+        ...state.data.calendar[idx],
+        date: fd.get('date'),
+        type: fd.get('type'),
+        title: fd.get('title'),
+        allDay: document.getElementById('allDayCheckEdit')?.checked||false,
+        startTime: fd.get('startTime')||'',
+        endTime: fd.get('endTime')||'',
+        time: document.getElementById('allDayCheckEdit')?.checked ? '종일' : (fd.get('startTime')||(fd.get('endTime')?fd.get('startTime')+'~'+fd.get('endTime'):'')),
+        vendorIds, vendorId: vendorIds[0]||'',
+        attendeePersonIds, attendeePersonId: attendeePersonIds[0]||'',
+        projectId: fd.get('projectId')||'',
+        location: fd.get('location')||'',
+        attendees: fd.get('attendees')||'',
+        memo: fd.get('memo')||''
+      };
+    }
+    closeModal(); persist(false); render(); showToast('일정이 수정되었습니다.');
+  });
+  const delBtn = document.getElementById('deleteEventBtn');
+  if(delBtn) delBtn.addEventListener('click', ()=>{
+    if(confirm('이 일정을 삭제하시겠습니까?')){
+      state.data.calendar = state.data.calendar.filter(x=>x.id!==eid);
+      closeModal(); persist(false); render(); showToast('일정이 삭제되었습니다.');
+    }
+  });
+}
+
+function bindEventFormSubmit(){
+  bindVendorPersonChecklists('evVendorCheckListNew', 'evPersonCheckListNew', 'evVendorSearchNew');
   document.getElementById('eventForm').addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -5552,10 +5646,14 @@ function bindEventFormSubmit(){
     const startTime = fd.get('startTime')||'';
     const endTime = fd.get('endTime')||'';
     const timeLabel = allDay ? '종일' : startTime ? (endTime ? startTime+'~'+endTime : startTime) : '';
+    const vendorIds = Array.from(document.querySelectorAll('#evVendorCheckListNew .ev-vendor-cb:checked')).map(cb=>cb.value);
+    const attendeePersonIds = Array.from(document.querySelectorAll('#evPersonCheckListNew .ev-person-cb:checked')).map(cb=>cb.value);
     state.data.calendar.push({
       id: uid('ev'), date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
-      time: timeLabel, startTime, endTime, allDay, vendorId: fd.get('vendorId')||'',
-      attendeePersonId: fd.get('attendeePersonId')||'',
+      time: timeLabel, startTime, endTime, allDay,
+      vendorIds, vendorId: vendorIds[0]||'',
+      attendeePersonIds, attendeePersonId: attendeePersonIds[0]||'',
+      projectId: fd.get('projectId')||'',
       location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
     });
     closeModal(); persist(false); showToast('일정이 등록되었습니다.');
@@ -5694,35 +5792,7 @@ document.addEventListener('click', function(e){
     if(!evData) return;
     openModal(modalEditEvent(evData));
     bindModalCommon();
-    const editVendorSelect = document.getElementById('editEventVendorSelect');
-    if(editVendorSelect) editVendorSelect.addEventListener('change', ()=>{
-      const attendeeSelect = document.getElementById('editEventAttendeePersonSelect');
-      if(attendeeSelect) attendeeSelect.innerHTML = personOptionsForVendor(editVendorSelect.value, '');
-    });
-    document.getElementById('editEventForm').addEventListener('submit', e2=>{
-      e2.preventDefault();
-      const fd = new FormData(e2.target);
-      const idx = state.data.calendar.findIndex(x=>x.id===calEventLink.dataset.eid);
-      if(idx!==-1){
-        state.data.calendar[idx] = {
-          ...state.data.calendar[idx],
-          date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
-          allDay: document.getElementById('allDayCheckEdit')?.checked||false,
-          startTime: fd.get('startTime')||'', endTime: fd.get('endTime')||'',
-          time: document.getElementById('allDayCheckEdit')?.checked ? '종일' : (fd.get('startTime')||(fd.get('endTime')?fd.get('startTime')+'~'+fd.get('endTime'):'')),
-          vendorId: fd.get('vendorId')||'', attendeePersonId: fd.get('attendeePersonId')||'',
-          location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
-        };
-      }
-      closeModal(); persist(false); render(); showToast('일정이 수정되었습니다.');
-    });
-    const delBtn = document.getElementById('deleteEventBtn');
-    if(delBtn) delBtn.addEventListener('click', ()=>{
-      if(confirm('이 일정을 삭제하시겠습니까?')){
-        state.data.calendar = state.data.calendar.filter(x=>x.id!==calEventLink.dataset.eid);
-        closeModal(); persist(false); render(); showToast('일정이 삭제되었습니다.');
-      }
-    });
+    bindEditEventModal(calEventLink.dataset.eid);
     return;
   }
 
