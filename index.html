@@ -2403,12 +2403,15 @@ function viewProjects(){
             ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${ddayLabel}</span>`:''}
           </div>
           <div style="font-size:14px;font-weight:600;margin-bottom:4px;line-height:1.4">${p.title}</div>
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">담당: ${p.owner}${p.vendorId?' · '+p.vendorId:''}</div>
-          ${p.checklist.slice(0,3).map(c=>`<div style="display:flex;align-items:flex-start;gap:6px;padding:3px 0;font-size:12px">
-            <input type="checkbox" disabled ${c.done?'checked':''} style="accent-color:var(--o);margin-top:2px;flex-shrink:0"/>
-            <span style="${c.done?'text-decoration:line-through;color:var(--muted)':''}">${c.text}</span>
-          </div>`).join('')}
-          ${p.checklist.length>3?`<div style="font-size:11px;color:var(--muted);margin-top:4px">+${p.checklist.length-3}개 더보기</div>`:''}
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">담당: ${p.owner}</div>
+          ${(() => {
+            const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
+            const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
+            if(linkedVendors.length===0) return `<div style="font-size:12px;color:var(--muted);padding:4px 0">연결된 거래처 없음</div>`;
+            return `<div style="display:flex;flex-wrap:wrap;gap:5px">
+              ${linkedVendors.map(v=>`<span style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--sf);padding:3px 8px 3px 4px;border-radius:20px">${av(v.name,16)} ${v.name}</span>`).join('')}
+            </div>`;
+          })()}
           <div class="pgb" style="margin-top:10px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
           <div style="font-size:10px;color:var(--muted);text-align:right;margin-top:3px">${prog}%</div>
         </div>`;
