@@ -2109,6 +2109,41 @@ function viewVendorDetail(){
       </div>`;
     })()}
 
+    ${(() => {
+      const today = dayjs().format('YYYY-MM-DD');
+      const past = (state.data.calendar||[])
+        .filter(e=>{
+          const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
+          return vids.includes(v.id) && e.date<today;
+        })
+        .sort((a,b)=>b.date.localeCompare(a.date))
+        .slice(0,4);
+      if(past.length===0) return '';
+      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
+          <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
+          <span style="font-size:11px;color:var(--muted)">${past.length}건</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${past.map(e=>{
+            const pids = e.attendeePersonIds && e.attendeePersonIds.length ? e.attendeePersonIds : (e.attendeePersonId ? [e.attendeePersonId] : []);
+            const personNames = pids.map(pid=>(v.people||[]).find(p=>p.id===pid)?.name).filter(Boolean).join(', ');
+            const proj = e.projectId ? state.data.projects.find(p=>p.id===e.projectId) : null;
+            const hasNote = e.meetingNote && e.meetingNote.trim();
+            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+              <span style="font-size:10px;color:var(--muted);flex-shrink:0;width:44px">${fmtDate(e.date)}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?' <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 있음"></i>':''}</div>
+                <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${personNames?personNames+' · ':''}${hasNote?(e.meetingSummary||'회의록 있음'):(e.location||'')}</div>
+              </div>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })()}
+
 
     <!-- ── 사이드바 + 메인 2단 레이아웃 ── -->
     <div style="display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start">
@@ -2555,6 +2590,38 @@ function viewProjectDetail(){
       </div>`;
     })()}
 
+    ${(() => {
+      const today = dayjs().format('YYYY-MM-DD');
+      const past = (state.data.calendar||[])
+        .filter(e=>e.projectId===p.id && e.date<today)
+        .sort((a,b)=>b.date.localeCompare(a.date))
+        .slice(0,4);
+      if(past.length===0) return '';
+      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
+          <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
+          <span style="font-size:11px;color:var(--muted)">${past.length}건</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${past.map(e=>{
+            const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
+            const evVendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
+            const vendorNames = evVendors.map(v=>v.name).join(', ');
+            const hasNote = e.meetingNote && e.meetingNote.trim();
+            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+              <span style="font-size:10px;color:var(--muted);flex-shrink:0;width:44px">${fmtDate(e.date)}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?' <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 있음"></i>':''}</div>
+                <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${vendorNames?vendorNames+' · ':''}${hasNote?(e.meetingSummary||'회의록 있음'):(e.location||'')}</div>
+              </div>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    })()}
+
     <!-- 체크리스트 -->
     <div class="card" style="margin-bottom:14px">
       <div class="sh">
@@ -2625,16 +2692,30 @@ function viewProjectDetail(){
         ${activeSubTab==='log' ? `
           ${activeVendorLogs.length===0
             ? `<div class="empty-state" style="padding:28px">아직 기록이 없습니다. 기록 추가 버튼으로 시작하세요.</div>`
-            : activeVendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
-              <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                  <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
-                  <span class="badge bgr" style="font-size:10px">${l.status}</span>
-                </div>
-                <div style="font-size:13px;font-weight:500;line-height:1.5">${l.summary}</div>
-                ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
-                ${renderLogLinks(l.links)}
-              </div>`).join('')}
+            : (() => {
+                const sorted = activeVendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+                const LOG_PAGE = 5;
+                const showAll = !!state.projLogShowAll;
+                const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
+                const rowsHtml = visible.map(l=>`
+                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                      <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
+                      <span class="badge bgr" style="font-size:10px">${l.status}</span>
+                    </div>
+                    <div style="font-size:13px;font-weight:500;line-height:1.5">${l.summary}</div>
+                    ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
+                    ${renderLogLinks(l.links)}
+                  </div>`).join('');
+                const moreBtn = sorted.length > LOG_PAGE
+                  ? `<div style="text-align:center;padding:10px 16px">
+                      <button class="btn" id="toggleProjLogShowAllBtn" style="font-size:11px;padding:5px 14px">
+                        ${showAll ? `<i class="ti ti-chevron-up"></i> 접기` : `<i class="ti ti-chevron-down"></i> 더보기 (${sorted.length - LOG_PAGE}건 더)`}
+                      </button>
+                    </div>`
+                  : '';
+                return rowsHtml + moreBtn;
+              })()}
         ` : ''}
 
         ${activeSubTab==='meeting' ? `
@@ -4567,6 +4648,7 @@ function bindViewEvents(){
     el.addEventListener('click', ()=>{
       state.activeProjectVendorTab = el.dataset.vid;
       state.activeVendorSubTab = 'log'; // 벤더 탭 바꾸면 서브탭은 기록으로 초기화
+      state.projLogShowAll = false;
       render();
     });
   });
@@ -4577,6 +4659,13 @@ function bindViewEvents(){
       state.activeVendorSubTab = el.dataset.sub;
       render();
     });
+  });
+
+  // 기록 더보기/접기
+  const toggleProjLogShowAllBtn = document.getElementById('toggleProjLogShowAllBtn');
+  if(toggleProjLogShowAllBtn) toggleProjLogShowAllBtn.addEventListener('click', ()=>{
+    state.projLogShowAll = !state.projLogShowAll;
+    render();
   });
 
   // 벤더별 회의록 작성
