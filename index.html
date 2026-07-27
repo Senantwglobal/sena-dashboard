@@ -2762,7 +2762,7 @@ function viewCalendar(){
 
 
 function modalLogForm(preVendorId, preProjectId){
-  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
+  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
   const relProjects = preVendorId ? state.data.projects.filter(p=>{
     const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
     return ids.includes(preVendorId);
@@ -3548,7 +3548,7 @@ function modalProjectForm(project){
 }
 
 function modalEventForm(dateStr){
-  const vendorOptions = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
     <div class="modal">
       <div class="mh"><h3>일정 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
@@ -3728,7 +3728,7 @@ function modalPersonForm(companyId, person){
 }
 
 function modalEditLog(log){
-  const vendorOptions = state.data.vendors.map(v=>
+  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>
     `<option value="${v.id}" ${v.id===log.vendorId?'selected':''}>${v.name}</option>`
   ).join('');
 
