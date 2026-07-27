@@ -5790,10 +5790,11 @@ function modalEventDetail(ev){
   const personGroups = evVendors
     .map(v=>({vendor:v, people: personIds.map(pid=>(v.people||[]).find(x=>x.id===pid)).filter(Boolean)}))
     .filter(g=>g.people.length>0);
+  const personPill = p => `<span style="display:inline-flex;align-items:center;background:var(--ol);color:var(--od);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;margin:2px 4px 2px 0">${p.name}${p.title?` <span style="opacity:.7;font-weight:400;margin-left:3px">(${p.title})</span>`:''}</span>`;
   const personGroupsHtml = personGroups.map(g=>`
-    <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap">
       ${vendorPill(g.vendor)}
-      <span style="font-size:13px;color:var(--text);line-height:1.7;padding-top:3px">${g.people.map(p=>p.name+(p.title?' ('+p.title+')':'')).join(', ')}</span>
+      <div style="display:flex;flex-wrap:wrap">${g.people.map(personPill).join('')}</div>
     </div>`).join('');
 
   const row = (icon, label, value) => value ? `
