@@ -41,6 +41,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
 .kpi{background:var(--card);border-radius:12px;border:0.5px solid var(--bd);padding:14px;text-align:center}
@@ -1512,7 +1513,7 @@ function viewHome(){
     </div>` : ''}
 
     <div class="two">
-      <div>
+      <div class="dash-left-col" style="display:flex;flex-direction:column">
         <div class="card">
           <div class="sh">
             <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
