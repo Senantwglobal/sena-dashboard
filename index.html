@@ -1514,6 +1514,20 @@ function viewHome(){
 
     <div class="two">
       <div class="dash-left-col" style="display:flex;flex-direction:column">
+        <div class="card" style="margin-bottom:14px;border-left:3px solid var(--o)">
+          <div class="sh"><div class="st"><i class="ti ti-calendar-event oi"></i>오늘 일정 (${dayjs().format('M월 D일 (ddd)')})</div></div>
+          ${todayEvs.length===0
+            ? `<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">오늘 일정이 없습니다.</div>`
+            : todayEvs.map(e=>{
+                const c=eventColor(e.type);
+                const isEditable = state.data.calendar.some(x=>x.id===e.id);
+                return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
+                  <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+                  <span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span>
+                </div>`;
+              }).join('')}
+        </div>
+
         <div class="card">
           <div class="sh">
             <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
@@ -1622,10 +1636,6 @@ function viewHome(){
           </div>`).join('')}
         </div>` : ''}
 
-        ${todayEvs.length>0 ? `<div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-calendar-event oi"></i>오늘 일정</div></div>
-          ${todayEvs.map(e=>{const c=eventColor(e.type);return `<div class="dash-row"><span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span><span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span></div>`;}).join('')}
-        </div>` : ''}
       </div>
 
       <div>
