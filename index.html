@@ -1492,6 +1492,11 @@ function viewHome(){
   const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
 
   return `
+    ${!isReadOnly()?`<div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-o" id="quickAddLogBtn" style="font-size:13px;padding:8px 16px">
+        <i class="ti ti-plus"></i> 빠른 로그 추가
+      </button>
+    </div>`:''}
     <div class="krow">
       <div class="kpi"><div class="kn" style="color:var(--o)">${inProgProjects}</div><div class="kl">진행중인 프로젝트</div></div>
       <div class="kpi"><div class="kn" style="${undoneItems>0?'color:#A32D2D':''}">${undoneItems}</div><div class="kl">미완료 항목</div></div>
@@ -1583,50 +1588,6 @@ function viewHome(){
             <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
           </div>`:''}
         </div>` : ''}
-
-        ${(() => {
-          const months = [];
-          for(let i=5;i>=0;i--) months.push(dayjs().subtract(i,'month').format('YYYY-MM'));
-          const data = months.map(m=>({
-            month: m,
-            events: state.data.calendar.filter(e=>e.date && e.date.startsWith(m) && !e.isHoliday).length,
-            leaves: (state.data.leave?.logs||[]).filter(l=>l.date && l.date.startsWith(m)).length,
-            logs: state.data.vendorLogs.filter(l=>l.date && l.date.startsWith(m)).length,
-          }));
-          const maxVal = Math.max(1, ...data.flatMap(d=>[d.events,d.leaves,d.logs]));
-          const CH = 56; // 차트 영역 높이(px)
-          const GW = 46; // 월 그룹 너비
-          const BW = 9;  // 막대 너비
-          const series = [
-            {key:'events', color:'#2554C7', label:'일정'},
-            {key:'leaves', color:'#059669', label:'연차'},
-            {key:'logs', color:'#D97706', label:'로그'},
-          ];
-          const svgW = GW * data.length;
-          const bars = data.map((d,i)=>{
-            const gx = i*GW;
-            return series.map((s,si)=>{
-              const val = d[s.key];
-              const h = maxVal>0 ? Math.max(val>0?3:0, (val/maxVal)*CH) : 0;
-              const x = gx + 6 + si*(BW+2);
-              const y = CH - h;
-              return `<rect x="${x}" y="${y}" width="${BW}" height="${h}" rx="2" fill="${s.color}">
-                <title>${s.label} ${val}건 (${d.month})</title>
-              </rect>`;
-            }).join('');
-          }).join('');
-          const labels = data.map((d,i)=>`<text x="${i*GW+GW/2}" y="${CH+14}" font-size="9" fill="var(--muted)" text-anchor="middle">${parseInt(d.month.split('-')[1])}월</text>`).join('');
-          return `<div class="card">
-            <div class="sh"><div class="st"><i class="ti ti-chart-bar oi"></i>월별 활동 추이</div></div>
-            <div style="display:flex;gap:12px;margin-bottom:8px;padding-left:2px">
-              ${series.map(s=>`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><span style="width:7px;height:7px;border-radius:2px;background:${s.color};display:inline-block"></span>${s.label}</span>`).join('')}
-            </div>
-            <svg viewBox="0 0 ${svgW} ${CH+20}" style="width:100%;height:${CH+20}px;overflow:visible">
-              ${bars}
-              ${labels}
-            </svg>
-          </div>`;
-        })()}
 
         ${deadlines.length>0 ? `<div class="card">
           <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>마감 임박 프로젝트</div></div>
@@ -3062,32 +3023,12 @@ function viewCalendar(){
 
 
 function modalLogForm(preVendorId, preProjectId){
-  const vendorOptions = state.data.vendors.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}" ${v.id===preVendorId?'selected':''}>${v.name}</option>`).join('');
-  const relProjects = preVendorId ? state.data.projects.filter(p=>{
+  const preVendorIds = preVendorId ? [preVendorId] : [];
+  const relProjects = preVendorIds.length ? state.data.projects.filter(p=>{
     const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
-    return ids.includes(preVendorId);
+    return ids.some(id=>preVendorIds.includes(id));
   }) : [];
   const projOptions = relProjects.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
-
-  // 현재 선택된 벤더의 브랜드 목록 (멀티선택용)
-  const preBrands = preVendorId ? (state.data.vendors.find(v=>v.id===preVendorId)?.brands||[]) : [];
-  const preActiveBrand = state.activeBrandId;
-  const brandCheckboxes = preBrands.length > 0
-    ? `<div class="field" id="lmBrandSection">
-        <label class="field-label" style="display:flex;align-items:center;gap:6px">
-          <i class="ti ti-brand-abstract" style="font-size:13px;color:var(--o)"></i>
-          관련 브랜드 <span style="font-size:11px;color:var(--muted);font-weight:400">(복수 선택 가능)</span>
-        </label>
-        <div id="lmBrandCheckboxes" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:var(--sf);border-radius:8px">
-          ${preBrands.map(b=>`
-            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid var(--bd);font-size:12px">
-              <input type="checkbox" name="brandIds" value="${b.id}" ${b.id===preActiveBrand?'checked':''} style="accent-color:var(--o);width:13px;height:13px"/>
-              ${b.logoUrl?`<img src="${b.logoUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover"/>`:''}
-              ${b.name}
-            </label>`).join('')}
-        </div>
-      </div>`
-    : `<div id="lmBrandSection" style="display:none"></div>`;
 
   return `
     <div class="modal" style="width:600px">
@@ -3097,15 +3038,23 @@ function modalLogForm(preVendorId, preProjectId){
       </div>
       <div class="mb" style="max-height:70vh;overflow-y:auto">
         <form id="logModalForm">
-          <div class="two">
-            <div class="field"><label class="field-label">날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" class="inp" required/></div>
-            <div class="field"><label class="field-label">거래처</label>
-              <select name="vendorId" id="lmVendorSel" class="inp" required>
-                <option value="">선택하세요</option>${vendorOptions}
-              </select>
+          <div class="field"><label class="field-label">날짜</label><input type="date" name="date" value="${dayjs().format('YYYY-MM-DD')}" class="inp" required/></div>
+
+          <div class="field">
+            <label class="field-label">거래처 (복수 선택 가능) <span style="color:#DC2626">*</span></label>
+            <div class="search-wrap" style="margin-bottom:6px"><i class="ti ti-search"></i><input class="inp" id="lmVendorSearch" placeholder="거래처 검색..." style="margin:0"/></div>
+            <div id="lmVendorCheckList" style="max-height:140px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventVendorCheckListHtml(preVendorIds)}
             </div>
           </div>
-          ${brandCheckboxes}
+
+          <div class="field">
+            <label class="field-label">담당자 (선택한 거래처의 등록 담당자 중 복수 선택)</label>
+            <div id="lmPersonCheckList" style="max-height:120px;overflow-y:auto;border:0.5px solid var(--bd);border-radius:8px;padding:4px">
+              ${eventPersonCheckListHtml(preVendorIds, [])}
+            </div>
+          </div>
+
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
               <i class="ti ti-clipboard-list" style="font-size:13px;color:var(--o)"></i>
@@ -3196,38 +3145,25 @@ function modalLogForm(preVendorId, preProjectId){
 function bindLogModal(preVendorId, preProjectId){
   bindModalCommon();
 
-  // 거래처 변경 → 프로젝트 드롭다운 동적 업데이트
-  const vendorSel = document.getElementById('lmVendorSel');
+  const vendorList = document.getElementById('lmVendorCheckList');
   const projSel = document.getElementById('lmProjSel');
-  function updateProjects(vid){
+
+  function updateProjectsForCheckedVendors(){
     if(!projSel) return;
+    const checkedVids = Array.from(document.querySelectorAll('#lmVendorCheckList .ev-vendor-cb:checked')).map(cb=>cb.value);
     const rel = state.data.projects.filter(p=>{
       const ids = p.vendorIds||(p.vendorId?[p.vendorId]:[]);
-      return vid && ids.includes(vid);
+      return ids.some(id=>checkedVids.includes(id));
     });
+    const curVal = projSel.value;
     projSel.innerHTML = `<option value="">없음</option>`
-      + rel.map(p=>`<option value="${p.id}" ${p.id===preProjectId?'selected':''}>${p.title}</option>`).join('');
-    // 브랜드 체크박스 동적 업데이트
-    const brandSection = document.getElementById('lmBrandSection');
-    const brandCheckboxes = document.getElementById('lmBrandCheckboxes');
-    if(!brandSection) return;
-    const vendor = vid ? state.data.vendors.find(v=>v.id===vid) : null;
-    const brands = vendor?.brands || [];
-    if(brands.length === 0){
-      brandSection.style.display = 'none';
-      return;
-    }
-    brandSection.style.display = 'block';
-    if(brandCheckboxes){
-      brandCheckboxes.innerHTML = brands.map(b=>`
-        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 8px;border-radius:6px;background:#fff;border:1px solid var(--bd);font-size:12px">
-          <input type="checkbox" name="brandIds" value="${b.id}" ${b.id===state.activeBrandId?'checked':''} style="accent-color:var(--o);width:13px;height:13px"/>
-          ${b.logoUrl?`<img src="${b.logoUrl}" style="width:16px;height:16px;border-radius:50%;object-fit:cover"/>`:''}
-          ${b.name}
-        </label>`).join('');
-    }
+      + rel.map(p=>`<option value="${p.id}" ${p.id===(curVal||preProjectId)?'selected':''}>${p.title}</option>`).join('');
   }
-  if(vendorSel) vendorSel.addEventListener('change', ()=>updateProjects(vendorSel.value));
+
+  bindVendorPersonChecklists('lmVendorCheckList', 'lmPersonCheckList', 'lmVendorSearch');
+  if(vendorList) vendorList.addEventListener('change', e=>{
+    if(e.target.classList.contains('ev-vendor-cb')) updateProjectsForCheckedVendors();
+  });
 
   // AI 요약
   const aiBtn = document.getElementById('lmAiBtn');
@@ -3338,12 +3274,14 @@ function bindLogModal(preVendorId, preProjectId){
   if(form) form.addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(form);
-    const vendorId = fd.get('vendorId');
+    const checkedVendorIds = Array.from(document.querySelectorAll('#lmVendorCheckList .ev-vendor-cb:checked')).map(cb=>cb.value);
+    if(checkedVendorIds.length===0){ showToast('거래처를 최소 1곳 선택해주세요.'); return; }
+    const checkedPersonIds = Array.from(document.querySelectorAll('#lmPersonCheckList .ev-person-cb:checked')).map(cb=>cb.value);
     const linkedProjectId = fd.get('linkedProjectId')||'';
     const nextStep = fd.get('nextStep')||'';
     const needsApproval = fd.get('needsApproval')==='on';
 
-    // 링크+파일 수집
+    // 링크+파일 수집 (모든 선택 거래처 로그에 공통 반영)
     const links = [];
     document.querySelectorAll('#lmLinkList .link-row').forEach(row=>{
       const label = row.querySelector('.link-label')?.value?.trim();
@@ -3351,61 +3289,60 @@ function bindLogModal(preVendorId, preProjectId){
       const data  = row.querySelector('.link-data')?.value?.trim();
       const type  = row.querySelector('.link-type')?.value?.trim();
       if(data){
-        // 직접 업로드 파일
         links.push({label: label||'파일', url:'', data, type});
       } else if(url){
-        // URL 링크
         links.push({label: label||url, url});
       }
     });
 
-    // 선택된 브랜드 ID 수집 (복수)
-    const checkedBrands = Array.from(document.querySelectorAll('#lmBrandCheckboxes input[name="brandIds"]:checked')).map(cb=>cb.value);
-
-    const newLog = {
-      id: uid('vl'), vendorId, date: fd.get('date'),
-      type: fd.get('type'), status: fd.get('status'), priority: fd.get('priority'),
-      summary: fd.get('summary'), nextStep,
-      nextStepDue: fd.get('nextStepDue')||'',
-      rawText: fd.get('rawText')||'',
-      needsApproval, nextStepDone: false,
-      links, linkedProjectId,
-      brandId: checkedBrands.length === 1 ? checkedBrands[0] : '',  // 단일 선택 호환
-      brandIds: checkedBrands  // 복수 선택
-    };
-
-    state.data.vendorLogs.push(newLog);
-    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
-
-    // 다음액션 → 벤더 체크리스트 자동 생성
-    if(nextStep && vendorId){
+    const createdLogs = [];
+    checkedVendorIds.forEach(vendorId=>{
       const vendor = state.data.vendors.find(v=>v.id===vendorId);
-      if(vendor){
+      // 이 거래처에 소속된 담당자만 필터링
+      const contactPersonIds = checkedPersonIds.filter(pid => (vendor?.people||[]).some(p=>p.id===pid));
+
+      const newLog = {
+        id: uid('vl'), vendorId, date: fd.get('date'),
+        type: fd.get('type'), status: fd.get('status'), priority: fd.get('priority'),
+        summary: fd.get('summary'), nextStep,
+        nextStepDue: fd.get('nextStepDue')||'',
+        rawText: fd.get('rawText')||'',
+        needsApproval, nextStepDone: false,
+        links, linkedProjectId,
+        contactPersonIds
+      };
+      createdLogs.push(newLog);
+      state.data.vendorLogs.push(newLog);
+
+      // 다음액션 → 벤더 체크리스트 자동 생성
+      if(nextStep && vendor){
         if(!vendor.checklist) vendor.checklist = [];
         vendor.checklist.push({id:uid('ck'), text:nextStep, done:false, fromLog:newLog.id});
       }
-    }
 
-    // 대표님 승인
-    if(needsApproval){
-      if(!state.data.approvalItems) state.data.approvalItems = [];
-      state.data.approvalItems.push({id:uid('ap'), vendorId, content: fd.get('summary'), date: fd.get('date'), approved:false});
-    }
-
-    // 연결 프로젝트에 자동 반영
-    if(linkedProjectId){
-      const proj = state.data.projects.find(p=>p.id===linkedProjectId);
-      if(proj){
-        if(!proj.vendorLogs) proj.vendorLogs = {};
-        if(!proj.vendorLogs[vendorId]) proj.vendorLogs[vendorId] = [];
-        proj.vendorLogs[vendorId].unshift(newLog);
+      // 대표님 승인
+      if(needsApproval){
+        if(!state.data.approvalItems) state.data.approvalItems = [];
+        state.data.approvalItems.push({id:uid('ap'), vendorId, content: fd.get('summary'), date: fd.get('date'), approved:false});
       }
-    }
+
+      // 연결 프로젝트에 자동 반영
+      if(linkedProjectId){
+        const proj = state.data.projects.find(p=>p.id===linkedProjectId);
+        if(proj){
+          if(!proj.vendorLogs) proj.vendorLogs = {};
+          if(!proj.vendorLogs[vendorId]) proj.vendorLogs[vendorId] = [];
+          proj.vendorLogs[vendorId].unshift(newLog);
+        }
+      }
+    });
+
+    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
 
     closeModal();
     persist(false);
     render();
-    showToast('로그가 저장되었습니다.');
+    showToast(checkedVendorIds.length>1 ? `거래처 ${checkedVendorIds.length}곳에 로그가 저장되었습니다.` : '로그가 저장되었습니다.');
   });
 }
 
@@ -4631,6 +4568,12 @@ function bindViewEvents(){
   if(addVendorLogBtn) addVendorLogBtn.addEventListener('click', ()=>{
     openModal(modalLogForm(state.selectedVendorId, null));
     bindLogModal(state.selectedVendorId, null);
+  });
+
+  const quickAddLogBtn = document.getElementById('quickAddLogBtn');
+  if(quickAddLogBtn) quickAddLogBtn.addEventListener('click', ()=>{
+    openModal(modalLogForm(null, null));
+    bindLogModal(null, null);
   });
 
   // 로그 상세 (원본 보기)
