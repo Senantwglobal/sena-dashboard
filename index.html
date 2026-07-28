@@ -1156,8 +1156,8 @@ const state = {
   dashProjCategoryFilter: '전체',
   activeBrandId: null,
   vendorLogExpanded: false,
-  leaveMonthFilter: 'all',
-  leaveAsOfDate: dayjs().format('YYYY-MM-DD'),
+  leaveYearFilter: 'all',
+  leaveRecordPage: 0,
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
@@ -3439,9 +3439,7 @@ function calcLeave(asOfDateStr){
 
 function viewLeave(){
   const l = state.data.leave;
-  const asOfDate = state.leaveAsOfDate || dayjs().format('YYYY-MM-DD');
-  const isToday = asOfDate === dayjs().format('YYYY-MM-DD');
-  const { totalGranted, compTotal, used, remaining, grantDetails, yearsWorked, monthsWorked } = calcLeave(asOfDate);
+  const { totalGranted, compTotal, used, remaining, grantDetails, yearsWorked, monthsWorked } = calcLeave();
   const allLogs = [
     ...(l.logs||[]).map(r=>({...r, category:'사용'})),
     ...(l.compLogs||[]).map(r=>({...r, category:'보상발생', type:'휴일근무'}))
@@ -3455,13 +3453,6 @@ function viewLeave(){
         ${!isReadOnly()?`<button class="btn" id="addCompLeaveBtn"><i class="ti ti-sun"></i> 휴일근무 등록</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-o" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>`:''}
       </div>
-    </div>
-
-    <div style="display:flex;align-items:center;gap:8px;background:var(--sf);border-radius:8px;padding:10px 14px;margin-bottom:14px">
-      <i class="ti ti-calendar-search" style="font-size:14px;color:var(--o)"></i>
-      <span style="font-size:12px;color:var(--muted)">기준일 선택 — 이 날짜 기준으로 발생/사용/잔여 연차를 계산합니다</span>
-      <input type="date" id="leaveAsOfDateInput" class="inp" value="${asOfDate}" style="margin:0;width:auto;font-size:12px;padding:4px 8px"/>
-      ${!isToday?`<button class="btn" id="leaveAsOfResetBtn" style="font-size:11px;padding:4px 10px">오늘로 초기화</button><span style="font-size:11px;color:var(--o);font-weight:500">${fmtDate(asOfDate)} 기준</span>`:''}
     </div>
 
     ${l.joinDate ? `
@@ -3503,21 +3494,33 @@ function viewLeave(){
         <div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:0.5px solid var(--bd)">사용 기록</div>
         ${(() => {
           const allSorted = (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
-          const months = [...new Set(allSorted.map(r=>dayjs(r.date).format('YYYY-MM')))]; // 최신순 (allSorted가 이미 최신순이라 순서 유지됨)
-          const activeMonth = state.leaveMonthFilter || 'all';
-          const monthTabs = `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:0.5px solid var(--bd)">
-            <button class="btn leave-month-tab ${activeMonth==='all'?'btn-o':''}" data-month="all" style="font-size:11px;padding:4px 10px">전체</button>
-            ${months.map(m=>`<button class="btn leave-month-tab ${activeMonth===m?'btn-o':''}" data-month="${m}" style="font-size:11px;padding:4px 10px">${dayjs(m+'-01').format('YYYY년 M월')}</button>`).join('')}
+          const years = [...new Set(allSorted.map(r=>dayjs(r.date).format('YYYY')))]; // 최신순 유지
+          const activeYear = state.leaveYearFilter || 'all';
+          const yearTabs = `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:0.5px solid var(--bd)">
+            <button class="btn leave-year-tab ${activeYear==='all'?'btn-o':''}" data-year="all" style="font-size:11px;padding:4px 10px">전체</button>
+            ${years.map(y=>`<button class="btn leave-year-tab ${activeYear===y?'btn-o':''}" data-year="${y}" style="font-size:11px;padding:4px 10px">${y}년</button>`).join('')}
           </div>`;
-          const filtered = activeMonth==='all' ? allSorted : allSorted.filter(r=>dayjs(r.date).format('YYYY-MM')===activeMonth);
+          const filtered = activeYear==='all' ? allSorted : allSorted.filter(r=>dayjs(r.date).format('YYYY')===activeYear);
           const filteredTotal = filtered.reduce((s,r)=>s+r.amount,0);
-          return monthTabs + `
-          <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeMonth==='all'?'전체 기간':dayjs(activeMonth+'-01').format('YYYY년 M월')} · 합계 <span style="color:var(--o);font-weight:600">${filteredTotal}일</span> (${filtered.length}건)</div>
+
+          const LV_PER_PAGE = 5;
+          const lvPage = state.leaveRecordPage || 0;
+          const lvTotalPages = Math.ceil(filtered.length / LV_PER_PAGE);
+          const pageItems = filtered.slice(lvPage*LV_PER_PAGE, lvPage*LV_PER_PAGE+LV_PER_PAGE);
+
+          const pager = lvTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding:10px 14px">
+            <button class="btn leave-record-page-btn" data-page="${Math.max(0,lvPage-1)}" style="padding:3px 8px;font-size:11px" ${lvPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            ${Array.from({length:lvTotalPages}).map((_,i)=>`<button class="btn leave-record-page-btn ${i===lvPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+            <button class="btn leave-record-page-btn" data-page="${Math.min(lvTotalPages-1,lvPage+1)}" style="padding:3px 8px;font-size:11px" ${lvPage>=lvTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>` : '';
+
+          return yearTabs + `
+          <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeYear==='all'?'전체 기간':activeYear+'년'} · 합계 <span style="color:var(--o);font-weight:600">${filteredTotal}일</span> (${filtered.length}건)</div>
           <table class="tbl">
             <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
             <tbody>
-            ${filtered.length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
-              filtered.map(r=>`
+            ${pageItems.length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
+              pageItems.map(r=>`
               <tr>
                 <td>${fmtDateDow(r.date)}</td>
                 <td><span class="badge ${r.type==='연차'?'bo':'bgr'}">${r.type}</span></td>
@@ -3529,7 +3532,8 @@ function viewLeave(){
                 </td>`:'<td></td>'}
               </tr>`).join('')}
             </tbody>
-          </table>`;
+          </table>
+          ${pager}`;
         })()}
       </div>
 
@@ -5640,17 +5644,6 @@ function bindViewEvents(){
 
   // 연차
   // 입사일 등록
-  const leaveAsOfDateInput = document.getElementById('leaveAsOfDateInput');
-  if(leaveAsOfDateInput) leaveAsOfDateInput.addEventListener('change', e=>{
-    state.leaveAsOfDate = e.target.value || dayjs().format('YYYY-MM-DD');
-    render();
-  });
-  const leaveAsOfResetBtn = document.getElementById('leaveAsOfResetBtn');
-  if(leaveAsOfResetBtn) leaveAsOfResetBtn.addEventListener('click', ()=>{
-    state.leaveAsOfDate = dayjs().format('YYYY-MM-DD');
-    render();
-  });
-
   const setJoinDateBtn = document.getElementById('setJoinDateBtn');
   if(setJoinDateBtn) setJoinDateBtn.addEventListener('click', ()=>{
     openModal(`
@@ -5778,10 +5771,19 @@ function bindViewEvents(){
     });
   });
 
-  // 연차 사용 기록 월별 탭
-  document.querySelectorAll('.leave-month-tab').forEach(btn=>{
+  // 연차 사용 기록 연도별 탭
+  document.querySelectorAll('.leave-year-tab').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      state.leaveMonthFilter = btn.dataset.month;
+      state.leaveYearFilter = btn.dataset.year;
+      state.leaveRecordPage = 0;
+      render();
+    });
+  });
+
+  // 연차 사용 기록 페이지네이션
+  document.querySelectorAll('.leave-record-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.leaveRecordPage = parseInt(btn.dataset.page);
       render();
     });
   });
