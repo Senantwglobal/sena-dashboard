@@ -5733,6 +5733,129 @@ function bindViewEvents(){
       closeModal(); persist(false); showToast(`${fd.get('type')} ${amount}일 등록되었습니다.`);
     });
   });
+
+  // 연차 사용 기록 수정
+  document.querySelectorAll('.leave-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = (state.data.leave.logs||[]).find(x=>x.id===btn.dataset.lid);
+      if(!r) return;
+      openModal(`
+        <div class="modal">
+          <div class="mh"><h3>연차 사용 기록 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+          <div class="mb">
+            <form id="editLeaveForm">
+              <div class="two">
+                <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${r.date}" required/></div>
+                <div class="field">
+                  <label class="field-label">구분</label>
+                  <select class="inp" name="type" id="editLeaveTypeSelect">
+                    <option value="연차" data-amount="1" ${r.type==='연차'?'selected':''}>연차 (1일)</option>
+                    <option value="반차" data-amount="0.5" ${r.type==='반차'?'selected':''}>반차 (0.5일)</option>
+                    <option value="반반차" data-amount="0.25" ${r.type==='반반차'?'selected':''}>반반차 (0.25일)</option>
+                    <option value="대체휴무" data-amount="1" ${r.type==='대체휴무'?'selected':''}>대체휴무 (1일)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="two">
+                <div class="field"><label class="field-label">사용량</label><input class="inp" type="number" step="0.25" name="amount" id="editLeaveAmountInput" value="${r.amount}" required/></div>
+                <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${(r.memo||'').replace(/"/g,'&quot;')}" placeholder="예: 오후 반차"/></div>
+              </div>
+            </form>
+          </div>
+          <div class="mf">
+            <button type="button" class="btn btn-red" id="editLeaveDeleteBtn">삭제</button>
+            <button type="submit" form="editLeaveForm" class="btn btn-o">저장</button>
+          </div>
+        </div>
+      `);
+      bindModalCommon();
+      document.getElementById('editLeaveTypeSelect').addEventListener('change', e=>{
+        document.getElementById('editLeaveAmountInput').value = e.target.selectedOptions[0].dataset.amount || 1;
+      });
+      document.getElementById('editLeaveDeleteBtn').addEventListener('click', ()=>{
+        if(!confirm('이 기록을 삭제하시겠습니까?')) return;
+        state.data.leave.logs = state.data.leave.logs.filter(x=>x.id!==r.id);
+        closeModal(); persist(false); render(); showToast('삭제되었습니다.');
+      });
+      document.getElementById('editLeaveForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const idx = state.data.leave.logs.findIndex(x=>x.id===r.id);
+        if(idx!==-1){
+          state.data.leave.logs[idx] = {...r, date:fd.get('date'), type:fd.get('type'), amount:parseFloat(fd.get('amount')), memo:fd.get('memo')||''};
+        }
+        closeModal(); persist(false); render(); showToast('수정되었습니다.');
+      });
+    });
+  });
+
+  // 연차 사용 기록 삭제 (바로 삭제)
+  document.querySelectorAll('.leave-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('이 기록을 삭제하시겠습니까?')) return;
+      state.data.leave.logs = (state.data.leave.logs||[]).filter(x=>x.id!==btn.dataset.lid);
+      persist(false); render(); showToast('삭제되었습니다.');
+    });
+  });
+
+  // 휴일근무 보상 기록 수정
+  document.querySelectorAll('.comp-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const r = (state.data.leave.compLogs||[]).find(x=>x.id===btn.dataset.lid);
+      if(!r) return;
+      openModal(`
+        <div class="modal">
+          <div class="mh"><h3>휴일근무 보상 기록 수정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+          <div class="mb">
+            <form id="editCompForm">
+              <div class="two">
+                <div class="field"><label class="field-label">근무일</label><input class="inp" type="date" name="date" value="${r.date}" required/></div>
+                <div class="field"><label class="field-label">근무 시간</label><input class="inp" type="number" name="hours" min="1" max="12" step="0.5" value="${r.hours}" required/></div>
+              </div>
+              <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${(r.memo||'').replace(/"/g,'&quot;')}" placeholder="예: 창고 이전 작업"/></div>
+              <div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">
+                <i class="ti ti-info-circle" style="font-size:13px;color:var(--o)"></i>
+                4시간 미만 = 0.25일 / 4시간 = 0.5일 / 8시간 = 1일 기준으로 자동 환산됩니다.
+              </div>
+            </form>
+          </div>
+          <div class="mf">
+            <button type="button" class="btn btn-red" id="editCompDeleteBtn">삭제</button>
+            <button type="submit" form="editCompForm" class="btn btn-o">저장</button>
+          </div>
+        </div>
+      `);
+      bindModalCommon();
+      document.getElementById('editCompDeleteBtn').addEventListener('click', ()=>{
+        if(!confirm('이 기록을 삭제하시겠습니까?')) return;
+        state.data.leave.compLogs = state.data.leave.compLogs.filter(x=>x.id!==r.id);
+        closeModal(); persist(false); render(); showToast('삭제되었습니다.');
+      });
+      document.getElementById('editCompForm').addEventListener('submit', e=>{
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const hours = parseFloat(fd.get('hours'));
+        let amount = 0;
+        if(hours >= 8) amount = 1;
+        else if(hours >= 4) amount = 0.5;
+        else amount = 0.25;
+        const idx = state.data.leave.compLogs.findIndex(x=>x.id===r.id);
+        if(idx!==-1){
+          state.data.leave.compLogs[idx] = {...r, date:fd.get('date'), hours, amount, memo:fd.get('memo')||''};
+        }
+        closeModal(); persist(false); render(); showToast('수정되었습니다.');
+      });
+    });
+  });
+
+  // 휴일근무 보상 기록 삭제
+  document.querySelectorAll('.comp-del-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(!confirm('이 기록을 삭제하시겠습니까?')) return;
+      state.data.leave.compLogs = (state.data.leave.compLogs||[]).filter(x=>x.id!==btn.dataset.lid);
+      persist(false); render(); showToast('삭제되었습니다.');
+    });
+  });
 }
 
 function bindCategorySelect(){
