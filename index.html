@@ -1157,6 +1157,7 @@ const state = {
   activeBrandId: null,
   vendorLogExpanded: false,
   leaveMonthFilter: 'all',
+  leaveAsOfDate: dayjs().format('YYYY-MM-DD'),
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
@@ -3387,16 +3388,17 @@ function bindLogModal(preVendorId, preProjectId){
 
 
 /* ---------- 연차 계산 로직 ---------- */
-function calcLeave(){
+function calcLeave(asOfDateStr){
   const l = state.data.leave;
   let totalGranted = 0;
   let grantDetails = [];
   let yearsWorked = 0;
   let monthsWorked = 0;
+  const asOf = asOfDateStr ? new Date(asOfDateStr + 'T00:00:00') : new Date();
 
   if(l.joinDate){
     const join = new Date(l.joinDate + 'T00:00:00');
-    const now = new Date();
+    const now = asOf;
 
     // 정확한 연/월 계산
     yearsWorked = now.getFullYear() - join.getFullYear();
@@ -3410,6 +3412,7 @@ function calcLeave(){
     monthsWorked = (now.getFullYear() - join.getFullYear()) * 12 + (now.getMonth() - join.getMonth());
     if(dayDiff < 0) monthsWorked--;
     monthsWorked = Math.max(0, monthsWorked);
+    yearsWorked = Math.max(0, yearsWorked);
 
     if(yearsWorked < 1){
       // 1년 미만: 완성된 개월수만큼 발생 (최대 11개)
@@ -3426,8 +3429,9 @@ function calcLeave(){
     }
   }
 
-  const compTotal = (l.compLogs||[]).reduce((sum,c)=>sum+c.amount, 0);
-  const used = (l.logs||[]).reduce((sum,r)=>sum+r.amount, 0);
+  const asOfStr = dayjs(asOf).format('YYYY-MM-DD');
+  const compTotal = (l.compLogs||[]).filter(c=>c.date<=asOfStr).reduce((sum,c)=>sum+c.amount, 0);
+  const used = (l.logs||[]).filter(r=>r.date<=asOfStr).reduce((sum,r)=>sum+r.amount, 0);
   const remaining = Math.round((totalGranted + compTotal - used) * 100) / 100;
 
   return { totalGranted, compTotal, used, remaining, grantDetails, yearsWorked, monthsWorked };
@@ -3435,7 +3439,9 @@ function calcLeave(){
 
 function viewLeave(){
   const l = state.data.leave;
-  const { totalGranted, compTotal, used, remaining, grantDetails, yearsWorked, monthsWorked } = calcLeave();
+  const asOfDate = state.leaveAsOfDate || dayjs().format('YYYY-MM-DD');
+  const isToday = asOfDate === dayjs().format('YYYY-MM-DD');
+  const { totalGranted, compTotal, used, remaining, grantDetails, yearsWorked, monthsWorked } = calcLeave(asOfDate);
   const allLogs = [
     ...(l.logs||[]).map(r=>({...r, category:'사용'})),
     ...(l.compLogs||[]).map(r=>({...r, category:'보상발생', type:'휴일근무'}))
@@ -3449,6 +3455,13 @@ function viewLeave(){
         ${!isReadOnly()?`<button class="btn" id="addCompLeaveBtn"><i class="ti ti-sun"></i> 휴일근무 등록</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-o" id="addLeaveBtn"><i class="ti ti-plus"></i> 사용 기록 추가</button>`:''}
       </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;background:var(--sf);border-radius:8px;padding:10px 14px;margin-bottom:14px">
+      <i class="ti ti-calendar-search" style="font-size:14px;color:var(--o)"></i>
+      <span style="font-size:12px;color:var(--muted)">기준일 선택 — 이 날짜 기준으로 발생/사용/잔여 연차를 계산합니다</span>
+      <input type="date" id="leaveAsOfDateInput" class="inp" value="${asOfDate}" style="margin:0;width:auto;font-size:12px;padding:4px 8px"/>
+      ${!isToday?`<button class="btn" id="leaveAsOfResetBtn" style="font-size:11px;padding:4px 10px">오늘로 초기화</button><span style="font-size:11px;color:var(--o);font-weight:500">${fmtDate(asOfDate)} 기준</span>`:''}
     </div>
 
     ${l.joinDate ? `
@@ -5627,6 +5640,17 @@ function bindViewEvents(){
 
   // 연차
   // 입사일 등록
+  const leaveAsOfDateInput = document.getElementById('leaveAsOfDateInput');
+  if(leaveAsOfDateInput) leaveAsOfDateInput.addEventListener('change', e=>{
+    state.leaveAsOfDate = e.target.value || dayjs().format('YYYY-MM-DD');
+    render();
+  });
+  const leaveAsOfResetBtn = document.getElementById('leaveAsOfResetBtn');
+  if(leaveAsOfResetBtn) leaveAsOfResetBtn.addEventListener('click', ()=>{
+    state.leaveAsOfDate = dayjs().format('YYYY-MM-DD');
+    render();
+  });
+
   const setJoinDateBtn = document.getElementById('setJoinDateBtn');
   if(setJoinDateBtn) setJoinDateBtn.addEventListener('click', ()=>{
     openModal(`
