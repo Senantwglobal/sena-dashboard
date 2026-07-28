@@ -1496,15 +1496,19 @@ function viewHome(){
   const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
 
   return `
-    <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:16px">
-      <div class="krow" style="flex:1">
+    <div style="margin-bottom:16px">
+      ${!isReadOnly()?`<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button class="btn btn-o" id="quickAddLogBtn" style="font-size:13px;padding:7px 14px">
+          <i class="ti ti-plus"></i> 빠른 로그 추가
+        </button>
+      </div>`:''}
+      <div class="krow">
         <div class="kpi" style="--ac:#2554C7"><div class="ki"><i class="ti ti-briefcase"></i></div><div class="kn" style="color:#2554C7">${inProgProjects}</div><div class="kl">진행중인 프로젝트</div></div>
         <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div class="ki"><i class="ti ti-list-check"></i></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div><div class="kl">미완료 항목</div></div>
         <div class="kpi" style="--ac:#7C3AED"><div class="ki"><i class="ti ti-calendar-event"></i></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div><div class="kl">오늘 일정</div></div>
         <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div class="ki"><i class="ti ti-flag"></i></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div><div class="kl">마감 임박 프로젝트</div></div>
         <div class="kpi" style="--ac:#D97706"><div class="ki"><i class="ti ti-users"></i></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div><div class="kl">이번달 미팅</div></div>
       </div>
-      ${!isReadOnly()?`<button class="btn btn-o" id="quickAddLogBtn" style="font-size:13px;padding:0 18px;flex-shrink:0"><i class="ti ti-plus"></i> 빠른 로그 추가</button>`:''}
     </div>
 
     ${upcomingHolidays.length>0 ? `
