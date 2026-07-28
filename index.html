@@ -1156,6 +1156,7 @@ const state = {
   dashProjCategoryFilter: '전체',
   activeBrandId: null,
   vendorLogExpanded: false,
+  leaveMonthFilter: 'all',
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
@@ -3486,22 +3487,23 @@ function viewLeave(){
     <div class="two" style="margin-bottom:14px">
       <div class="card" style="padding:0;overflow:hidden">
         <div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:0.5px solid var(--bd)">사용 기록</div>
-        <table class="tbl">
-          <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
-          <tbody>
-          ${(l.logs||[]).length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
-            (() => {
-              const sorted = (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
-              let curMonth = null;
-              const rows = [];
-              sorted.forEach(r=>{
-                const m = dayjs(r.date).format('YYYY-MM');
-                if(m !== curMonth){
-                  curMonth = m;
-                  const monthTotal = sorted.filter(x=>dayjs(x.date).format('YYYY-MM')===m).reduce((s,x)=>s+x.amount,0);
-                  rows.push(`<tr><td colspan="5" style="background:var(--sf);font-size:12px;font-weight:600;color:var(--muted);padding:7px 14px">${dayjs(m+'-01').format('YYYY년 M월')} <span style="font-weight:400;color:var(--o)">· 합계 ${monthTotal}일</span></td></tr>`);
-                }
-                rows.push(`
+        ${(() => {
+          const allSorted = (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+          const months = [...new Set(allSorted.map(r=>dayjs(r.date).format('YYYY-MM')))]; // 최신순 (allSorted가 이미 최신순이라 순서 유지됨)
+          const activeMonth = state.leaveMonthFilter || 'all';
+          const monthTabs = `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:0.5px solid var(--bd)">
+            <button class="btn leave-month-tab ${activeMonth==='all'?'btn-o':''}" data-month="all" style="font-size:11px;padding:4px 10px">전체</button>
+            ${months.map(m=>`<button class="btn leave-month-tab ${activeMonth===m?'btn-o':''}" data-month="${m}" style="font-size:11px;padding:4px 10px">${dayjs(m+'-01').format('YYYY년 M월')}</button>`).join('')}
+          </div>`;
+          const filtered = activeMonth==='all' ? allSorted : allSorted.filter(r=>dayjs(r.date).format('YYYY-MM')===activeMonth);
+          const filteredTotal = filtered.reduce((s,r)=>s+r.amount,0);
+          return monthTabs + `
+          <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeMonth==='all'?'전체 기간':dayjs(activeMonth+'-01').format('YYYY년 M월')} · 합계 <span style="color:var(--o);font-weight:600">${filteredTotal}일</span> (${filtered.length}건)</div>
+          <table class="tbl">
+            <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
+            <tbody>
+            ${filtered.length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
+              filtered.map(r=>`
               <tr>
                 <td>${fmtDateDow(r.date)}</td>
                 <td><span class="badge ${r.type==='연차'?'bo':'bgr'}">${r.type}</span></td>
@@ -3511,12 +3513,10 @@ function viewLeave(){
                   <button class="btn leave-edit-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
                   <button class="btn btn-red leave-del-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
                 </td>`:'<td></td>'}
-              </tr>`);
-              });
-              return rows.join('');
-            })()}
-          </tbody>
-        </table>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+        })()}
       </div>
 
       <div class="card" style="padding:0;overflow:hidden">
@@ -5750,6 +5750,14 @@ function bindViewEvents(){
       if(!state.data.leave.logs) state.data.leave.logs = [];
       state.data.leave.logs.push({id:uid('lv'), date:fd.get('date'), type:fd.get('type'), amount, memo:fd.get('memo')||''});
       closeModal(); persist(false); showToast(`${fd.get('type')} ${amount}일 등록되었습니다.`);
+    });
+  });
+
+  // 연차 사용 기록 월별 탭
+  document.querySelectorAll('.leave-month-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.leaveMonthFilter = btn.dataset.month;
+      render();
     });
   });
 
