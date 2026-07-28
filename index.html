@@ -3232,8 +3232,18 @@ function bindLogModal(preVendorId, preProjectId){
   // AI 요약
   const aiBtn = document.getElementById('lmAiBtn');
   if(aiBtn) aiBtn.addEventListener('click', ()=>{
-    const raw = document.getElementById('lmRawText')?.value?.trim();
-    if(!raw){ showToast('원본 내용을 먼저 입력해주세요.'); return; }
+    const rawEl = document.getElementById('lmRawText');
+    const raw = rawEl?.value?.trim();
+    if(!raw){
+      showToast('원본 내용을 먼저 입력해주세요.');
+      if(rawEl){
+        rawEl.style.border = '1.5px solid #DC2626';
+        rawEl.style.boxShadow = '0 0 0 3px rgba(220,38,38,.15)';
+        rawEl.focus();
+        setTimeout(()=>{ rawEl.style.border=''; rawEl.style.boxShadow=''; }, 1600);
+      }
+      return;
+    }
     const summary = generateOneLineSummary(raw);
     const summEl = document.getElementById('lmSummary');
     if(summEl) summEl.value = summary;
