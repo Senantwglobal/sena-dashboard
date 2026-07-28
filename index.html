@@ -1153,6 +1153,7 @@ const state = {
   dashProjCategoryFilter: '전체',
   activeBrandId: null,
   vendorLogExpanded: false,
+  anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
 function persist(shouldRender=true){
@@ -3083,7 +3084,9 @@ function modalLogForm(preVendorId, preProjectId){
           <div class="field"><label class="field-label">원본 내용 (이메일 전체 등)</label>
             <textarea class="inp" id="lmRawText" name="rawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요" style="resize:vertical"></textarea>
           </div>
-          <div style="text-align:right;margin-bottom:6px">
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px">
+            <span style="font-size:10px;color:var(--muted);margin-right:auto">${state.anthropicApiKey?'<i class="ti ti-sparkles" style="color:var(--o)"></i> Claude AI 요약 사용 중':'규칙 기반 요약 (API 키 없음)'}</span>
+            <button type="button" class="btn" id="lmApiKeyBtn" title="Claude API 키 설정" style="font-size:11px;padding:5px 8px"><i class="ti ti-key"></i></button>
             <button type="button" class="btn" id="lmAiBtn" style="font-size:12px;padding:5px 12px">
               <i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성
             </button>
@@ -3165,9 +3168,17 @@ function bindLogModal(preVendorId, preProjectId){
     if(e.target.classList.contains('ev-vendor-cb')) updateProjectsForCheckedVendors();
   });
 
+  // API 키 설정 버튼
+  const apiKeyBtn = document.getElementById('lmApiKeyBtn');
+  if(apiKeyBtn) apiKeyBtn.addEventListener('click', ()=>{
+    openModal(modalApiKeySettings());
+    bindModalCommon();
+    bindApiKeySettings();
+  });
+
   // AI 요약
   const aiBtn = document.getElementById('lmAiBtn');
-  if(aiBtn) aiBtn.addEventListener('click', ()=>{
+  if(aiBtn) aiBtn.addEventListener('click', async ()=>{
     const rawEl = document.getElementById('lmRawText');
     const raw = rawEl?.value?.trim();
     if(!raw){
@@ -3180,10 +3191,31 @@ function bindLogModal(preVendorId, preProjectId){
       }
       return;
     }
-    const summary = generateOneLineSummary(raw);
     const summEl = document.getElementById('lmSummary');
-    if(summEl) summEl.value = summary;
-    showToast('AI 요약이 생성되었습니다.');
+    const originalLabel = aiBtn.innerHTML;
+    aiBtn.disabled = true;
+    aiBtn.innerHTML = '<i class="ti ti-loader-2"></i> 생성 중...';
+    try{
+      if(state.anthropicApiKey){
+        const aiResult = await callClaudeSummary(raw);
+        if(aiResult){
+          if(summEl) summEl.value = aiResult;
+          showToast('Claude AI 요약이 생성되었습니다.');
+          return;
+        }
+      }
+      const summary = generateOneLineSummary(raw);
+      if(summEl) summEl.value = summary;
+      showToast(state.anthropicApiKey ? 'AI 응답이 비어있어 규칙 기반 요약을 사용했습니다.' : '요약이 생성되었습니다. (Claude 연동은 열쇠 아이콘에서 설정)');
+    }catch(err){
+      console.error(err);
+      const summary = generateOneLineSummary(raw);
+      if(summEl) summEl.value = summary;
+      showToast('Claude API 호출 실패 — 규칙 기반 요약으로 대체했습니다. (' + err.message.slice(0,60) + ')');
+    }finally{
+      aiBtn.disabled = false;
+      aiBtn.innerHTML = originalLabel;
+    }
   });
 
   // 파일/링크 탭 전환
@@ -3649,14 +3681,17 @@ function viewCompanyDetail(){
 function openModal(html){
   const overlay = document.createElement('div');
   overlay.className = 'overlay';
-  overlay.id = 'modalOverlay';
+  const stackIndex = document.querySelectorAll('.overlay').length;
+  if(stackIndex===0) overlay.id = 'modalOverlay'; // 하위 호환용 (기존 코드가 이 id를 참조할 수 있음)
+  overlay.style.zIndex = String(200 + stackIndex*10);
   overlay.innerHTML = html;
   overlay.addEventListener('click', e=>{ if(e.target===overlay) closeModal(); });
   document.body.appendChild(overlay);
 }
 function closeModal(){
-  const m = document.getElementById('modalOverlay');
-  if(m) m.remove();
+  const overlays = document.querySelectorAll('.overlay');
+  const last = overlays[overlays.length-1];
+  if(last) last.remove();
 }
 
 function modalVendorForm(vendor){
@@ -4406,13 +4441,125 @@ function generateMeetingSummary(text){
   return {summary: summary || '요약할 내용이 없습니다.', items};
 }
 
-/* 로그 원본 -> 한 줄 요약 (간단 규칙 기반, Claude API 연동 시 교체) */
+/* ============================================================
+   실제 Claude API를 이용한 AI 요약 (선택사항, API 키 필요)
+   ============================================================ */
+async function callClaudeSummary(text){
+  if(!state.anthropicApiKey) return null;
+  const prompt = `다음은 업무 이메일/통화/미팅 원문입니다. 인사말이나 서명은 무시하고, 핵심 요청사항·결정사항·다음 액션이 드러나도록 15~40자 내외의 한국어 한 줄로 요약해줘. 요약 문장 하나만 출력하고 다른 설명은 절대 하지마.\n\n---\n${text.slice(0,4000)}`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.anthropicApiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 120,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if(!res.ok){
+    const errBody = await res.text().catch(()=>'');
+    throw new Error(`API 오류 (${res.status}): ${errBody.slice(0,200)}`);
+  }
+  const data = await res.json();
+  const textBlock = data.content?.find(b=>b.type==='text');
+  return textBlock?.text?.trim() || null;
+}
+
+function modalApiKeySettings(){
+  return `
+    <div class="modal" style="width:440px">
+      <div class="mh"><h3><i class="ti ti-key" style="color:var(--o)"></i> Claude AI 요약 설정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">
+          Anthropic API 키를 등록하면 "AI 요약 생성"이 실제 Claude 모델을 호출해 요약합니다.<br/>
+          키는 <b>이 브라우저에만</b> 저장되며(localStorage), Supabase나 다른 사용자와 공유되지 않습니다.<br/>
+          <span style="color:#A32D2D">⚠️ 페이지 소스/네트워크 요청에 키가 노출될 수 있으니, 개인 사용/사내용으로만 권장합니다.</span>
+        </p>
+        <div class="field"><label class="field-label">Anthropic API 키</label>
+          <input type="password" id="apiKeyInput" class="inp" placeholder="sk-ant-..." value="${state.anthropicApiKey||''}"/>
+        </div>
+      </div>
+      <div class="mf">
+        ${state.anthropicApiKey?`<button class="btn btn-red" id="apiKeyRemoveBtn">키 삭제</button>`:''}
+        <button class="btn btn-o" id="apiKeySaveBtn">저장</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindApiKeySettings(){
+  const saveBtn = document.getElementById('apiKeySaveBtn');
+  if(saveBtn) saveBtn.addEventListener('click', ()=>{
+    const val = document.getElementById('apiKeyInput').value.trim();
+    if(!val){ showToast('API 키를 입력해주세요.'); return; }
+    state.anthropicApiKey = val;
+    try{ localStorage.setItem('anthropic_api_key', val); }catch(e){}
+    closeModal();
+    showToast('API 키가 저장되었습니다. 이제 실제 Claude 요약을 사용합니다.');
+  });
+  const removeBtn = document.getElementById('apiKeyRemoveBtn');
+  if(removeBtn) removeBtn.addEventListener('click', ()=>{
+    state.anthropicApiKey = '';
+    try{ localStorage.removeItem('anthropic_api_key'); }catch(e){}
+    closeModal();
+    showToast('API 키가 삭제되었습니다. 규칙 기반 요약으로 돌아갑니다.');
+  });
+}
+
+/* 규칙 기반 폴백 요약 (API 키 없거나 호출 실패 시 사용)
+   인사말/서명/기밀고지 등 정보값 낮은 문장은 제외하고, 핵심 키워드나 질문이 담긴 문장을 우선 선택 */
 function generateOneLineSummary(text){
-  const sentences = text.split(/[.。\n\r]/).map(s=>s.trim()).filter(Boolean);
+  if(!text) return '';
+  // 서명 블록/기밀고지 등 뒷부분 통째로 제거 (흔한 마커 기준)
+  const cutMarkers = [
+    /confidentiality notice/i, /this (message|email) and any attachments/i,
+    /sent from my iphone/i, /ios용 outlook/i, /보낸 사람\s*:/,
+  ];
+  let body = text;
+  cutMarkers.forEach(m=>{
+    const idx = body.search(m);
+    if(idx > 20) body = body.slice(0, idx);
+  });
+
+  const rawLines = body.split(/[\n\r]+/).map(s=>s.trim()).filter(Boolean);
+  const sentences = [];
+  rawLines.forEach(line=>{
+    line.split(/(?<=[.?!。])\s+/).forEach(s=>{
+      const t = s.trim();
+      if(t) sentences.push(t);
+    });
+  });
   if(sentences.length===0) return '';
-  let first = sentences[0];
-  if(first.length>60) first = first.slice(0,57)+'...';
-  return first;
+
+  // 인사말/클로징/서명/연락처 라인 등 정보값 낮은 문장 제외
+  const skipPatterns = [
+    /^(hi|hello|dear|hey)\b/i, /^안녕하세요/, /^(thanks?|thank you|best regards|regards|sincerely|kind regards|cheers)\b[,.]?$/i,
+    /^감사합니다[.!]?$/, /드림\s*$/, /^[A-Za-z가-힣\s]{1,15}(드림|올림)$/,
+    /^(e|m|tel|mobile|phone|office)\s*[:.]/i, /^\+?\d[\d\-\s()]{6,}$/, /^https?:\/\//i,
+    /^[\w.+-]+@[\w-]+\.[\w.]+$/,
+  ];
+  const candidates = sentences.filter(s => !skipPatterns.some(p=>p.test(s)) && s.length>3);
+  const pool = candidates.length>0 ? candidates : sentences;
+
+  // 핵심 키워드/질문 포함 문장 우선순위 부여
+  const keywords = ['필요','예정','요청','확인','회신','검토','전달','계약','견적','가격','협의','일정','안내','부탁',
+    'please','request','need','confirm','schedule','meeting','quote','price','contract','deadline','follow up','asap','urgent'];
+  const scored = pool.map(s=>{
+    let score = 0;
+    if(/\?$/.test(s)) score += 3;
+    keywords.forEach(k=>{ if(s.toLowerCase().includes(k)) score += 2; });
+    if(s.length>=15 && s.length<=90) score += 1;
+    return {s, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  let picked = scored[0]?.s || pool[0];
+  if(picked.length>80) picked = picked.slice(0,77)+'...';
+  return picked;
 }
 
 
@@ -5677,7 +5824,9 @@ function bindPersonFormSubmit(existingPerson){
 }
 
 function bindModalCommon(){
-  const closeBtn = document.getElementById('closeModal');
+  const overlays = document.querySelectorAll('.overlay');
+  const last = overlays[overlays.length-1];
+  const closeBtn = last?.querySelector('#closeModal');
   if(closeBtn) closeBtn.addEventListener('click', closeModal);
 }
 
