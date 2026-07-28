@@ -1158,6 +1158,7 @@ const state = {
   vendorLogExpanded: false,
   leaveYearFilter: 'all',
   leaveRecordPage: 0,
+  vendorProjectPage: 0,
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
@@ -2363,13 +2364,28 @@ function viewVendorDetail(){
       <div style="display:flex;flex-direction:column;gap:12px">
 
         ${projects.length>0?`<div class="card" style="padding:12px 16px">
-          <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">연결된 프로젝트</div>
-          ${projects.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer;padding:6px 0">
-            <i class="ti ti-checklist" style="font-size:12px;color:var(--o)"></i>
-            <span style="flex:1;font-size:13px;font-weight:500">${p.title}</span>
-            <div class="pgb" style="width:60px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
-            <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
-          </div>`).join('')}
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">연결된 프로젝트</div>
+            <span style="font-size:10px;color:var(--muted)">${projects.length}건</span>
+          </div>
+          ${(() => {
+            const VP_PER_PAGE = 5;
+            const vpPage = state.vendorProjectPage || 0;
+            const vpTotalPages = Math.ceil(projects.length / VP_PER_PAGE);
+            const pageItems = projects.slice(vpPage*VP_PER_PAGE, vpPage*VP_PER_PAGE+VP_PER_PAGE);
+            const rows = pageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer;padding:6px 0">
+              <i class="ti ti-checklist" style="font-size:12px;color:var(--o)"></i>
+              <span style="flex:1;font-size:13px;font-weight:500">${p.title}</span>
+              <div class="pgb" style="width:60px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
+              <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
+            </div>`).join('');
+            const pager = vpTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:8px">
+              <button class="btn vendor-project-page-btn" data-page="${Math.max(0,vpPage-1)}" style="padding:3px 8px;font-size:11px" ${vpPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+              ${Array.from({length:vpTotalPages}).map((_,i)=>`<button class="btn vendor-project-page-btn ${i===vpPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+              <button class="btn vendor-project-page-btn" data-page="${Math.min(vpTotalPages-1,vpPage+1)}" style="padding:3px 8px;font-size:11px" ${vpPage>=vpTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+            </div>` : '';
+            return rows + pager;
+          })()}
         </div>`:''}
 
         <!-- 파일/링크 섹션 -->
@@ -4609,6 +4625,7 @@ function bindViewEvents(){
     el.addEventListener('click', ()=>{
       state.selectedVendorId = el.dataset.vid;
       state.view = 'vendors';
+      state.vendorProjectPage = 0;
       render();
     });
   });
@@ -5784,6 +5801,14 @@ function bindViewEvents(){
   document.querySelectorAll('.leave-record-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.leaveRecordPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+
+  // 거래처 상세 - 연결된 프로젝트 페이지네이션
+  document.querySelectorAll('.vendor-project-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorProjectPage = parseInt(btn.dataset.page);
       render();
     });
   });
