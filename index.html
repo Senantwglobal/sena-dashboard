@@ -1487,7 +1487,7 @@ function viewHome(){
   const pendingActionsAll = state.data.vendorLogs
     .filter(l=>l.nextStep && l.nextStep.trim() && !l.nextStepDone)
     .sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
-  const PA_PER_PAGE = 5;
+  const PA_PER_PAGE = 8;
   const paPage = state.dashActionPage || 0;
   const paTotalPages = Math.ceil(pendingActionsAll.length / PA_PER_PAGE);
   const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
