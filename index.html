@@ -3490,7 +3490,18 @@ function viewLeave(){
           <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
           <tbody>
           ${(l.logs||[]).length===0?`<tr><td colspan="5"><div class="empty-state">기록이 없습니다.</div></td></tr>`:
-            (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(r=>`
+            (() => {
+              const sorted = (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+              let curMonth = null;
+              const rows = [];
+              sorted.forEach(r=>{
+                const m = dayjs(r.date).format('YYYY-MM');
+                if(m !== curMonth){
+                  curMonth = m;
+                  const monthTotal = sorted.filter(x=>dayjs(x.date).format('YYYY-MM')===m).reduce((s,x)=>s+x.amount,0);
+                  rows.push(`<tr><td colspan="5" style="background:var(--sf);font-size:12px;font-weight:600;color:var(--muted);padding:7px 14px">${dayjs(m+'-01').format('YYYY년 M월')} <span style="font-weight:400;color:var(--o)">· 합계 ${monthTotal}일</span></td></tr>`);
+                }
+                rows.push(`
               <tr>
                 <td>${fmtDateDow(r.date)}</td>
                 <td><span class="badge ${r.type==='연차'?'bo':'bgr'}">${r.type}</span></td>
@@ -3500,7 +3511,10 @@ function viewLeave(){
                   <button class="btn leave-edit-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
                   <button class="btn btn-red leave-del-btn" data-lid="${r.id}" style="padding:2px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
                 </td>`:'<td></td>'}
-              </tr>`).join('')}
+              </tr>`);
+              });
+              return rows.join('');
+            })()}
           </tbody>
         </table>
       </div>
