@@ -6,9 +6,7 @@
 <title>천세나 업무 대시보드</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
 <script>
 // 아이콘 폰트가 실제로 로드됐는지 확인 → 실패 시 폰트 없이도 KPI 카드가 비어보이지 않게 이모지 폴백 적용
 (function(){
@@ -34,7 +32,7 @@
 :root{
   --o:#1C85E8;--ol:#E8F2FE;--od:#0B4E9E;--ob:#A9D2F8;
   --bg:#FAFAFA;--card:#fff;--bd:#EDEDEF;--text:#0B1B2E;--muted:#8A8F98;--sf:#F5F5F6;
-  --sans:'Lato',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
+  --sans:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
   --shadow-xs:none;
   --shadow-sm:0 1px 2px rgba(11,27,46,.04);
   --shadow-md:0 8px 24px rgba(11,27,46,.08);
@@ -49,22 +47,22 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:20px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#C1C7CF}
 a{color:inherit}
-.editorial{font-weight:700;letter-spacing:-.02em}
+.editorial{font-weight:800;letter-spacing:-.02em}
 .hdr{background:#fff;border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-.logo{background:var(--text);color:#fff;font-size:14px;font-weight:700;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
+.logo{background:var(--text);color:#fff;font-size:14px;font-weight:300;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
-.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
 .nav{display:flex;gap:4px;padding:0 22px;background:#fff;border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
 .nb{padding:12px 14px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:0;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:300;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s var(--ease),border-color .18s var(--ease)}
-.nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:700}
+.nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1200px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
-.st{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
+.st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--o)}
-.btn{font-size:12px;padding:6.5px 13px;border-radius:8px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:700;box-shadow:none}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:8px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
 .btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
@@ -72,7 +70,7 @@ a{color:inherit}
 .btn-o:hover{background:#000;color:#fff}
 .btn-red{color:#C0392B;background:#FDEAEA}
 .btn-red:hover{background:#FBDADA}
-.badge{font-size:10px;padding:2.5px 8px;border-radius:6px;font-weight:700;white-space:nowrap;letter-spacing:.02em}
+.badge{font-size:10px;padding:2.5px 8px;border-radius:6px;font-weight:300;white-space:nowrap;letter-spacing:.02em}
 .bo{background:var(--ol);color:var(--od)}
 .bb{background:#E1F3FE;color:#1F6C9F}
 .br{background:#FDEAEA;color:#C0392B}
@@ -97,23 +95,23 @@ select.inp{cursor:pointer}
 .ti-fallback .ki i.ti-flag::before{content:"🚩"}
 .ti-fallback .ki i.ti-users::before{content:"👥"}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:27px;font-weight:700;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
-.kl{font-size:11px;color:var(--muted);font-weight:700}
+.kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.kl{font-size:11px;color:var(--muted);font-weight:300}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
-.dlc{font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:6px;white-space:nowrap}
+.dlc{font-size:10px;font-weight:300;padding:2.5px 8px;border-radius:6px;white-space:nowrap}
 .dl-ok{background:#E4F7F1;color:#1C9873}
 .dl-w{background:var(--ol);color:var(--od)}
 .dl-c{background:#FDEAEA;color:#C0392B}
 .dl-d{background:#F0F1F3;color:#5F6672}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
-.cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:700;letter-spacing:.02em}
+.cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
 .cal-cell{min-height:80px;border-radius:10px;padding:5px;border:0.5px solid transparent;background:var(--sf);position:relative;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease);overflow:hidden}
 .cal-cell:hover{border-color:var(--ob);background:#fff}
 .cal-cell.today{border-color:var(--o);border-width:1.5px}
 .cal-cell.empty{background:transparent;border:none;cursor:default}
 .cal-num{font-size:11px;font-weight:300;margin-bottom:2px}
-.cal-cell.today .cal-num{color:var(--o);font-weight:700}
+.cal-cell.today .cal-num{color:var(--o);font-weight:300}
 .cal-ev{font-size:9px;padding:2px 5px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 .ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:var(--card);cursor:pointer;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
 .ck-item:hover{border-color:var(--ob);box-shadow:var(--shadow-xs)}
@@ -128,14 +126,14 @@ select.inp{cursor:pointer}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal{background:#fff;border-radius:12px;border:1px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
-.mh h3{font-weight:700;font-size:15px;letter-spacing:-.01em}
+.mh h3{font-weight:600;font-size:15px;letter-spacing:-.01em}
 .mb{padding:16px 18px}
 .mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1c1c22;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(4px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateY(0)}
 .dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease)}
 .dash-row:last-child{border-bottom:none}
-.feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;flex-shrink:0;font-size:11px}
+.feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0;font-size:11px}
 .cat-sidebar{width:180px;flex-shrink:0}
 .cat-item{padding:7px 10px;border-radius:8px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:4px;border:none;background:none;width:100%;text-align:left;font-family:inherit}
 .cat-item:hover{background:var(--sf)}
@@ -154,7 +152,7 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 .search-wrap .inp{padding-left:32px;margin-bottom:0}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
+.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
 .tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
@@ -1464,7 +1462,7 @@ function render(){
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="logo">O</span>
-        <span class="editorial" style="font-size:16px;font-weight:700;color:#111114">천세나 업무 대시보드</span>
+        <span class="editorial" style="font-size:16px;color:#111114">천세나 업무 대시보드</span>
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
@@ -1576,7 +1574,7 @@ function viewHome(){
         return `<div style="display:flex;align-items:center;gap:6px;background:${c.bg};border:0.5px solid ${c.color}33;border-radius:8px;padding:6px 12px;font-size:12px">
           <span>${c.flag}</span>
           <span style="font-weight:300;color:${c.color}">${h.title.replace('🇰🇷','').replace('🇺🇸','').trim()}</span>
-          <span style="color:${c.color};font-weight:700">${h.dday===0?'오늘':'D-'+h.dday}</span>
+          <span style="color:${c.color};font-weight:300">${h.dday===0?'오늘':'D-'+h.dday}</span>
         </div>`;
       }).join('')}
     </div>` : ''}
@@ -1635,12 +1633,12 @@ function viewHome(){
             return `<div class="dash-row" style="align-items:flex-start;gap:9px;padding:9px 0">
               <input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:14px;height:14px;margin-top:3px;flex-shrink:0;cursor:pointer"/>
               <div style="flex:1;min-width:0;cursor:pointer" class="pending-action-link" data-vid="${l.vendorId}" data-pid="${l.linkedProjectId||''}">
-                <div style="font-size:12.5px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:5px">${l.nextStep}</div>
+                <div style="font-size:12.5px;font-weight:300;color:var(--text);line-height:1.4;margin-bottom:5px">${l.nextStep}</div>
                 <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                   ${v?`<span style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:300;background:var(--ol);color:var(--od);padding:1px 7px 1px 2px;border-radius:20px">${av(v.name,12)}${v.name}</span>`:''}
                   ${linkedProj?`<span style="display:flex;align-items:center;gap:3px;font-size:10px;background:var(--sf);color:var(--muted);padding:1px 7px;border-radius:20px"><i class="ti ti-checklist" style="font-size:9px"></i>${linkedProj.title}</span>`:''}
                   <span style="font-size:10px;font-weight:300;background:${urgentBg};color:${urgentColor};padding:1px 7px;border-radius:20px">${fmtDate(l.date)} · ${elapsed}일 경과</span>
-                  ${dueDday!==null?`<span style="font-size:10px;font-weight:700;background:${dueBg};color:${dueColor};padding:1px 7px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:9px"></i> ${dueLabel}</span>`:''}
+                  ${dueDday!==null?`<span style="font-size:10px;font-weight:300;background:${dueBg};color:${dueColor};padding:1px 7px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:9px"></i> ${dueLabel}</span>`:''}
                 </div>
               </div>
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
@@ -1670,12 +1668,12 @@ function viewHome(){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div style="text-align:center;padding:10px;background:var(--sf);border-radius:8px">
               <div style="font-size:10px;color:var(--muted);margin-bottom:4px">🇰🇷 서울 (KST)</div>
-              <div id="clockKR" style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--o)">--:--</div>
+              <div id="clockKR" style="font-size:18px;font-weight:300;font-variant-numeric:tabular-nums;color:var(--o)">--:--</div>
               <div id="dateKR" style="font-size:10px;color:var(--muted);margin-top:2px"></div>
             </div>
             <div style="text-align:center;padding:10px;background:var(--sf);border-radius:8px">
               <div style="font-size:10px;color:var(--muted);margin-bottom:4px">🇺🇸 시애틀 (PT)</div>
-              <div id="clockUS" style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:#185FA5">--:--</div>
+              <div id="clockUS" style="font-size:18px;font-weight:300;font-variant-numeric:tabular-nums;color:#185FA5">--:--</div>
               <div id="dateUS" style="font-size:10px;color:var(--muted);margin-top:2px"></div>
             </div>
           </div>
@@ -1778,15 +1776,15 @@ function viewHome(){
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:700;color:var(--o)">${totalGranted+compTotal}</div>
+                <div style="font-size:16px;font-weight:300;color:var(--o)">${totalGranted+compTotal}</div>
                 <div style="font-size:10px;color:var(--muted)">총 발생</div>
               </div>
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:700">${used}</div>
+                <div style="font-size:16px;font-weight:300">${used}</div>
                 <div style="font-size:10px;color:var(--muted)">사용</div>
               </div>
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:700;color:${remaining<3?'#A32D2D':'#3B6D11'}">${remaining}</div>
+                <div style="font-size:16px;font-weight:300;color:${remaining<3?'#A32D2D':'#3B6D11'}">${remaining}</div>
                 <div style="font-size:10px;color:var(--muted)">잔여</div>
               </div>
             </div>
@@ -1996,7 +1994,7 @@ function viewVendorList(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:16px;font-weight:700">Company</span>
+        <span style="font-size:16px;font-weight:300">Company</span>
         <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="vendorSearchInput" placeholder="회사명 또는 담당자 검색" value="${state.vendorSearch}" style="margin:0"/></div>
       </div>
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCompanyTypesBtn"><i class="ti ti-settings"></i> 유형 관리</button><button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 회사 추가</button></div>`:''}
@@ -2143,7 +2141,7 @@ function viewVendorDetail(){
           </label>`:''}
         </div>
         <div>
-          <div class="editorial" style="font-size:21px;font-weight:700;color:#111114">${v.name}</div>
+          <div class="editorial" style="font-size:21px;color:#111114">${v.name}</div>
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${typeColorFor(v.companyType).bg};color:${typeColorFor(v.companyType).color}">${v.companyType}</span>`:''}
@@ -2211,7 +2209,7 @@ function viewVendorDetail(){
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--o)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
+          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
           <span style="font-size:11px;color:var(--muted)">${upcoming.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2250,7 +2248,7 @@ function viewVendorDetail(){
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
+          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
           <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2287,7 +2285,7 @@ function viewVendorDetail(){
         <!-- 브랜드 모드 토글 (브랜드가 있을 때만) -->
         ${hasBrands && activeBrand ? `
         <div class="card" style="padding:10px 14px">
-          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
+          <div style="font-size:10px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">
             <i class="ti ti-settings" style="font-size:11px"></i> ${activeBrand.name} 설정
           </div>
           <!-- 브랜드 로고 -->
@@ -2337,7 +2335,7 @@ function viewVendorDetail(){
         <!-- 담당자 -->
         <div class="card" style="padding:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
+            <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
             ${!isReadOnly()&&(!hasBrands||!isInherit)?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
           </div>
           ${hasBrands && isInherit && activeBrand ? `
@@ -2371,12 +2369,12 @@ function viewVendorDetail(){
         <!-- 거래 메모 -->
         <div class="card" style="padding:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-            <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">거래 메모</span>
+            <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">거래 메모</span>
           </div>
 
           ${(v.companyType==='벤더'||!v.companyType)?`
           <!-- 벤더 필수 필드 -->
-          <div style="font-size:10px;font-weight:700;color:var(--o);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">벤더 조건</div>
+          <div style="font-size:10px;font-weight:300;color:var(--o);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">벤더 조건</div>
           ${(() => {
             // vendorTerms는 상단에서 activeBrand 기반으로 결정됨
             const fields = [
@@ -2400,7 +2398,7 @@ function viewVendorDetail(){
 
           <!-- 자유 메모 -->
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-            <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">추가 메모</span>
+            <span style="font-size:10px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">추가 메모</span>
             ${!isReadOnly()?`<button class="btn" id="addNoteFieldBtn" style="font-size:10px;padding:2px 7px"><i class="ti ti-plus"></i></button>`:''}
           </div>
           <div id="customNotesList">
@@ -2428,7 +2426,7 @@ function viewVendorDetail(){
 
         ${projects.length>0?`<div class="card" style="padding:12px 16px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">연결된 프로젝트</div>
+            <div style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">연결된 프로젝트</div>
             <span style="font-size:10px;color:var(--muted)">${projects.length}건</span>
           </div>
           ${(() => {
@@ -2473,7 +2471,7 @@ function viewVendorDetail(){
             let folderHtml = '';
             if(folderLabel !== curFolder){
               curFolder = folderLabel;
-              folderHtml = `<div style="font-size:10px;font-weight:700;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+              folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
             }
             const sourceCaption = lk.isDirect
               ? `<span style="font-size:9px;color:var(--muted)">직접 첨부</span>`
@@ -2514,7 +2512,7 @@ function viewVendorDetail(){
 
           return `<div class="card" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
+              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
               <div style="display:flex;align-items:center;gap:6px">
                 <span style="font-size:10px;color:var(--muted)">${combinedLinks.length}건</span>
                 ${!isReadOnly()?`
@@ -2581,7 +2579,7 @@ function viewVendorDetail(){
             ${filtered.length===0?`<div class="empty-state" style="padding:28px">해당 기간에 기록이 없습니다.</div>`:
               Object.entries(groups).map(([ym, glogs])=>`
               <div>
-                <div style="font-size:10px;font-weight:700;color:var(--muted);padding:5px 16px;background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.04em;text-transform:uppercase">${ym}</div>
+                <div style="font-size:10px;font-weight:300;color:var(--muted);padding:5px 16px;background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.04em;text-transform:uppercase">${ym}</div>
                 ${glogs.map(l=>{
                   const tb=logTypeBadge(l.type);
                   return `<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd)">
@@ -2640,7 +2638,7 @@ function viewProjects(){
 
   return `
     <div class="sh">
-      <div style="font-size:16px;font-weight:700">프로젝트</div>
+      <div style="font-size:16px;font-weight:300">프로젝트</div>
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCategoriesBtn"><i class="ti ti-settings"></i> 카테고리 관리</button><button class="btn btn-o" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button></div>`:''}
     </div>
 
@@ -2663,13 +2661,13 @@ function viewProjects(){
         return `<div class="card proj-card" data-pid="${p.id}" style="padding:12px;margin-bottom:0;display:flex;flex-direction:column;${isDone?'background:var(--sf)':''}">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
             <div style="display:flex;gap:5px;align-items:center;min-width:0">
-              <span class="badge" style="background:${col}1a;color:${col};font-weight:700;font-size:10px;padding:2px 7px">${p.category}</span>
+              <span class="badge" style="background:${col}1a;color:${col};font-weight:300;font-size:10px;padding:2px 7px">${p.category}</span>
               <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
             </div>
             ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="font-size:9px;flex-shrink:0">${ddayLabel}</span>`:''}
           </div>
 
-          <div style="font-size:13px;font-weight:700;line-height:1.35;margin-bottom:3px;color:var(--text)">${p.title}</div>
+          <div style="font-size:13px;font-weight:300;line-height:1.35;margin-bottom:3px;color:var(--text)">${p.title}</div>
           <div style="font-size:10px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:3px">
             <i class="ti ti-user" style="font-size:10px"></i>${p.owner}
           </div>
@@ -2686,7 +2684,7 @@ function viewProjects(){
           <div>
             <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
               <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">진행률</span>
-              <span style="font-size:12px;font-weight:700;color:${col}">${prog}%</span>
+              <span style="font-size:12px;font-weight:300;color:${col}">${prog}%</span>
             </div>
             <div class="pgb" style="height:5px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
           </div>
@@ -2718,7 +2716,7 @@ function viewProjectDetail(){
     <button class="back-link" id="backToProjects"><i class="ti ti-arrow-left"></i> 프로젝트 목록</button>
     <div class="sh">
       <div>
-        <div class="editorial" style="font-size:21px;font-weight:700;color:#111114">${p.title}</div>
+        <div class="editorial" style="font-size:21px;color:#111114">${p.title}</div>
         <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
           <span class="badge bo">${p.category}</span>
           <select class="proj-status-select" data-pid="${p.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
@@ -2744,7 +2742,7 @@ function viewProjectDetail(){
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--o)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
+          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
           <span style="font-size:11px;color:var(--muted)">${upcoming.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2783,7 +2781,7 @@ function viewProjectDetail(){
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
+          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
           <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
@@ -2928,10 +2926,10 @@ function viewProjectDetail(){
             : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px 16px">
                 ${activeVendorMeetings.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
                   <div class="meeting-card-btn" data-vid="${activeVendorId}" data-mid="${m.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:6px;min-height:88px">
-                    <div style="font-size:11px;color:var(--o);font-weight:700;display:flex;align-items:center;gap:5px">
+                    <div style="font-size:11px;color:var(--o);font-weight:300;display:flex;align-items:center;gap:5px">
                       <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
                     </div>
-                    <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
+                    <div style="font-size:13px;font-weight:300;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
                     <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(m.summary||m.text||'').replace(/</g,'&lt;')}</div>
                   </div>`).join('')}
               </div>`}
@@ -2974,7 +2972,7 @@ function viewProjectDetail(){
         let folderHtml = '';
         if(folderLabel !== curFolder){
           curFolder = folderLabel;
-          folderHtml = `<div style="font-size:10px;font-weight:700;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+          folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
         }
         const delBtn = lk._imported
           ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
@@ -3012,7 +3010,7 @@ function viewProjectDetail(){
 
       return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
+          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
           <div style="display:flex;align-items:center;gap:6px">
             <span style="font-size:10px;color:var(--muted)">${totalCount}건</span>
             ${!isReadOnly()?`
@@ -3125,7 +3123,7 @@ function viewCalendar(){
         const isToday = dateStr===todayStr;
         const isHoliday = evs.some(e=>e.isHoliday);
         return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
-          <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
+          <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:300':''}">${d}</div>
           ${evs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
           ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
         </div>`;
@@ -3613,7 +3611,7 @@ function viewLeave(){
 
   return `
     <div class="sh">
-      <div style="font-size:16px;font-weight:700">연차 관리</div>
+      <div style="font-size:16px;font-weight:300">연차 관리</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${!isReadOnly()?`<button class="btn" id="setJoinDateBtn"><i class="ti ti-calendar-plus"></i> 입사일 ${l.joinDate?'수정':'등록'}</button>`:''}
         ${!isReadOnly()?`<button class="btn" id="addCompLeaveBtn"><i class="ti ti-sun"></i> 휴일근무 등록</button>`:''}
@@ -3657,7 +3655,7 @@ function viewLeave(){
 
     <div class="two" style="margin-bottom:14px">
       <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:12px 14px;font-size:13px;font-weight:700;border-bottom:0.5px solid var(--bd)">사용 기록</div>
+        <div style="padding:12px 14px;font-size:13px;font-weight:300;border-bottom:0.5px solid var(--bd)">사용 기록</div>
         ${(() => {
           const allSorted = (l.logs||[]).slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
           const years = [...new Set(allSorted.map(r=>dayjs(r.date).format('YYYY')))]; // 최신순 유지
@@ -3681,7 +3679,7 @@ function viewLeave(){
           </div>` : '';
 
           return yearTabs + `
-          <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeYear==='all'?'전체 기간':activeYear+'년'} · 합계 <span style="color:var(--o);font-weight:700">${filteredTotal}일</span> (${filtered.length}건)</div>
+          <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeYear==='all'?'전체 기간':activeYear+'년'} · 합계 <span style="color:var(--o);font-weight:300">${filteredTotal}일</span> (${filtered.length}건)</div>
           <table class="tbl">
             <thead><tr><th>날짜</th><th>구분</th><th>사용량</th><th>메모</th><th></th></tr></thead>
             <tbody>
@@ -3704,7 +3702,7 @@ function viewLeave(){
       </div>
 
       <div class="card" style="padding:0;overflow:hidden">
-        <div style="padding:12px 14px;font-size:13px;font-weight:700;border-bottom:0.5px solid var(--bd)">휴일근무 보상 기록</div>
+        <div style="padding:12px 14px;font-size:13px;font-weight:300;border-bottom:0.5px solid var(--bd)">휴일근무 보상 기록</div>
         <table class="tbl">
           <thead><tr><th>근무일</th><th>시간</th><th>발생</th><th>메모</th><th></th></tr></thead>
           <tbody>
@@ -3789,7 +3787,7 @@ function viewCompanyList(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span style="font-size:16px;font-weight:700">컨택</span>
+        <span style="font-size:16px;font-weight:300">컨택</span>
         <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="companySearchInput" placeholder="회사 또는 담당자 검색" value="${state.companySearch}" style="margin:0"/></div>
       </div>
       ${!isReadOnly()?`<button class="btn btn-o" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>`:''}
@@ -3838,7 +3836,7 @@ function viewCompanyDetail(){
     <div class="sh">
       <div style="display:flex;align-items:center;gap:12px">
         ${av(c.name,40)}
-        <div style="font-size:18px;font-weight:700">${c.name}</div>
+        <div style="font-size:18px;font-weight:300">${c.name}</div>
       </div>
       <div style="display:flex;gap:8px">
         ${!isReadOnly()?`<button class="btn" id="editCompanyBtn"><i class="ti ti-pencil"></i> 회사명 편집</button>`:''}
@@ -3863,7 +3861,7 @@ function viewCompanyDetail(){
             ${av(p.name,36)}
             <div style="flex:1">
               <div style="display:flex;align-items:center;gap:6px">
-                <span style="font-weight:700;font-size:14px">${p.name}</span>
+                <span style="font-weight:300;font-size:14px">${p.name}</span>
                 ${p.isMain?'<span style="font-size:10px;background:var(--ol);color:var(--od);padding:1px 7px;border-radius:20px">메인</span>':''}
               </div>
               <div style="font-size:12px;color:var(--muted)">${p.title||'-'}</div>
@@ -3975,10 +3973,10 @@ function modalLogDetail(log, vendorName){
           <span class="badge bgr">${log.type}</span>
           <span class="badge bgr">${log.status}</span>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">AI 요약</div>
+        <div style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">AI 요약</div>
         <div style="font-size:13px;margin-bottom:12px">${log.summary}</div>
-        ${log.nextStep?`<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">다음 액션</div><div style="font-size:13px;margin-bottom:12px">${log.nextStep}</div>`:''}
-        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">원본 내용</div>
+        ${log.nextStep?`<div style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px">다음 액션</div><div style="font-size:13px;margin-bottom:12px">${log.nextStep}</div>`:''}
+        <div style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">원본 내용</div>
         <div style="background:var(--sf);border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap;line-height:1.6">${log.rawText||'원본이 등록되지 않았습니다.'}</div>
       </div>
     </div>
@@ -6356,10 +6354,10 @@ function modalAllMeetingNotes(){
               ${notesEvents.map(e=>{
                 const c = eventColor(e.type);
                 return `<div class="meeting-note-card-btn" data-eid="${e.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:6px;min-height:96px">
-                  <div style="font-size:11px;color:var(--o);font-weight:700;display:flex;align-items:center;gap:5px">
+                  <div style="font-size:11px;color:var(--o);font-weight:300;display:flex;align-items:center;gap:5px">
                     <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(e.date)}
                   </div>
-                  <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(e.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:12px;font-weight:300;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(e.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
                   <div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
                   <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(e.meetingSummary||e.meetingNote||'').replace(/</g,'&lt;')}</div>
                 </div>`;
@@ -6423,15 +6421,15 @@ function modalEventDetail(ev){
 
         <div style="margin-top:6px;border-top:0.5px solid var(--bd);padding-top:12px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-notes" style="font-size:12px"></i> 회의록</span>
+            <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-notes" style="font-size:12px"></i> 회의록</span>
             ${!isReadOnly()?`<button class="btn" id="toggleMeetingNoteBtn" style="font-size:10px;padding:2px 8px">${ev.meetingNote?'수정':'작성'}</button>`:''}
           </div>
           <div id="meetingNoteDisplay" style="${ev.meetingNote?'':'display:none'}">
             <div class="meeting-note-card-btn" data-eid="${ev.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:5px">
-              <div style="font-size:11px;color:var(--o);font-weight:700;display:flex;align-items:center;gap:5px">
+              <div style="font-size:11px;color:var(--o);font-weight:300;display:flex;align-items:center;gap:5px">
                 <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(ev.date)}
               </div>
-              <div style="font-size:13px;font-weight:700;color:var(--text)">${(ev.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
+              <div style="font-size:13px;font-weight:300;color:var(--text)">${(ev.meetingTitle||'제목 없음').replace(/</g,'&lt;')}</div>
               <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(ev.meetingSummary||ev.meetingNote||'').replace(/</g,'&lt;')}</div>
             </div>
           </div>
@@ -6828,7 +6826,7 @@ async function initApp(){
     const errMsg = isNetworkError ? '<p style="font-size:12px;background:#f1f1f1;padding:8px 12px;border-radius:8px;margin-top:4px;">Supabase → Project Settings → API → Allowed origins에 <b>https://senantwglobal.github.io</b> 추가 필요</p>' : '';
     app.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:12px;padding:2rem;text-align:center;">' +
       '<div style="font-size:32px;">⚠️</div>' +
-      '<p style="font-size:15px;font-weight:700;color:#dc2626;">데이터를 불러오지 못했습니다</p>' +
+      '<p style="font-size:15px;font-weight:300;color:#dc2626;">데이터를 불러오지 못했습니다</p>' +
       '<p style="font-size:12px;color:#888;max-width:400px;">' + e.message + '</p>' +
       errMsg +
       '<button id="retryBtn" class="btn btn-primary" style="margin-top:8px;padding:8px 20px;background:#1C85E8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">다시 시도</button>' +
