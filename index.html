@@ -2688,15 +2688,15 @@ function viewProjects(){
     </div>
 
     ${projects.length===0?'<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>':
-    `<div style="display:flex;gap:16px;overflow-x:auto;align-items:flex-start;padding-bottom:8px">
+    `<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
       ${columns.map(col=>{
         const colProjects = projects.filter(p=>(p.status||'진행중')===col.key);
-        return `<div style="flex:0 0 280px;min-width:280px">
+        return `<div style="min-width:0">
           <div style="margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
               <i class="ti ${col.icon}" style="font-size:14px;color:${col.color}"></i>
               <span style="font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--text)">${col.label}</span>
-              <span style="background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center">${colProjects.length}</span>
+              <span style="background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${colProjects.length}</span>
             </div>
             <div style="height:3px;border-radius:2px;background:${col.color}"></div>
           </div>
