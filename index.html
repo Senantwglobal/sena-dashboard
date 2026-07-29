@@ -2779,6 +2779,8 @@ function viewProjects(){
     `<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">
       ${columns.map(col=>{
         const colProjects = projects.filter(p=>(p.status||'진행중')===col.key);
+        const COL_MAX = 10;
+        const visibleProjects = colProjects.slice(0, COL_MAX);
         return `<div style="min-width:0">
           <div style="margin-bottom:12px">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
@@ -2791,11 +2793,48 @@ function viewProjects(){
           <div>
             ${colProjects.length===0
               ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding:20px 0;border:1.5px dashed var(--bd);border-radius:10px">항목 없음</div>`
-              : colProjects.map(renderCard).join('')}
+              : visibleProjects.map(renderCard).join('')}
+            ${colProjects.length>COL_MAX?`<button class="btn proj-col-more-btn" data-status="${col.key}" style="width:100%;justify-content:center;font-size:11px;padding:8px;margin-top:2px"><i class="ti ti-chevron-down"></i> 더보기 (${colProjects.length-COL_MAX}개 더)</button>`:''}
           </div>
         </div>`;
       }).join('')}
     </div>`}
+  `;
+}
+
+function modalProjectStatusList(statusKey){
+  const columns = [
+    {key:'진행중', label:'진행중', color:'#7C3AED', icon:'ti-rocket'},
+    {key:'보류',   label:'보류',   color:'#F97316', icon:'ti-player-pause'},
+    {key:'중단',   label:'중단',   color:'#6B7280', icon:'ti-player-stop'},
+    {key:'완료',   label:'완료',   color:'#10B981', icon:'ti-circle-check'},
+  ];
+  const col = columns.find(c=>c.key===statusKey) || columns[0];
+  const projects = state.data.projects.filter(p=>(p.status||'진행중')===statusKey);
+  return `
+    <div class="modal" style="width:420px">
+      <div class="mh">
+        <h3><i class="ti ${col.icon}" style="color:${col.color}"></i> ${col.label} <span style="color:var(--muted);font-weight:400">(${projects.length}개)</span></h3>
+        <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="mb" style="max-height:70vh;overflow-y:auto">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${projects.length===0?'<div class="empty-state">항목이 없습니다.</div>':
+            projects.map(p=>{
+              const prog = progressOf(p);
+              const dday = p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+              const ddayLabel = dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`);
+              return `<div class="modal-proj-link" data-pid="${p.id}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;cursor:pointer">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
+                  <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${p.category}${dday!==null?' · '+ddayLabel:''} · 진행률 ${prog}%</div>
+                </div>
+                <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px;flex-shrink:0"></i>
+              </div>`;
+            }).join('')}
+        </div>
+      </div>
+    </div>
   `;
 }
 
@@ -4993,6 +5032,24 @@ function bindViewEvents(){
       state.projPastEventPage = 0;
       state.projFileLinkPage = 0;
       render();
+    });
+  });
+
+  document.querySelectorAll('.proj-col-more-btn').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      openModal(modalProjectStatusList(el.dataset.status));
+      bindModalCommon();
+      document.querySelectorAll('.modal-proj-link').forEach(item=>{
+        item.addEventListener('click', ()=>{
+          state.selectedProjectId = item.dataset.pid;
+          state.view = 'projects';
+          state.projChecklistShowAll = false;
+          state.projPastEventPage = 0;
+          state.projFileLinkPage = 0;
+          closeModal();
+          render();
+        });
+      });
     });
   });
 
