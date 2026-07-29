@@ -89,11 +89,7 @@ select.inp{cursor:pointer}
 .kpi:hover{border-color:#D3D6DB}
 .ki{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
-.ti-fallback .ki i.ti-briefcase::before{content:"💼"}
-.ti-fallback .ki i.ti-list-check::before{content:"✅"}
-.ti-fallback .ki i.ti-calendar-event::before{content:"📅"}
-.ti-fallback .ki i.ti-flag::before{content:"🚩"}
-.ti-fallback .ki i.ti-users::before{content:"👥"}
+.ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
 .kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
 .kl{font-size:11px;color:var(--muted);font-weight:300}
@@ -1581,18 +1577,41 @@ function viewHome(){
 
     <div class="two">
       <div class="dash-left-col" style="display:flex;flex-direction:column">
-        <div class="card" style="margin-bottom:14px;border-left:3px solid var(--o)">
-          <div class="sh"><div class="st"><i class="ti ti-calendar-event oi"></i>오늘 일정 (${dayjs().format('M월 D일 (ddd)')})</div></div>
-          ${todayEvs.length===0
-            ? `<div style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">오늘 일정이 없습니다.</div>`
-            : todayEvs.map(e=>{
-                const c=eventColor(e.type);
-                const isEditable = state.data.calendar.some(x=>x.id===e.id);
-                return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
-                  <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-                  <span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span>
+        <div class="card" style="margin-bottom:14px">
+          <div class="sh" style="margin-bottom:10px">
+            <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
+            <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+            ${(() => {
+              const dowLabels = ['일','월','화','수','목','금','토'];
+              const weekStart = dayjs().startOf('week');
+              const evAll = allCalendarEvents();
+              return Array.from({length:7}).map((_,i)=>{
+                const d = weekStart.add(i,'day');
+                const dateStr = d.format('YYYY-MM-DD');
+                const isToday = dateStr===dayjs().format('YYYY-MM-DD');
+                const hasEvents = evAll.some(e=> e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
+                return `<div class="week-day-cell" data-date="${dateStr}" style="cursor:pointer;padding:4px 0;border-radius:8px">
+                  <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${dowLabels[i]}</div>
+                  <div style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;font-weight:${isToday?'700':'300'};background:${isToday?'#EF4444':'transparent'};color:${isToday?'#fff':'var(--text)'}">${d.date()}</div>
+                  <div style="height:5px;margin-top:3px">${hasEvents?`<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:${isToday?'#EF4444':'var(--o)'}"></span>`:''}</div>
                 </div>`;
-              }).join('')}
+              }).join('');
+            })()}
+          </div>
+          ${todayEvs.length>0 ? `
+          <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--bd)">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">오늘 일정</div>
+            ${todayEvs.map(e=>{
+              const c=eventColor(e.type);
+              const isEditable = state.data.calendar.some(x=>x.id===e.id);
+              return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
+                <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+                <span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span>
+              </div>`;
+            }).join('')}
+          </div>` : ''}
         </div>
 
         <div class="card">
@@ -1676,32 +1695,6 @@ function viewHome(){
               <div id="clockUS" style="font-size:18px;font-weight:300;font-variant-numeric:tabular-nums;color:#185FA5">--:--</div>
               <div id="dateUS" style="font-size:10px;color:var(--muted);margin-top:2px"></div>
             </div>
-          </div>
-        </div>
-
-        <!-- 이번주 위젯 -->
-        <div class="card" style="margin-bottom:14px">
-          <div class="sh" style="margin-bottom:10px">
-            <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
-            <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
-            ${(() => {
-              const dowLabels = ['일','월','화','수','목','금','토'];
-              const weekStart = dayjs().startOf('week');
-              const evAll = allCalendarEvents();
-              return Array.from({length:7}).map((_,i)=>{
-                const d = weekStart.add(i,'day');
-                const dateStr = d.format('YYYY-MM-DD');
-                const isToday = dateStr===dayjs().format('YYYY-MM-DD');
-                const hasEvents = evAll.some(e=> e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
-                return `<div class="week-day-cell" data-date="${dateStr}" style="cursor:pointer;padding:4px 0;border-radius:8px">
-                  <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${dowLabels[i]}</div>
-                  <div style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;font-weight:${isToday?'700':'300'};background:${isToday?'#EF4444':'transparent'};color:${isToday?'#fff':'var(--text)'}">${d.date()}</div>
-                  <div style="height:5px;margin-top:3px">${hasEvents?`<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:${isToday?'#EF4444':'var(--o)'}"></span>`:''}</div>
-                </div>`;
-              }).join('');
-            })()}
           </div>
         </div>
 
