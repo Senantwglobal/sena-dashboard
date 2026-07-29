@@ -2452,6 +2452,9 @@ function viewVendorDetail(){
               curFolder = folderLabel;
               folderHtml = `<div style="font-size:10px;font-weight:600;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
             }
+            const sourceCaption = lk.isDirect
+              ? `<span style="font-size:9px;color:var(--muted)">직접 첨부</span>`
+              : `<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 6px;border-radius:8px;display:inline-flex;align-items:center;gap:2px;max-width:100%"><i class="ti ti-file-text" style="font-size:9px;flex-shrink:0"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fmtDate(lk.logDate)} 로그 · ${(lk.logSummary||'').slice(0,22)}</span></span>`;
             if(lk.data){
               const t = lk.type||'';
               const icon = t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
@@ -2460,7 +2463,7 @@ function viewVendorDetail(){
                 <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
                 <div style="flex:1;min-width:0">
                   <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="font-size:12px;font-weight:500;color:${color};text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
-                  ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${(lk.logSummary||'').slice(0,25)}</span>`}
+                  ${sourceCaption}
                 </div>
                 ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
               </div>`;
@@ -2473,7 +2476,7 @@ function viewVendorDetail(){
               <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
               <div style="flex:1;min-width:0">
                 <a href="${url}" target="_blank" style="font-size:12px;font-weight:500;color:var(--o);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
-                ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${(lk.logSummary||'').slice(0,25)}</span>`}
+                ${sourceCaption}
               </div>
               <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
               ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
