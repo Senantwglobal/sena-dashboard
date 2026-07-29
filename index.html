@@ -3114,21 +3114,73 @@ function viewCalendar(){
       }).join('')}
     </div>
 
-    <div class="cal-grid" style="margin-bottom:20px">
-      ${dowNames.map(d=>`<div class="cal-dh">${d}</div>`).join('')}
-      ${cells.map(d=>{
-        if(d===null) return `<div class="cal-cell empty"></div>`;
-        const dateStr = month.date(d).format('YYYY-MM-DD');
-        const evs = allEvs.filter(e=>e.date===dateStr);
-        const isToday = dateStr===todayStr;
-        const isHoliday = evs.some(e=>e.isHoliday);
-        return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}">
-          <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:300':''}">${d}</div>
-          ${evs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
-          ${evs.length>3?`<span style="font-size:9px;color:var(--muted)">+${evs.length-3}건</span>`:''}
+    ${(() => {
+      const weeks = [];
+      for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
+      const BAR_H = 18, BAR_GAP = 3, NUM_H = 22;
+
+      const weekBlocks = weeks.map(weekCells=>{
+        const weekDates = weekCells.map(d=> d===null ? null : month.date(d).format('YYYY-MM-DD'));
+        const validDates = weekDates.filter(Boolean);
+        const wMin = validDates[0], wMax = validDates[validDates.length-1];
+
+        // 기간(다일) 일정 - endDate가 있고 date와 다른 경우
+        const multiEvs = wMin ? allEvs.filter(e=>{
+          if(!e.endDate || e.endDate===e.date) return false;
+          return e.date <= wMax && e.endDate >= wMin;
+        }).sort((a,b)=>a.date.localeCompare(b.date)) : [];
+
+        // 레인 배정 (그리디)
+        const laneEnds = []; // 각 레인의 마지막 colEnd
+        const bars = multiEvs.map(e=>{
+          const clampedStart = e.date < wMin ? wMin : e.date;
+          const clampedEnd = e.endDate > wMax ? wMax : e.endDate;
+          const colStart = weekDates.indexOf(clampedStart);
+          const colEnd = weekDates.indexOf(clampedEnd);
+          if(colStart===-1 || colEnd===-1) return null;
+          let lane = laneEnds.findIndex(end => end < colStart);
+          if(lane===-1){ lane = laneEnds.length; laneEnds.push(colEnd); }
+          else laneEnds[lane] = colEnd;
+          return {e, colStart, colEnd, lane, isStartCap: e.date>=wMin, isEndCap: e.endDate<=wMax};
+        }).filter(Boolean);
+
+        const laneCount = laneEnds.length;
+        const barsAreaH = laneCount>0 ? laneCount*(BAR_H+BAR_GAP) : 0;
+
+        const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+          ${weekCells.map((d,ci)=>{
+            if(d===null) return `<div class="cal-cell empty"></div>`;
+            const dateStr = weekDates[ci];
+            const isToday = dateStr===todayStr;
+            const dayEvs = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
+            const isHoliday = dayEvs.some(e=>e.isHoliday);
+            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="min-height:${74+barsAreaH}px">
+              <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
+              <div style="height:${barsAreaH}px"></div>
+              ${dayEvs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
+              ${dayEvs.length>3?`<span style="font-size:9px;color:var(--muted)">+${dayEvs.length-3}건</span>`:''}
+            </div>`;
+          }).join('')}
         </div>`;
-      }).join('')}
-    </div>
+
+        const barsOverlay = laneCount>0 ? `<div style="position:absolute;top:${NUM_H}px;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;pointer-events:none">
+          ${bars.map(b=>{
+            const c = eventColor(b.e.type);
+            return `<div class="cal-ev cal-ev-bar" data-eid="${b.e.id}" data-pid="${b.e.projectId||''}" style="grid-column:${b.colStart+1} / span ${b.colEnd-b.colStart+1};grid-row:1;margin-top:${b.lane*(BAR_H+BAR_GAP)}px;height:${BAR_H}px;background:${c.bg};color:${c.text};display:flex;align-items:center;padding:0 6px;border-radius:${b.isStartCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isStartCap?'4px':'0'};font-size:10px;overflow:hidden;white-space:nowrap;pointer-events:auto;cursor:pointer;font-weight:600">${b.isStartCap?b.e.title:''}</div>`;
+          }).join('')}
+        </div>` : '';
+
+        return `<div style="position:relative">${numbersRow}${barsOverlay}</div>`;
+      }).join('');
+
+      return `
+      <div class="cal-grid" style="margin-bottom:10px">
+        ${dowNames.map(d=>`<div class="cal-dh">${d}</div>`).join('')}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:20px">
+        ${weekBlocks}
+      </div>`;
+    })()}
 
     ${todayEvs.length>0 ? `
     <div class="card" style="margin-bottom:14px;border-left:3px solid var(--o)">
@@ -4066,8 +4118,19 @@ function modalEventForm(dateStr){
       <div class="mb">
         <form id="eventForm">
           <div class="two">
-            <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/></div>
-            <div class="field"><label class="field-label">종류</label><select class="inp" name="type">
+            <div class="field"><label class="field-label" style="display:flex;align-items:center;gap:10px">
+              날짜
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:300;cursor:pointer">
+                <input type="checkbox" id="multiDayCheckNew" style="accent-color:var(--o)"/> 여러 날 (기간)
+              </label>
+            </label>
+              <input class="inp" type="date" name="date" id="eventDateNew" value="${dateStr||dayjs().format('YYYY-MM-DD')}" required/>
+            </div>
+            <div class="field" id="endDateFieldNew" style="display:none">
+              <label class="field-label">종료일</label>
+              <input class="inp" type="date" name="endDate" id="eventEndDateNew" value="${dateStr||dayjs().format('YYYY-MM-DD')}"/>
+            </div>
+            <div class="field" id="typeFieldNew"><label class="field-label">종류</label><select class="inp" name="type">
               ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option>${t.name}</option>`).join('')}
             </select></div>
           </div>
@@ -4572,14 +4635,23 @@ function modalEditEvent(ev){
       <div class="mb">
         <form id="editEventForm">
           <div class="two">
-            <div class="field"><label class="field-label">날짜</label>
-              <input class="inp" type="date" name="date" value="${ev.date}" required/>
+            <div class="field"><label class="field-label" style="display:flex;align-items:center;gap:10px">
+              날짜
+              <label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:300;cursor:pointer">
+                <input type="checkbox" id="multiDayCheckEdit" ${ev.endDate && ev.endDate!==ev.date?'checked':''} style="accent-color:var(--o)"/> 여러 날 (기간)
+              </label>
+            </label>
+              <input class="inp" type="date" name="date" id="eventDateEdit" value="${ev.date}" required/>
             </div>
-            <div class="field"><label class="field-label">종류</label>
-              <select class="inp" name="type">
-                ${allTypes.map(t=>`<option ${ev.type===t?'selected':''}>${t}</option>`).join('')}
-              </select>
+            <div class="field" id="endDateFieldEdit" style="${ev.endDate && ev.endDate!==ev.date?'':'display:none'}">
+              <label class="field-label">종료일</label>
+              <input class="inp" type="date" name="endDate" id="eventEndDateEdit" value="${ev.endDate||ev.date}"/>
             </div>
+          </div>
+          <div class="field"><label class="field-label">종류</label>
+            <select class="inp" name="type">
+              ${allTypes.map(t=>`<option ${ev.type===t?'selected':''}>${t}</option>`).join('')}
+            </select>
           </div>
           <div class="field"><label class="field-label">제목</label>
             <input class="inp" type="text" name="title" value="${(ev.title||'').replace(/"/g,'&quot;')}" required/>
@@ -6510,6 +6582,19 @@ function bindEventDetailModal(eid){
 
 function bindEditEventModal(eid){
   bindVendorPersonChecklists('evVendorCheckListEdit', 'evPersonCheckListEdit', 'evVendorSearchEdit');
+
+  const multiDayCheckEdit = document.getElementById('multiDayCheckEdit');
+  const endDateFieldEdit = document.getElementById('endDateFieldEdit');
+  const eventDateEdit = document.getElementById('eventDateEdit');
+  const eventEndDateEdit = document.getElementById('eventEndDateEdit');
+  if(multiDayCheckEdit) multiDayCheckEdit.addEventListener('change', ()=>{
+    endDateFieldEdit.style.display = multiDayCheckEdit.checked ? '' : 'none';
+    if(multiDayCheckEdit.checked && eventEndDateEdit.value < eventDateEdit.value) eventEndDateEdit.value = eventDateEdit.value;
+  });
+  if(eventDateEdit) eventDateEdit.addEventListener('change', ()=>{
+    if(eventEndDateEdit.value < eventDateEdit.value) eventEndDateEdit.value = eventDateEdit.value;
+  });
+
   document.getElementById('editEventForm').addEventListener('submit', e2=>{
     e2.preventDefault();
     const fd = new FormData(e2.target);
@@ -6517,9 +6602,14 @@ function bindEditEventModal(eid){
     if(idx!==-1){
       const vendorIds = Array.from(document.querySelectorAll('#evVendorCheckListEdit .ev-vendor-cb:checked')).map(cb=>cb.value);
       const attendeePersonIds = Array.from(document.querySelectorAll('#evPersonCheckListEdit .ev-person-cb:checked')).map(cb=>cb.value);
+      const isMultiDay = multiDayCheckEdit?.checked || false;
+      const startDate = fd.get('date');
+      let endDate = isMultiDay ? (fd.get('endDate')||startDate) : '';
+      if(endDate && endDate < startDate) endDate = startDate;
       state.data.calendar[idx] = {
         ...state.data.calendar[idx],
-        date: fd.get('date'),
+        date: startDate,
+        endDate,
         type: fd.get('type'),
         title: fd.get('title'),
         allDay: document.getElementById('allDayCheckEdit')?.checked||false,
@@ -6547,6 +6637,19 @@ function bindEditEventModal(eid){
 
 function bindEventFormSubmit(){
   bindVendorPersonChecklists('evVendorCheckListNew', 'evPersonCheckListNew', 'evVendorSearchNew');
+
+  const multiDayCheckNew = document.getElementById('multiDayCheckNew');
+  const endDateFieldNew = document.getElementById('endDateFieldNew');
+  const eventDateNew = document.getElementById('eventDateNew');
+  const eventEndDateNew = document.getElementById('eventEndDateNew');
+  if(multiDayCheckNew) multiDayCheckNew.addEventListener('change', ()=>{
+    endDateFieldNew.style.display = multiDayCheckNew.checked ? '' : 'none';
+    if(multiDayCheckNew.checked && eventEndDateNew.value < eventDateNew.value) eventEndDateNew.value = eventDateNew.value;
+  });
+  if(eventDateNew) eventDateNew.addEventListener('change', ()=>{
+    if(eventEndDateNew.value < eventDateNew.value) eventEndDateNew.value = eventDateNew.value;
+  });
+
   document.getElementById('eventForm').addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -6556,15 +6659,19 @@ function bindEventFormSubmit(){
     const timeLabel = allDay ? '종일' : startTime ? (endTime ? startTime+'~'+endTime : startTime) : '';
     const vendorIds = Array.from(document.querySelectorAll('#evVendorCheckListNew .ev-vendor-cb:checked')).map(cb=>cb.value);
     const attendeePersonIds = Array.from(document.querySelectorAll('#evPersonCheckListNew .ev-person-cb:checked')).map(cb=>cb.value);
+    const isMultiDay = multiDayCheckNew?.checked || false;
+    const startDate = fd.get('date');
+    let endDate = isMultiDay ? (fd.get('endDate')||startDate) : '';
+    if(endDate && endDate < startDate) endDate = startDate;
     state.data.calendar.push({
-      id: uid('ev'), date: fd.get('date'), type: fd.get('type'), title: fd.get('title'),
+      id: uid('ev'), date: startDate, endDate, type: fd.get('type'), title: fd.get('title'),
       time: timeLabel, startTime, endTime, allDay,
       vendorIds, vendorId: vendorIds[0]||'',
       attendeePersonIds, attendeePersonId: attendeePersonIds[0]||'',
       projectId: fd.get('projectId')||'',
       location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
     });
-    closeModal(); persist(false); showToast('일정이 등록되었습니다.');
+    closeModal(); persist(false); render(); showToast('일정이 등록되었습니다.');
   });
 }
 
