@@ -273,13 +273,14 @@ async function loadStoreRemote(){
     // ── 마이그레이션: calendarEventTypes가 없거나 연차/반차가 빠진 경우 보완 ──
     const defaultEventTypes = [
       {name:'미팅', color:'#1C85E8'},{name:'외근', color:'#D85A30'},
-      {name:'마감', color:'#7C3AED'},{name:'연차', color:'#059669'},
-      {name:'반차', color:'#0891B2'},{name:'반반차', color:'#65A30D'},
+      {name:'마감', color:'#7C3AED'},
       {name:'개인 용무', color:'#F59E0B'},{name:'전화 통화', color:'#38BDF8'},
     ];
     if(!d.calendarEventTypes || d.calendarEventTypes.length < 3){
       d.calendarEventTypes = defaultEventTypes;
     } else {
+      // 연차/반차/반반차는 더 이상 수동 관리 유형이 아님 (연차 관리에서 자동 생성됨) → 제거
+      d.calendarEventTypes = d.calendarEventTypes.filter(t=>!['연차','반차','반반차'].includes(t.name));
       // 기존 유형에 없는 기본 유형만 앞에 추가
       const existingNames = d.calendarEventTypes.map(t=>t.name);
       const missing = defaultEventTypes.filter(t=>!existingNames.includes(t.name));
@@ -1171,9 +1172,6 @@ function seedData(){
       {name:'미팅', color:'#1C85E8'},
       {name:'외근', color:'#D85A30'},
       {name:'마감', color:'#7C3AED'},
-      {name:'연차', color:'#059669'},
-      {name:'반차', color:'#0891B2'},
-      {name:'반반차', color:'#65A30D'},
       {name:'개인 용무', color:'#F59E0B'},
       {name:'전화 통화', color:'#38BDF8'},
     ],
@@ -1389,7 +1387,7 @@ function allCalendarEvents(){
   // 연차/반차 자동 반영
   (state.data.leave?.logs||[]).forEach(l=>{
     if(!evs.find(e=>e.id==='leave_'+l.id)){
-      evs.push({id:'leave_'+l.id, date:l.date, type:l.type, title:l.type+(l.memo?' ('+l.memo+')':''), time:''});
+      evs.push({id:'leave_'+l.id, date:l.date, type:l.type, title:l.type+(l.memo?' ('+l.memo+')':''), time:'', isLeave:true});
     }
   });
   // 공휴일 (현재 연도 + 내년)
@@ -3185,7 +3183,6 @@ function viewCalendar(){
   // 모든 이벤트 타입 (calendarEventTypes에서)
   const allEventTypes = state.data.calendarEventTypes || [
     {name:'미팅',color:'#1C85E8'},{name:'외근',color:'#D85A30'},{name:'마감',color:'#7C3AED'},
-    {name:'연차',color:'#059669'},{name:'반차',color:'#0891B2'},{name:'반반차',color:'#65A30D'},
     {name:'개인 용무',color:'#F59E0B'},{name:'전화 통화',color:'#38BDF8'}
   ];
 
@@ -3206,7 +3203,7 @@ function viewCalendar(){
     </div>
 
     <div class="legend-row" style="flex-wrap:wrap">
-      ${allEventTypes.filter(t=>!['반차','반반차'].includes(t.name)).map(t=>{
+      ${allEventTypes.filter(t=>!['연차','반차','반반차'].includes(t.name)).map(t=>{
         const c=eventColor(t.name); return `<span><span class="legend-dot" style="background:${c.dot}"></span>${t.name}</span>`;
       }).join('')}
     </div>
@@ -3252,11 +3249,14 @@ function viewCalendar(){
             const isToday = dateStr===todayStr;
             const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
             const holidayEvs = dayEvsAll.filter(e=>e.isHoliday);
-            const dayEvs = dayEvsAll.filter(e=>!e.isHoliday);
-            const EV_MAX = holidayEvs.length>0 ? 1 : 2;
+            const leaveEvs = dayEvsAll.filter(e=>e.isLeave);
+            const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave);
+            const labelCount = holidayEvs.length + leaveEvs.length;
+            const EV_MAX = labelCount>0 ? 1 : 2;
             return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="height:${CELL_H+barsAreaH}px">
               <div class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
               ${holidayEvs.length>0?`<div style="font-size:8.5px;color:#DC2626;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${holidayEvs.map(h=>h.title).join(', ')}</div>`:''}
+              ${leaveEvs.length>0?`<div style="font-size:8.5px;color:var(--muted);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${leaveEvs.map(h=>h.title).join(', ')}</div>`:''}
               <div style="height:${barsAreaH}px"></div>
               ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);font-weight:700;cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
@@ -3305,17 +3305,36 @@ function viewCalendar(){
     <div class="card">
       <div class="sh"><div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
       <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span></div>
-      ${monthEvs.map(e=>{
-        const c=eventColor(e.type);
-        const isToday=e.date===todayStr;
-        const isEditable = state.data.calendar.some(x=>x.id===e.id);
-        return `<div class="dash-row" style="gap:8px">
-        <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'700':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-        <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-        <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
-        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
-        ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
-      </div>`;}).join('')}
+      ${(() => {
+        const specialEvs = monthEvs.filter(e=>e.isHoliday||e.isLeave);
+        const realEvs = monthEvs.filter(e=>!e.isHoliday && !e.isLeave);
+        const specialHtml = specialEvs.length>0 ? `
+          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--bd)">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">공휴일 · 연차/반차</div>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              ${specialEvs.map(e=>{
+                const isToday = e.date===todayStr;
+                return `<div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
+                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>` : '';
+        const realHtml = realEvs.map(e=>{
+          const c=eventColor(e.type);
+          const isToday=e.date===todayStr;
+          const isEditable = state.data.calendar.some(x=>x.id===e.id);
+          return `<div class="dash-row" style="gap:8px">
+          <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'700':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
+          <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+          <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
+          <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
+          ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
+        </div>`;
+        }).join('');
+        return specialHtml + realHtml;
+      })()}
     </div>` : ''}
   `;
 }
@@ -4232,7 +4251,7 @@ function modalEventForm(dateStr){
               <input class="inp" type="date" name="endDate" id="eventEndDateNew" value="${dateStr||dayjs().format('YYYY-MM-DD')}"/>
             </div>
             <div class="field" id="typeFieldNew"><label class="field-label">종류</label><select class="inp" name="type">
-              ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option>${t.name}</option>`).join('')}
+              ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option>${t.name}</option>`).join('')}
             </select></div>
           </div>
           <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
@@ -4725,7 +4744,7 @@ function bindCompanyTypesManager(){
 // 캘린더 이벤트 수정 모달
 function modalEditEvent(ev){
   const allTypes = (state.data.calendarEventTypes||[
-    {name:'미팅'},{name:'외근'},{name:'연차'},{name:'반차'},{name:'반반차'},{name:'개인 용무'},{name:'전화 통화'}
+    {name:'미팅'},{name:'외근'},{name:'개인 용무'},{name:'전화 통화'}
   ]).map(t=>t.name);
   const evVendorIds = ev.vendorIds && ev.vendorIds.length ? ev.vendorIds : (ev.vendorId ? [ev.vendorId] : []);
   const evPersonIds = ev.attendeePersonIds && ev.attendeePersonIds.length ? ev.attendeePersonIds : (ev.attendeePersonId ? [ev.attendeePersonId] : []);
