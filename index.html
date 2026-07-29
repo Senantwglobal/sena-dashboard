@@ -1730,7 +1730,7 @@ function viewHome(){
                   <span class="badge ${pc}">${v.priority}</span>
                 </div>
                 ${brandNames.length>0
-                  ? `<div style="font-size:10px;color:var(--o);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${brandNames.join(' · ')}</div>`
+                  ? `<div style="font-size:10px;color:var(--o);font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${brandNames.join(' · ')}</div>`
                   : `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest?latest.summary.slice(0,35)+'…':'기록 없음'}</div>`}
               </div>
             </div>`;
