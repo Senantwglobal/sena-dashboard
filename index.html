@@ -6,6 +6,9 @@
 <title>천세나 업무 대시보드</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>
 // 아이콘 폰트가 실제로 로드됐는지 확인 → 실패 시 폰트 없이도 KPI 카드가 비어보이지 않게 이모지 폴백 적용
 (function(){
@@ -30,51 +33,54 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --o:#2554C7;--ol:#EBF0FB;--od:#1A3A9E;--ob:#A8C0F5;
-  --bg:#f7f6f3;--card:#fff;--bd:#e8e6de;--text:#16161a;--muted:#84828a;--sf:#f4f3ef;
-  --shadow-xs:0 1px 2px rgba(20,20,25,.04);
-  --shadow-sm:0 1px 3px rgba(20,20,25,.05), 0 1px 2px rgba(20,20,25,.04);
-  --shadow-md:0 4px 16px rgba(20,20,25,.07), 0 1px 3px rgba(20,20,25,.05);
-  --shadow-lg:0 12px 32px rgba(20,20,25,.12), 0 2px 8px rgba(20,20,25,.06);
-  --ease:cubic-bezier(.4,0,.2,1);
+  --bg:#F7F6F3;--card:#fff;--bd:#EAE7DF;--text:#18181B;--muted:#8A877E;--sf:#F3F1EC;
+  --serif:'Newsreader',ui-serif,Georgia,serif;
+  --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
+  --shadow-xs:0 1px 2px rgba(24,24,27,.04), inset 0 1px 0 rgba(255,255,255,.7);
+  --shadow-sm:0 1px 3px rgba(24,24,27,.05), 0 1px 2px rgba(24,24,27,.04);
+  --shadow-md:0 8px 24px rgba(24,24,27,.08), 0 2px 6px rgba(24,24,27,.05);
+  --shadow-lg:0 16px 40px rgba(24,24,27,.14), 0 4px 12px rgba(24,24,27,.06);
+  --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 ::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#d8d5cc;border-radius:20px;border:2px solid var(--bg)}
-::-webkit-scrollbar-thumb:hover{background:#c3c0b6}
+::-webkit-scrollbar-thumb{background:#DBD7CB;border-radius:20px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#C7C2B2}
 a{color:inherit}
-.hdr{background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--bd);padding:11px 20px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-.logo{background:var(--o);color:#fff;font-size:13px;font-weight:700;padding:5px 11px;border-radius:7px;letter-spacing:-.01em;box-shadow:0 2px 6px rgba(37,84,199,.25)}
+.editorial{font-family:var(--serif);font-style:italic;letter-spacing:-.01em}
+.hdr{background:rgba(247,246,243,.82);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{background:linear-gradient(155deg,#3465E0,var(--o) 55%,var(--od));color:#fff;font-family:var(--serif);font-style:italic;font-size:15px;font-weight:600;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:9px;box-shadow:0 2px 8px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.35)}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
-.nav{display:flex;padding:0 16px;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:51px;z-index:49}
-.nb{padding:11px 15px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:500;transition:color .15s var(--ease),border-color .15s var(--ease)}
-.nb.active{color:var(--o);border-bottom-color:var(--o);font-weight:600}
-.nb:hover:not(.active){color:var(--text)}
-.cnt{padding:22px;max-width:1200px;margin:0 auto}
-.card{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease)}
+.nav{display:flex;gap:2px;padding:6px 16px;background:rgba(247,246,243,.82);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
+.nb{padding:8px 15px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:9px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:500;transition:color .18s var(--ease),background .18s var(--ease)}
+.nb.active{color:var(--od);background:var(--ol);font-weight:700}
+.nb:hover:not(.active){color:var(--text);background:var(--sf)}
+.cnt{padding:24px;max-width:1200px;margin:0 auto}
+.card{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:17px;margin-bottom:14px;box-shadow:var(--shadow-xs);transition:box-shadow .25s var(--ease)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
-.st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.005em}
+.st{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:#111114}
 .oi{color:var(--o)}
-.btn{font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid var(--bd);background:var(--card);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),border-color .15s var(--ease),transform .1s var(--ease),box-shadow .15s var(--ease);font-family:inherit;font-weight:500}
-.btn:hover{background:var(--sf);border-color:#d8d5cc}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:9px;border:0.5px solid var(--bd);background:var(--card);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .18s var(--ease),border-color .18s var(--ease),transform .12s var(--ease),box-shadow .18s var(--ease);font-family:inherit;font-weight:500}
+.btn:hover{background:var(--sf);border-color:#D9D5C8}
 .btn:active{transform:scale(.97)}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
-.btn-o{background:var(--o);color:#fff;border-color:var(--o);box-shadow:0 1px 2px rgba(37,84,199,.2)}
-.btn-o:hover{background:var(--od);border-color:var(--od);color:#fff;box-shadow:0 2px 8px rgba(37,84,199,.3)}
-.btn-red{color:#A32D2D;border-color:#F09595}
-.btn-red:hover{background:#FCEBEB;border-color:#e88080}
-.badge{font-size:10px;padding:2.5px 8px;border-radius:20px;font-weight:600;white-space:nowrap;letter-spacing:.01em}
+.btn-o{background:linear-gradient(155deg,#3465E0,var(--o));color:#fff;border-color:var(--o);box-shadow:0 1px 2px rgba(37,84,199,.25), inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-o:hover{background:linear-gradient(155deg,var(--o),var(--od));border-color:var(--od);color:#fff;box-shadow:0 3px 10px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.2)}
+.btn-red{color:#9F2F2D;border-color:#F0B8B8}
+.btn-red:hover{background:#FDEBEC;border-color:#e88080}
+.badge{font-size:10px;padding:2.5px 8px;border-radius:20px;font-weight:600;white-space:nowrap;letter-spacing:.02em}
 .bo{background:var(--ol);color:var(--od)}
-.bb{background:#E6F1FB;color:#185FA5}
-.br{background:#FCEBEB;color:#A32D2D}
-.bg{background:#EAF3DE;color:#3B6D11}
+.bb{background:#E1F3FE;color:#1F6C9F}
+.br{background:#FDEBEC;color:#9F2F2D}
+.bg{background:#EDF3EC;color:#346538}
 .bgr{background:#F1EFE8;color:#5F5E5A}
-.bw{background:#FEF3C7;color:#92400E}
-.inp{width:100%;padding:8px 11px;border:0.5px solid var(--bd);border-radius:9px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease);font-family:inherit}
+.bw{background:#FBF3DB;color:#956400}
+.inp{width:100%;padding:8px 12px;border:0.5px solid var(--bd);border-radius:10px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease),background .18s var(--ease);font-family:inherit}
 .inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(37,84,199,.12);background:#fff}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
@@ -124,7 +130,7 @@ select.inp{cursor:pointer}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal{background:#fff;border-radius:16px;border:0.5px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
-.mh h3{font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.mh h3{font-family:var(--serif);font-style:italic;font-size:17px;font-weight:600;letter-spacing:-.01em}
 .mb{padding:16px 18px}
 .mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1c1c22;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(4px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;box-shadow:var(--shadow-lg)}
@@ -1460,7 +1466,7 @@ function render(){
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="logo">O</span>
-        <span style="font-size:14px;font-weight:500">천세나 업무 대시보드</span>
+        <span class="editorial" style="font-size:16px;font-weight:600;color:#111114">천세나 업무 대시보드</span>
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
@@ -2139,7 +2145,7 @@ function viewVendorDetail(){
           </label>`:''}
         </div>
         <div>
-          <div style="font-size:18px;font-weight:600">${v.name}</div>
+          <div class="editorial" style="font-size:21px;font-weight:600;color:#111114">${v.name}</div>
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${typeColorFor(v.companyType).bg};color:${typeColorFor(v.companyType).color}">${v.companyType}</span>`:''}
@@ -2714,7 +2720,7 @@ function viewProjectDetail(){
     <button class="back-link" id="backToProjects"><i class="ti ti-arrow-left"></i> 프로젝트 목록</button>
     <div class="sh">
       <div>
-        <div style="font-size:18px;font-weight:600">${p.title}</div>
+        <div class="editorial" style="font-size:21px;font-weight:600;color:#111114">${p.title}</div>
         <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
           <span class="badge bo">${p.category}</span>
           <select class="proj-status-select" data-pid="${p.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
