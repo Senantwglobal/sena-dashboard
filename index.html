@@ -1470,6 +1470,15 @@ function render(){
   app.innerHTML = `
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="position:relative;flex-shrink:0">
+          <label id="dashboardLogoLabel" title="${isReadOnly()?'':'클릭하여 로고 업로드'}" style="width:28px;height:28px;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${state.data.dashboardLogo?'transparent':'var(--sf)'};cursor:${isReadOnly()?'default':'pointer'};border:0.5px solid var(--bd)">
+            ${state.data.dashboardLogo
+              ? `<img src="${state.data.dashboardLogo}" style="width:100%;height:100%;object-fit:cover"/>`
+              : `<i class="ti ti-photo" style="font-size:14px;color:var(--muted)"></i>`}
+            ${!isReadOnly()?`<input type="file" id="dashboardLogoInput" accept="image/*" style="display:none"/>`:''}
+          </label>
+          ${state.data.dashboardLogo && !isReadOnly() ? `<button id="removeDashboardLogoBtn" title="로고 제거" style="position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:#DC2626;color:#fff;border:1.5px solid #fff;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-size:9px;line-height:1"><i class="ti ti-x" style="font-size:8px"></i></button>` : ''}
+        </div>
         <span class="editorial dashboard-title-text" id="dashboardTitleText" style="font-size:16px;color:#111114;cursor:pointer" title="클릭하여 이름 수정">${state.data.dashboardTitle || '천세나 업무 대시보드'}</span>
         ${!isReadOnly()?`<button id="editDashboardTitleBtn" title="이름 수정" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:13px"></i></button>`:''}
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
@@ -1507,6 +1516,27 @@ function render(){
   if(editDashboardTitleBtn) editDashboardTitleBtn.addEventListener('click', renameDashboard);
   const dashboardTitleText = document.getElementById('dashboardTitleText');
   if(dashboardTitleText && !isReadOnly()) dashboardTitleText.addEventListener('click', renameDashboard);
+
+  const dashboardLogoInput = document.getElementById('dashboardLogoInput');
+  if(dashboardLogoInput) dashboardLogoInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 2*1024*1024){ showToast('이미지 용량은 2MB 이하로 업로드해주세요.'); return; }
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      state.data.dashboardLogo = reader.result;
+      persist(false); render();
+      showToast('로고가 저장되었습니다.');
+    };
+    reader.readAsDataURL(file);
+  });
+  const removeDashboardLogoBtn = document.getElementById('removeDashboardLogoBtn');
+  if(removeDashboardLogoBtn) removeDashboardLogoBtn.addEventListener('click', e=>{
+    e.preventDefault();
+    state.data.dashboardLogo = '';
+    persist(false); render();
+    showToast('로고가 제거되었습니다.');
+  });
 
   document.querySelectorAll('.nb').forEach(el=>{
     el.addEventListener('click', ()=>{
