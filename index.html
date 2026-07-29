@@ -5,6 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>천세나 업무 대시보드</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
+<script>
+// 아이콘 폰트가 실제로 로드됐는지 확인 → 실패 시 폰트 없이도 KPI 카드가 비어보이지 않게 이모지 폴백 적용
+(function(){
+  function markIconFallback(){
+    document.documentElement.classList.add('ti-fallback');
+  }
+  if('fonts' in document){
+    document.fonts.ready.then(function(){
+      var found = false;
+      document.fonts.forEach(function(f){ if(/tabler/i.test(f.family)) found = true; });
+      if(!found) markIconFallback();
+    }).catch(markIconFallback);
+    setTimeout(function(){
+      var found = false;
+      document.fonts.forEach(function(f){ if(/tabler/i.test(f.family) && f.status==='loaded') found = true; });
+      if(!found) markIconFallback();
+    }, 2500);
+  }
+})();
+</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--o:#2554C7;--ol:#EBF0FB;--od:#1A3A9E;--ob:#A8C0F5;--bg:#f8f7f5;--card:#fff;--bd:#e5e3dc;--text:#1a1a1a;--muted:#888;--sf:#f3f2ef}
@@ -48,6 +69,13 @@ select.inp{cursor:pointer}
 .kpi:hover{box-shadow:0 4px 14px rgba(0,0,0,.07);transform:translateY(-1px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ac,var(--o))}
 .ki{width:26px;height:26px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:8px}
+/* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
+.ti-fallback .ki i.ti-briefcase::before{content:"💼"}
+.ti-fallback .ki i.ti-list-check::before{content:"✅"}
+.ti-fallback .ki i.ti-calendar-event::before{content:"📅"}
+.ti-fallback .ki i.ti-flag::before{content:"🚩"}
+.ti-fallback .ki i.ti-users::before{content:"👥"}
+.ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
 .kn{font-size:26px;font-weight:700;margin-bottom:3px}
 .kl{font-size:11px;color:var(--muted)}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
@@ -1159,6 +1187,10 @@ const state = {
   leaveYearFilter: 'all',
   leaveRecordPage: 0,
   vendorProjectPage: 0,
+  vendorPastEventPage: 0,
+  projPastEventPage: 0,
+  vendorFileLinkPage: 0,
+  projFileLinkPage: 0,
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
 };
 
@@ -2181,19 +2213,22 @@ function viewVendorDetail(){
 
     ${(() => {
       const today = dayjs().format('YYYY-MM-DD');
-      const past = (state.data.calendar||[])
+      const pastAll = (state.data.calendar||[])
         .filter(e=>{
           const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
           return vids.includes(v.id) && e.date<today;
         })
-        .sort((a,b)=>b.date.localeCompare(a.date))
-        .slice(0,4);
-      if(past.length===0) return '';
+        .sort((a,b)=>b.date.localeCompare(a.date));
+      if(pastAll.length===0) return '';
+      const PE_PER_PAGE = 3;
+      const pePage = state.vendorPastEventPage || 0;
+      const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
+      const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
           <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
-          <span style="font-size:11px;color:var(--muted)">${past.length}건</span>
+          <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           ${past.map(e=>{
@@ -2202,7 +2237,7 @@ function viewVendorDetail(){
             const proj = e.projectId ? state.data.projects.find(p=>p.id===e.projectId) : null;
             const hasNote = e.meetingNote && e.meetingNote.trim();
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
-              <span style="font-size:10px;color:var(--muted);flex-shrink:0;width:44px">${fmtDate(e.date)}</span>
+              <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?' <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 있음"></i>':''}</div>
                 <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${personNames?personNames+' · ':''}${hasNote?(e.meetingSummary||'회의록 있음'):(e.location||'')}</div>
@@ -2211,6 +2246,11 @@ function viewVendorDetail(){
             </div>`;
           }).join('')}
         </div>
+        ${peTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+          <button class="btn vendor-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:3px 8px;font-size:11px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+          ${Array.from({length:peTotalPages}).map((_,i)=>`<button class="btn vendor-past-event-page-btn ${i===pePage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+          <button class="btn vendor-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:3px 8px;font-size:11px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+        </div>`:''}
       </div>`;
     })()}
 
@@ -2393,7 +2433,59 @@ function viewVendorDetail(){
           const allLinks = logs.flatMap(l=>(l.links||[]).map(lk=>({...lk, logDate:l.date, logSummary:l.summary})));
           // vendor.links (거래처 직접 첨부)
           const vendorLinks = useBrandData ? (activeBrand.links || []) : (v.links || []);
-          const combinedLinks = [...vendorLinks.map(lk=>({...lk, isDirect:true})), ...allLinks];
+          const combinedLinksRaw = [...vendorLinks.map(lk=>({...lk, isDirect:true})), ...allLinks];
+          // 정렬: 날짜 있는 것부터 최신순, 날짜 없는 것(구버전 직접첨부)은 맨 뒤
+          const withIdx = combinedLinksRaw.map((lk,idx)=>({...lk, _idx:idx, _date: lk.logDate || lk.addedDate || ''}));
+          const combinedLinks = withIdx.slice().sort((a,b)=>(b._date||'').localeCompare(a._date||''));
+
+          const FL_PER_PAGE = 5;
+          const flPage = state.vendorFileLinkPage || 0;
+          const flTotalPages = Math.ceil(combinedLinks.length / FL_PER_PAGE);
+          const pageItems = combinedLinks.slice(flPage*FL_PER_PAGE, flPage*FL_PER_PAGE+FL_PER_PAGE);
+
+          let curFolder = null;
+          const itemsHtml = pageItems.map((lk)=>{
+            const idx = lk._idx;
+            const folderLabel = lk._date ? dayjs(lk._date).format('YYYY년 M월') : '미분류';
+            let folderHtml = '';
+            if(folderLabel !== curFolder){
+              curFolder = folderLabel;
+              folderHtml = `<div style="font-size:10px;font-weight:600;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+            }
+            if(lk.data){
+              const t = lk.type||'';
+              const icon = t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
+              const color = t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
+              return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+                <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
+                <div style="flex:1;min-width:0">
+                  <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="font-size:12px;font-weight:500;color:${color};text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
+                  ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${(lk.logSummary||'').slice(0,25)}</span>`}
+                </div>
+                ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+              </div>`;
+            }
+            const url = (lk.url||'').replace(/"/g,'&quot;');
+            const isDrive = url.includes('drive.google')||url.includes('docs.google');
+            const isNotion = url.includes('notion.');
+            const icon2 = isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
+            return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+              <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+              <div style="flex:1;min-width:0">
+                <a href="${url}" target="_blank" style="font-size:12px;font-weight:500;color:var(--o);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
+                ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${(lk.logSummary||'').slice(0,25)}</span>`}
+              </div>
+              <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
+              ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+            </div>`;
+          }).join('');
+
+          const pager = flTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+            <button class="btn vendor-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn vendor-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+            <button class="btn vendor-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>` : '';
+
           return `<div class="card" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
               <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
@@ -2418,35 +2510,8 @@ function viewVendorDetail(){
                   <i class="ti ti-paperclip" style="font-size:20px;display:block;margin-bottom:6px;opacity:.3"></i>
                   파일이나 링크를 추가해보세요
                 </div>`
-              : combinedLinks.map((lk,idx)=>{
-                  if(lk.data){
-                    // 직접 업로드 파일
-                    const t = lk.type||'';
-                    const icon = t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
-                    const color = t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
-                    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
-                      <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
-                      <div style="flex:1;min-width:0">
-                        <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="font-size:12px;font-weight:500;color:${color};text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
-                        ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${fmtDate(lk.logDate)} · ${(lk.logSummary||'').slice(0,25)}</span>`}
-                      </div>
-                      ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
-                    </div>`;
-                  }
-                  const url = (lk.url||'').replace(/"/g,'&quot;');
-                  const isDrive = url.includes('drive.google')||url.includes('docs.google');
-                  const isNotion = url.includes('notion.');
-                  const icon2 = isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
-                  return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
-                    <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
-                    <div style="flex:1;min-width:0">
-                      <a href="${url}" target="_blank" style="font-size:12px;font-weight:500;color:var(--o);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
-                      ${lk.isDirect?'<span style="font-size:10px;color:var(--muted)">직접 첨부</span>':`<span style="font-size:10px;color:var(--muted)">${fmtDate(lk.logDate)} · ${(lk.logSummary||'').slice(0,25)}</span>`}
-                    </div>
-                    <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
-                    ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
-                  </div>`;
-                }).join('')}
+              : itemsHtml}
+            ${pager}
           </div>`;
         })()}
 
@@ -2681,16 +2746,19 @@ function viewProjectDetail(){
 
     ${(() => {
       const today = dayjs().format('YYYY-MM-DD');
-      const past = (state.data.calendar||[])
+      const pastAll = (state.data.calendar||[])
         .filter(e=>e.projectId===p.id && e.date<today)
-        .sort((a,b)=>b.date.localeCompare(a.date))
-        .slice(0,4);
-      if(past.length===0) return '';
+        .sort((a,b)=>b.date.localeCompare(a.date));
+      if(pastAll.length===0) return '';
+      const PE_PER_PAGE = 3;
+      const pePage = state.projPastEventPage || 0;
+      const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
+      const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
       return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
           <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
-          <span style="font-size:11px;color:var(--muted)">${past.length}건</span>
+          <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           ${past.map(e=>{
@@ -2711,6 +2779,11 @@ function viewProjectDetail(){
             </div>`;
           }).join('')}
         </div>
+        ${peTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+          <button class="btn proj-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:3px 8px;font-size:11px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+          ${Array.from({length:peTotalPages}).map((_,i)=>`<button class="btn proj-past-event-page-btn ${i===pePage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+          <button class="btn proj-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:3px 8px;font-size:11px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+        </div>`:''}
       </div>`;
     })()}
 
@@ -2860,7 +2933,57 @@ function viewProjectDetail(){
         return {...link, _imported:true, _refIdx: refIdx, _sourceLabel: sourceLabel};
       }
       const resolvedImports = importedRefs.map((r,i)=>resolveVendorLink(r,i)).filter(Boolean);
-      const totalCount = pLinks.length + resolvedImports.length;
+      const allItemsRaw = [...pLinks.map((lk,idx)=>({...lk,_idx:idx})), ...resolvedImports];
+      const totalCount = allItemsRaw.length;
+      const allItems = allItemsRaw.slice().sort((a,b)=>(b.addedDate||'').localeCompare(a.addedDate||''));
+
+      const FL_PER_PAGE = 5;
+      const flPage = state.projFileLinkPage || 0;
+      const flTotalPages = Math.ceil(allItems.length / FL_PER_PAGE);
+      const pageItems = allItems.slice(flPage*FL_PER_PAGE, flPage*FL_PER_PAGE+FL_PER_PAGE);
+
+      let curFolder = null;
+      const itemsHtml = pageItems.map((lk)=>{
+        const folderLabel = lk.addedDate ? dayjs(lk.addedDate).format('YYYY년 M월') : '미분류';
+        let folderHtml = '';
+        if(folderLabel !== curFolder){
+          curFolder = folderLabel;
+          folderHtml = `<div style="font-size:10px;font-weight:600;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+        }
+        const delBtn = lk._imported
+          ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
+          : (!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${lk._idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:'');
+        const sourceTag = lk._imported?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
+        if(lk.data){
+          const t=lk.type||'';
+          const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
+          const color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
+          return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+            <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
+            <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="flex:1;font-size:12px;font-weight:500;color:${color};text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
+            ${sourceTag}
+            ${delBtn}
+          </div>`;
+        }
+        const url=(lk.url||'').replace(/"/g,'&quot;');
+        const isDrive=url.includes('drive.google')||url.includes('docs.google');
+        const isNotion=url.includes('notion.');
+        const icon2=isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
+        return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+          <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+          <a href="${url}" target="_blank" style="flex:1;font-size:12px;font-weight:500;color:var(--o);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
+          <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
+          ${sourceTag}
+          ${delBtn}
+        </div>`;
+      }).join('');
+
+      const pager = flTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+        <button class="btn proj-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+        ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn proj-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+        <button class="btn proj-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+      </div>` : '';
+
       return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
@@ -2885,34 +3008,8 @@ function viewProjectDetail(){
               <i class="ti ti-paperclip" style="font-size:18px;display:block;margin-bottom:4px;opacity:.3"></i>
               파일이나 링크를 추가해보세요
             </div>`
-          : [...pLinks.map((lk,idx)=>({...lk,_idx:idx})), ...resolvedImports].map((lk)=>{
-              const delBtn = lk._imported
-                ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
-                : (!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${lk._idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:'');
-              const sourceTag = lk._imported?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
-              if(lk.data){
-                const t=lk.type||'';
-                const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
-                const color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
-                return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
-                  <i class="ti ${icon}" style="font-size:16px;color:${color};flex-shrink:0"></i>
-                  <a href="data:${t};base64,${lk.data}" download="${lk.label||'파일'}" style="flex:1;font-size:12px;font-weight:500;color:${color};text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||'파일'}</a>
-                  ${sourceTag}
-                  ${delBtn}
-                </div>`;
-              }
-              const url=(lk.url||'').replace(/"/g,'&quot;');
-              const isDrive=url.includes('drive.google')||url.includes('docs.google');
-              const isNotion=url.includes('notion.');
-              const icon2=isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
-              return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd)">
-                <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
-                <a href="${url}" target="_blank" style="flex:1;font-size:12px;font-weight:500;color:var(--o);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
-                <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
-                ${sourceTag}
-                ${delBtn}
-              </div>`;
-            }).join('')}
+          : itemsHtml}
+        ${pager}
       </div>`;
     })()}
 
@@ -3171,6 +3268,7 @@ function modalLogForm(preVendorId, preProjectId){
 
 function bindLogModal(preVendorId, preProjectId){
   bindModalCommon();
+  let pendingFileReads = 0;
 
   const vendorList = document.getElementById('lmVendorCheckList');
   const projSel = document.getElementById('lmProjSel');
@@ -3261,6 +3359,8 @@ function bindLogModal(preVendorId, preProjectId){
     if(file.size > 2*1024*1024){
       showToast(`${file.name}: 2MB 초과 파일은 업로드할 수 없습니다.`); return;
     }
+    pendingFileReads++;
+    updateSubmitBtnState();
     const reader = new FileReader();
     reader.onload = ev => {
       const base64 = ev.target.result.split(',')[1];
@@ -3282,8 +3382,28 @@ function bindLogModal(preVendorId, preProjectId){
         <span style="font-size:10px;color:var(--muted);flex-shrink:0">${(file.size/1024).toFixed(0)}KB</span>
         <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px;flex-shrink:0" onclick="this.closest('.link-row').remove()"><i class="ti ti-x"></i></button>`;
       list.appendChild(row);
+      pendingFileReads--;
+      updateSubmitBtnState();
+    };
+    reader.onerror = () => {
+      showToast(`${file.name} 파일을 읽는 중 오류가 발생했습니다.`);
+      pendingFileReads--;
+      updateSubmitBtnState();
     };
     reader.readAsDataURL(file);
+  }
+
+  function updateSubmitBtnState(){
+    const submitBtn = document.querySelector('button[type=submit][form=logModalForm]');
+    if(!submitBtn) return;
+    if(pendingFileReads > 0){
+      submitBtn.disabled = true;
+      submitBtn.dataset.origLabel = submitBtn.dataset.origLabel || submitBtn.innerHTML;
+      submitBtn.innerHTML = '<i class="ti ti-loader-2"></i> 파일 처리 중...';
+    } else {
+      submitBtn.disabled = false;
+      if(submitBtn.dataset.origLabel) submitBtn.innerHTML = submitBtn.dataset.origLabel;
+    }
   }
 
   const lmFileInput = document.getElementById('lmFileInput');
@@ -3329,6 +3449,10 @@ function bindLogModal(preVendorId, preProjectId){
   const form = document.getElementById('logModalForm');
   if(form) form.addEventListener('submit', e=>{
     e.preventDefault();
+    if(pendingFileReads > 0){
+      showToast('파일을 처리하는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
     const fd = new FormData(form);
     const checkedVendorIds = Array.from(document.querySelectorAll('#lmVendorCheckList .ev-vendor-cb:checked')).map(cb=>cb.value);
     if(checkedVendorIds.length===0){ showToast('거래처를 최소 1곳 선택해주세요.'); return; }
@@ -4626,6 +4750,8 @@ function bindViewEvents(){
       state.selectedVendorId = el.dataset.vid;
       state.view = 'vendors';
       state.vendorProjectPage = 0;
+      state.vendorPastEventPage = 0;
+      state.vendorFileLinkPage = 0;
       render();
     });
   });
@@ -4634,6 +4760,8 @@ function bindViewEvents(){
       state.selectedProjectId = el.dataset.pid;
       state.view = 'projects';
       state.projChecklistShowAll = false;
+      state.projPastEventPage = 0;
+      state.projFileLinkPage = 0;
       render();
     });
   });
@@ -5225,7 +5353,7 @@ function bindViewEvents(){
     const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
     const target = (brand && brand.inherit === false) ? brand : v;
     if(!target.links) target.links = [];
-    target.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url});
+    target.links.push({id:uid('vl'), url, label:lblInput?.value?.trim()||url, addedDate:dayjs().format('YYYY-MM-DD')});
     urlArea.style.display='none';
     urlInput.value=''; if(lblInput) lblInput.value='';
     persist(false); render(); showToast('링크가 추가되었습니다.');
@@ -5245,7 +5373,7 @@ function bindViewEvents(){
       const reader = new FileReader();
       reader.onload = ev=>{
         const base64 = ev.target.result.split(',')[1];
-        target.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type});
+        target.links.push({id:uid('vf'), label:file.name, url:'', data:base64, type:file.type, addedDate:dayjs().format('YYYY-MM-DD')});
         persist(false); render(); showToast(`${file.name} 추가됨`);
       };
       reader.readAsDataURL(file);
@@ -5421,7 +5549,7 @@ function bindViewEvents(){
     const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
     if(!proj) return;
     if(!proj.links) proj.links = [];
-    proj.links.push({id:uid('pkl'), url, label:projLabelInput?.value?.trim()||url});
+    proj.links.push({id:uid('pkl'), url, label:projLabelInput?.value?.trim()||url, addedDate:dayjs().format('YYYY-MM-DD')});
     projLinkUrlArea.style.display='none';
     projUrlInput.value=''; if(projLabelInput) projLabelInput.value='';
     persist(false); render(); showToast('링크가 추가되었습니다.');
@@ -5490,7 +5618,7 @@ function bindViewEvents(){
       const reader = new FileReader();
       reader.onload = ev=>{
         const base64 = ev.target.result.split(',')[1];
-        proj.links.push({id:uid('pkf'), label:file.name, url:'', data:base64, type:file.type});
+        proj.links.push({id:uid('pkf'), label:file.name, url:'', data:base64, type:file.type, addedDate:dayjs().format('YYYY-MM-DD')});
         persist(false); render(); showToast(`${file.name} 추가됨`);
       };
       reader.readAsDataURL(file);
@@ -5809,6 +5937,32 @@ function bindViewEvents(){
   document.querySelectorAll('.vendor-project-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.vendorProjectPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+
+  // 거래처/프로젝트 상세 - 지난 일정 페이지네이션
+  document.querySelectorAll('.vendor-past-event-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorPastEventPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.proj-past-event-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.projPastEventPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.vendor-filelink-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorFileLinkPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.proj-filelink-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.projFileLinkPage = parseInt(btn.dataset.page);
       render();
     });
   });
