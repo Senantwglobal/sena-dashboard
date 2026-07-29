@@ -1441,6 +1441,7 @@ function avatarEl(name, size=28){ return av(name, size); }
 
 function render(){
   if(!state.data){ return; }
+  document.title = state.data.dashboardTitle || '천세나 업무 대시보드';
 
   const today = dayjs();
   const nearestDeadline = null; // D-day 배지 미사용
@@ -1459,8 +1460,8 @@ function render(){
   app.innerHTML = `
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="logo">O</span>
-        <span class="editorial" style="font-size:16px;color:#111114">천세나 업무 대시보드</span>
+        <span class="editorial dashboard-title-text" id="dashboardTitleText" style="font-size:16px;color:#111114;cursor:pointer" title="클릭하여 이름 수정">${state.data.dashboardTitle || '천세나 업무 대시보드'}</span>
+        ${!isReadOnly()?`<button id="editDashboardTitleBtn" title="이름 수정" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:2px;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:13px"></i></button>`:''}
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
@@ -1482,6 +1483,21 @@ function render(){
   document.getElementById('roleSelect').addEventListener('change', e=>{
     state.data.role = e.target.value; persist(false);
   });
+
+  function renameDashboard(){
+    const cur = state.data.dashboardTitle || '천세나 업무 대시보드';
+    const next = prompt('대시보드 이름을 입력하세요', cur);
+    if(next && next.trim()){
+      state.data.dashboardTitle = next.trim();
+      document.title = next.trim();
+      persist(false); render();
+    }
+  }
+  const editDashboardTitleBtn = document.getElementById('editDashboardTitleBtn');
+  if(editDashboardTitleBtn) editDashboardTitleBtn.addEventListener('click', renameDashboard);
+  const dashboardTitleText = document.getElementById('dashboardTitleText');
+  if(dashboardTitleText && !isReadOnly()) dashboardTitleText.addEventListener('click', renameDashboard);
+
   document.querySelectorAll('.nb').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.view = el.dataset.view;
@@ -2048,7 +2064,7 @@ function viewVendorList(){
 
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl">
-        <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:8%"><col style="width:4%"></colgroup>
+        <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:12%"></colgroup>
         <thead><tr>
           <th>회사명</th><th>거래 상태</th><th>유형</th><th>최근 상황</th><th>액션 상태</th><th>우선순위</th><th>담당자</th><th></th>
         </tr></thead>
