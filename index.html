@@ -1705,18 +1705,28 @@ function viewHome(){
       <div>
         <!-- 시간 위젯 -->
         <div class="card" style="margin-bottom:14px">
-          <div class="sh" style="margin-bottom:10px"><div class="st"><i class="ti ti-world oi"></i>현재 시각</div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div style="text-align:center;padding:10px;background:var(--sf);border-radius:8px">
-              <div style="font-size:10px;color:var(--muted);margin-bottom:4px">🇰🇷 서울 (KST)</div>
-              <div id="clockKR" style="font-size:18px;font-weight:300;font-variant-numeric:tabular-nums;color:var(--o)">--:--</div>
-              <div id="dateKR" style="font-size:10px;color:var(--muted);margin-top:2px"></div>
-            </div>
-            <div style="text-align:center;padding:10px;background:var(--sf);border-radius:8px">
-              <div style="font-size:10px;color:var(--muted);margin-bottom:4px">🇺🇸 시애틀 (PT)</div>
-              <div id="clockUS" style="font-size:18px;font-weight:300;font-variant-numeric:tabular-nums;color:#185FA5">--:--</div>
-              <div id="dateUS" style="font-size:10px;color:var(--muted);margin-top:2px"></div>
-            </div>
+          <div class="sh" style="margin-bottom:10px">
+            <div class="st"><i class="ti ti-world oi"></i>현재 시각</div>
+            ${!isReadOnly() && (state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length<3 ? `<button class="btn" id="addTzSlotBtn" style="font-size:11px;padding:3px 9px"><i class="ti ti-plus"></i> 시간대 추가</button>` : ''}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length},1fr);gap:8px">
+            ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
+              const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
+              return `<div class="tz-card" style="background:var(--sf);border-radius:10px;padding:10px;position:relative">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:4px">
+                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:700;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--text);width:auto" ${isReadOnly()?'disabled':''}>
+                    ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
+                  </select>
+                  <span class="tz-offset" data-tz="${tz}" style="font-size:9px;color:var(--muted);flex-shrink:0"></span>
+                </div>
+                <div class="tz-time" data-tz="${tz}" style="font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;margin-bottom:6px;color:var(--text)">--:--</div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="tz-date" data-tz="${tz}" style="font-size:9px;color:var(--muted)"></span>
+                  <span class="tz-daynight" data-tz="${tz}" style="font-size:9px;color:var(--muted);display:flex;align-items:center;gap:2px"></span>
+                </div>
+                ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:2px"><i class="ti ti-x"></i></button>` : ''}
+              </div>`;
+            }).join('')}
           </div>
         </div>
 
@@ -1851,26 +1861,55 @@ function viewHome(){
   `;
 }
 
+const TZ_PRESETS = [
+  {tz:'Asia/Seoul', label:'🇰🇷 서울'},
+  {tz:'America/Los_Angeles', label:'🇺🇸 시애틀'},
+  {tz:'America/New_York', label:'🇺🇸 뉴욕'},
+  {tz:'America/Chicago', label:'🇺🇸 시카고'},
+  {tz:'Europe/London', label:'🇬🇧 런던'},
+  {tz:'Europe/Paris', label:'🇫🇷 파리'},
+  {tz:'Asia/Tokyo', label:'🇯🇵 도쿄'},
+  {tz:'Asia/Shanghai', label:'🇨🇳 상하이'},
+  {tz:'Asia/Hong_Kong', label:'🇭🇰 홍콩'},
+  {tz:'Asia/Singapore', label:'🇸🇬 싱가포르'},
+  {tz:'Australia/Sydney', label:'🇦🇺 시드니'},
+  {tz:'Asia/Dubai', label:'🇦🇪 두바이'},
+];
+
+function tzParts(tz){
+  const now = new Date();
+  let timeStr = '--:--', dateStr = '', offset = '', isDay = true;
+  try{
+    timeStr = new Intl.DateTimeFormat('en-GB',{timeZone:tz, hour:'2-digit', minute:'2-digit', hour12:false}).format(now);
+    const hour = parseInt(new Intl.DateTimeFormat('en-US',{timeZone:tz, hour:'2-digit', hour12:false}).format(now).replace(/\D/g,''),10);
+    const days=['일','월','화','수','목','금','토'];
+    const dParts = new Intl.DateTimeFormat('en-US',{timeZone:tz, month:'numeric', day:'numeric', weekday:'short'}).formatToParts(now);
+    const month = dParts.find(p=>p.type==='month')?.value;
+    const day = dParts.find(p=>p.type==='day')?.value;
+    const wkKR = new Intl.DateTimeFormat('en-US',{timeZone:tz, weekday:'short'}).format(now);
+    const wkMap = {Sun:'일',Mon:'월',Tue:'화',Wed:'수',Thu:'목',Fri:'금',Sat:'토'};
+    dateStr = `${month}/${day} (${wkMap[wkKR]||''})`;
+    const offParts = new Intl.DateTimeFormat('en-US',{timeZone:tz, timeZoneName:'shortOffset'}).formatToParts(now);
+    offset = (offParts.find(p=>p.type==='timeZoneName')?.value||'').replace('GMT','UTC');
+    isDay = hour>=6 && hour<18;
+  }catch(e){}
+  return {timeStr, dateStr, offset, isDay};
+}
+
 let clockInterval = null;
 function startClock(){
   function tick(){
-    const krEl = document.getElementById('clockKR');
-    const usEl = document.getElementById('clockUS');
-    const krDateEl = document.getElementById('dateKR');
-    const usDateEl = document.getElementById('dateUS');
-    if(!krEl) return;
-    const now = new Date();
-    const kr = new Date(now.toLocaleString('en-US',{timeZone:'Asia/Seoul'}));
-    const us = new Date(now.toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-    const fmt = d=>`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    const fmtD = d=>{
-      const days=['일','월','화','수','목','금','토'];
-      return `${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`;
-    };
-    krEl.textContent = fmt(kr);
-    usEl.textContent = fmt(us);
-    if(krDateEl) krDateEl.textContent = fmtD(kr);
-    if(usDateEl) usDateEl.textContent = fmtD(us);
+    document.querySelectorAll('.tz-time[data-tz]').forEach(el=>{
+      const tz = el.dataset.tz;
+      const {timeStr, dateStr, offset, isDay} = tzParts(tz);
+      el.textContent = timeStr;
+      const dateEl = document.querySelector(`.tz-date[data-tz="${CSS.escape(tz)}"]`);
+      if(dateEl) dateEl.textContent = dateStr;
+      const offEl = document.querySelector(`.tz-offset[data-tz="${CSS.escape(tz)}"]`);
+      if(offEl) offEl.textContent = offset;
+      const dnEl = document.querySelector(`.tz-daynight[data-tz="${CSS.escape(tz)}"]`);
+      if(dnEl) dnEl.innerHTML = isDay ? '<i class="ti ti-sun" style="font-size:10px;color:#D97706"></i> Day' : '<i class="ti ti-moon" style="font-size:10px;color:#6366F1"></i> Night';
+    });
   }
   if(clockInterval) clearInterval(clockInterval);
   tick();
@@ -5204,6 +5243,34 @@ function bindViewEvents(){
     state.dashProjCategoryFilter = e.target.value;
     state.dashProjPage = 0;
     render();
+  });
+
+  // 현재 시각 위젯 - 시간대 추가/변경/삭제
+  const addTzSlotBtn = document.getElementById('addTzSlotBtn');
+  if(addTzSlotBtn) addTzSlotBtn.addEventListener('click', ()=>{
+    const slots = state.data.timezoneSlots || ['Asia/Seoul','America/Los_Angeles'];
+    if(slots.length>=3) return;
+    const next = TZ_PRESETS.find(p=>!slots.includes(p.tz));
+    if(next){
+      state.data.timezoneSlots = [...slots, next.tz];
+      persist(false); render();
+    }
+  });
+  document.querySelectorAll('.tz-select').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const slots = (state.data.timezoneSlots || ['Asia/Seoul','America/Los_Angeles']).slice();
+      slots[parseInt(sel.dataset.idx)] = e.target.value;
+      state.data.timezoneSlots = slots;
+      persist(false); render(); startClock();
+    });
+  });
+  document.querySelectorAll('.tz-remove-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const slots = (state.data.timezoneSlots || ['Asia/Seoul','America/Los_Angeles']).slice();
+      slots.splice(parseInt(btn.dataset.idx),1);
+      state.data.timezoneSlots = slots;
+      persist(false); render(); startClock();
+    });
   });
 
   // 미완료 다음 액션 페이지네이션
