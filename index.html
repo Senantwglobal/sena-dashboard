@@ -108,7 +108,9 @@ select.inp{cursor:pointer}
 .cal-cell.empty{background:transparent;border:none;cursor:default}
 .cal-num{font-size:11px;font-weight:300;margin-bottom:2px}
 .cal-cell.today .cal-num{color:var(--o);font-weight:300}
-.cal-ev{font-size:9px;padding:2px 5px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.cal-ev{font-size:10px;padding:4px 6px;border-radius:7px;margin-bottom:3px;overflow:hidden;display:block;line-height:1.3;cursor:pointer}
+.cal-ev-title{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev-time{display:block;font-size:9px;opacity:.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
 .ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:var(--card);cursor:pointer;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
 .ck-item:hover{border-color:var(--ob);box-shadow:var(--shadow-xs)}
 .ck-cb{accent-color:var(--o);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer}
@@ -3193,7 +3195,7 @@ function viewCalendar(){
             return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="min-height:${74+barsAreaH}px">
               <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
               <div style="height:${barsAreaH}px"></div>
-              ${dayEvs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}">${e.title}</span>`;}).join('')}
+              ${dayEvs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>3?`<span style="font-size:9px;color:var(--muted)">+${dayEvs.length-3}건</span>`:''}
             </div>`;
           }).join('')}
