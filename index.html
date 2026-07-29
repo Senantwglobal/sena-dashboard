@@ -1276,6 +1276,14 @@ function eventColor(type){
   return defaults[type] || {bg:'var(--sf)', text:'var(--muted)', dot:'#888780'};
 }
 
+function flagKR(size=10){
+  return `<svg width="${size}" height="${size}" viewBox="0 0 20 20" style="flex-shrink:0;vertical-align:middle"><circle cx="10" cy="10" r="9" fill="#fff"/><path d="M10 1a9 9 0 0 1 0 18 4.5 4.5 0 0 1 0-9 4.5 4.5 0 0 0 0-9z" fill="#C60C30"/><path d="M10 10a4.5 4.5 0 0 1 0-9 9 9 0 0 0 0 18 4.5 4.5 0 0 1 0-9z" fill="#003478"/><circle cx="10" cy="10" r="9" fill="none" stroke="#e5e5e5" stroke-width="0.5"/></svg>`;
+}
+function flagUS(size=10){
+  const h = size*10/14;
+  return `<svg width="${size}" height="${h}" viewBox="0 0 14 10" style="flex-shrink:0;vertical-align:middle"><rect width="14" height="10" fill="#fff"/><g fill="#B22234"><rect y="0" width="14" height="0.77"/><rect y="1.54" width="14" height="0.77"/><rect y="3.08" width="14" height="0.77"/><rect y="4.62" width="14" height="0.77"/><rect y="6.15" width="14" height="0.77"/><rect y="7.69" width="14" height="0.77"/></g><rect width="6" height="5.4" fill="#3C3B6E"/></svg>`;
+}
+
 function getPublicHolidays(year){
   const holidays = [];
   // ── 한국 법정 공휴일 ──
@@ -1394,7 +1402,7 @@ function allCalendarEvents(){
   const yr = new Date().getFullYear();
   [yr, yr+1].forEach(y=>{
     getPublicHolidays(y).forEach(h=>{
-      evs.push({id:'holiday_'+h.date+'_'+h.country, date:h.date, type:h.country==='KR'?'한국 공휴일':'미국 공휴일', title:h.name+(h.country==='KR'?' 🇰🇷':' 🇺🇸'), time:'', isHoliday:true, country:h.country});
+      evs.push({id:'holiday_'+h.date+'_'+h.country, date:h.date, type:h.country==='KR'?'한국 공휴일':'미국 공휴일', title:h.name, time:'', isHoliday:true, country:h.country});
     });
   });
   return evs;
@@ -1586,9 +1594,9 @@ function viewHome(){
     ${upcomingHolidays.length>0 ? `
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       ${upcomingHolidays.map(h=>{
-        const c = h.country==='KR' ? {bg:'#FFF0F0',color:'#CC0000',flag:'🇰🇷'} : {bg:'#F0F4FF',color:'#003087',flag:'🇺🇸'};
+        const c = h.country==='KR' ? {bg:'#FFF0F0',color:'#CC0000'} : {bg:'#F0F4FF',color:'#003087'};
         return `<div style="display:flex;align-items:center;gap:6px;background:${c.bg};border:0.5px solid ${c.color}33;border-radius:8px;padding:6px 12px;font-size:12px">
-          <span>${c.flag}</span>
+          <span>${h.country==='KR'?flagKR(12):flagUS(12)}</span>
           <span style="font-weight:300;color:${c.color}">${h.title.replace('🇰🇷','').replace('🇺🇸','').trim()}</span>
           <span style="color:${c.color};font-weight:300">${h.dday===0?'오늘':'D-'+h.dday}</span>
         </div>`;
@@ -1711,18 +1719,20 @@ function viewHome(){
             ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
               const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
               return `<div class="tz-card" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;position:relative">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:4px">
-                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:400;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto" ${isReadOnly()?'disabled':''}>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:6px">
+                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:400;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto;flex-shrink:1;min-width:0" ${isReadOnly()?'disabled':''}>
                     ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
                   </select>
-                  <span class="tz-offset" data-tz="${tz}" style="font-size:9px;color:var(--muted);flex-shrink:0"></span>
+                  <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+                    <span class="tz-offset" data-tz="${tz}" style="font-size:9px;color:var(--muted)"></span>
+                    ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:0;display:flex;align-items:center"><i class="ti ti-x"></i></button>` : ''}
+                  </div>
                 </div>
                 <div class="tz-time" data-tz="${tz}" style="font-size:19px;font-weight:400;font-variant-numeric:tabular-nums;margin-bottom:8px;color:var(--text)">--:--</div>
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <span class="tz-date" data-tz="${tz}" style="font-size:9px;color:var(--muted)"></span>
                   <span class="tz-daynight" data-tz="${tz}" style="font-size:9px;color:var(--muted);display:flex;align-items:center;gap:2px;font-weight:400"></span>
                 </div>
-                ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="position:absolute;top:6px;right:6px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:2px"><i class="ti ti-x"></i></button>` : ''}
               </div>`;
             }).join('')}
           </div>
@@ -1860,18 +1870,18 @@ function viewHome(){
 }
 
 const TZ_PRESETS = [
-  {tz:'Asia/Seoul', label:'🇰🇷 서울'},
-  {tz:'America/Los_Angeles', label:'🇺🇸 시애틀'},
-  {tz:'America/New_York', label:'🇺🇸 뉴욕'},
-  {tz:'America/Chicago', label:'🇺🇸 시카고'},
-  {tz:'Europe/London', label:'🇬🇧 런던'},
-  {tz:'Europe/Paris', label:'🇫🇷 파리'},
-  {tz:'Asia/Tokyo', label:'🇯🇵 도쿄'},
-  {tz:'Asia/Shanghai', label:'🇨🇳 상하이'},
-  {tz:'Asia/Hong_Kong', label:'🇭🇰 홍콩'},
-  {tz:'Asia/Singapore', label:'🇸🇬 싱가포르'},
-  {tz:'Australia/Sydney', label:'🇦🇺 시드니'},
-  {tz:'Asia/Dubai', label:'🇦🇪 두바이'},
+  {tz:'Asia/Seoul', label:'서울'},
+  {tz:'America/Los_Angeles', label:'시애틀'},
+  {tz:'America/New_York', label:'뉴욕'},
+  {tz:'America/Chicago', label:'시카고'},
+  {tz:'Europe/London', label:'런던'},
+  {tz:'Europe/Paris', label:'파리'},
+  {tz:'Asia/Tokyo', label:'도쿄'},
+  {tz:'Asia/Shanghai', label:'상하이'},
+  {tz:'Asia/Hong_Kong', label:'홍콩'},
+  {tz:'Asia/Singapore', label:'싱가포르'},
+  {tz:'Australia/Sydney', label:'시드니'},
+  {tz:'Asia/Dubai', label:'두바이'},
 ];
 
 function tzParts(tz){
@@ -3240,11 +3250,16 @@ function viewCalendar(){
 
         const laneCount = laneEnds.length;
         const barsAreaH = laneCount>0 ? laneCount*(BAR_H+BAR_GAP) : 0;
+        // 공휴일/연차 라벨이 이 주에 하나라도 있으면, 막대 오버레이가 그 라벨 아래로 내려오도록 여유 확보
+        const weekHasLabel = weekDates.some(dt=> dt && allEvs.some(e=>e.date===dt && (e.isHoliday||e.isLeave)));
+        const LABEL_H = weekHasLabel ? 13 : 0;
+        const BARS_MAX_H = 45; // 막대 영역 최대 확보 높이 (이보다 레인이 많아지면 넘치는 부분은 자동으로 겹쳐 표시되지 않고 생략됨)
+        const cappedBarsAreaH = Math.min(barsAreaH, BARS_MAX_H);
 
-        const CELL_H = 104;
+        const CELL_H = 130; // 모든 주(week)에 동일하게 적용되는 고정 셀 높이 (막대/라벨 유무와 무관)
         const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
           ${weekCells.map((d,ci)=>{
-            if(d===null) return `<div class="cal-cell empty"></div>`;
+            if(d===null) return `<div class="cal-cell empty" style="height:${CELL_H}px"></div>`;
             const dateStr = weekDates[ci];
             const isToday = dateStr===todayStr;
             const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
@@ -3252,19 +3267,19 @@ function viewCalendar(){
             const leaveEvs = dayEvsAll.filter(e=>e.isLeave);
             const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave);
             const EV_MAX = 1;
-            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="height:${CELL_H+barsAreaH}px">
+            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="height:${CELL_H}px">
               <div class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''}">${d}</div>
-              ${holidayEvs.length>0?`<div style="font-size:8.5px;color:#DC2626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${holidayEvs.map(h=>h.title).join(', ')}</div>`:''}
+              ${holidayEvs.length>0?`<div style="font-size:8.5px;color:#DC2626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;display:flex;align-items:center;gap:3px">${holidayEvs.map(h=>(h.country==='KR'?flagKR(9):flagUS(9))+' '+h.title).join(', ')}</div>`:''}
               ${leaveEvs.length>0?`<div style="font-size:8.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${leaveEvs.map(h=>h.title).join(', ')}</div>`:''}
-              <div style="height:${barsAreaH}px"></div>
+              <div style="height:${cappedBarsAreaH}px"></div>
               ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
             </div>`;
           }).join('')}
         </div>`;
 
-        const barsOverlay = laneCount>0 ? `<div style="position:absolute;top:${NUM_H}px;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;pointer-events:none">
-          ${bars.map(b=>{
+        const barsOverlay = laneCount>0 ? `<div style="position:absolute;top:${NUM_H+LABEL_H}px;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;pointer-events:none">
+          ${bars.filter(b=>b.lane*(BAR_H+BAR_GAP) < BARS_MAX_H).map(b=>{
             const c = eventColor(b.e.type);
             return `<div class="cal-ev cal-ev-bar" data-eid="${b.e.id}" data-pid="${b.e.projectId||''}" style="grid-column:${b.colStart+1} / span ${b.colEnd-b.colStart+1};grid-row:1;margin-top:${b.lane*(BAR_H+BAR_GAP)}px;height:${BAR_H}px;background:${c.bg};color:${c.text};display:flex;align-items:center;padding:0 6px;border-radius:${b.isStartCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isStartCap?'4px':'0'};font-size:10px;overflow:hidden;white-space:nowrap;pointer-events:auto;cursor:pointer;font-weight:600">${b.isStartCap?b.e.title:''}</div>`;
           }).join('')}
@@ -3313,9 +3328,10 @@ function viewCalendar(){
             <div style="display:flex;flex-direction:column;gap:4px">
               ${specialEvs.map(e=>{
                 const isToday = e.date===todayStr;
+                const flag = e.isHoliday ? (e.country==='KR'?flagKR(11):flagUS(11))+' ' : '';
                 return `<div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
+                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600;display:flex;align-items:center;gap:4px">${flag}${e.title}</span>
                 </div>`;
               }).join('')}
             </div>
