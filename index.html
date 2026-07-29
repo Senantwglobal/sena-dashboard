@@ -1368,6 +1368,10 @@ function getPublicHolidays(year){
   return holidays;
 }
 
+function eventsOnDate(dateStr){
+  return allCalendarEvents().filter(e => e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
+}
+
 function allCalendarEvents(){
   const evs = state.data.calendar.map(e=>({...e}));
   // 프로젝트 마감일
@@ -3201,18 +3205,22 @@ function viewCalendar(){
         const laneCount = laneEnds.length;
         const barsAreaH = laneCount>0 ? laneCount*(BAR_H+BAR_GAP) : 0;
 
+        const CELL_H = 92;
         const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
           ${weekCells.map((d,ci)=>{
             if(d===null) return `<div class="cal-cell empty"></div>`;
             const dateStr = weekDates[ci];
             const isToday = dateStr===todayStr;
-            const dayEvs = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
-            const isHoliday = dayEvs.some(e=>e.isHoliday);
-            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="min-height:${74+barsAreaH}px">
-              <div class="cal-num${isToday?' today':''}" style="${isHoliday&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
+            const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
+            const holidayEvs = dayEvsAll.filter(e=>e.isHoliday);
+            const dayEvs = dayEvsAll.filter(e=>!e.isHoliday);
+            const EV_MAX = holidayEvs.length>0 ? 1 : 2;
+            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="height:${CELL_H+barsAreaH}px">
+              <div class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626;font-weight:700':''}">${d}</div>
+              ${holidayEvs.length>0?`<div style="font-size:8.5px;color:#DC2626;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${holidayEvs.map(h=>h.title).join(', ')}</div>`:''}
               <div style="height:${barsAreaH}px"></div>
-              ${dayEvs.slice(0,3).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
-              ${dayEvs.length>3?`<span style="font-size:9px;color:var(--muted)">+${dayEvs.length-3}건</span>`:''}
+              ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
+              ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);font-weight:700;cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
             </div>`;
           }).join('')}
         </div>`;
@@ -4232,7 +4240,6 @@ function modalEventForm(dateStr){
 
 function modalDayDetail(dateStr){
   const evs = eventsOnDate(dateStr);
-  const evColors = {'미팅':'#185FA5','외근':'#993C1D','마감':'#534AB7','연차':'#3B6D11'};
   return `
     <div class="modal">
       <div class="mh"><h3>${fmtDateDow(dateStr)}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
@@ -4240,9 +4247,9 @@ function modalDayDetail(dateStr){
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">일정 ${evs.length}건</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           ${evs.length===0?'<div class="empty-state" style="padding:16px">등록된 일정이 없습니다.</div>':
-            evs.map(e=>{const col=evColors[e.type]||'#888';return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;border-left:3px solid ${col};cursor:pointer">
+            evs.map(e=>{const c=eventColor(e.type);return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;border-left:3px solid ${c.dot};cursor:pointer">
               <div style="flex:1">
-                <div style="font-size:13px;font-weight:300">${e.title}</div>
+                <div style="font-size:13px;font-weight:600">${e.title}</div>
                 <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.type}${e.time?' · '+e.time:''}</div>
               </div>
               <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
@@ -5815,6 +5822,16 @@ function bindViewEvents(){
     });
   });
 
+  document.querySelectorAll('.cal-more-btn[data-date]').forEach(el=>{
+    el.addEventListener('click', e=>{
+      e.stopPropagation();
+      const dateStr = el.dataset.date;
+      openModal(modalDayDetail(dateStr));
+      bindModalCommon();
+      bindDayDetailEvents(dateStr);
+    });
+  });
+
   // 이벤트 배지 클릭 시 셀 클릭 중단, 프로젝트 마감이면 프로젝트로 이동
   document.querySelectorAll('.cal-ev[data-eid]').forEach(ev=>{
     ev.addEventListener('click', e=>{
@@ -6740,7 +6757,14 @@ function bindEventFormSubmit(){
 function bindDayDetailEvents(dateStr){
   document.querySelectorAll('.day-event-item').forEach(el=>{
     el.addEventListener('click', ()=>{
-      if(el.dataset.projectid){
+      const eid = el.dataset.eid;
+      const evData = state.data.calendar.find(x=>x.id===eid);
+      if(evData){
+        closeModal();
+        openModal(modalEventDetail(evData));
+        bindModalCommon();
+        bindEventDetailModal(eid);
+      } else if(el.dataset.projectid){
         state.selectedProjectId = el.dataset.projectid;
         state.view = 'projects';
         closeModal(); render();
