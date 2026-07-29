@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,500;0,600;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script>
 // 아이콘 폰트가 실제로 로드됐는지 확인 → 실패 시 폰트 없이도 KPI 카드가 비어보이지 않게 이모지 폴백 적용
 (function(){
@@ -34,7 +34,6 @@
 :root{
   --o:#2554C7;--ol:#EBF0FB;--od:#1A3A9E;--ob:#A8C0F5;
   --bg:#F7F6F3;--card:#fff;--bd:#EAE7DF;--text:#18181B;--muted:#8A877E;--sf:#F3F1EC;
-  --serif:'Newsreader',ui-serif,Georgia,serif;
   --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
   --shadow-xs:0 1px 2px rgba(24,24,27,.04), inset 0 1px 0 rgba(255,255,255,.7);
   --shadow-sm:0 1px 3px rgba(24,24,27,.05), 0 1px 2px rgba(24,24,27,.04);
@@ -50,9 +49,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 ::-webkit-scrollbar-thumb{background:#DBD7CB;border-radius:20px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#C7C2B2}
 a{color:inherit}
-.editorial{font-family:var(--serif);font-style:italic;letter-spacing:-.01em}
+.editorial{font-weight:800;letter-spacing:-.02em}
 .hdr{background:rgba(247,246,243,.82);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-.logo{background:linear-gradient(155deg,#3465E0,var(--o) 55%,var(--od));color:#fff;font-family:var(--serif);font-style:italic;font-size:15px;font-weight:600;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:9px;box-shadow:0 2px 8px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.35)}
+.logo{background:linear-gradient(155deg,#3465E0,var(--o) 55%,var(--od));color:#fff;font-size:14px;font-weight:800;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:9px;box-shadow:0 2px 8px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.35)}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
@@ -88,10 +87,10 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:14px;border:0.5px solid var(--bd);padding:14px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
+.kpi{background:var(--card);border-radius:14px;border:0.5px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
 .kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--ac,var(--o))}
-.ki{width:26px;height:26px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:8px}
+.kpi::after{content:'';position:absolute;top:-30%;right:-30%;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle, var(--ac,var(--o)) 0%, transparent 72%);opacity:.14;pointer-events:none}
+.ki{width:32px;height:32px;border-radius:10px;background:var(--ac,var(--o));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;box-shadow:0 3px 8px color-mix(in srgb, var(--ac,var(--o)) 35%, transparent);position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i.ti-briefcase::before{content:"💼"}
 .ti-fallback .ki i.ti-list-check::before{content:"✅"}
@@ -99,7 +98,7 @@ select.inp{cursor:pointer}
 .ti-fallback .ki i.ti-flag::before{content:"🚩"}
 .ti-fallback .ki i.ti-users::before{content:"👥"}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:27px;font-weight:700;margin-bottom:3px;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kn{font-size:28px;font-weight:800;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
 .kl{font-size:11px;color:var(--muted);font-weight:500}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
@@ -130,7 +129,7 @@ select.inp{cursor:pointer}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .modal{background:#fff;border-radius:16px;border:0.5px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
-.mh h3{font-family:var(--serif);font-style:italic;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.mh h3{font-weight:700;font-size:15px;letter-spacing:-.01em}
 .mb{padding:16px 18px}
 .mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1c1c22;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(4px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;box-shadow:var(--shadow-lg)}
@@ -1563,11 +1562,11 @@ function viewHome(){
         </button>
       </div>`:''}
       <div class="krow">
-        <div class="kpi" style="--ac:#2554C7"><div class="ki"><i class="ti ti-briefcase"></i></div><div class="kn" style="color:#2554C7">${inProgProjects}</div><div class="kl">진행중인 프로젝트</div></div>
-        <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div class="ki"><i class="ti ti-list-check"></i></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div><div class="kl">미완료 항목</div></div>
-        <div class="kpi" style="--ac:#7C3AED"><div class="ki"><i class="ti ti-calendar-event"></i></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div><div class="kl">오늘 일정</div></div>
-        <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div class="ki"><i class="ti ti-flag"></i></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div><div class="kl">마감 임박 프로젝트</div></div>
-        <div class="kpi" style="--ac:#D97706"><div class="ki"><i class="ti ti-users"></i></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div><div class="kl">이번달 미팅</div></div>
+        <div class="kpi" style="--ac:#2554C7"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#2554C7">${inProgProjects}</div></div>
+        <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div></div>
+        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div></div>
+        <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div></div>
+        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div></div>
       </div>
     </div>
 
