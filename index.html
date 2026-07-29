@@ -1679,6 +1679,32 @@ function viewHome(){
           </div>
         </div>
 
+        <!-- 이번주 위젯 -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="sh" style="margin-bottom:10px">
+            <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
+            <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+            ${(() => {
+              const dowLabels = ['일','월','화','수','목','금','토'];
+              const weekStart = dayjs().startOf('week');
+              const evAll = allCalendarEvents();
+              return Array.from({length:7}).map((_,i)=>{
+                const d = weekStart.add(i,'day');
+                const dateStr = d.format('YYYY-MM-DD');
+                const isToday = dateStr===dayjs().format('YYYY-MM-DD');
+                const hasEvents = evAll.some(e=> e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
+                return `<div class="week-day-cell" data-date="${dateStr}" style="cursor:pointer;padding:4px 0;border-radius:8px">
+                  <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${dowLabels[i]}</div>
+                  <div style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;font-weight:${isToday?'700':'300'};background:${isToday?'#EF4444':'transparent'};color:${isToday?'#fff':'var(--text)'}">${d.date()}</div>
+                  <div style="height:5px;margin-top:3px">${hasEvents?`<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:${isToday?'#EF4444':'var(--o)'}"></span>`:''}</div>
+                </div>`;
+              }).join('');
+            })()}
+          </div>
+        </div>
+
         <div class="card">
           ${(()=>{
             const PER_PAGE = 6;
@@ -5761,6 +5787,14 @@ function bindViewEvents(){
   if(prevMonth) prevMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').subtract(1,'month').format('YYYY-MM'); render(); });
   const nextMonth = document.getElementById('nextMonth');
   if(nextMonth) nextMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').add(1,'month').format('YYYY-MM'); render(); });
+
+  document.querySelectorAll('.week-day-cell[data-date]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.view = 'calendar';
+      state.calMonth = el.dataset.date.slice(0,7);
+      render();
+    });
+  });
 
   document.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
     el.addEventListener('click', ()=>{
