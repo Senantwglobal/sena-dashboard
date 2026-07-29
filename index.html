@@ -32,13 +32,13 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --o:#2554C7;--ol:#EBF0FB;--od:#1A3A9E;--ob:#A8C0F5;
-  --bg:#F7F6F3;--card:#fff;--bd:#EAE7DF;--text:#18181B;--muted:#8A877E;--sf:#F3F1EC;
+  --o:#1C85E8;--ol:#E8F2FE;--od:#0B4E9E;--ob:#A9D2F8;
+  --bg:#F7F8FA;--card:#fff;--bd:#E5E7EB;--text:#0B1B2E;--muted:#8A93A3;--sf:#F3F4F6;
   --sans:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
-  --shadow-xs:0 1px 2px rgba(24,24,27,.04), inset 0 1px 0 rgba(255,255,255,.7);
-  --shadow-sm:0 1px 3px rgba(24,24,27,.05), 0 1px 2px rgba(24,24,27,.04);
-  --shadow-md:0 8px 24px rgba(24,24,27,.08), 0 2px 6px rgba(24,24,27,.05);
-  --shadow-lg:0 16px 40px rgba(24,24,27,.14), 0 4px 12px rgba(24,24,27,.06);
+  --shadow-xs:0 1px 2px rgba(11,27,46,.04);
+  --shadow-sm:0 1px 2px rgba(11,27,46,.05);
+  --shadow-md:0 4px 12px rgba(11,27,46,.06);
+  --shadow-lg:0 12px 28px rgba(11,27,46,.12);
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
@@ -46,51 +46,50 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 ::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#DBD7CB;border-radius:20px;border:2px solid var(--bg)}
-::-webkit-scrollbar-thumb:hover{background:#C7C2B2}
+::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:20px;border:2px solid var(--bg)}
+::-webkit-scrollbar-thumb:hover{background:#C1C7CF}
 a{color:inherit}
 .editorial{font-weight:800;letter-spacing:-.02em}
-.hdr{background:rgba(247,246,243,.82);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-.logo{background:linear-gradient(155deg,#3465E0,var(--o) 55%,var(--od));color:#fff;font-size:14px;font-weight:800;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:9px;box-shadow:0 2px 8px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.35)}
+.hdr{background:#fff;border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.logo{background:var(--text);color:#fff;font-size:14px;font-weight:800;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
-.nav{display:flex;gap:2px;padding:6px 16px;background:rgba(247,246,243,.82);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
-.nb{padding:8px 15px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:9px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:500;transition:color .18s var(--ease),background .18s var(--ease)}
-.nb.active{color:var(--od);background:var(--ol);font-weight:700}
+.nav{display:flex;gap:2px;padding:6px 16px;background:#fff;border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
+.nb{padding:8px 15px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:7px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:600;transition:color .18s var(--ease),background .18s var(--ease)}
+.nb.active{color:var(--od);background:var(--ol)}
 .nb:hover:not(.active){color:var(--text);background:var(--sf)}
 .cnt{padding:24px;max-width:1200px;margin:0 auto}
-.card{background:var(--card);border:0.5px solid var(--bd);border-radius:14px;padding:17px;margin-bottom:14px;box-shadow:var(--shadow-xs);transition:box-shadow .25s var(--ease)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
-.st{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:#111114}
+.st{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--o)}
-.btn{font-size:12px;padding:6.5px 13px;border-radius:9px;border:0.5px solid var(--bd);background:var(--card);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .18s var(--ease),border-color .18s var(--ease),transform .12s var(--ease),box-shadow .18s var(--ease);font-family:inherit;font-weight:500}
-.btn:hover{background:var(--sf);border-color:#D9D5C8}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:7px;border:1px solid var(--bd);background:var(--card);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),border-color .15s var(--ease),transform .1s var(--ease);font-family:inherit;font-weight:600}
+.btn:hover{background:var(--sf);border-color:#D3D6DB}
 .btn:active{transform:scale(.97)}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
-.btn-o{background:linear-gradient(155deg,#3465E0,var(--o));color:#fff;border-color:var(--o);box-shadow:0 1px 2px rgba(37,84,199,.25), inset 0 1px 0 rgba(255,255,255,.2)}
-.btn-o:hover{background:linear-gradient(155deg,var(--o),var(--od));border-color:var(--od);color:#fff;box-shadow:0 3px 10px rgba(37,84,199,.35), inset 0 1px 0 rgba(255,255,255,.2)}
-.btn-red{color:#9F2F2D;border-color:#F0B8B8}
+.btn-o{background:var(--o);color:#fff;border-color:var(--o)}
+.btn-o:hover{background:var(--od);border-color:var(--od);color:#fff}
+.btn-red{color:#C0392B;border-color:#F3C5C0}
 .btn-red:hover{background:#FDEBEC;border-color:#e88080}
-.badge{font-size:10px;padding:2.5px 8px;border-radius:20px;font-weight:600;white-space:nowrap;letter-spacing:.02em}
+.badge{font-size:10px;padding:2.5px 8px;border-radius:6px;font-weight:700;white-space:nowrap;letter-spacing:.02em}
 .bo{background:var(--ol);color:var(--od)}
 .bb{background:#E1F3FE;color:#1F6C9F}
-.br{background:#FDEBEC;color:#9F2F2D}
-.bg{background:#EDF3EC;color:#346538}
-.bgr{background:#F1EFE8;color:#5F5E5A}
-.bw{background:#FBF3DB;color:#956400}
-.inp{width:100%;padding:8px 12px;border:0.5px solid var(--bd);border-radius:10px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .18s var(--ease),box-shadow .18s var(--ease),background .18s var(--ease);font-family:inherit}
-.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(37,84,199,.12);background:#fff}
+.br{background:#FDEAEA;color:#C0392B}
+.bg{background:#E4F7F1;color:#1C9873}
+.bgr{background:#F0F1F3;color:#5F6672}
+.bw{background:#FFF6E0;color:#B8790A}
+.inp{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
+.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:#fff}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:14px;border:0.5px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease),transform .2s var(--ease)}
-.kpi:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.kpi::after{content:'';position:absolute;top:-30%;right:-30%;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle, var(--ac,var(--o)) 0%, transparent 72%);opacity:.14;pointer-events:none}
-.ki{width:32px;height:32px;border-radius:10px;background:var(--ac,var(--o));color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:10px;box-shadow:0 3px 8px color-mix(in srgb, var(--ac,var(--o)) 35%, transparent);position:relative;z-index:1}
+.kpi{background:var(--card);border-radius:12px;border:1px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease),border-color .2s var(--ease)}
+.kpi:hover{border-color:#D3D6DB}
+.ki{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i.ti-briefcase::before{content:"💼"}
 .ti-fallback .ki i.ti-list-check::before{content:"✅"}
@@ -98,15 +97,15 @@ select.inp{cursor:pointer}
 .ti-fallback .ki i.ti-flag::before{content:"🚩"}
 .ti-fallback .ki i.ti-users::before{content:"👥"}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:28px;font-weight:800;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
-.kl{font-size:11px;color:var(--muted);font-weight:500}
+.kn{font-size:27px;font-weight:800;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.kl{font-size:11px;color:var(--muted);font-weight:600}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
-.dlc{font-size:10px;font-weight:600;padding:2.5px 8px;border-radius:20px;white-space:nowrap}
-.dl-ok{background:#EAF3DE;color:#3B6D11}
+.dlc{font-size:10px;font-weight:700;padding:2.5px 8px;border-radius:6px;white-space:nowrap}
+.dl-ok{background:#E4F7F1;color:#1C9873}
 .dl-w{background:var(--ol);color:var(--od)}
-.dl-c{background:#FCEBEB;color:#A32D2D}
-.dl-d{background:#F1EFE8;color:#5F5E5A}
+.dl-c{background:#FDEAEA;color:#C0392B}
+.dl-d{background:#F0F1F3;color:#5F6672}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:600;letter-spacing:.02em}
 .cal-cell{min-height:80px;border-radius:10px;padding:5px;border:0.5px solid transparent;background:var(--sf);position:relative;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease);overflow:hidden}
@@ -127,7 +126,7 @@ select.inp{cursor:pointer}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.5);backdrop-filter:blur(1px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto;animation:overlayIn .15s var(--ease)}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal{background:#fff;border-radius:16px;border:0.5px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
+.modal{background:#fff;border-radius:12px;border:1px solid var(--bd);border-top:3px solid var(--o);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .mh h3{font-weight:700;font-size:15px;letter-spacing:-.01em}
 .mb{padding:16px 18px}
@@ -277,7 +276,7 @@ async function loadStoreRemote(){
     const d = rows[0].data;
     // ── 마이그레이션: calendarEventTypes가 없거나 연차/반차가 빠진 경우 보완 ──
     const defaultEventTypes = [
-      {name:'미팅', color:'#2554C7'},{name:'외근', color:'#D85A30'},
+      {name:'미팅', color:'#1C85E8'},{name:'외근', color:'#D85A30'},
       {name:'마감', color:'#7C3AED'},{name:'연차', color:'#059669'},
       {name:'반차', color:'#0891B2'},{name:'반반차', color:'#65A30D'},
       {name:'개인 용무', color:'#F59E0B'},{name:'전화 통화', color:'#38BDF8'},
@@ -1173,7 +1172,7 @@ function seedData(){
     categories: ['IT/시스템','물류','벤더관리','운영','시장조사','출장','업무','기타'],
     companyTypes: ['벤더','물류사','파트너','기타'],
     calendarEventTypes: [
-      {name:'미팅', color:'#2554C7'},
+      {name:'미팅', color:'#1C85E8'},
       {name:'외근', color:'#D85A30'},
       {name:'마감', color:'#7C3AED'},
       {name:'연차', color:'#059669'},
@@ -1270,7 +1269,7 @@ function eventColor(type){
   if(custom) return {bg:custom.color+'22', text:custom.color, dot:custom.color};
   // 기본 타입
   const defaults = {
-    '미팅':     {bg:'#EBF0FB', text:'#1A3A9E', dot:'#2554C7'},
+    '미팅':     {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
     '외근':     {bg:'#FAECE7', text:'#993C1D', dot:'#D85A30'},
     '마감':     {bg:'#EEEDFE', text:'#534AB7', dot:'#7F77DD'},
     '연차':     {bg:'#EAF3DE', text:'#3B6D11', dot:'#1D9E75'},
@@ -1413,7 +1412,7 @@ function allPeopleFlat(){
 
 /* ---------- 렌더 루트 ---------- */
 function avatarColor(name){
-  const colors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const colors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
   let h = 0; for(let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xFFFFFF;
   return colors[Math.abs(h) % colors.length];
 }
@@ -1421,7 +1420,7 @@ function typeColorFor(t){
   const custom = state.data.companyTypeColors?.[t];
   if(custom) return custom;
   const defaults = {
-    '벤더':  {bg:'#EBF0FB',color:'#1A3A9E'},
+    '벤더':  {bg:'#E8F2FE',color:'#0B4E9E'},
     '물류사':{bg:'#EAF3DE',color:'#3B6D11'},
     '파트너':{bg:'#FEF3C7',color:'#92400E'},
     '기타':  {bg:'#F1EFE8',color:'#5F5E5A'},
@@ -1543,7 +1542,7 @@ function viewHome(){
   const thisMonthMeetings = allCalendarEvents().filter(e=>e.date.startsWith(thisMonthStr) && e.type==='미팅').length;
 
   // 프로젝트별 진행률
-  const projColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const projColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
 
   // 미완료 다음액션 (nextStep이 있고, 완료 아닌 로그들)
   const pendingActionsAll = state.data.vendorLogs
@@ -1562,7 +1561,7 @@ function viewHome(){
         </button>
       </div>`:''}
       <div class="krow">
-        <div class="kpi" style="--ac:#2554C7"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#2554C7">${inProgProjects}</div></div>
+        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#1C85E8">${inProgProjects}</div></div>
         <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div></div>
         <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div></div>
         <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div></div>
@@ -1927,7 +1926,7 @@ function priorityBadge(p){
 
 function projStatusStyle(status){
   const map = {
-    '진행중': 'background:#EBF0FB;color:#1A3A9E;border-color:#2554C7',
+    '진행중': 'background:#E8F2FE;color:#0B4E9E;border-color:#1C85E8',
     '보류':   'background:#FEF3C7;color:#92400E;border-color:#F59E0B',
     '중단':   'background:#FCEBEB;color:#A32D2D;border-color:#E24B4A',
     '완료':   'background:#EAF3DE;color:#3B6D11;border-color:#639922',
@@ -1939,7 +1938,7 @@ function vendorStatusStyle(status){
   const map = {
     'Active':   'background:#EAF3DE;color:#3B6D11;border-color:#3B6D11',
     'Pending':  'background:#FEF3C7;color:#92400E;border-color:#92400E',
-    'Review':   'background:#EBF0FB;color:#1A3A9E;border-color:#2554C7',
+    'Review':   'background:#E8F2FE;color:#0B4E9E;border-color:#1C85E8',
     'Hold':     'background:#FFF0E8;color:#C2410C;border-color:#EA580C',
     'Inactive': 'background:#F1EFE8;color:#5F5E5A;border-color:#ccc',
   };
@@ -1950,8 +1949,8 @@ function vendorActionBadge(status){
   const map = {
     '회신 대기중':    {bg:'#FEF3C7', color:'#92400E'},
     '회신 해야함':    {bg:'#FCEBEB', color:'#A32D2D'},
-    '미팅 예정':      {bg:'#EBF0FB', color:'#1A3A9E'},
-    '발주 예정':      {bg:'#EBF0FB', color:'#1A3A9E'},
+    '미팅 예정':      {bg:'#E8F2FE', color:'#0B4E9E'},
+    '발주 예정':      {bg:'#E8F2FE', color:'#0B4E9E'},
     '계약 진행중':    {bg:'#FEF3C7', color:'#92400E'},
     '팔로업 필요':    {bg:'#FCEBEB', color:'#A32D2D'},
     '신규 브랜드 검토':{bg:'#F3E8FF', color:'#6B21A8'},
@@ -2046,7 +2045,7 @@ function viewVendorList(){
               ? `<span style="color:var(--muted)">-</span>`
               : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             // 거래 상태 dot
-            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#2554C7' : cs==='Hold' ? '#EA580C' : '#DC2626';
+            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#1C85E8' : cs==='Hold' ? '#EA580C' : '#DC2626';
             const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : cs==='Hold' ? '거래보류' : '거래중단';
             const statusDot = `<div style="display:flex;align-items:center;gap:5px;cursor:pointer" class="status-dot-wrap" data-vid="${v.id}" onclick="event.stopPropagation()">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
@@ -2120,8 +2119,8 @@ function viewVendorDetail(){
     {value:'', label:'상태 미지정', bg:'var(--sf)', color:'var(--muted)'},
     {value:'회신 대기중', label:'⏳ 회신 대기중', bg:'#FEF3C7', color:'#92400E'},
     {value:'회신 해야함', label:'📤 회신 해야함', bg:'#FCEBEB', color:'#A32D2D'},
-    {value:'미팅 예정', label:'📅 미팅 예정', bg:'#EBF0FB', color:'#1A3A9E'},
-    {value:'발주 예정', label:'🛒 발주 예정', bg:'#EBF0FB', color:'#1A3A9E'},
+    {value:'미팅 예정', label:'📅 미팅 예정', bg:'#E8F2FE', color:'#0B4E9E'},
+    {value:'발주 예정', label:'🛒 발주 예정', bg:'#E8F2FE', color:'#0B4E9E'},
     {value:'계약 진행중', label:'📝 계약 진행중', bg:'#FEF3C7', color:'#92400E'},
     {value:'팔로업 필요', label:'🔔 팔로업 필요', bg:'#FCEBEB', color:'#A32D2D'},
     {value:'신규 브랜드 검토', label:'🔍 신규 브랜드 검토', bg:'#F3E8FF', color:'#6B21A8'},
@@ -2635,7 +2634,7 @@ function viewProjects(){
     return dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01'));
   });
 
-  const catColors = ['#2554C7','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const catColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
   const catColorMap = {};
   state.data.categories.forEach((c,i)=>catColorMap[c]=catColors[i%catColors.length]);
 
@@ -2656,7 +2655,7 @@ function viewProjects(){
         const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
         const prog=progressOf(p);
         const ddayLabel=dday===null?'':(dday<0?`D+${Math.abs(dday)}`:`D-${dday}`);
-        const col=catColorMap[p.category]||'#2554C7';
+        const col=catColorMap[p.category]||'#1C85E8';
         const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
         const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
         const VMAX = 2;
@@ -3090,7 +3089,7 @@ function viewCalendar(){
 
   // 모든 이벤트 타입 (calendarEventTypes에서)
   const allEventTypes = state.data.calendarEventTypes || [
-    {name:'미팅',color:'#2554C7'},{name:'외근',color:'#D85A30'},{name:'마감',color:'#7C3AED'},
+    {name:'미팅',color:'#1C85E8'},{name:'외근',color:'#D85A30'},{name:'마감',color:'#7C3AED'},
     {name:'연차',color:'#059669'},{name:'반차',color:'#0891B2'},{name:'반반차',color:'#65A30D'},
     {name:'개인 용무',color:'#F59E0B'},{name:'전화 통화',color:'#38BDF8'}
   ];
@@ -4397,7 +4396,7 @@ function modalEventTypesManager(){
             </div>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <input type="color" id="newEventTypeColor" value="#2554C7" style="width:40px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px"/>
+          <input type="color" id="newEventTypeColor" value="#1C85E8" style="width:40px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px"/>
           <input type="text" id="newEventTypeName" class="inp" placeholder="새 유형 이름 (예: 전시회)" style="flex:1;margin:0"/>
           <button class="btn btn-o" id="addEventTypeBtn"><i class="ti ti-plus"></i> 추가</button>
         </div>
@@ -6832,7 +6831,7 @@ async function initApp(){
       '<p style="font-size:15px;font-weight:600;color:#dc2626;">데이터를 불러오지 못했습니다</p>' +
       '<p style="font-size:12px;color:#888;max-width:400px;">' + e.message + '</p>' +
       errMsg +
-      '<button id="retryBtn" class="btn btn-primary" style="margin-top:8px;padding:8px 20px;background:#2554C7;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">다시 시도</button>' +
+      '<button id="retryBtn" class="btn btn-primary" style="margin-top:8px;padding:8px 20px;background:#1C85E8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px">다시 시도</button>' +
       '</div>';
     document.getElementById('retryBtn').addEventListener('click', initApp);
   }
