@@ -2625,16 +2625,61 @@ function viewVendorDetail(){
 function viewProjects(){
   let projects = state.data.projects.slice();
   if(state.projectFilter!=='전체') projects = projects.filter(p=>p.category===state.projectFilter);
-  const statusOrder = {'진행중':0,'보류':1,'완료':2};
-  projects.sort((a,b)=>{
-    const so = (statusOrder[a.status]??1) - (statusOrder[b.status]??1);
-    if(so!==0) return so;
-    return dayjs(a.deadline||'2099-01-01').diff(dayjs(b.deadline||'2099-01-01'));
-  });
 
   const catColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
   const catColorMap = {};
   state.data.categories.forEach((c,i)=>catColorMap[c]=catColors[i%catColors.length]);
+
+  const columns = [
+    {key:'진행중', label:'진행중', color:'#7C3AED', icon:'ti-rocket'},
+    {key:'보류',   label:'보류',   color:'#F97316', icon:'ti-player-pause'},
+    {key:'중단',   label:'중단',   color:'#6B7280', icon:'ti-player-stop'},
+    {key:'완료',   label:'완료',   color:'#10B981', icon:'ti-circle-check'},
+  ];
+
+  function renderCard(p){
+    const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+    const prog=progressOf(p);
+    const ddayLabel=dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`);
+    const col=catColorMap[p.category]||'#1C85E8';
+    const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
+    const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
+    const logCount = vendorIds.reduce((sum,vid)=>sum + ((p.vendorLogs||{})[vid]||[]).length, 0);
+    const doneCk = (p.checklist||[]).filter(c=>c.done).length;
+    const totalCk = (p.checklist||[]).length;
+    const isDone = (p.status||'진행중')==='완료';
+    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px;margin-bottom:10px;cursor:pointer;${isDone?'background:var(--sf)':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="font-size:13.5px;font-weight:700;line-height:1.35;color:var(--text)">${p.title}</div>
+        <div class="proj-card-menu" data-pid="${p.id}" onclick="event.stopPropagation()" style="cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px"><i class="ti ti-dots"></i></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        ${dday!==null?`<span style="display:flex;align-items:center;gap:3px;font-size:10.5px;color:var(--muted)"><i class="ti ti-clock" style="font-size:11px"></i>${ddayLabel}</span>`:''}
+        <span class="badge" style="background:${col}1a;color:${col};font-size:10px">${p.category}</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <span style="font-size:10.5px;color:var(--muted);border:1px solid var(--bd);border-radius:20px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-user" style="font-size:10px"></i>${p.owner}</span>
+      </div>
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+          <span style="font-size:11px;font-weight:700;color:var(--text)">진행률</span>
+          <span style="font-size:11px;color:var(--muted)">${prog}%</span>
+        </div>
+        <div class="pgb" style="height:5px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center">
+          ${linkedVendors.slice(0,3).map((v,i)=>`<span style="margin-left:${i>0?'-6px':'0'};border:2px solid #fff;border-radius:50%;position:relative;z-index:${3-i}">${av(v.name,22)}</span>`).join('')}
+          ${linkedVendors.length>3?`<span style="margin-left:-6px;width:22px;height:22px;border-radius:50%;background:var(--sf);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--muted);font-weight:700">+${linkedVendors.length-3}</span>`:''}
+          ${linkedVendors.length===0?`<span style="font-size:10px;color:var(--muted)">연결된 거래처 없음</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;color:var(--muted);font-size:10.5px">
+          ${totalCk>0?`<span style="display:flex;align-items:center;gap:3px"><i class="ti ti-checklist" style="font-size:12px"></i>${doneCk}/${totalCk}</span>`:''}
+          ${logCount>0?`<span style="display:flex;align-items:center;gap:3px"><i class="ti ti-message-circle" style="font-size:12px"></i>${logCount}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }
 
   return `
     <div class="sh">
@@ -2648,45 +2693,22 @@ function viewProjects(){
     </div>
 
     ${projects.length===0?'<div class="empty-state">해당 카테고리의 프로젝트가 없습니다.</div>':
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
-      ${projects.map(p=>{
-        const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
-        const prog=progressOf(p);
-        const ddayLabel=dday===null?'':(dday<0?`D+${Math.abs(dday)}`:`D-${dday}`);
-        const col=catColorMap[p.category]||'#1C85E8';
-        const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
-        const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
-        const VMAX = 2;
-        const isDone = (p.status||'진행중')==='완료';
-        return `<div class="card proj-card" data-pid="${p.id}" style="padding:12px;margin-bottom:0;display:flex;flex-direction:column;${isDone?'background:var(--sf)':''}">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-            <div style="display:flex;gap:5px;align-items:center;min-width:0">
-              <span class="badge" style="background:${col}1a;color:${col};font-weight:300;font-size:10px;padding:2px 7px">${p.category}</span>
-              <select class="proj-status-select" data-pid="${p.id}" onclick="event.stopPropagation()" style="font-size:9px;padding:1px 5px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
+    `<div style="display:flex;gap:16px;overflow-x:auto;align-items:flex-start;padding-bottom:8px">
+      ${columns.map(col=>{
+        const colProjects = projects.filter(p=>(p.status||'진행중')===col.key);
+        return `<div style="flex:0 0 280px;min-width:280px">
+          <div style="margin-bottom:12px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
+              <i class="ti ${col.icon}" style="font-size:14px;color:${col.color}"></i>
+              <span style="font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--text)">${col.label}</span>
+              <span style="background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center">${colProjects.length}</span>
             </div>
-            ${dday!==null?`<span class="dlc ${dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}" style="font-size:9px;flex-shrink:0">${ddayLabel}</span>`:''}
+            <div style="height:3px;border-radius:2px;background:${col.color}"></div>
           </div>
-
-          <div style="font-size:13px;font-weight:300;line-height:1.35;margin-bottom:3px;color:var(--text)">${p.title}</div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:9px;display:flex;align-items:center;gap:3px">
-            <i class="ti ti-user" style="font-size:10px"></i>${p.owner}
-          </div>
-
-          <div style="flex:1;margin-bottom:10px">
-            ${linkedVendors.length===0
-              ? `<div style="font-size:10px;color:var(--muted)">연결된 거래처 없음</div>`
-              : `<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-                  ${linkedVendors.slice(0,VMAX).map(v=>`<span style="font-size:10px;font-weight:300;color:var(--text);background:var(--sf);padding:3px 8px;border-radius:20px">${v.name}</span>`).join('')}
-                  ${linkedVendors.length>VMAX?`<span style="font-size:10px;color:var(--muted)">+${linkedVendors.length-VMAX}개</span>`:''}
-                </div>`}
-          </div>
-
           <div>
-            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">
-              <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">진행률</span>
-              <span style="font-size:12px;font-weight:300;color:${col}">${prog}%</span>
-            </div>
-            <div class="pgb" style="height:5px"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+            ${colProjects.length===0
+              ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding:20px 0;border:1.5px dashed var(--bd);border-radius:10px">항목 없음</div>`
+              : colProjects.map(renderCard).join('')}
           </div>
         </div>`;
       }).join('')}
