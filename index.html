@@ -3311,7 +3311,7 @@ function viewCalendar(){
 
         const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
           ${weekCells.map((d,ci)=>{
-            if(d===null) return `<div class="cal-cell empty" style="aspect-ratio:4/3"></div>`;
+            if(d===null) return `<div class="cal-cell empty" style="aspect-ratio:16/9"></div>`;
             const dateStr = weekDates[ci];
             const isToday = dateStr===todayStr;
             const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
@@ -3320,7 +3320,7 @@ function viewCalendar(){
             const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave);
             const EV_MAX = 2;
             const labelParts = [...holidayEvs.map(h=>h.title), ...leaveEvs.map(l=>l.title)];
-            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="aspect-ratio:4/3">
+            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="aspect-ratio:16/9">
               <div style="display:flex;align-items:baseline;gap:4px;min-width:0">
                 <span class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''};flex-shrink:0">${d}</span>
                 ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
