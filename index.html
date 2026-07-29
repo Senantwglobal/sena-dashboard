@@ -1596,7 +1596,6 @@ function viewHome(){
       ${upcomingHolidays.map(h=>{
         const c = h.country==='KR' ? {bg:'#FFF0F0',color:'#CC0000'} : {bg:'#F0F4FF',color:'#003087'};
         return `<div style="display:flex;align-items:center;gap:6px;background:${c.bg};border:0.5px solid ${c.color}33;border-radius:8px;padding:6px 12px;font-size:12px">
-          <span>${h.country==='KR'?flagKR(12):flagUS(12)}</span>
           <span style="font-weight:300;color:${c.color}">${h.title.replace('🇰🇷','').replace('🇺🇸','').trim()}</span>
           <span style="color:${c.color};font-weight:300">${h.dday===0?'오늘':'D-'+h.dday}</span>
         </div>`;
@@ -1861,7 +1860,7 @@ function viewHome(){
         <div class="card">
           <div class="sh"><div class="st"><i class="ti ti-note oi"></i>메모</div>
           <button class="btn" id="saveMemoBtn" style="font-size:11px;padding:4px 10px">저장</button></div>
-          <textarea id="dashMemo" class="inp" rows="4" placeholder="자유롭게 메모하세요..." style="margin:0;border:none;background:var(--sf);border-radius:0;resize:none;padding:12px">${state.data.memo||''}</textarea>
+          <textarea id="dashMemo" class="inp" rows="4" placeholder="자유롭게 메모하세요..." style="margin:0;border:none;background:var(--sf);border-radius:0;resize:none;padding:12px" oninput="state.data.memo=this.value">${state.data.memo||''}</textarea>
         </div>
 
       </div>
@@ -2726,23 +2725,25 @@ function viewProjects(){
   ];
 
   function renderCard(p){
+    const isDone = (p.status||'진행중')==='완료';
     const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
     const prog=progressOf(p);
-    const ddayLabel=dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`);
+    const ddayLabel = isDone
+      ? (p.completedDate ? `완료 ${fmtDate(p.completedDate)}` : '완료')
+      : (dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`));
     const col=catColorMap[p.category]||'#1C85E8';
     const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
     const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
     const logCount = vendorIds.reduce((sum,vid)=>sum + ((p.vendorLogs||{})[vid]||[]).length, 0);
     const doneCk = (p.checklist||[]).filter(c=>c.done).length;
     const totalCk = (p.checklist||[]).length;
-    const isDone = (p.status||'진행중')==='완료';
     return `<div class="card proj-card" data-pid="${p.id}" style="padding:9px 10px;margin-bottom:7px;cursor:pointer;${isDone?'background:var(--sf)':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;gap:6px">
         <div style="font-size:12px;font-weight:700;line-height:1.25;color:var(--text)">${p.title}</div>
         <div class="proj-card-menu" data-pid="${p.id}" onclick="event.stopPropagation()" style="cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px;line-height:1"><i class="ti ti-dots"></i></div>
       </div>
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px;flex-wrap:wrap">
-        ${dday!==null?`<span style="display:flex;align-items:center;gap:2px;font-size:9.5px;color:var(--muted)"><i class="ti ti-clock" style="font-size:9.5px"></i>${ddayLabel}</span>`:''}
+        ${ddayLabel?`<span style="display:flex;align-items:center;gap:2px;font-size:9.5px;color:var(--muted)"><i class="ti ti-clock" style="font-size:9.5px"></i>${ddayLabel}</span>`:''}
         <span class="badge" style="background:${col}1a;color:${col};font-size:8.5px;padding:1.5px 6px">${p.category}</span>
         <span style="font-size:9.5px;color:var(--muted);display:inline-flex;align-items:center;gap:2px"><i class="ti ti-user" style="font-size:9.5px"></i>${p.owner}</span>
       </div>
@@ -2822,12 +2823,15 @@ function modalProjectStatusList(statusKey){
           ${projects.length===0?'<div class="empty-state">항목이 없습니다.</div>':
             projects.map(p=>{
               const prog = progressOf(p);
+              const isDone = (p.status||'진행중')==='완료';
               const dday = p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
-              const ddayLabel = dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`);
+              const ddayLabel = isDone
+                ? (p.completedDate ? `완료 ${fmtDate(p.completedDate)}` : '완료')
+                : (dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`));
               return `<div class="modal-proj-link" data-pid="${p.id}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;cursor:pointer">
                 <div style="flex:1;min-width:0">
                   <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
-                  <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${p.category}${dday!==null?' · '+ddayLabel:''} · 진행률 ${prog}%</div>
+                  <div style="font-size:10.5px;color:var(--muted);margin-top:2px">${p.category}${ddayLabel?' · '+ddayLabel:''} · 진행률 ${prog}%</div>
                 </div>
                 <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px;flex-shrink:0"></i>
               </div>`;
@@ -3101,7 +3105,17 @@ function viewProjectDetail(){
         return {...link, _imported:true, _refIdx: refIdx, _sourceLabel: sourceLabel};
       }
       const resolvedImports = importedRefs.map((r,i)=>resolveVendorLink(r,i)).filter(Boolean);
-      const allItemsRaw = [...pLinks.map((lk,idx)=>({...lk,_idx:idx})), ...resolvedImports];
+      // 이 프로젝트 내 거래처별 "기록(로그)"에 첨부된 파일/링크도 집계
+      const logLinks = [];
+      Object.entries(p.vendorLogs||{}).forEach(([vid, logs])=>{
+        const vend = state.data.vendors.find(x=>x.id===vid);
+        (logs||[]).forEach(l=>{
+          (l.links||[]).forEach(lk=>{
+            logLinks.push({...lk, _fromLog:true, addedDate: l.date, _sourceLabel: (vend?.name||'거래처')+' 로그 · '+(l.summary||'').slice(0,20)});
+          });
+        });
+      });
+      const allItemsRaw = [...pLinks.map((lk,idx)=>({...lk,_idx:idx})), ...resolvedImports, ...logLinks];
       const totalCount = allItemsRaw.length;
       const allItems = allItemsRaw.slice().sort((a,b)=>(b.addedDate||'').localeCompare(a.addedDate||''));
 
@@ -3118,10 +3132,12 @@ function viewProjectDetail(){
           curFolder = folderLabel;
           folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
         }
-        const delBtn = lk._imported
+        const delBtn = lk._fromLog
+          ? ''
+          : lk._imported
           ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
           : (!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${lk._idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:'');
-        const sourceTag = lk._imported?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
+        const sourceTag = (lk._imported||lk._fromLog)?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
         if(lk.data){
           const t=lk.type||'';
           const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
@@ -3289,13 +3305,10 @@ function viewCalendar(){
 
         const laneCount = laneEnds.length;
         const barsAreaH = laneCount>0 ? laneCount*(BAR_H+BAR_GAP) : 0;
-        // 공휴일/연차 라벨이 이 주에 하나라도 있으면, 막대 오버레이가 그 라벨 아래로 내려오도록 여유 확보
-        const weekHasLabel = weekDates.some(dt=> dt && allEvs.some(e=>e.date===dt && (e.isHoliday||e.isLeave)));
-        const LABEL_H = weekHasLabel ? 13 : 0;
         const BARS_MAX_H = 45; // 막대 영역 최대 확보 높이 (이보다 레인이 많아지면 넘치는 부분은 자동으로 겹쳐 표시되지 않고 생략됨)
         const cappedBarsAreaH = Math.min(barsAreaH, BARS_MAX_H);
 
-        const CELL_H = 130; // 모든 주(week)에 동일하게 적용되는 고정 셀 높이 (막대/라벨 유무와 무관)
+        const CELL_H = 128; // 모든 주(week)에 동일하게 적용되는 고정 셀 높이 (막대 유무와 무관)
         const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
           ${weekCells.map((d,ci)=>{
             if(d===null) return `<div class="cal-cell empty" style="height:${CELL_H}px"></div>`;
@@ -3305,11 +3318,13 @@ function viewCalendar(){
             const holidayEvs = dayEvsAll.filter(e=>e.isHoliday);
             const leaveEvs = dayEvsAll.filter(e=>e.isLeave);
             const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave);
-            const EV_MAX = 1;
+            const EV_MAX = 2;
+            const labelParts = [...holidayEvs.map(h=>h.title), ...leaveEvs.map(l=>l.title)];
             return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="height:${CELL_H}px">
-              <div class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''}">${d}</div>
-              ${holidayEvs.length>0?`<div style="font-size:8.5px;color:#DC2626;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;display:flex;align-items:center;gap:3px">${holidayEvs.map(h=>(h.country==='KR'?flagKR(9):flagUS(9))+' '+h.title).join(', ')}</div>`:''}
-              ${leaveEvs.length>0?`<div style="font-size:8.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px">${leaveEvs.map(h=>h.title).join(', ')}</div>`:''}
+              <div style="display:flex;align-items:baseline;gap:4px;min-width:0">
+                <span class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''};flex-shrink:0">${d}</span>
+                ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
+              </div>
               <div style="height:${cappedBarsAreaH}px"></div>
               ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
@@ -3317,7 +3332,7 @@ function viewCalendar(){
           }).join('')}
         </div>`;
 
-        const barsOverlay = laneCount>0 ? `<div style="position:absolute;top:${NUM_H+LABEL_H}px;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;pointer-events:none">
+        const barsOverlay = laneCount>0 ? `<div style="position:absolute;top:${NUM_H}px;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:4px;pointer-events:none">
           ${bars.filter(b=>b.lane*(BAR_H+BAR_GAP) < BARS_MAX_H).map(b=>{
             const c = eventColor(b.e.type);
             return `<div class="cal-ev cal-ev-bar" data-eid="${b.e.id}" data-pid="${b.e.projectId||''}" style="grid-column:${b.colStart+1} / span ${b.colEnd-b.colStart+1};grid-row:1;margin-top:${b.lane*(BAR_H+BAR_GAP)}px;height:${BAR_H}px;background:${c.bg};color:${c.text};display:flex;align-items:center;padding:0 6px;border-radius:${b.isStartCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isEndCap?'4px':'0'} ${b.isStartCap?'4px':'0'};font-size:10px;overflow:hidden;white-space:nowrap;pointer-events:auto;cursor:pointer;font-weight:600">${b.isStartCap?b.e.title:''}</div>`;
@@ -3367,10 +3382,9 @@ function viewCalendar(){
             <div style="display:flex;flex-direction:column;gap:4px">
               ${specialEvs.map(e=>{
                 const isToday = e.date===todayStr;
-                const flag = e.isHoliday ? (e.country==='KR'?flagKR(11):flagUS(11))+' ' : '';
                 return `<div style="display:flex;align-items:center;gap:8px">
                   <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600;display:flex;align-items:center;gap:4px">${flag}${e.title}</span>
+                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
                 </div>`;
               }).join('')}
             </div>
@@ -5329,6 +5343,21 @@ function bindViewEvents(){
   const nextBtn = document.querySelector('.dash-proj-next');
   if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.dashProjPage = Math.max(0,(state.dashProjPage||0)-1); render(); });
   if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.dashProjPage = (state.dashProjPage||0)+1; render(); });
+  const saveMemoBtn = document.getElementById('saveMemoBtn');
+  if(saveMemoBtn) saveMemoBtn.addEventListener('click', ()=>{
+    const memoEl = document.getElementById('dashMemo');
+    if(memoEl){
+      state.data.memo = memoEl.value;
+      persist(false);
+      showToast('메모가 저장되었습니다.');
+    }
+  });
+  const dashMemoEl = document.getElementById('dashMemo');
+  if(dashMemoEl) dashMemoEl.addEventListener('blur', ()=>{
+    state.data.memo = dashMemoEl.value;
+    persist(false);
+  });
+
   const dashProjCatFilter = document.getElementById('dashProjCatFilter');
   if(dashProjCatFilter) dashProjCatFilter.addEventListener('change', e=>{
     state.dashProjCategoryFilter = e.target.value;
@@ -6099,7 +6128,12 @@ function bindViewEvents(){
     sel.addEventListener('change', e=>{
       e.stopPropagation();
       const p = state.data.projects.find(x=>x.id===sel.dataset.pid);
-      if(p){ p.status = sel.value; persist(false); }
+      if(p){
+        p.status = sel.value;
+        if(sel.value==='완료' && !p.completedDate) p.completedDate = dayjs().format('YYYY-MM-DD');
+        if(sel.value!=='완료') p.completedDate = '';
+        persist(false); render();
+      }
     });
   });
 
