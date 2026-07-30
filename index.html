@@ -3057,14 +3057,21 @@ function viewProjectDetail(){
                 const showAll = !!state.projLogShowAll;
                 const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
                 const rowsHtml = visible.map(l=>`
-                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd)">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                      <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
-                      <span class="badge bgr" style="font-size:10px">${l.status}</span>
+                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd);display:flex;gap:10px">
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                        <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
+                        <span class="badge bgr" style="font-size:10px">${l.status}</span>
+                      </div>
+                      <div style="font-size:13px;font-weight:300;line-height:1.5">${l.summary}</div>
+                      ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
+                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
+                      ${renderLogLinks(l.links)}
                     </div>
-                    <div style="font-size:13px;font-weight:300;line-height:1.5">${l.summary}</div>
-                    ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
-                    ${renderLogLinks(l.links)}
+                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
+                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
+                    </div>`:''}
                   </div>`).join('');
                 const moreBtn = sorted.length > LOG_PAGE
                   ? `<div style="text-align:center;padding:10px 16px">
@@ -5469,7 +5476,19 @@ function bindViewEvents(){
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       if(confirm('이 로그를 삭제하시겠습니까?')){
-        state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==btn.dataset.lid);
+        const lid = btn.dataset.lid;
+        state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==lid);
+        // 프로젝트에 반영되어 있던 사본도 함께 제거 (그대로 두면 새로고침 시 다시 나타남)
+        (state.data.projects||[]).forEach(p=>{
+          if(!p.vendorLogs) return;
+          Object.keys(p.vendorLogs).forEach(vid=>{
+            p.vendorLogs[vid] = (p.vendorLogs[vid]||[]).filter(l=>l.id!==lid);
+          });
+        });
+        // 이 로그에서 자동 생성된 체크리스트 항목도 함께 정리
+        (state.data.vendors||[]).forEach(v=>{
+          if(v.checklist) v.checklist = v.checklist.filter(c=>c.fromLog!==lid);
+        });
         persist(false); render();
         showToast('로그가 삭제되었습니다.');
       }
