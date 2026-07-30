@@ -2598,18 +2598,24 @@ function viewVendorDetail(){
             <button class="btn vendor-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
           </div>` : '';
 
+          const isCollapsed = state.vendorFileLinkCollapsed !== false; // 기본값: 접힘
+
           return `<div class="card" style="padding:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
-              <div style="display:flex;align-items:center;gap:6px">
+            <div style="display:flex;align-items:center;justify-content:space-between;${isCollapsed?'':'margin-bottom:10px'}">
+              <div class="filelink-collapse-toggle" id="vendorFileLinkToggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1">
+                <i class="ti ti-chevron-${isCollapsed?'right':'down'}" style="font-size:12px;color:var(--muted)"></i>
+                <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
                 <span style="font-size:10px;color:var(--muted)">${combinedLinks.length}건</span>
-                ${!isReadOnly()?`
+              </div>
+              ${!isReadOnly()?`
+              <div style="display:flex;align-items:center;gap:6px">
                 <button class="btn" id="addVendorLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
                 <label class="btn" id="addVendorFileLabelBtn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
                   <input type="file" id="addVendorFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
-                </label>`:''}
-              </div>
+                </label>
+              </div>`:''}
             </div>
+            ${isCollapsed ? '' : `
             <!-- URL 입력창 (숨김) -->
             <div id="vendorLinkUrlArea" style="display:none;gap:6px;margin-bottom:8px">
               <input type="text" id="vendorLinkUrlInput" class="inp" placeholder="URL (https://...)" style="flex:1;margin:0;font-size:12px"/>
@@ -2623,7 +2629,7 @@ function viewVendorDetail(){
                   파일이나 링크를 추가해보세요
                 </div>`
               : itemsHtml}
-            ${pager}
+            ${pager}`}
           </div>`;
         })()}
 
@@ -3169,19 +3175,25 @@ function viewProjectDetail(){
         <button class="btn proj-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
       </div>` : '';
 
+      const isProjCollapsed = state.projFileLinkCollapsed !== false; // 기본값: 접힘
+
       return `<div class="card" style="margin-bottom:14px;padding:14px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
-          <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;${isProjCollapsed?'':'margin-bottom:10px'}">
+          <div class="filelink-collapse-toggle" id="projFileLinkToggle" style="display:flex;align-items:center;gap:6px;cursor:pointer;flex:1">
+            <i class="ti ti-chevron-${isProjCollapsed?'right':'down'}" style="font-size:12px;color:var(--muted)"></i>
+            <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-paperclip" style="font-size:12px"></i> 파일 & 링크</span>
             <span style="font-size:10px;color:var(--muted)">${totalCount}건</span>
-            ${!isReadOnly()?`
+          </div>
+          ${!isReadOnly()?`
+          <div style="display:flex;align-items:center;gap:6px">
             ${linkedVendors.length>0?`<button class="btn" id="importVendorLinksBtn" style="font-size:10px;padding:2px 8px"><i class="ti ti-building-store" style="font-size:11px"></i> 거래처에서 가져오기</button>`:''}
             <button class="btn" id="addProjLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
             <label class="btn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
               <input type="file" id="addProjFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
-            </label>`:''}
-          </div>
+            </label>
+          </div>`:''}
         </div>
+        ${isProjCollapsed ? '' : `
         <div id="projLinkUrlArea" style="display:none;gap:6px;margin-bottom:8px">
           <input type="text" id="projLinkUrlInput" class="inp" placeholder="URL (https://...)" style="flex:1;margin:0;font-size:12px"/>
           <input type="text" id="projLinkLabelInput" class="inp" placeholder="제목 (선택)" style="width:120px;margin:0;font-size:12px"/>
@@ -3194,7 +3206,7 @@ function viewProjectDetail(){
               파일이나 링크를 추가해보세요
             </div>`
           : itemsHtml}
-        ${pager}
+        ${pager}`}
       </div>`;
     })()}
 
@@ -5510,6 +5522,17 @@ function bindViewEvents(){
   if(dashMemoEl) dashMemoEl.addEventListener('blur', ()=>{
     state.data.memo = dashMemoEl.value;
     persist(false);
+  });
+
+  const vendorFileLinkToggle = document.getElementById('vendorFileLinkToggle');
+  if(vendorFileLinkToggle) vendorFileLinkToggle.addEventListener('click', ()=>{
+    state.vendorFileLinkCollapsed = state.vendorFileLinkCollapsed === false;
+    render();
+  });
+  const projFileLinkToggle = document.getElementById('projFileLinkToggle');
+  if(projFileLinkToggle) projFileLinkToggle.addEventListener('click', ()=>{
+    state.projFileLinkCollapsed = state.projFileLinkCollapsed === false;
+    render();
   });
 
   const dashProjCatFilter = document.getElementById('dashProjCatFilter');
