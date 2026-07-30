@@ -57,7 +57,7 @@ a{color:inherit}
 .nb{padding:12px 14px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:0;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:300;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s var(--ease),border-color .18s var(--ease)}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
-.cnt{padding:24px;max-width:1200px;margin:0 auto}
+.cnt{padding:24px;max-width:1500px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
@@ -1226,6 +1226,14 @@ function showToast(msg){
 }
 
 /* ---------- 유틸 ---------- */
+function sortLogsDesc(logs){
+  return logs.slice().sort((a,b)=>{
+    const dateDiff = dayjs(b.date).diff(dayjs(a.date));
+    if(dateDiff !== 0) return dateDiff;
+    return (b.createdAt||0) - (a.createdAt||0);
+  });
+}
+
 function daysAgo(dateStr){
   if(!dateStr) return null;
   return dayjs().diff(dayjs(dateStr), 'day');
@@ -1236,10 +1244,10 @@ function fmtDateDow(d){ return dayjs(d).format('M월 D일 (ddd)'); }
 function latestLogForVendor(vendorId){
   const logs = state.data.vendorLogs.filter(l=>l.vendorId===vendorId);
   if(logs.length===0) return null;
-  return logs.slice().sort((a,b)=> dayjs(b.date).diff(dayjs(a.date)))[0];
+  return sortLogsDesc(logs)[0];
 }
 function logsForVendor(vendorId){
-  return state.data.vendorLogs.filter(l=>l.vendorId===vendorId).slice().sort((a,b)=> dayjs(b.date).diff(dayjs(a.date)));
+  return sortLogsDesc(state.data.vendorLogs.filter(l=>l.vendorId===vendorId));
 }
 function projectsForVendor(vendorId){
   return state.data.projects.filter(p=>
@@ -1550,7 +1558,7 @@ function viewHome(){
     .filter(p=>p.deadline)
     .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
     .filter(p=>p.dday>=0 && p.dday<=7).sort((a,b)=>a.dday-b.dday);
-  const recentLogs = state.data.vendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).slice(0,8);
+  const recentLogs = sortLogsDesc(state.data.vendorLogs).slice(0,8);
   const allCL = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c,pid:p.id,ptitle:p.title})));
   const inProgProjects = state.data.projects.filter(p=> progressOf(p) > 0 && progressOf(p) < 100).length;
   const undoneItems = allCL.filter(c=>!c.done).length;
@@ -3055,7 +3063,7 @@ function viewProjectDetail(){
           ${activeVendorLogs.length===0
             ? `<div class="empty-state" style="padding:28px">아직 기록이 없습니다. 기록 추가 버튼으로 시작하세요.</div>`
             : (() => {
-                const sorted = activeVendorLogs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+                const sorted = sortLogsDesc(activeVendorLogs);
                 const LOG_PAGE = 5;
                 const showAll = !!state.projLogShowAll;
                 const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
@@ -3784,7 +3792,8 @@ function bindLogModal(preVendorId, preProjectId){
         rawText: fd.get('rawText')||'',
         needsApproval, nextStepDone: false,
         links, linkedProjectId,
-        contactPersonIds
+        contactPersonIds,
+        createdAt: Date.now()
       };
       createdLogs.push(newLog);
       state.data.vendorLogs.push(newLog);
@@ -3812,7 +3821,7 @@ function bindLogModal(preVendorId, preProjectId){
       }
     });
 
-    state.data.vendorLogs.sort((a,b)=>b.date.localeCompare(a.date));
+    state.data.vendorLogs = sortLogsDesc(state.data.vendorLogs);
 
     closeModal();
     persist(false);
