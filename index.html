@@ -1721,7 +1721,7 @@ function viewHome(){
   // 미완료 프로젝트 전체 (마감일이 있고, 완료되지 않은 프로젝트) — 7일 이내 빨강 / 30일 이내 파랑 / 그 외 초록
   const ddayBadgeClass = (d)=> d<=7 ? 'dl-c' : d<=30 ? 'dl-b' : 'dl-ok';
   const incompleteProjects = state.data.projects
-    .filter(p=>p.deadline && (p.status||'진행중')!=='완료')
+    .filter(p=>p.deadline && (p.status||'진행중')==='진행중')
     .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
     .filter(p=>p.dday>=0)
     .sort((a,b)=>a.dday-b.dday);
