@@ -2221,7 +2221,7 @@ function viewVendorList(){
       <div class="kpi"><div class="kn" style="color:#B45309">${staleCount}</div><div class="kl">90일 이상 정체</div></div>
     </div>
 
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:14px;margin-bottom:14px">
       <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px">전체</button>
       ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px">${c}</button>`).join('')}
       <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
