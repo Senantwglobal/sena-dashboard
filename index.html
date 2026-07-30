@@ -1226,6 +1226,17 @@ function showToast(msg){
 }
 
 /* ---------- 유틸 ---------- */
+function moveLogToTrash(log){
+  if(!state.data.deletedLogs) state.data.deletedLogs = [];
+  state.data.deletedLogs.push({...log, deletedAt: Date.now()});
+  purgeOldTrash();
+}
+function purgeOldTrash(){
+  if(!state.data.deletedLogs) return;
+  const cutoff = Date.now() - 30*24*60*60*1000;
+  state.data.deletedLogs = state.data.deletedLogs.filter(l=>(l.deletedAt||0) >= cutoff);
+}
+
 function sortLogsDesc(logs){
   return logs.slice().sort((a,b)=>{
     const dateDiff = dayjs(b.date).diff(dayjs(a.date));
@@ -1483,6 +1494,11 @@ function render(){
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
+        <button id="globalSearchBtn" title="검색" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center"><i class="ti ti-search" style="font-size:16px"></i></button>
+        ${!isReadOnly()?`<button id="trashBinBtn" title="휴지통" style="background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;position:relative">
+          <i class="ti ti-trash" style="font-size:16px"></i>
+          ${(state.data.deletedLogs||[]).length>0?`<span style="position:absolute;top:0;right:0;width:7px;height:7px;border-radius:50%;background:#DC2626"></span>`:''}
+        </button>`:''}
         ${av('천세나', 30)}
         <span style="font-size:13px;color:var(--muted)">천세나</span>
         <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;">
@@ -1500,6 +1516,57 @@ function render(){
 
   document.getElementById('roleSelect').addEventListener('change', e=>{
     state.data.role = e.target.value; persist(false);
+  });
+
+  // 전체 검색
+  const globalSearchBtn = document.getElementById('globalSearchBtn');
+  if(globalSearchBtn) globalSearchBtn.addEventListener('click', ()=>{
+    openModal(modalGlobalSearch());
+    bindModalCommon();
+    const input = document.getElementById('globalSearchInput');
+    const results = document.getElementById('globalSearchResults');
+    input.focus();
+    let searchDebounce = null;
+    input.addEventListener('input', ()=>{
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(()=>{
+        results.innerHTML = renderGlobalSearchResults(input.value);
+        results.querySelectorAll('.search-result-item').forEach(el=>{
+          el.addEventListener('mouseover', ()=>el.style.background='var(--sf)');
+          el.addEventListener('mouseout', ()=>el.style.background='transparent');
+          el.addEventListener('click', ()=>{
+            const type = el.dataset.type;
+            if(type==='vendor'){ state.selectedVendorId = el.dataset.id; state.view='vendors'; }
+            else if(type==='project'){ state.selectedProjectId = el.dataset.id; state.view='projects'; }
+            else if(type==='log'){ state.selectedVendorId = el.dataset.vid; state.view='vendors'; }
+            closeModal(); render();
+          });
+        });
+      }, 150);
+    });
+  });
+
+  // 휴지통
+  const trashBinBtn = document.getElementById('trashBinBtn');
+  if(trashBinBtn) trashBinBtn.addEventListener('click', ()=>{
+    purgeOldTrash();
+    openModal(modalTrashBin());
+    bindModalCommon();
+    document.querySelectorAll('.trash-restore-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const lid = btn.dataset.lid;
+        const idx = (state.data.deletedLogs||[]).findIndex(l=>l.id===lid);
+        if(idx!==-1){
+          const [restored] = state.data.deletedLogs.splice(idx,1);
+          delete restored.deletedAt;
+          state.data.vendorLogs.push(restored);
+          state.data.vendorLogs = sortLogsDesc(state.data.vendorLogs);
+          persist(false);
+          closeModal(); render();
+          showToast('로그가 복구되었습니다.');
+        }
+      });
+    });
   });
 
   function renameDashboard(){
@@ -1576,9 +1643,25 @@ function viewHome(){
   const projColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
 
   // 미완료 다음액션 (nextStep이 있고, 완료 아닌 로그들)
-  const pendingActionsAll = state.data.vendorLogs
-    .filter(l=>l.nextStep && l.nextStep.trim() && !l.nextStepDone)
-    .sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+  const paFilter = state.dashActionFilter || '전체';
+  let pendingActionsAll = state.data.vendorLogs
+    .filter(l=>l.nextStep && l.nextStep.trim() && !l.nextStepDone);
+  if(paFilter==='이번주'){
+    const weekEndStr = dayjs().endOf('week').format('YYYY-MM-DD');
+    pendingActionsAll = pendingActionsAll.filter(l=>l.nextStepDue && l.nextStepDue<=weekEndStr);
+  } else if(paFilter==='이번달'){
+    const monthEndStr = dayjs().endOf('month').format('YYYY-MM-DD');
+    pendingActionsAll = pendingActionsAll.filter(l=>l.nextStepDue && l.nextStepDue<=monthEndStr);
+  }
+  if(paFilter==='전체'){
+    pendingActionsAll = pendingActionsAll.sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
+  } else {
+    pendingActionsAll = pendingActionsAll.sort((a,b)=>{
+      const ad = a.nextStepDue ? dayjs(a.nextStepDue).valueOf() : Infinity;
+      const bd = b.nextStepDue ? dayjs(b.nextStepDue).valueOf() : Infinity;
+      return ad - bd;
+    });
+  }
   const PA_PER_PAGE = 8;
   const paPage = state.dashActionPage || 0;
   const paTotalPages = Math.ceil(pendingActionsAll.length / PA_PER_PAGE);
@@ -1673,8 +1756,12 @@ function viewHome(){
             }).join('')}
         </div>
 
-        ${pendingActionsAll.length>0 ? `<div class="card">
+        ${pendingActionsAll.length>0 || paFilter!=='전체' ? `<div class="card">
           <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div><span style="font-size:10px;color:var(--muted)">${pendingActionsAll.length}건</span></div>
+          <div style="display:flex;gap:5px;margin-bottom:10px">
+            ${['전체','이번주','이번달'].map(f=>`<button class="btn dash-action-filter-btn ${paFilter===f?'btn-o':''}" data-filter="${f}" style="font-size:10.5px;padding:3px 10px">${f}</button>`).join('')}
+          </div>
+          ${pendingActionsAll.length===0 ? `<div class="empty-state" style="padding:16px 0">해당 기간에 마감 예정인 액션이 없습니다.</div>` : ''}
           ${pendingActions.map(l=>{
             const v = state.data.vendors.find(x=>x.id===l.vendorId);
             const linkedProj = l.linkedProjectId ? state.data.projects.find(p=>p.id===l.linkedProjectId) : null;
@@ -4404,6 +4491,93 @@ function modalEventForm(dateStr){
   `;
 }
 
+function modalGlobalSearch(){
+  return `
+    <div class="modal" style="width:540px">
+      <div class="mh"><h3><i class="ti ti-search"></i> 전체 검색</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <input type="text" id="globalSearchInput" class="inp" placeholder="거래처, 프로젝트, 로그 내용 검색..." style="margin-bottom:0"/>
+        <div id="globalSearchResults" style="max-height:55vh;overflow-y:auto;margin-top:10px">
+          <div style="font-size:12px;color:var(--muted);text-align:center;padding:24px 0">검색어를 입력하세요.</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGlobalSearchResults(query){
+  const q = query.trim().toLowerCase();
+  if(!q) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:24px 0">검색어를 입력하세요.</div>`;
+
+  const vendors = state.data.vendors.filter(v=>(v.name||'').toLowerCase().includes(q)).slice(0,8);
+  const projects = state.data.projects.filter(p=>(p.title||'').toLowerCase().includes(q)).slice(0,8);
+  const logs = state.data.vendorLogs.filter(l=>(l.summary||'').toLowerCase().includes(q) || (l.rawText||'').toLowerCase().includes(q) || (l.nextStep||'').toLowerCase().includes(q)).slice(0,10);
+
+  if(vendors.length===0 && projects.length===0 && logs.length===0){
+    return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:24px 0">'${query}'에 대한 검색 결과가 없습니다.</div>`;
+  }
+
+  let html = '';
+  if(vendors.length>0){
+    html += `<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 6px">거래처</div>`;
+    html += vendors.map(v=>`<div class="search-result-item" data-type="vendor" data-id="${v.id}" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer">
+      ${av(v.name,26)}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.name}</div>
+        <div style="font-size:10.5px;color:var(--muted)">${v.type||''}</div>
+      </div>
+      <i class="ti ti-chevron-right" style="font-size:13px;color:var(--muted)"></i>
+    </div>`).join('');
+  }
+  if(projects.length>0){
+    html += `<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px">프로젝트</div>`;
+    html += projects.map(p=>`<div class="search-result-item" data-type="project" data-id="${p.id}" style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;cursor:pointer">
+      <div style="width:26px;height:26px;border-radius:8px;background:var(--ol);color:var(--od);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-folder" style="font-size:13px"></i></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>
+        <div style="font-size:10.5px;color:var(--muted)">${p.category||''} · ${p.status||'진행중'}</div>
+      </div>
+      <i class="ti ti-chevron-right" style="font-size:13px;color:var(--muted)"></i>
+    </div>`).join('');
+  }
+  if(logs.length>0){
+    html += `<div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 6px">로그</div>`;
+    html += logs.map(l=>{
+      const v = state.data.vendors.find(x=>x.id===l.vendorId);
+      return `<div class="search-result-item" data-type="log" data-vid="${l.vendorId}" style="padding:8px;border-radius:8px;cursor:pointer">
+        <div style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px">${l.summary||''}</div>
+        <div style="font-size:10.5px;color:var(--muted)">${v?v.name:''} · ${fmtDate(l.date)}</div>
+      </div>`;
+    }).join('');
+  }
+  return html;
+}
+
+function modalTrashBin(){
+  const deleted = (state.data.deletedLogs||[]).slice().sort((a,b)=>(b.deletedAt||0)-(a.deletedAt||0));
+  return `
+    <div class="modal" style="width:520px">
+      <div class="mh"><h3><i class="ti ti-trash"></i> 휴지통 <span style="color:var(--muted);font-weight:400">(${deleted.length}건)</span></h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb" style="max-height:60vh;overflow-y:auto">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">삭제된 로그는 30일간 보관되며, 이후 자동으로 완전히 삭제됩니다.</div>
+        ${deleted.length===0 ? `<div class="empty-state">휴지통이 비어있습니다.</div>` :
+          deleted.map(l=>{
+            const v = state.data.vendors.find(x=>x.id===l.vendorId);
+            const daysLeft = 30 - Math.floor((Date.now()-(l.deletedAt||0))/86400000);
+            return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;margin-bottom:8px">
+              ${av(v?v.name:'?',26)}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.summary||''}</div>
+                <div style="font-size:10.5px;color:var(--muted)">${v?v.name:''} · ${fmtDate(l.date)} · ${daysLeft}일 후 완전삭제</div>
+              </div>
+              <button class="btn btn-o trash-restore-btn" data-lid="${l.id}" style="font-size:11px;padding:4px 10px;flex-shrink:0"><i class="ti ti-arrow-back-up"></i> 복구</button>
+            </div>`;
+          }).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function modalDayDetail(dateStr){
   const evs = eventsOnDate(dateStr);
   return `
@@ -5474,8 +5648,10 @@ function bindViewEvents(){
       // 삭제 버튼 (모달 내)
       const deleteBtn = document.getElementById('deleteLogConfirmBtn');
       if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
-        if(confirm('이 로그를 삭제하시겠습니까?')){
+        if(confirm('이 로그를 휴지통으로 이동하시겠습니까? (30일간 보관 후 자동 삭제됩니다)')){
           const lid = btn.dataset.lid;
+          const logToDelete = state.data.vendorLogs.find(l=>l.id===lid);
+          if(logToDelete) moveLogToTrash(logToDelete);
           state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==lid);
           // 프로젝트에 반영되어 있던 사본도 함께 제거 (그대로 두면 새로고침 시 다시 나타남)
           (state.data.projects||[]).forEach(p=>{
@@ -5489,7 +5665,7 @@ function bindViewEvents(){
           });
           state.data.approvalItems = (state.data.approvalItems||[]).filter(a=>a.logId!==lid);
           closeModal(); persist(false); render();
-          showToast('로그가 삭제되었습니다.');
+          showToast('로그가 휴지통으로 이동되었습니다.');
         }
       });
     });
@@ -5499,8 +5675,10 @@ function bindViewEvents(){
   document.querySelectorAll('.log-delete-btn').forEach(btn=>{
     btn.addEventListener('click', e=>{
       e.stopPropagation();
-      if(confirm('이 로그를 삭제하시겠습니까?')){
+      if(confirm('이 로그를 휴지통으로 이동하시겠습니까? (30일간 보관 후 자동 삭제됩니다)')){
         const lid = btn.dataset.lid;
+        const logToDelete = state.data.vendorLogs.find(l=>l.id===lid);
+        if(logToDelete) moveLogToTrash(logToDelete);
         state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==lid);
         // 프로젝트에 반영되어 있던 사본도 함께 제거 (그대로 두면 새로고침 시 다시 나타남)
         (state.data.projects||[]).forEach(p=>{
@@ -5516,7 +5694,7 @@ function bindViewEvents(){
         // 이 로그로 생성된 대표님 승인 대기 항목도 함께 정리
         state.data.approvalItems = (state.data.approvalItems||[]).filter(a=>a.logId!==lid);
         persist(false); render();
-        showToast('로그가 삭제되었습니다.');
+        showToast('로그가 휴지통으로 이동되었습니다.');
       }
     });
   });
@@ -5621,6 +5799,13 @@ function bindViewEvents(){
   document.querySelectorAll('.dash-action-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.dashActionPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.dash-action-filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashActionFilter = btn.dataset.filter;
+      state.dashActionPage = 0;
       render();
     });
   });
@@ -7437,6 +7622,7 @@ async function initApp(){
   app.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--text-muted);font-size:13px;">불러오는 중...</div>`;
   try{
     state.data = await loadStoreRemote();
+    purgeOldTrash();
     render();
     // 시계 위젯 시작
     startClock();
