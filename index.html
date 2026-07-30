@@ -1492,6 +1492,67 @@ function av(name, size=28, logoUrl){
 }
 function avatarEl(name, size=28){ return av(name, size); }
 
+function modalProfilePhoto(){
+  const current = state.data.profilePhotoUrl;
+  return `
+    <div class="modal" style="width:380px">
+      <div class="mh"><h3>프로필 사진</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb" style="display:flex;flex-direction:column;align-items:center;gap:16px">
+        <div id="profilePhotoPreview">${current?`<img src="${current}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:0.5px solid var(--bd)"/>`:av('천세나', 96)}</div>
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none"/>
+        <button class="btn btn-o" id="profilePhotoSelectBtn" style="font-size:12px;padding:6px 14px"><i class="ti ti-upload"></i> 사진 선택</button>
+      </div>
+      <div class="mf" style="gap:8px">
+        ${current?`<button type="button" class="btn btn-red" id="profilePhotoRemoveBtn"><i class="ti ti-trash"></i> 기본 이미지로</button>`:''}
+        <button type="button" class="btn btn-o" id="profilePhotoSaveBtn" disabled><i class="ti ti-device-floppy"></i> 저장</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindProfilePhotoModal(){
+  let pendingDataUrl = null;
+  const selectBtn = document.getElementById('profilePhotoSelectBtn');
+  const fileInput = document.getElementById('profilePhotoInput');
+  const preview = document.getElementById('profilePhotoPreview');
+  const saveBtn = document.getElementById('profilePhotoSaveBtn');
+  const removeBtn = document.getElementById('profilePhotoRemoveBtn');
+
+  if(selectBtn) selectBtn.addEventListener('click', ()=> fileInput.click());
+
+  if(fileInput) fileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    if(!file.type.startsWith('image/')){ showToast('이미지 파일만 업로드할 수 있습니다.'); return; }
+    if(file.size > 3*1024*1024){ showToast('이미지 용량은 3MB 이하로 올려주세요.'); return; }
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      pendingDataUrl = ev.target.result;
+      if(preview) preview.innerHTML = `<img src="${pendingDataUrl}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:0.5px solid var(--bd)"/>`;
+      if(saveBtn) saveBtn.disabled = false;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  if(saveBtn) saveBtn.addEventListener('click', ()=>{
+    if(!pendingDataUrl) return;
+    state.data.profilePhotoUrl = pendingDataUrl;
+    persist(false);
+    closeModal();
+    render();
+    showToast('프로필 사진이 변경되었습니다.');
+  });
+
+  if(removeBtn) removeBtn.addEventListener('click', ()=>{
+    state.data.profilePhotoUrl = '';
+    persist(false);
+    closeModal();
+    render();
+    showToast('기본 이미지로 되돌렸습니다.');
+  });
+}
+
+
 function render(){
   if(!state.data){ return; }
   document.title = state.data.dashboardTitle || '천세나 업무 대시보드';
@@ -1523,7 +1584,7 @@ function render(){
           <i class="ti ti-trash" style="font-size:16px"></i>
           ${(state.data.deletedLogs||[]).length>0?`<span style="position:absolute;top:0;right:0;width:7px;height:7px;border-radius:50%;background:#DC2626"></span>`:''}
         </button>`:''}
-        ${av('천세나', 30)}
+        <button id="profileAvatarBtn" title="프로필 사진 변경" style="background:none;border:none;padding:0;cursor:pointer;border-radius:50%;display:flex;flex-shrink:0">${state.data.profilePhotoUrl ? `<img src="${state.data.profilePhotoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:0.5px solid var(--bd)"/>` : av('천세나', 30)}</button>
         <span style="font-size:13px;color:var(--muted)">천세나</span>
         <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;">
           <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
@@ -1543,6 +1604,13 @@ function render(){
   });
 
   // 전체 검색
+  const profileAvatarBtn = document.getElementById('profileAvatarBtn');
+  if(profileAvatarBtn) profileAvatarBtn.addEventListener('click', ()=>{
+    openModal(modalProfilePhoto());
+    bindModalCommon();
+    bindProfilePhotoModal();
+  });
+
   const globalSearchBtn = document.getElementById('globalSearchBtn');
   if(globalSearchBtn) globalSearchBtn.addEventListener('click', ()=>{
     openModal(modalGlobalSearch());
