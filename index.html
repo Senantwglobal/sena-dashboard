@@ -2004,7 +2004,7 @@ function viewHome(){
                     </div>
                     <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
                   </div>
-                  ${!isReadOnly()?`<button class="btn approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-check"></i></button>`:''}
+                  ${!isReadOnly()?`<button class="approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="width:26px;height:26px;border-radius:50%;border:none;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;padding:0"><i class="ti ti-check"></i></button>`:''}
                 </div>`;
               }).join('')}
         </div>
