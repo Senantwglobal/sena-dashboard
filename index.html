@@ -3708,6 +3708,13 @@ function bindLogModal(preVendorId, preProjectId){
     document.getElementById('lmLinkLabel').value = '';
     document.getElementById('lmLinkUrl').value = '';
   });
+  // 링크 입력창에서 Enter키 누르면 폼이 조기 제출되지 않고 링크만 추가되도록 처리
+  ['lmLinkLabel','lmLinkUrl'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); addLinkBtn?.click(); }
+    });
+  });
 
   // 폼 제출
   const form = document.getElementById('logModalForm');
@@ -5352,6 +5359,12 @@ function bindViewEvents(){
         list.appendChild(row);
         document.getElementById('elLinkLabel').value = '';
         document.getElementById('elLinkUrl').value = '';
+      });
+      ['elLinkLabel','elLinkUrl'].forEach(id=>{
+        const el = document.getElementById(id);
+        if(el) el.addEventListener('keydown', e=>{
+          if(e.key==='Enter'){ e.preventDefault(); elAddLinkBtn?.click(); }
+        });
       });
 
       // 수정 저장
