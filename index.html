@@ -1984,12 +1984,12 @@ function viewHome(){
         </div>
 
         <!-- 대표님 승인 대기 (항상 표시) -->
-        <div class="card" style="border-left:3px solid ${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#A32D2D':'var(--bd)'}">
+        <div class="card">
           <div class="sh">
-            <div class="st"><i class="ti ti-user-check" style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#A32D2D':'var(--muted)'}"></i>
-              <span style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#A32D2D':'var(--text)'}">대표님 승인 대기</span>
+            <div class="st"><i class="ti ti-user-check" style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--muted)'}"></i>
+              <span style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--text)'}">대표님 승인 대기</span>
             </div>
-            <span style="font-size:11px;background:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#FCEBEB':'var(--sf)'};color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#A32D2D':'var(--muted)'};padding:2px 8px;border-radius:20px">${(state.data.approvalItems||[]).filter(a=>!a.approved).length}건</span>
+            <span style="font-size:11px;background:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#FEE2E2':'var(--sf)'};color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--muted)'};padding:2px 8px;border-radius:20px">${(state.data.approvalItems||[]).filter(a=>!a.approved).length}건</span>
           </div>
           ${(state.data.approvalItems||[]).filter(a=>!a.approved).length===0
             ? `<div style="font-size:12px;color:var(--muted);padding:8px 0">승인 대기 항목이 없습니다.</div>`
