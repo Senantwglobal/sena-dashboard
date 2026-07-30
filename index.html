@@ -2676,6 +2676,40 @@ function viewVendorDetail(){
           })()}
         </div>`:''}
 
+        <!-- 회의록 섹션 (연결된 프로젝트 전체에서 집계) -->
+        ${(() => {
+          const meetings = vendorMeetingsAcrossProjects(v.id);
+          const MN_PER_PAGE = 4;
+          const mnPage = state.vendorMeetingNotePage || 0;
+          const mnTotalPages = Math.ceil(meetings.length / MN_PER_PAGE);
+          const pageItems = meetings.slice(mnPage*MN_PER_PAGE, mnPage*MN_PER_PAGE+MN_PER_PAGE);
+          return `<div class="card" style="padding:12px 16px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <div style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><i class="ti ti-notes" style="font-size:12px"></i> 회의록</div>
+              <span style="font-size:10px;color:var(--muted)">${meetings.length}건</span>
+            </div>
+            ${meetings.length===0
+              ? `<div class="empty-state" style="padding:16px">등록된 회의록이 없습니다. 상단의 회의록 추가 버튼으로 시작하세요.</div>`
+              : `<div style="display:flex;flex-direction:column;gap:8px">
+                  ${pageItems.map(({project, note})=>`
+                    <div class="meeting-card-btn" data-vid="${v.id}" data-pid="${project.id}" data-mid="${note.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:4px">
+                      <div style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                        <span style="font-size:11px;color:var(--o);font-weight:300;display:flex;align-items:center;gap:4px"><i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(note.date)}</span>
+                        <span style="font-size:10px;color:var(--muted);background:var(--sf);padding:1px 7px;border-radius:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${project.title}</span>
+                      </div>
+                      <div style="font-size:13px;font-weight:300;color:var(--text)">${(note.title||'제목 없음').replace(/</g,'&lt;')}</div>
+                      ${note.personName?`<div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px"><i class="ti ti-user" style="font-size:10px"></i>${note.personName}</div>`:''}
+                      <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(note.summary||note.text||'').replace(/</g,'&lt;')}</div>
+                    </div>`).join('')}
+                </div>
+                ${mnTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+                  <button class="btn vendor-meeting-note-page-btn" data-page="${Math.max(0,mnPage-1)}" style="padding:3px 8px;font-size:11px" ${mnPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+                  ${Array.from({length:mnTotalPages}).map((_,i)=>`<button class="btn vendor-meeting-note-page-btn ${i===mnPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+                  <button class="btn vendor-meeting-note-page-btn" data-page="${Math.min(mnTotalPages-1,mnPage+1)}" style="padding:3px 8px;font-size:11px" ${mnPage>=mnTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+                </div>`:''}`}
+          </div>`;
+        })()}
+
         <!-- 파일/링크 섹션 -->
         ${(() => {
           const allLinks = logs.flatMap(l=>(l.links||[]).map(lk=>({...lk, logDate:l.date, logSummary:l.summary})));
@@ -4658,6 +4692,152 @@ function modalMeetingNoteForm(){
   `;
 }
 
+function modalVendorMeetingNoteForm(vid, editCtx){
+  const v = state.data.vendors.find(x=>x.id===vid);
+  const relProjects = projectsForVendor(vid);
+  const isEdit = !!editCtx;
+  const note = editCtx ? editCtx.note : null;
+  const presetProjectId = editCtx ? editCtx.projectId : '';
+  const projectOptions = relProjects.map(p=>`<option value="${p.id}" ${p.id===presetProjectId?'selected':''}>${p.title}</option>`).join('');
+  const people = (v && v.people) || [];
+  const personOptions = people.map(p=>`<option value="${p.id}" ${note && note.personId===p.id?'selected':''}>${p.name}${p.title?' ('+p.title+')':''}</option>`).join('');
+  return `
+    <div class="modal" style="width:560px">
+      <div class="mh">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${av(v?v.name:'?', 24)}
+          <h3>${v?v.name:''} 회의록 ${isEdit?'수정':'작성'}</h3>
+        </div>
+        <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="mb">
+        <div class="field"><label class="field-label">연관 프로젝트 ${relProjects.length?'<span style="color:#DC2626">*</span>':''}</label>
+          <select class="inp" id="vmProjectSel" style="margin:0" ${relProjects.length?'':'disabled'} ${isEdit?'disabled':''}>
+            ${relProjects.length
+              ? `<option value="">선택하세요</option>${projectOptions}`
+              : `<option value="">연결된 프로젝트가 없습니다</option>`}
+          </select>
+          ${relProjects.length===0?`<div style="font-size:10.5px;color:var(--muted);margin-top:4px">이 거래처와 연결된 프로젝트가 없어 회의록을 등록할 수 없습니다. 프로젝트에서 이 거래처를 먼저 연결해주세요.</div>`:''}
+          ${isEdit?`<div style="font-size:10.5px;color:var(--muted);margin-top:4px">연관 프로젝트는 수정할 수 없습니다. 다른 프로젝트로 옮기려면 삭제 후 다시 작성해주세요.</div>`:''}
+        </div>
+        <div class="field" style="margin-top:8px"><label class="field-label">담당자</label>
+          <select class="inp" id="vmPersonSel" style="margin:0">
+            <option value="">선택 안함</option>${personOptions}
+          </select>
+        </div>
+        <div class="field" style="margin-top:8px"><label class="field-label">제목 <span style="color:#DC2626">*</span></label>
+          <input class="inp" type="text" id="vmTitle" value="${(note?.title||'').replace(/"/g,'&quot;')}" placeholder="예: 8월 정기 미팅" style="margin:0"/>
+        </div>
+        <div class="field" style="margin-top:8px"><label class="field-label">날짜</label><input class="inp" type="date" id="vmDate" value="${note?.date || dayjs().format('YYYY-MM-DD')}"/></div>
+        <div class="field" style="margin-top:8px"><label class="field-label">회의 내용</label>
+          <textarea class="inp" id="vmText" rows="7" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="resize:vertical;line-height:1.6">${note?.text||''}</textarea>
+        </div>
+      </div>
+      <div class="mf" style="gap:8px">
+        <button class="btn btn-o" id="vmSaveBtn" ${relProjects.length?'':'disabled'}><i class="ti ti-device-floppy"></i> 저장</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindVendorMeetingNoteForm(vid, editCtx){
+  const saveBtn = document.getElementById('vmSaveBtn');
+  if(!saveBtn) return;
+  saveBtn.addEventListener('click', ()=>{
+    const isEdit = !!editCtx;
+    const projectId = isEdit ? editCtx.projectId : document.getElementById('vmProjectSel').value;
+    const personId = document.getElementById('vmPersonSel').value;
+    const title = document.getElementById('vmTitle').value.trim();
+    const date = document.getElementById('vmDate').value;
+    const text = document.getElementById('vmText').value.trim();
+    if(!projectId){ showToast('연관 프로젝트를 선택해주세요.'); return; }
+    if(!title){ showToast('제목을 입력해주세요.'); return; }
+    if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
+    const p = state.data.projects.find(x=>x.id===projectId);
+    if(!p) return;
+    const v = state.data.vendors.find(x=>x.id===vid);
+    const person = personId ? (v && v.people || []).find(pp=>pp.id===personId) : null;
+    if(!p.vendorMeetings) p.vendorMeetings = {};
+    if(!p.vendorMeetings[vid]) p.vendorMeetings[vid] = [];
+    if(isEdit){
+      const n = p.vendorMeetings[vid].find(x=>x.id===editCtx.note.id);
+      if(n){
+        n.title = title; n.date = date; n.text = text;
+        n.personId = personId || ''; n.personName = person ? person.name : '';
+      }
+    } else {
+      p.vendorMeetings[vid].unshift({
+        id: uid('vm'), title, date, text, summary:'',
+        personId: personId || '', personName: person ? person.name : ''
+      });
+    }
+    closeModal(); persist(false); render();
+    showToast(isEdit?'회의록이 수정되었습니다.':'회의록이 저장되었습니다.');
+  });
+}
+
+function modalVendorMeetingNoteDetail(pid, vid, mid){
+  const proj = state.data.projects.find(x=>x.id===pid);
+  const m = proj?.vendorMeetings?.[vid]?.find(x=>x.id===mid);
+  const vendor = state.data.vendors.find(x=>x.id===vid);
+  if(!m){
+    return `
+      <div class="modal">
+        <div class="mh"><h3>회의록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+        <div class="mb"><div class="empty-state" style="padding:24px">회의록을 찾을 수 없습니다.</div></div>
+      </div>
+    `;
+  }
+  return `
+    <div class="modal">
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${m.title||vendor?.name||''}</h3>
+        <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="mb">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${vendor?.name||''} · ${proj?.title?proj.title+' · ':''}${fmtDateDow(m.date)}</div>
+        ${m.personName?`<div style="font-size:12px;color:var(--o);margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-user" style="font-size:12px"></i>${m.personName}</div>`:''}
+        <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(m.text||'').replace(/</g,'&lt;')}</div>
+        ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
+      </div>
+      ${!isReadOnly()?`<div class="mf" style="gap:8px">
+        <button type="button" class="btn btn-red" id="deleteVendorMeetingNoteBtn" data-pid="${pid}" data-vid="${vid}" data-mid="${mid}"><i class="ti ti-trash"></i> 삭제</button>
+        <button type="button" class="btn btn-o" id="editVendorMeetingNoteBtn" data-pid="${pid}" data-vid="${vid}" data-mid="${mid}"><i class="ti ti-pencil"></i> 수정</button>
+      </div>`:''}
+    </div>
+  `;
+}
+
+function bindVendorMeetingNoteDetail(pid, vid, mid){
+  const editBtn = document.getElementById('editVendorMeetingNoteBtn');
+  if(editBtn) editBtn.addEventListener('click', ()=>{
+    const proj = state.data.projects.find(x=>x.id===pid);
+    const note = proj?.vendorMeetings?.[vid]?.find(x=>x.id===mid);
+    if(!note) return;
+    closeModal();
+    openModal(modalVendorMeetingNoteForm(vid, {projectId: pid, note}));
+    bindModalCommon();
+    bindVendorMeetingNoteForm(vid, {projectId: pid, note});
+  });
+  const delBtn = document.getElementById('deleteVendorMeetingNoteBtn');
+  if(delBtn) delBtn.addEventListener('click', ()=>{
+    if(!confirm('이 회의록을 삭제하시겠습니까?')) return;
+    const proj = state.data.projects.find(x=>x.id===pid);
+    if(proj?.vendorMeetings?.[vid]){
+      proj.vendorMeetings[vid] = proj.vendorMeetings[vid].filter(x=>x.id!==mid);
+    }
+    persist(false); closeModal(); render();
+    showToast('회의록이 삭제되었습니다.');
+  });
+}
+
+function vendorMeetingsAcrossProjects(vid){
+  const rows = [];
+  (state.data.projects||[]).forEach(p=>{
+    ((p.vendorMeetings||{})[vid]||[]).forEach(m=>rows.push({project:p, note:m}));
+  });
+  return rows.sort((a,b)=>dayjs(b.note.date).diff(dayjs(a.note.date)));
+}
+
 function modalChecklistDetail(item){
   const internalNames = ['천세나','Jenna Kwon','Justin Kim'];
   const people = allPeopleFlat();
@@ -6106,13 +6286,13 @@ function bindViewEvents(){
     });
   });
 
-  // 거래처 상세에서 회의록(일정) 추가 — 캘린더 일정 등록과 동일한 폼, 이 거래처가 미리 선택된 상태로 오픈
+  // 거래처 상세에서 회의록 추가 — 일정이 아니라 연관 프로젝트/담당자를 선택해 회의록만 등록
   const addVendorEventBtn = document.getElementById('addVendorEventBtn');
   if(addVendorEventBtn) addVendorEventBtn.addEventListener('click', ()=>{
     const vid = addVendorEventBtn.dataset.vid;
-    openModal(modalEventForm(null, [vid]));
+    openModal(modalVendorMeetingNoteForm(vid));
     bindModalCommon();
-    bindEventFormSubmit();
+    bindVendorMeetingNoteForm(vid);
   });
 
   // 브랜드 추가
@@ -6784,6 +6964,14 @@ function bindViewEvents(){
   document.querySelectorAll('.vendor-project-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.vendorProjectPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+
+  // 거래처 상세 - 회의록 페이지네이션
+  document.querySelectorAll('.vendor-meeting-note-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorMeetingNotePage = parseInt(btn.dataset.page);
       render();
     });
   });
@@ -7736,24 +7924,13 @@ document.addEventListener('click', function(e){
   const meetingCardBtn = e.target.closest('.meeting-card-btn');
   if(meetingCardBtn){
     e.stopPropagation();
-    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    const pid = meetingCardBtn.dataset.pid || state.selectedProjectId;
     const vid = meetingCardBtn.dataset.vid;
     const mid = meetingCardBtn.dataset.mid;
-    const m = proj?.vendorMeetings?.[vid]?.find(x=>x.id===mid);
-    if(!m) return;
-    const vendor = state.data.vendors.find(x=>x.id===vid);
-    openModal(`
-      <div class="modal">
-        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${m.title||vendor?.name||''}</h3>
-          <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
-        </div>
-        <div class="mb">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${vendor?.name||''} · ${fmtDateDow(m.date)}</div>
-          <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(m.text||'').replace(/</g,'&lt;')}</div>
-          ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
-        </div>
-      </div>`);
+    closeModal();
+    openModal(modalVendorMeetingNoteDetail(pid, vid, mid));
     bindModalCommon();
+    bindVendorMeetingNoteDetail(pid, vid, mid);
     return;
   }
 });
