@@ -100,6 +100,7 @@ select.inp{cursor:pointer}
 .dl-ok{background:#E4F7F1;color:#1C9873}
 .dl-w{background:var(--ol);color:var(--od)}
 .dl-c{background:#FDEAEA;color:#C0392B}
+.dl-b{background:#E8F2FE;color:#0B4E9E}
 .dl-d{background:#F0F1F3;color:#5F6672}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
@@ -1717,6 +1718,17 @@ function viewHome(){
     .filter(p=>p.deadline)
     .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
     .filter(p=>p.dday>=0 && p.dday<=7).sort((a,b)=>a.dday-b.dday);
+  // 미완료 프로젝트 전체 (마감일이 있고, 완료되지 않은 프로젝트) — 7일 이내 빨강 / 30일 이내 파랑 / 그 외 초록
+  const ddayBadgeClass = (d)=> d<=7 ? 'dl-c' : d<=30 ? 'dl-b' : 'dl-ok';
+  const incompleteProjects = state.data.projects
+    .filter(p=>p.deadline && (p.status||'진행중')!=='완료')
+    .map(p=>({...p, dday: dayjs(p.deadline).diff(today,'day')}))
+    .filter(p=>p.dday>=0)
+    .sort((a,b)=>a.dday-b.dday);
+  const ipPage = state.homeIncompleteProjectPage || 0;
+  const IP_PER_PAGE = 5;
+  const ipTotalPages = Math.ceil(incompleteProjects.length / IP_PER_PAGE);
+  const ipPageItems = incompleteProjects.slice(ipPage*IP_PER_PAGE, ipPage*IP_PER_PAGE+IP_PER_PAGE);
   const recentLogs = sortLogsDesc(state.data.vendorLogs).slice(0,8);
   const allCL = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c,pid:p.id,ptitle:p.title})));
   const inProgProjects = state.data.projects.filter(p=> progressOf(p) > 0 && progressOf(p) < 100).length;
@@ -1885,12 +1897,17 @@ function viewHome(){
           </div>`:''}
         </div>` : ''}
 
-        ${deadlines.length>0 ? `<div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>마감 임박 프로젝트</div></div>
-          ${deadlines.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
-            <span class="dlc ${p.dday<=2?'dl-c':p.dday<=5?'dl-w':'dl-ok'}">D-${p.dday}</span>
+        ${incompleteProjects.length>0 ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>미완료 프로젝트</div><span style="font-size:11px;color:var(--muted)">${incompleteProjects.length}건</span></div>
+          ${ipPageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
+            <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
             <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
           </div>`).join('')}
+          ${ipTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+            <button class="btn home-incomplete-page-btn" data-page="${Math.max(0,ipPage-1)}" style="padding:3px 8px;font-size:11px" ${ipPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            ${Array.from({length:ipTotalPages}).map((_,i)=>`<button class="btn home-incomplete-page-btn ${i===ipPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
+            <button class="btn home-incomplete-page-btn" data-page="${Math.min(ipTotalPages-1,ipPage+1)}" style="padding:3px 8px;font-size:11px" ${ipPage>=ipTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>`:''}
         </div>` : ''}
 
       </div>
@@ -6096,6 +6113,14 @@ function bindViewEvents(){
   document.querySelectorAll('.dash-action-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.dashActionPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+
+  // 미완료 프로젝트 페이지네이션
+  document.querySelectorAll('.home-incomplete-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.homeIncompleteProjectPage = parseInt(btn.dataset.page);
       render();
     });
   });
