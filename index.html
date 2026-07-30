@@ -4600,6 +4600,47 @@ function modalEditLog(log){
           <div class="field"><label class="field-label">원본 내용</label>
             <textarea class="inp" name="rawText" rows="3">${log.rawText||''}</textarea>
           </div>
+
+          <!-- 파일/링크 -->
+          <div style="background:var(--sf);border-radius:10px;padding:12px;margin-top:4px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <label class="field-label" style="margin:0">파일 &amp; 링크</label>
+              <div style="display:flex;gap:4px">
+                <button type="button" id="elTabLink" class="btn btn-o" style="font-size:11px;padding:3px 10px">🔗 URL 링크</button>
+                <button type="button" id="elTabFile" class="btn" style="font-size:11px;padding:3px 10px">📎 파일 업로드</button>
+              </div>
+            </div>
+            <div id="elLinkList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+              ${(log.links||[]).map(lk=>{
+                const id = lk.id || uid('lk');
+                return `<div class="edit-link-row" data-id="${id}" style="display:flex;align-items:center;gap:6px;padding:4px 8px;background:#fff;border:0.5px solid var(--bd);border-radius:6px">
+                  <i class="ti ${lk.data?'ti-paperclip':'ti-link'}" style="font-size:12px;color:var(--muted)"></i>
+                  <input type="hidden" class="link-label" value="${(lk.label||'').replace(/"/g,'&quot;')}"/>
+                  <input type="hidden" class="link-url" value="${lk.url||''}"/>
+                  <input type="hidden" class="link-data" value="${lk.data||''}"/>
+                  <input type="hidden" class="link-type" value="${lk.type||''}"/>
+                  <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||lk.url||'파일'}</span>
+                  <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px" onclick="this.closest('.edit-link-row').remove()"><i class="ti ti-x"></i></button>
+                </div>`;
+              }).join('')}
+            </div>
+            <!-- URL 링크 입력 -->
+            <div id="elLinkArea" style="display:flex;gap:6px">
+              <input type="text" id="elLinkLabel" class="inp" placeholder="링크 제목 (선택)" style="flex:1;margin:0"/>
+              <input type="text" id="elLinkUrl" class="inp" placeholder="URL (https://...)" style="flex:2;margin:0"/>
+              <button type="button" id="elAddLinkBtn" class="btn" style="padding:7px 10px"><i class="ti ti-plus"></i></button>
+            </div>
+            <!-- 파일 업로드 -->
+            <div id="elFileArea" style="display:none">
+              <div id="elFileDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;border:2px dashed var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .2s">
+                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--o)"></i>
+                <span style="font-size:13px;color:var(--muted)">클릭하거나 파일을 드래그하세요</span>
+                <span style="font-size:11px;color:var(--muted)">PDF, Excel, Word, 이미지, CSV · 파일당 최대 2MB</span>
+                <input type="file" id="elFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif,.zip" style="display:none"/>
+              </div>
+            </div>
+          </div>
+
           <input type="hidden" name="logId" value="${log.id}"/>
           <input type="hidden" name="originalVendorId" value="${log.vendorId}"/>
         </form>
@@ -5226,12 +5267,111 @@ function bindViewEvents(){
       openModal(modalEditLog(log));
       bindModalCommon();
 
+      // ── 파일 & 링크 (수정 모달) ──
+      let editPendingFileReads = 0;
+      function updateEditSubmitBtnState(){
+        const submitBtn = document.querySelector('button[type=submit][form=editLogForm]');
+        if(!submitBtn) return;
+        if(editPendingFileReads > 0){
+          submitBtn.disabled = true;
+          submitBtn.dataset.origLabel = submitBtn.dataset.origLabel || submitBtn.innerHTML;
+          submitBtn.innerHTML = '<i class="ti ti-loader-2"></i> 파일 처리 중...';
+        } else {
+          submitBtn.disabled = false;
+          if(submitBtn.dataset.origLabel) submitBtn.innerHTML = submitBtn.dataset.origLabel;
+        }
+      }
+      function addFileToEditLinkList(file){
+        if(file.size > 2*1024*1024){ showToast(`${file.name}: 2MB 초과 파일은 업로드할 수 없습니다.`); return; }
+        editPendingFileReads++; updateEditSubmitBtnState();
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const base64 = ev.target.result.split(',')[1];
+          const list = document.getElementById('elLinkList');
+          const row = document.createElement('div');
+          row.className = 'edit-link-row';
+          row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;background:#fff;border:0.5px solid var(--bd);border-radius:6px';
+          row.innerHTML = `<i class="ti ti-paperclip" style="font-size:12px;color:var(--muted)"></i>
+            <input type="hidden" class="link-label" value="${file.name}"/>
+            <input type="hidden" class="link-url" value=""/>
+            <input type="hidden" class="link-data" value="${base64}"/>
+            <input type="hidden" class="link-type" value="${file.type||'application/octet-stream'}"/>
+            <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</span>
+            <span style="font-size:10px;color:var(--muted);flex-shrink:0">${(file.size/1024).toFixed(0)}KB</span>
+            <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px" onclick="this.closest('.edit-link-row').remove()"><i class="ti ti-x"></i></button>`;
+          list.appendChild(row);
+          editPendingFileReads--; updateEditSubmitBtnState();
+        };
+        reader.onerror = () => { showToast(`${file.name} 파일을 읽는 중 오류가 발생했습니다.`); editPendingFileReads--; updateEditSubmitBtnState(); };
+        reader.readAsDataURL(file);
+      }
+      const elTabLink = document.getElementById('elTabLink');
+      const elTabFile = document.getElementById('elTabFile');
+      const elLinkArea = document.getElementById('elLinkArea');
+      const elFileArea = document.getElementById('elFileArea');
+      if(elTabLink) elTabLink.addEventListener('click', ()=>{
+        elLinkArea.style.display='flex'; elFileArea.style.display='none';
+        elTabLink.className='btn btn-o'; elTabFile.className='btn';
+      });
+      if(elTabFile) elTabFile.addEventListener('click', ()=>{
+        elLinkArea.style.display='none'; elFileArea.style.display='block';
+        elTabFile.className='btn btn-o'; elTabLink.className='btn';
+      });
+      const elFileInput = document.getElementById('elFileInput');
+      const elDropZone = document.getElementById('elFileDropZone');
+      if(elDropZone){
+        elDropZone.addEventListener('click', ()=>elFileInput?.click());
+        elDropZone.addEventListener('dragover', e=>{ e.preventDefault(); elDropZone.style.borderColor='var(--o)'; elDropZone.style.background='var(--ol)'; });
+        elDropZone.addEventListener('dragleave', ()=>{ elDropZone.style.borderColor='var(--bd)'; elDropZone.style.background='#fff'; });
+        elDropZone.addEventListener('drop', e=>{
+          e.preventDefault();
+          elDropZone.style.borderColor='var(--bd)'; elDropZone.style.background='#fff';
+          Array.from(e.dataTransfer.files).forEach(addFileToEditLinkList);
+        });
+      }
+      if(elFileInput) elFileInput.addEventListener('change', e=>{
+        Array.from(e.target.files).forEach(addFileToEditLinkList);
+        e.target.value='';
+      });
+      const elAddLinkBtn = document.getElementById('elAddLinkBtn');
+      if(elAddLinkBtn) elAddLinkBtn.addEventListener('click', ()=>{
+        const label = document.getElementById('elLinkLabel').value.trim();
+        const url = document.getElementById('elLinkUrl').value.trim();
+        if(!url){ showToast('URL을 입력해주세요.'); return; }
+        const list = document.getElementById('elLinkList');
+        const row = document.createElement('div');
+        row.className = 'edit-link-row';
+        row.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 8px;background:#fff;border:0.5px solid var(--bd);border-radius:6px';
+        row.innerHTML = `<i class="ti ti-link" style="font-size:12px;color:var(--muted)"></i>
+          <input type="hidden" class="link-label" value="${(label||url).replace(/"/g,'&quot;')}"/>
+          <input type="hidden" class="link-url" value="${url.replace(/"/g,'&quot;')}"/>
+          <input type="hidden" class="link-data" value=""/>
+          <input type="hidden" class="link-type" value=""/>
+          <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label||url}</span>
+          <button type="button" class="btn btn-red" style="padding:2px 6px;font-size:10px" onclick="this.closest('.edit-link-row').remove()"><i class="ti ti-x"></i></button>`;
+        list.appendChild(row);
+        document.getElementById('elLinkLabel').value = '';
+        document.getElementById('elLinkUrl').value = '';
+      });
+
       // 수정 저장
       document.getElementById('editLogForm').addEventListener('submit', e2=>{
         e2.preventDefault();
+        if(editPendingFileReads > 0){ showToast('파일을 처리하는 중입니다. 잠시 후 다시 시도해주세요.'); return; }
         const fd = new FormData(e2.target);
         const newVendorId = fd.get('vendorId');
         const originalVendorId = fd.get('originalVendorId');
+
+        // 파일/링크 수집
+        const links = [];
+        document.querySelectorAll('#elLinkList .edit-link-row').forEach(row=>{
+          const label = row.querySelector('.link-label')?.value?.trim();
+          const url   = row.querySelector('.link-url')?.value?.trim();
+          const data  = row.querySelector('.link-data')?.value?.trim();
+          const type  = row.querySelector('.link-type')?.value?.trim();
+          if(data){ links.push({label: label||'파일', url:'', data, type}); }
+          else if(url){ links.push({label: label||url, url}); }
+        });
 
         // 로그 업데이트
         const idx = state.data.vendorLogs.findIndex(l=>l.id===btn.dataset.lid);
@@ -5252,6 +5392,7 @@ function bindViewEvents(){
             needsApproval: fd.get('needsApproval')==='on',
             linkedProjectId: newLinkedProjectId,
             brandId: newBrandId,
+            links,
           };
         }
         // 연결 프로젝트 vendorLogs에도 반영
