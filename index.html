@@ -1808,13 +1808,16 @@ function viewHome(){
             ? `<div style="font-size:12px;color:var(--muted);padding:8px 0">승인 대기 항목이 없습니다.</div>`
             : (state.data.approvalItems||[]).filter(a=>!a.approved).map(a=>{
                 const v=state.data.vendors.find(x=>x.id===a.vendorId);
-                return `<div class="dash-row approval-item" data-aid="${a.id}" data-vid="${a.vendorId}" style="cursor:pointer">
-                  ${av(v?v.name:'?',22)}
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.content}</div>
-                    <div style="font-size:11px;color:var(--muted)">${v?v.name:''} · ${fmtDate(a.date)}</div>
+                return `<div class="dash-row" style="gap:8px">
+                  <div class="approval-item" data-aid="${a.id}" data-vid="${a.vendorId}" style="cursor:pointer;display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+                    ${av(v?v.name:'?',22)}
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.content}</div>
+                      <div style="font-size:11px;color:var(--muted)">${v?v.name:''} · ${fmtDate(a.date)}</div>
+                    </div>
+                    <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
                   </div>
-                  <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
+                  ${!isReadOnly()?`<button class="btn approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="padding:3px 7px;font-size:11px;flex-shrink:0"><i class="ti ti-check"></i></button>`:''}
                 </div>`;
               }).join('')}
         </div>
@@ -3795,7 +3798,7 @@ function bindLogModal(preVendorId, preProjectId){
       // 대표님 승인
       if(needsApproval){
         if(!state.data.approvalItems) state.data.approvalItems = [];
-        state.data.approvalItems.push({id:uid('ap'), vendorId, content: fd.get('summary'), date: fd.get('date'), approved:false});
+        state.data.approvalItems.push({id:uid('ap'), vendorId, content: fd.get('summary'), date: fd.get('date'), approved:false, logId: newLog.id});
       }
 
       // 연결 프로젝트에 자동 반영
@@ -5463,7 +5466,19 @@ function bindViewEvents(){
       const deleteBtn = document.getElementById('deleteLogConfirmBtn');
       if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
         if(confirm('이 로그를 삭제하시겠습니까?')){
-          state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==btn.dataset.lid);
+          const lid = btn.dataset.lid;
+          state.data.vendorLogs = state.data.vendorLogs.filter(l=>l.id!==lid);
+          // 프로젝트에 반영되어 있던 사본도 함께 제거 (그대로 두면 새로고침 시 다시 나타남)
+          (state.data.projects||[]).forEach(p=>{
+            if(!p.vendorLogs) return;
+            Object.keys(p.vendorLogs).forEach(vid=>{
+              p.vendorLogs[vid] = (p.vendorLogs[vid]||[]).filter(l=>l.id!==lid);
+            });
+          });
+          (state.data.vendors||[]).forEach(v=>{
+            if(v.checklist) v.checklist = v.checklist.filter(c=>c.fromLog!==lid);
+          });
+          state.data.approvalItems = (state.data.approvalItems||[]).filter(a=>a.logId!==lid);
           closeModal(); persist(false); render();
           showToast('로그가 삭제되었습니다.');
         }
@@ -5489,6 +5504,8 @@ function bindViewEvents(){
         (state.data.vendors||[]).forEach(v=>{
           if(v.checklist) v.checklist = v.checklist.filter(c=>c.fromLog!==lid);
         });
+        // 이 로그로 생성된 대표님 승인 대기 항목도 함께 정리
+        state.data.approvalItems = (state.data.approvalItems||[]).filter(a=>a.logId!==lid);
         persist(false); render();
         showToast('로그가 삭제되었습니다.');
       }
@@ -6341,6 +6358,17 @@ function bindViewEvents(){
       state.selectedVendorId = el.dataset.vid;
       state.view = 'vendors';
       render();
+    });
+  });
+
+  // 대표님 승인 대기 항목 완료 처리
+  document.querySelectorAll('.approval-dismiss-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const item = (state.data.approvalItems||[]).find(a=>a.id===btn.dataset.aid);
+      if(item) item.approved = true;
+      persist(false); render();
+      showToast('승인 완료 처리되었습니다.');
     });
   });
 
