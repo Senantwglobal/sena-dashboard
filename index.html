@@ -2168,6 +2168,13 @@ function viewVendorList(){
   if(statusFilter !== '전체') vendors = vendors.filter(v=>(v.companyStatus||'Active') === statusFilter);
   if(priorityFilter !== '전체') vendors = vendors.filter(v=>v.priority === priorityFilter);
 
+  const alphaFilter = state.vendorAlphaFilter || '전체';
+  if(alphaFilter === '한글'){
+    vendors = vendors.filter(v=>/^[가-힣]/.test(v.name));
+  } else if(alphaFilter !== '전체'){
+    vendors = vendors.filter(v=>v.name.trim().toUpperCase().startsWith(alphaFilter));
+  }
+
   // 이름 가나다/ABC 순 정렬
   vendors.sort((a,b)=>a.name.localeCompare(b.name, ['ko','en'], {sensitivity:'base'}));
 
@@ -2211,6 +2218,12 @@ function viewVendorList(){
       <div class="kpi"><div class="kn" style="color:#A32D2D">${highCount}</div><div class="kl">우선순위 높음</div></div>
       <div class="kpi"><div class="kn">${waitingCount}</div><div class="kl">회신 대기</div></div>
       <div class="kpi"><div class="kn" style="color:#B45309">${staleCount}</div><div class="kl">90일 이상 정체</div></div>
+    </div>
+
+    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px">전체</button>
+      ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px">${c}</button>`).join('')}
+      <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden">
@@ -5369,6 +5382,14 @@ function bindViewEvents(){
   document.querySelectorAll('[data-vendor-type]').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.vendorTypeFilter = el.dataset.vendorType;
+      render();
+    });
+  });
+
+  document.querySelectorAll('.vendor-alpha-btn').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const val = el.dataset.alpha;
+      state.vendorAlphaFilter = (state.vendorAlphaFilter===val) ? '전체' : val;
       render();
     });
   });
