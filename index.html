@@ -1279,7 +1279,22 @@ function priorityColor(p){
   return {bg:'var(--success-bg)', text:'var(--success)'};
 }
 function eventMeetingNotes(ev){
-  return (ev.meetingNotes || []).slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(!ev.meetingNotes) ev.meetingNotes = [];
+  // 이전 버전(회의록 1개 = meetingNote/meetingTitle/meetingSummary 단일 필드) 데이터 자동 이전
+  // — 새 배열 구조로 넘어오지 못한 기존 회의록이 화면에서 사라져 보이지 않도록 복구
+  if(ev.meetingNote && ev.meetingNote.trim()){
+    const legacyId = 'legacy_'+ev.id;
+    if(!ev.meetingNotes.some(n=>n.id===legacyId)){
+      ev.meetingNotes.push({
+        id: legacyId,
+        title: ev.meetingTitle || '제목 없음',
+        text: ev.meetingNote,
+        summary: ev.meetingSummary || '',
+        date: ev.date
+      });
+    }
+  }
+  return ev.meetingNotes.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 }
 function latestMeetingNote(ev){
   const notes = eventMeetingNotes(ev);
