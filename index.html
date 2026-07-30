@@ -1186,6 +1186,7 @@ const state = {
   data: null,
   view: 'home',
   selectedVendorId: null,
+  meetingNotesYearFilter: null,
   selectedProjectId: null,
   selectedCompanyId: null,
   calMonth: dayjs().format('YYYY-MM'),
@@ -6499,8 +6500,10 @@ function bindViewEvents(){
 
   const viewAllMeetingNotesBtn = document.getElementById('viewAllMeetingNotesBtn');
   if(viewAllMeetingNotesBtn) viewAllMeetingNotesBtn.addEventListener('click', ()=>{
+    state.meetingNotesYearFilter = null;
     openModal(modalAllMeetingNotes());
     bindModalCommon();
+    bindAllMeetingNotesModal();
   });
 
   const addEventBtnTop = document.getElementById('addEventBtnTop');
@@ -7228,17 +7231,36 @@ function bindEventMeetingNoteForm(eid, noteId){
 }
 
 function modalAllMeetingNotes(){
-  const rows = [];
+  const allRows = [];
   (state.data.calendar||[]).forEach(e=>{
-    eventMeetingNotes(e).forEach(n=>rows.push({ev:e, note:n}));
+    eventMeetingNotes(e).forEach(n=>allRows.push({ev:e, note:n}));
   });
-  rows.sort((a,b)=>(b.note.date||b.ev.date||'').localeCompare(a.note.date||a.ev.date||''));
+  allRows.sort((a,b)=>(b.note.date||b.ev.date||'').localeCompare(a.note.date||a.ev.date||''));
+
+  const years = Array.from(new Set(allRows.map(r=>{
+    const d = r.note.date || r.ev.date || '';
+    return d ? d.slice(0,4) : null;
+  }).filter(Boolean))).sort((a,b)=>b.localeCompare(a));
+
+  const yf = state.meetingNotesYearFilter;
+  const rows = yf ? allRows.filter(r=>{
+    const d = r.note.date || r.ev.date || '';
+    return d.slice(0,4) === yf;
+  }) : allRows;
+
+  const yearTabsHtml = years.length>0 ? `
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button class="btn meeting-year-filter-btn ${!yf?'btn-o':''}" data-year="" style="font-size:11px;padding:4px 10px">전체</button>
+      ${years.map(y=>`<button class="btn meeting-year-filter-btn ${yf===y?'btn-o':''}" data-year="${y}" style="font-size:11px;padding:4px 10px">${y}년</button>`).join('')}
+    </div>` : '';
+
   return `
     <div class="modal" style="width:640px">
       <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> 회의록 모아보기</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
+        ${yearTabsHtml}
         ${rows.length===0
-          ? `<div class="empty-state" style="padding:24px">아직 작성된 회의록이 없습니다. 일정 상세에서 회의록을 작성해보세요.</div>`
+          ? `<div class="empty-state" style="padding:24px">${yf?`${yf}년에 작성된 회의록이 없습니다.`:'아직 작성된 회의록이 없습니다. 일정 상세에서 회의록을 작성해보세요.'}</div>`
           : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
               ${rows.map(({ev:e, note:n})=>{
                 const c = eventColor(e.type);
@@ -7255,6 +7277,18 @@ function modalAllMeetingNotes(){
       </div>
     </div>
   `;
+}
+
+function bindAllMeetingNotesModal(){
+  document.querySelectorAll('.meeting-year-filter-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.meetingNotesYearFilter = btn.dataset.year || null;
+      closeModal();
+      openModal(modalAllMeetingNotes());
+      bindModalCommon();
+      bindAllMeetingNotesModal();
+    });
+  });
 }
 
 function modalEventDetail(ev){
