@@ -101,6 +101,20 @@ select.inp{cursor:pointer}
 .dl-w{background:var(--ol);color:var(--od)}
 .dl-c{background:#FDEAEA;color:#C0392B}
 .dl-b{background:#E8F2FE;color:#0B4E9E}
+.rte-toolbar{display:flex;align-items:center;gap:1px;flex-wrap:wrap;border:0.5px solid var(--bd);border-bottom:none;border-radius:8px 8px 0 0;padding:5px 6px;background:var(--sf)}
+.rte-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:5px;cursor:pointer;color:var(--text);font-size:12px;flex-shrink:0;font-family:inherit}
+.rte-btn:hover{background:var(--ol)}
+.rte-sep{width:1px;height:16px;background:var(--bd);margin:0 4px;flex-shrink:0}
+.rte-editor{border:0.5px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;padding:10px 12px;font-size:13px;line-height:1.6;min-height:160px;max-height:340px;overflow-y:auto;outline:none}
+.rte-editor:empty:before{content:attr(data-placeholder);color:var(--muted)}
+.rte-editor table{border-collapse:collapse;width:100%;margin:8px 0}
+.rte-editor table td{border:1px solid var(--bd);padding:6px 8px;font-size:12px;min-width:40px}
+.rte-editor ul, .rte-editor ol{padding-left:20px;margin:4px 0}
+.rte-color-popover{display:none;position:absolute;top:30px;left:0;background:#fff;border:0.5px solid var(--bd);border-radius:8px;padding:6px;gap:5px;z-index:20;box-shadow:var(--shadow-md)}
+.rte-color-dot{width:15px;height:15px;border-radius:50%;cursor:pointer;border:1px solid var(--bd);flex-shrink:0}
+.rte-content ul, .rte-content ol{padding-left:20px}
+.rte-content table{border-collapse:collapse}
+.rte-content table td{border:1px solid var(--bd);padding:6px 8px;font-size:12px}
 .dl-d{background:#F0F1F3;color:#5F6672}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
@@ -2808,7 +2822,7 @@ function viewVendorDetail(){
                       </div>
                       <div style="font-size:13px;font-weight:300;color:var(--text)">${(note.title||'제목 없음').replace(/</g,'&lt;')}</div>
                       ${note.personName?`<div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px"><i class="ti ti-user" style="font-size:10px"></i>${note.personName}</div>`:''}
-                      <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(note.summary||note.text||'').replace(/</g,'&lt;')}</div>
+                      <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${stripHtml(note.summary||note.text||'')}</div>
                     </div>`).join('')}
                 </div>
                 ${mnTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
@@ -3375,7 +3389,7 @@ function viewProjectDetail(){
                       <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(m.date)}
                     </div>
                     <div style="font-size:13px;font-weight:300;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
-                    <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(m.summary||m.text||'').replace(/</g,'&lt;')}</div>
+                    <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${stripHtml(m.summary||m.text||'')}</div>
                   </div>`).join('')}
               </div>`}
         ` : ''}
@@ -4801,6 +4815,111 @@ function modalMeetingNoteForm(){
   `;
 }
 
+function stripHtml(html){
+  if(!html) return '';
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return (tmp.textContent || tmp.innerText || '').trim();
+}
+
+function richToolbarHtml(editorId){
+  return `
+  <div class="rte-toolbar" data-target="${editorId}">
+    <button type="button" class="rte-btn" data-cmd="bold" title="굵게"><b>B</b></button>
+    <button type="button" class="rte-btn" data-cmd="italic" title="기울임"><i>I</i></button>
+    <button type="button" class="rte-btn" data-cmd="underline" title="밑줄"><u>U</u></button>
+    <button type="button" class="rte-btn" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+    <span class="rte-sep"></span>
+    <div style="position:relative">
+      <button type="button" class="rte-btn rte-highlight-btn" title="형광펜"><i class="ti ti-highlight"></i></button>
+      <div class="rte-color-popover" data-type="hilite">
+        ${['#FFF3A3','#B9F6CA','#B3E5FC','#F8BBD0'].map(c=>`<span class="rte-color-dot" data-color="${c}" style="background:${c}"></span>`).join('')}
+        <span class="rte-color-dot" data-color="transparent" style="background:#fff;border-style:dashed" title="지우기"></span>
+      </div>
+    </div>
+    <div style="position:relative">
+      <button type="button" class="rte-btn rte-textcolor-btn" title="글자색"><span style="font-weight:600">A</span></button>
+      <div class="rte-color-popover" data-type="fore">
+        ${['#111114','#DC2626','#2563EB','#15803D','#D97706'].map(c=>`<span class="rte-color-dot" data-color="${c}" style="background:${c}"></span>`).join('')}
+      </div>
+    </div>
+    <span class="rte-sep"></span>
+    <button type="button" class="rte-btn" data-cmd="insertUnorderedList" title="글머리 기호"><i class="ti ti-list"></i></button>
+    <button type="button" class="rte-btn" data-cmd="insertOrderedList" title="번호 매기기"><i class="ti ti-list-numbers"></i></button>
+    <button type="button" class="rte-btn" data-cmd="outdent" title="내어쓰기"><i class="ti ti-indent-decrease"></i></button>
+    <button type="button" class="rte-btn" data-cmd="indent" title="들여쓰기"><i class="ti ti-indent-increase"></i></button>
+    <span class="rte-sep"></span>
+    <button type="button" class="rte-btn rte-table-btn" title="표 삽입"><i class="ti ti-table-plus"></i></button>
+  </div>`;
+}
+
+function richEditorHtml(editorId, placeholder, contentHtml){
+  return `<div id="${editorId}" class="rte-editor" contenteditable="true" data-placeholder="${placeholder}">${contentHtml||''}</div>`;
+}
+
+function bindRichEditor(editorId){
+  const toolbar = document.querySelector(`.rte-toolbar[data-target="${editorId}"]`);
+  const editor = document.getElementById(editorId);
+  if(!toolbar || !editor) return;
+
+  toolbar.querySelectorAll('.rte-btn[data-cmd]').forEach(btn=>{
+    btn.addEventListener('mousedown', e=>e.preventDefault());
+    btn.addEventListener('click', ()=>{
+      editor.focus();
+      document.execCommand(btn.dataset.cmd, false, null);
+    });
+  });
+
+  toolbar.querySelectorAll('.rte-highlight-btn, .rte-textcolor-btn').forEach(btn=>{
+    btn.addEventListener('mousedown', e=>e.preventDefault());
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const pop = btn.nextElementSibling;
+      toolbar.querySelectorAll('.rte-color-popover').forEach(p=>{ if(p!==pop) p.style.display='none'; });
+      pop.style.display = pop.style.display==='flex' ? 'none' : 'flex';
+    });
+  });
+  toolbar.querySelectorAll('.rte-color-dot').forEach(dot=>{
+    dot.addEventListener('mousedown', e=>e.preventDefault());
+    dot.addEventListener('click', e=>{
+      e.stopPropagation();
+      editor.focus();
+      const pop = dot.closest('.rte-color-popover');
+      const type = pop.dataset.type;
+      const color = dot.dataset.color;
+      if(type==='hilite'){
+        document.execCommand('hiliteColor', false, color);
+      } else {
+        document.execCommand('foreColor', false, color);
+      }
+      pop.style.display = 'none';
+    });
+  });
+  document.addEventListener('click', ()=>{
+    toolbar.querySelectorAll('.rte-color-popover').forEach(p=>p.style.display='none');
+  });
+
+  const tableBtn = toolbar.querySelector('.rte-table-btn');
+  if(tableBtn){
+    tableBtn.addEventListener('mousedown', e=>e.preventDefault());
+    tableBtn.addEventListener('click', ()=>{
+      const rowsInput = prompt('행(줄) 개수를 입력하세요', '3');
+      if(rowsInput===null) return;
+      const colsInput = prompt('열(칸) 개수를 입력하세요', '3');
+      if(colsInput===null) return;
+      const rows = Math.max(1, parseInt(rowsInput)||3);
+      const cols = Math.max(1, parseInt(colsInput)||3);
+      let html = '<table>';
+      for(let r=0;r<rows;r++){
+        html += '<tr>' + Array.from({length:cols}).map(()=>'<td>&nbsp;</td>').join('') + '</tr>';
+      }
+      html += '</table><p><br></p>';
+      editor.focus();
+      document.execCommand('insertHTML', false, html);
+    });
+  }
+}
+
 function modalVendorMeetingNoteForm(vid, editCtx){
   const v = state.data.vendors.find(x=>x.id===vid);
   const relProjects = projectsForVendor(vid);
@@ -4839,7 +4958,8 @@ function modalVendorMeetingNoteForm(vid, editCtx){
         </div>
         <div class="field" style="margin-top:8px"><label class="field-label">날짜</label><input class="inp" type="date" id="vmDate" value="${note?.date || dayjs().format('YYYY-MM-DD')}"/></div>
         <div class="field" style="margin-top:8px"><label class="field-label">회의 내용</label>
-          <textarea class="inp" id="vmText" rows="7" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="resize:vertical;line-height:1.6">${note?.text||''}</textarea>
+          ${richToolbarHtml('vmText')}
+          ${richEditorHtml('vmText', '회의 내용을 입력하거나 붙여넣으세요', note?.text||'')}
         </div>
       </div>
       <div class="mf" style="gap:8px">
@@ -4850,6 +4970,7 @@ function modalVendorMeetingNoteForm(vid, editCtx){
 }
 
 function bindVendorMeetingNoteForm(vid, editCtx){
+  bindRichEditor('vmText');
   const saveBtn = document.getElementById('vmSaveBtn');
   if(!saveBtn) return;
   saveBtn.addEventListener('click', ()=>{
@@ -4858,10 +4979,11 @@ function bindVendorMeetingNoteForm(vid, editCtx){
     const personId = document.getElementById('vmPersonSel').value;
     const title = document.getElementById('vmTitle').value.trim();
     const date = document.getElementById('vmDate').value;
-    const text = document.getElementById('vmText').value.trim();
+    const textHtml = document.getElementById('vmText').innerHTML;
+    const plainText = stripHtml(textHtml);
     if(!projectId){ showToast('연관 프로젝트를 선택해주세요.'); return; }
     if(!title){ showToast('제목을 입력해주세요.'); return; }
-    if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
+    if(!plainText){ showToast('회의 내용을 입력해주세요.'); return; }
     const p = state.data.projects.find(x=>x.id===projectId);
     if(!p) return;
     const v = state.data.vendors.find(x=>x.id===vid);
@@ -4871,12 +4993,12 @@ function bindVendorMeetingNoteForm(vid, editCtx){
     if(isEdit){
       const n = p.vendorMeetings[vid].find(x=>x.id===editCtx.note.id);
       if(n){
-        n.title = title; n.date = date; n.text = text;
+        n.title = title; n.date = date; n.text = textHtml; n.summary = generateOneLineSummary(plainText);
         n.personId = personId || ''; n.personName = person ? person.name : '';
       }
     } else {
       p.vendorMeetings[vid].unshift({
-        id: uid('vm'), title, date, text, summary:'',
+        id: uid('vm'), title, date, text: textHtml, summary: generateOneLineSummary(plainText),
         personId: personId || '', personName: person ? person.name : ''
       });
     }
@@ -4905,7 +5027,7 @@ function modalVendorMeetingNoteDetail(pid, vid, mid){
       <div class="mb">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${vendor?.name||''} · ${proj?.title?proj.title+' · ':''}${fmtDateDow(m.date)}</div>
         ${m.personName?`<div style="font-size:12px;color:var(--o);margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-user" style="font-size:12px"></i>${m.personName}</div>`:''}
-        <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(m.text||'').replace(/</g,'&lt;')}</div>
+        <div class="rte-content" style="font-size:13px;line-height:1.7">${m.text||''}</div>
         ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
       </div>
       ${!isReadOnly()?`<div class="mf" style="gap:8px">
@@ -7551,7 +7673,7 @@ function modalMeetingNoteFull(ev, noteId){
       </div>
       <div class="mb">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${ev.title||''} · ${fmtDateDow(note.date||ev.date)}</div>
-        <div style="font-size:13px;white-space:pre-wrap;line-height:1.7">${(note.text||'').replace(/</g,'&lt;')}</div>
+        <div class="rte-content" style="font-size:13px;line-height:1.7">${note.text||''}</div>
       </div>
       ${!isReadOnly()?`<div class="mf" style="gap:8px">
         <button type="button" class="btn btn-red" id="deleteEventMeetingNoteBtn" data-eid="${ev.id}" data-mid="${note.id}"><i class="ti ti-trash"></i> 삭제</button>
@@ -7592,7 +7714,8 @@ function modalEventMeetingNoteForm(eid, note){
         </div>
         <div class="field" style="margin-top:8px"><label class="field-label">날짜</label><input class="inp" type="date" id="emnDate" value="${note?.date || dayjs().format('YYYY-MM-DD')}"/></div>
         <div class="field" style="margin-top:8px"><label class="field-label">회의 내용</label>
-          <textarea id="emnText" class="inp" rows="7" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="resize:vertical;line-height:1.6">${note?.text||''}</textarea>
+          ${richToolbarHtml('emnText')}
+          ${richEditorHtml('emnText', '회의 내용을 입력하거나 붙여넣으세요', note?.text||'')}
         </div>
       </div>
       <div class="mf" style="gap:8px">
@@ -7603,21 +7726,23 @@ function modalEventMeetingNoteForm(eid, note){
 }
 
 function bindEventMeetingNoteForm(eid, noteId){
+  bindRichEditor('emnText');
   const saveBtn = document.getElementById('emnSaveBtn');
   if(saveBtn) saveBtn.addEventListener('click', ()=>{
     const title = document.getElementById('emnTitle').value.trim();
-    const text = document.getElementById('emnText').value.trim();
+    const textHtml = document.getElementById('emnText').innerHTML;
+    const plainText = stripHtml(textHtml);
     const date = document.getElementById('emnDate').value;
     if(!title){ showToast('회의록 제목을 입력해주세요.'); return; }
-    if(!text){ showToast('회의 내용을 입력해주세요.'); return; }
+    if(!plainText){ showToast('회의 내용을 입력해주세요.'); return; }
     const ev = state.data.calendar.find(x=>x.id===eid);
     if(!ev) return;
     if(!ev.meetingNotes) ev.meetingNotes = [];
     if(noteId){
       const n = ev.meetingNotes.find(x=>x.id===noteId);
-      if(n){ n.title = title; n.text = text; n.date = date; n.summary = generateOneLineSummary(text); }
+      if(n){ n.title = title; n.text = textHtml; n.date = date; n.summary = generateOneLineSummary(plainText); }
     } else {
-      ev.meetingNotes.unshift({id: uid('emn'), title, text, date, summary: generateOneLineSummary(text)});
+      ev.meetingNotes.unshift({id: uid('emn'), title, text: textHtml, date, summary: generateOneLineSummary(plainText)});
     }
     persist(false);
     closeModal();
@@ -7669,7 +7794,7 @@ function modalAllMeetingNotes(){
                   </div>
                   <div style="font-size:12px;font-weight:300;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(n.title||'제목 없음').replace(/</g,'&lt;')}</div>
                   <div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</div>
-                  <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(n.summary||n.text||'').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:11px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${stripHtml(n.summary||n.text||'')}</div>
                 </div>`;
               }).join('')}
             </div>`}
@@ -7756,7 +7881,7 @@ function modalEventDetail(ev){
                     <i class="ti ti-calendar" style="font-size:11px"></i>${fmtDateDow(n.date||ev.date)}
                   </div>
                   <div style="font-size:13px;font-weight:300;color:var(--text)">${(n.title||'제목 없음').replace(/</g,'&lt;')}</div>
-                  <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(n.summary||n.text||'').replace(/</g,'&lt;')}</div>
+                  <div style="font-size:12px;line-height:1.5;color:var(--muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${stripHtml(n.summary||n.text||'')}</div>
                 </div>`).join('')}
               </div>`}
         </div>
