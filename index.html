@@ -110,7 +110,9 @@ select.inp{cursor:pointer}
 .cal-cell.empty{background:transparent;border:none;cursor:default}
 .cal-num{font-size:11px;font-weight:300;margin-bottom:2px}
 .cal-cell.today .cal-num{color:var(--o);font-weight:300}
-.cal-ev{font-size:10px;padding:3px 6px;border-radius:6px;margin-bottom:3px;overflow:hidden;display:flex;align-items:baseline;gap:4px;line-height:1.3;cursor:pointer;white-space:nowrap}
+.cal-ev{font-size:10px;padding:3px 6px;border-radius:6px;margin-bottom:3px;overflow:hidden;display:flex;align-items:baseline;gap:4px;line-height:1.3;cursor:grab;white-space:nowrap}
+.cal-ev.dragging{opacity:.4}
+.cal-cell.drag-over{border-color:var(--o);border-width:1.5px;background:var(--ol)}
 .cal-ev-title{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
 .cal-ev-time{font-size:9px;opacity:.7;flex-shrink:0}
 .ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:var(--card);cursor:pointer;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
@@ -220,12 +222,18 @@ function dayjs(input){
     day(){ return d.getDay(); },
     startOf(unit){
       const nd = new Date(d);
-      if(unit==='month'){ nd.setDate(1); nd.setHours(0,0,0,0); }
+      if(unit==='day'){ nd.setHours(0,0,0,0); }
+      else if(unit==='week'){ nd.setDate(nd.getDate()-nd.getDay()); nd.setHours(0,0,0,0); }
+      else if(unit==='month'){ nd.setDate(1); nd.setHours(0,0,0,0); }
+      else if(unit==='year'){ nd.setMonth(0,1); nd.setHours(0,0,0,0); }
       return dayjs(nd);
     },
     endOf(unit){
       const nd = new Date(d);
-      if(unit==='month'){ nd.setMonth(nd.getMonth()+1); nd.setDate(0); nd.setHours(0,0,0,0); }
+      if(unit==='day'){ nd.setHours(23,59,59,999); }
+      else if(unit==='week'){ nd.setDate(nd.getDate()+(6-nd.getDay())); nd.setHours(23,59,59,999); }
+      else if(unit==='month'){ nd.setMonth(nd.getMonth()+1); nd.setDate(0); nd.setHours(23,59,59,999); }
+      else if(unit==='year'){ nd.setMonth(11,31); nd.setHours(23,59,59,999); }
       return dayjs(nd);
     },
     isValid(){ return !isNaN(d.getTime()); }
@@ -1250,7 +1258,7 @@ function sortLogsDesc(logs){
 
 function daysAgo(dateStr){
   if(!dateStr) return null;
-  return dayjs().diff(dayjs(dateStr), 'day');
+  return dayjs().startOf('day').diff(dayjs(dateStr).startOf('day'), 'day');
 }
 function fmtDate(d){ return dayjs(d).format('M월 D일'); }
 function fmtDateDow(d){ return dayjs(d).format('M월 D일 (ddd)'); }
@@ -1726,7 +1734,7 @@ const isReadOnly = () => state.data.role === 'ceo';
 
 /* ---------- 홈 ---------- */
 function viewHome(){
-  const today = dayjs();
+  const today = dayjs().startOf('day');
   const todayStr = today.format('YYYY-MM-DD');
   const allEvs = allCalendarEvents();
   const todayEvs = allEvs.filter(e=>e.date===todayStr);
@@ -1982,7 +1990,7 @@ function viewHome(){
                 const idx = state.data.projects.indexOf(p);
                 const prog = progressOf(p);
                 const col = projColors[idx % projColors.length];
-                const dday = p.deadline ? dayjs(p.deadline).diff(dayjs(),'day') : null;
+                const dday = p.deadline ? dayjs(p.deadline).diff(dayjs().startOf('day'),'day') : null;
                 const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">D-'+dday+'</span>' : '';
                 return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
                   +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
@@ -3007,7 +3015,7 @@ function viewProjects(){
 
   function renderCard(p){
     const isDone = (p.status||'진행중')==='완료';
-    const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+    const dday=p.deadline?dayjs(p.deadline).diff(dayjs().startOf('day'),'day'):null;
     const prog=progressOf(p);
     const ddayLabel = isDone
       ? (p.completedDate ? `완료 ${fmtDate(p.completedDate)}` : '완료')
@@ -3105,7 +3113,7 @@ function modalProjectStatusList(statusKey){
             projects.map(p=>{
               const prog = progressOf(p);
               const isDone = (p.status||'진행중')==='완료';
-              const dday = p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+              const dday = p.deadline?dayjs(p.deadline).diff(dayjs().startOf('day'),'day'):null;
               const ddayLabel = isDone
                 ? (p.completedDate ? `완료 ${fmtDate(p.completedDate)}` : '완료')
                 : (dday===null?'':(dday<0?`마감 +${Math.abs(dday)}일`:`D-${dday}`));
@@ -3127,7 +3135,7 @@ function viewProjectDetail(){
   const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
   if(!p) return '<div class="empty-state">프로젝트를 찾을 수 없습니다.</div>';
   const prog=progressOf(p);
-  const dday=p.deadline?dayjs(p.deadline).diff(dayjs(),'day'):null;
+  const dday=p.deadline?dayjs(p.deadline).diff(dayjs().startOf('day'),'day'):null;
   const vendorIds = p.vendorIds || (p.vendorId ? [p.vendorId] : []);
   const linkedVendors = vendorIds.map(id=>state.data.vendors.find(v=>v.id===id)).filter(Boolean);
 
@@ -3620,7 +3628,7 @@ function viewCalendar(){
                 ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
               </div>
               <div style="height:${cappedBarsAreaH}px"></div>
-              ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" data-vid="${(e.vendorIds&&e.vendorIds[0])||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
+              ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" draggable="true" data-eid="${e.id}" data-pid="${e.projectId||''}" data-vid="${(e.vendorIds&&e.vendorIds[0])||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
             </div>`;
           }).join('')}
@@ -6757,6 +6765,35 @@ function bindViewEvents(){
     });
   });
 
+function moveCalendarEventToDate(eid, newDate){
+  if(eid.startsWith('deadline_')){
+    const pid = eid.slice('deadline_'.length);
+    const p = state.data.projects.find(x=>x.id===pid);
+    if(p){ p.deadline = newDate; return {ok:true, label:'프로젝트 마감일'}; }
+    return {ok:false};
+  }
+  if(eid.startsWith('ck_')){
+    const cid = eid.slice('ck_'.length);
+    for(const p of state.data.projects){
+      const item = (p.checklist||[]).find(c=>c.id===cid);
+      if(item){ item.dueDate = newDate; return {ok:true, label:'체크리스트 마감일'}; }
+    }
+    return {ok:false};
+  }
+  if(eid.startsWith('log_')){
+    const lid = eid.slice('log_'.length);
+    const log = state.data.vendorLogs.find(x=>x.id===lid);
+    if(log){ log.nextStepDue = newDate; return {ok:true, label:'다음 액션 마감일'}; }
+    return {ok:false};
+  }
+  if(eid.startsWith('leave_') || eid.startsWith('holiday_')){
+    return {ok:false};
+  }
+  const ev = state.data.calendar.find(x=>x.id===eid);
+  if(ev){ ev.date = newDate; return {ok:true, label:'일정'}; }
+  return {ok:false};
+}
+
   document.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
     el.addEventListener('click', ()=>{
       openModal(modalEventForm(el.dataset.date));
@@ -6764,6 +6801,44 @@ function bindViewEvents(){
       bindEventFormSubmit();
     });
   });
+
+  // 캘린더 이벤트 드래그 앤 드롭 → 날짜(마감일) 변경
+  if(!isReadOnly()){
+    document.querySelectorAll('.cal-ev[draggable="true"]').forEach(el=>{
+      el.addEventListener('dragstart', e=>{
+        e.dataTransfer.setData('text/plain', el.dataset.eid);
+        e.dataTransfer.effectAllowed = 'move';
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', ()=>{
+        el.classList.remove('dragging');
+      });
+    });
+
+    document.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
+      el.addEventListener('dragover', e=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        el.classList.add('drag-over');
+      });
+      el.addEventListener('dragleave', ()=>{
+        el.classList.remove('drag-over');
+      });
+      el.addEventListener('drop', e=>{
+        e.preventDefault();
+        el.classList.remove('drag-over');
+        const eid = e.dataTransfer.getData('text/plain');
+        if(!eid) return;
+        const newDate = el.dataset.date;
+        const result = moveCalendarEventToDate(eid, newDate);
+        if(result.ok){
+          persist(false);
+          render();
+          showToast(`${result.label}이(가) ${fmtDate(newDate)}(으)로 변경되었습니다.`);
+        }
+      });
+    });
+  }
 
   document.querySelectorAll('.cal-more-btn[data-date]').forEach(el=>{
     el.addEventListener('click', e=>{
@@ -6789,16 +6864,14 @@ function bindViewEvents(){
         render();
         return;
       }
-      // 거래처 로그의 다음 액션 마감일 → 거래처 상세로 이동
+      // 거래처 로그의 다음 액션 마감일 → 로그 상세 모달
       if(eid.startsWith('log_')){
-        if(vid){
-          state.selectedVendorId = vid;
-          state.view = 'vendors';
-          render();
-        } else if(pid){
-          state.selectedProjectId = pid;
-          state.view = 'projects';
-          render();
+        const logId = eid.slice(4);
+        const log = state.data.vendorLogs.find(x=>x.id===logId);
+        if(log){
+          const vendor = state.data.vendors.find(x=>x.id===log.vendorId);
+          openModal(modalLogDetail(log, vendor?vendor.name:''));
+          bindModalCommon();
         }
         return;
       }
@@ -7827,10 +7900,15 @@ function bindDayDetailEvents(dateStr){
         openModal(modalEventDetail(evData));
         bindModalCommon();
         bindEventDetailModal(eid);
-      } else if(el.dataset.vid){
-        state.selectedVendorId = el.dataset.vid;
-        state.view = 'vendors';
-        closeModal(); render();
+      } else if(eid.startsWith('log_')){
+        const logId = eid.slice(4);
+        const log = state.data.vendorLogs.find(x=>x.id===logId);
+        if(log){
+          const vendor = state.data.vendors.find(x=>x.id===log.vendorId);
+          closeModal();
+          openModal(modalLogDetail(log, vendor?vendor.name:''));
+          bindModalCommon();
+        }
       } else if(el.dataset.projectid){
         state.selectedProjectId = el.dataset.projectid;
         state.view = 'projects';
