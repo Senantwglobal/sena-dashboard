@@ -124,6 +124,7 @@ select.inp{cursor:pointer}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
 .cal-cell{min-height:80px;border-radius:10px;padding:5px;border:0.5px solid transparent;background:var(--sf);position:relative;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease);overflow:hidden}
 .cal-cell:hover{border-color:var(--ob);background:#fff}
+.cal-year-month:hover{border-color:var(--ob)}
 .cal-cell.today{border-color:var(--o);border-width:1.5px}
 .cal-cell.empty{background:transparent;border:none;cursor:default}
 .cal-num{font-size:11px;font-weight:300;margin-bottom:2px}
@@ -3652,22 +3653,22 @@ function viewCalendarYear(){
     for(let i=0;i<cells.length;i+=7) weeks.push(cells.slice(i,i+7));
     const isCurrentMonth = (m===Number(dayjs().format('M')) && year===Number(dayjs().format('YYYY')));
 
-    return `<div class="cal-year-month" data-month="${year}-${mm}" style="cursor:pointer">
+    return `<div class="cal-year-month" data-month="${year}-${mm}" style="cursor:pointer;border:1px solid var(--bd);border-radius:10px;padding:14px;transition:border-color .15s var(--ease)">
       <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:${isCurrentMonth?'var(--o)':'var(--text)'}">${mm}</div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px">
         ${dowNamesMon.map((d,i)=>`<span style="font-size:9px;color:${i===6?'#DC2626':'var(--muted)'};text-align:center">${d}</span>`).join('')}
       </div>
-      ${weeks.map(week=>`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px">
+      ${weeks.map(week=>`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px">
         ${week.map((d,i)=>{
-          if(d===null) return `<div style="aspect-ratio:1"></div>`;
+          if(d===null) return `<span></span>`;
           const dateStr = `${year}-${mm}-${String(d).padStart(2,'0')}`;
           const isSun = i===6;
           const isHoliday = holidayDates.has(dateStr);
           const isToday = dateStr===todayStr;
           const hasEvent = eventDates.has(dateStr);
-          return `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0.5px solid var(--bd);border-radius:4px;${isToday?'background:var(--o);border-color:var(--o)':''}">
-            <span style="font-size:10px;line-height:1;${isToday?'color:#fff;font-weight:700':(isHoliday||isSun)?'color:#DC2626':'color:var(--text)'}">${d}</span>
-            <span style="width:3px;height:3px;border-radius:50%;background:${isToday?'#fff':'var(--o)'};visibility:${hasEvent?'visible':'hidden'}"></span>
+          return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px">
+            <span style="font-size:10px;line-height:1.4;width:18px;height:18px;display:flex;align-items:center;justify-content:center;border-radius:50%;${isToday?'background:var(--o);color:#fff;font-weight:700':(isHoliday||isSun)?'color:#DC2626':'color:var(--text)'}">${d}</span>
+            <span style="width:3px;height:3px;border-radius:50%;background:var(--o);visibility:${hasEvent?'visible':'hidden'}"></span>
           </div>`;
         }).join('')}
       </div>`).join('')}
@@ -3691,11 +3692,9 @@ function viewCalendarYear(){
         </div>
       </div>
     </div>
-    <div class="card">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px 32px">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
         ${monthsHtml}
       </div>
-    </div>
   `;
 }
 
