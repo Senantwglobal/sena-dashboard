@@ -2559,7 +2559,7 @@ function viewVendorDetail(){
         .sort((a,b)=>a.date.localeCompare(b.date))
         .slice(0,4);
       if(upcoming.length===0) return '';
-      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--o)">
+      return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
           <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
@@ -3197,7 +3197,7 @@ function viewProjectDetail(){
         .sort((a,b)=>a.date.localeCompare(b.date))
         .slice(0,4);
       if(upcoming.length===0) return '';
-      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--o)">
+      return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
           <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
           <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
@@ -3676,7 +3676,7 @@ function viewCalendar(){
     })()}
 
     ${todayEvs.length>0 ? `
-    <div class="card" style="margin-bottom:14px;border-left:3px solid var(--o)">
+    <div class="card" style="margin-bottom:14px">
       <div class="sh"><div class="st"><i class="ti ti-sun oi"></i>오늘 일정 (${todayStr})</div></div>
       ${todayEvs.map(e=>{
         const c=eventColor(e.type);
