@@ -1436,6 +1436,22 @@ function allCalendarEvents(){
       }
     });
   });
+  // 거래처 로그의 "다음 액션 마감일"
+  (state.data.vendorLogs||[]).forEach(l=>{
+    if(l.nextStepDue && !l.nextStepDone){
+      const vendor = state.data.vendors.find(v=>v.id===l.vendorId);
+      evs.push({
+        id: 'log_'+l.id,
+        date: l.nextStepDue,
+        type: '마감',
+        title: `[${vendor?vendor.name:'거래처'}] ${l.nextStep||l.summary||'다음 액션'}`,
+        time: '',
+        vendorIds: l.vendorId ? [l.vendorId] : [],
+        projectId: l.linkedProjectId || '',
+        logId: l.id
+      });
+    }
+  });
   // 연차/반차 자동 반영
   (state.data.leave?.logs||[]).forEach(l=>{
     if(!evs.find(e=>e.id==='leave_'+l.id)){
@@ -3604,7 +3620,7 @@ function viewCalendar(){
                 ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
               </div>
               <div style="height:${cappedBarsAreaH}px"></div>
-              ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
+              ${dayEvs.slice(0,EV_MAX).map(e=>{const c=eventColor(e.type);return `<span class="cal-ev" data-eid="${e.id}" data-pid="${e.projectId||''}" data-vid="${(e.vendorIds&&e.vendorIds[0])||''}" style="background:${c.bg};color:${c.text}"><span class="cal-ev-title">${e.title}</span>${e.time&&e.time!=='종일'?`<span class="cal-ev-time">${e.time}</span>`:''}</span>`;}).join('')}
               ${dayEvs.length>EV_MAX?`<span class="cal-more-btn" data-date="${dateStr}" style="font-size:9px;color:var(--o);cursor:pointer">+${dayEvs.length-EV_MAX}건 더보기</span>`:''}
             </div>`;
           }).join('')}
@@ -4747,7 +4763,7 @@ function modalDayDetail(dateStr){
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px">일정 ${evs.length}건</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           ${evs.length===0?'<div class="empty-state" style="padding:16px">등록된 일정이 없습니다.</div>':
-            evs.map(e=>{const c=eventColor(e.type);return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;border-left:3px solid ${c.dot};cursor:pointer">
+            evs.map(e=>{const c=eventColor(e.type);return `<div class="day-event-item" data-eid="${e.id}" data-projectid="${e.projectId||''}" data-vid="${(e.vendorIds&&e.vendorIds[0])||''}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--sf);border-radius:8px;border-left:3px solid ${c.dot};cursor:pointer">
               <div style="flex:1">
                 <div style="font-size:13px;font-weight:600">${e.title}</div>
                 <div style="font-size:11px;color:var(--muted);margin-top:2px">${e.type}${e.time?' · '+e.time:''}</div>
@@ -6765,11 +6781,25 @@ function bindViewEvents(){
       e.stopPropagation();
       const eid = ev.dataset.eid;
       const pid = ev.dataset.pid;
+      const vid = ev.dataset.vid;
       // 프로젝트 마감/체크리스트 마감 → 프로젝트로 이동
       if(pid && (eid.startsWith('deadline_') || eid.startsWith('ck_'))){
         state.selectedProjectId = pid;
         state.view = 'projects';
         render();
+        return;
+      }
+      // 거래처 로그의 다음 액션 마감일 → 거래처 상세로 이동
+      if(eid.startsWith('log_')){
+        if(vid){
+          state.selectedVendorId = vid;
+          state.view = 'vendors';
+          render();
+        } else if(pid){
+          state.selectedProjectId = pid;
+          state.view = 'projects';
+          render();
+        }
         return;
       }
       // 연차 항목 → 수정 불가 (연차탭에서 관리)
@@ -7797,6 +7827,10 @@ function bindDayDetailEvents(dateStr){
         openModal(modalEventDetail(evData));
         bindModalCommon();
         bindEventDetailModal(eid);
+      } else if(el.dataset.vid){
+        state.selectedVendorId = el.dataset.vid;
+        state.view = 'vendors';
+        closeModal(); render();
       } else if(el.dataset.projectid){
         state.selectedProjectId = el.dataset.projectid;
         state.view = 'projects';
