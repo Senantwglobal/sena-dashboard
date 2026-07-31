@@ -3095,13 +3095,11 @@ function viewProjects(){
         const COL_MAX = 10;
         const visibleProjects = colProjects.slice(0, COL_MAX);
         return `<div style="min-width:0">
-          <div style="margin-bottom:12px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">
-              <i class="ti ${col.icon}" style="font-size:14px;color:${col.color}"></i>
-              <span style="font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--text)">${col.label}</span>
-              <span style="background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">${colProjects.length}</span>
+          <div style="margin-bottom:14px">
+            <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;background:${col.color}1f">
+              <span style="font-size:12px;font-weight:600;color:${col.color}">${col.label}</span>
+              <span style="font-size:12px;font-weight:600;color:${col.color};opacity:.65">${colProjects.length}</span>
             </div>
-            <div style="height:3px;border-radius:2px;background:${col.color}"></div>
           </div>
           <div>
             ${colProjects.length===0
