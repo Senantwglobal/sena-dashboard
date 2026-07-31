@@ -4822,6 +4822,26 @@ function stripHtml(html){
   return (tmp.textContent || tmp.innerText || '').trim();
 }
 
+function applyFontSize(px){
+  const sel = window.getSelection();
+  if(!sel || sel.rangeCount===0) return;
+  const range = sel.getRangeAt(0);
+  if(range.collapsed) return;
+  const span = document.createElement('span');
+  span.style.fontSize = px+'px';
+  try{
+    range.surroundContents(span);
+  } catch(e){
+    const content = range.extractContents();
+    span.appendChild(content);
+    range.insertNode(span);
+  }
+  sel.removeAllRanges();
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.addRange(newRange);
+}
+
 function richToolbarHtml(editorId){
   return `
   <div class="rte-toolbar" data-target="${editorId}">
@@ -4829,6 +4849,13 @@ function richToolbarHtml(editorId){
     <button type="button" class="rte-btn" data-cmd="italic" title="기울임"><i>I</i></button>
     <button type="button" class="rte-btn" data-cmd="underline" title="밑줄"><u>U</u></button>
     <button type="button" class="rte-btn" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+    <span class="rte-sep"></span>
+    <div style="position:relative">
+      <button type="button" class="rte-btn rte-fontsize-btn" title="글자 크기" style="width:auto;padding:0 6px;gap:2px">크기<i class="ti ti-chevron-down" style="font-size:8px"></i></button>
+      <div class="rte-color-popover rte-size-popover" data-type="size" style="flex-direction:column;min-width:64px">
+        ${[11,13,15,18,22,28].map(s=>`<div class="rte-size-opt" data-size="${s}" style="padding:5px 8px;font-size:${Math.min(s,16)}px;cursor:pointer;border-radius:5px;white-space:nowrap">${s}px</div>`).join('')}
+      </div>
+    </div>
     <span class="rte-sep"></span>
     <div style="position:relative">
       <button type="button" class="rte-btn rte-highlight-btn" title="형광펜"><i class="ti ti-highlight"></i></button>
@@ -4870,13 +4897,24 @@ function bindRichEditor(editorId){
     });
   });
 
-  toolbar.querySelectorAll('.rte-highlight-btn, .rte-textcolor-btn').forEach(btn=>{
+  toolbar.querySelectorAll('.rte-highlight-btn, .rte-textcolor-btn, .rte-fontsize-btn').forEach(btn=>{
     btn.addEventListener('mousedown', e=>e.preventDefault());
     btn.addEventListener('click', e=>{
       e.stopPropagation();
       const pop = btn.nextElementSibling;
       toolbar.querySelectorAll('.rte-color-popover').forEach(p=>{ if(p!==pop) p.style.display='none'; });
       pop.style.display = pop.style.display==='flex' ? 'none' : 'flex';
+    });
+  });
+  toolbar.querySelectorAll('.rte-size-opt').forEach(opt=>{
+    opt.addEventListener('mousedown', e=>e.preventDefault());
+    opt.addEventListener('mouseover', ()=>{ opt.style.background='var(--sf)'; });
+    opt.addEventListener('mouseout', ()=>{ opt.style.background='transparent'; });
+    opt.addEventListener('click', e=>{
+      e.stopPropagation();
+      editor.focus();
+      applyFontSize(opt.dataset.size);
+      opt.closest('.rte-color-popover').style.display = 'none';
     });
   });
   toolbar.querySelectorAll('.rte-color-dot').forEach(dot=>{
