@@ -62,7 +62,7 @@ a{color:inherit}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
-.oi{color:var(--o)}
+.oi{color:var(--text)}
 .btn{font-size:12px;padding:6.5px 13px;border-radius:8px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
 .btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
@@ -2561,7 +2561,7 @@ function viewVendorDetail(){
       if(upcoming.length===0) return '';
       return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-          <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
+          <i class="ti ti-calendar-event" style="color:var(--text);font-size:14px"></i>
           <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
           <span style="font-size:11px;color:var(--muted)">${upcoming.length}건</span>
         </div>
@@ -2614,7 +2614,7 @@ function viewVendorDetail(){
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
+                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--text)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
                 <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${personNames?personNames+' · ':''}${hasNote?(latestNote.summary||latestNote.title||'회의록 있음'):(e.location||'')}</div>
               </div>
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
@@ -2682,7 +2682,7 @@ function viewVendorDetail(){
           <div style="font-size:10px;color:var(--muted);margin-top:6px;line-height:1.5">
             ${isInherit
               ? '<i class="ti ti-info-circle" style="font-size:10px"></i> 벤더 마스터의 담당자·거래조건·메모를 공유합니다.'
-              : '<i class="ti ti-user-check" style="font-size:10px;color:var(--o)"></i> 이 브랜드만의 담당자·거래조건·메모를 설정합니다.'}
+              : '<i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i> 이 브랜드만의 담당자·거래조건·메모를 설정합니다.'}
           </div>
         </div>` : ''}
 
@@ -2694,7 +2694,7 @@ function viewVendorDetail(){
           </div>
           ${hasBrands && isInherit && activeBrand ? `
           <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
-            <i class="ti ti-link" style="font-size:10px;color:var(--o)"></i>
+            <i class="ti ti-link" style="font-size:10px;color:var(--text)"></i>
             벤더 마스터에서 상속 중
           </div>` : ''}
           ${(() => {
@@ -2789,7 +2789,7 @@ function viewVendorDetail(){
             const vpTotalPages = Math.ceil(projects.length / VP_PER_PAGE);
             const pageItems = projects.slice(vpPage*VP_PER_PAGE, vpPage*VP_PER_PAGE+VP_PER_PAGE);
             const rows = pageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer;padding:6px 0">
-              <i class="ti ti-checklist" style="font-size:12px;color:var(--o)"></i>
+              <i class="ti ti-checklist" style="font-size:12px;color:var(--text)"></i>
               <span style="flex:1;font-size:13px;font-weight:300">${p.title}</span>
               <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
@@ -2864,7 +2864,7 @@ function viewVendorDetail(){
             let folderHtml = '';
             if(folderLabel !== curFolder){
               curFolder = folderLabel;
-              folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+              folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--text)"></i>${curFolder}</div>`;
             }
             const sourceCaption = lk.isDirect
               ? `<span style="font-size:9px;color:var(--muted)">직접 첨부</span>`
@@ -2887,7 +2887,7 @@ function viewVendorDetail(){
             const isNotion = url.includes('notion.');
             const icon2 = isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
             return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
-              <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+              <i class="ti ${icon2}" style="font-size:16px;color:var(--text);flex-shrink:0"></i>
               <div style="flex:1;min-width:0">
                 <a href="${url}" target="_blank" style="font-size:12px;font-weight:300;color:var(--o);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
                 ${sourceCaption}
@@ -3025,7 +3025,7 @@ function viewProjects(){
   let projects = state.data.projects.slice();
   if(state.projectFilter!=='전체') projects = projects.filter(p=>p.category===state.projectFilter);
 
-  const catColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const catColors = ['#25265E','#7540EE','#2F61D5','#3FB6DC','#2DC76D','#FF7052','#FFC800','#868697'];
   const catColorMap = {};
   state.data.categories.forEach((c,i)=>catColorMap[c]=catColors[i%catColors.length]);
 
@@ -3276,7 +3276,7 @@ function viewProjectDetail(){
       if(upcoming.length===0) return '';
       return `<div class="card" style="margin-bottom:14px;padding:14px">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-          <i class="ti ti-calendar-event" style="color:var(--o);font-size:14px"></i>
+          <i class="ti ti-calendar-event" style="color:var(--text);font-size:14px"></i>
           <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">예정된 미팅</span>
           <span style="font-size:11px;color:var(--muted)">${upcoming.length}건</span>
         </div>
@@ -3328,7 +3328,7 @@ function viewProjectDetail(){
             return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--o)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
+                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--text)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
                 <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                   ${e.time?`<span>${e.time}</span>`:''}
                   ${evVendors.map(v=>`<span style="display:flex;align-items:center;gap:3px">${av(v.name,14)}${v.name}</span>`).join('')}
@@ -3526,7 +3526,7 @@ function viewProjectDetail(){
         let folderHtml = '';
         if(folderLabel !== curFolder){
           curFolder = folderLabel;
-          folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--o)"></i>${curFolder}</div>`;
+          folderHtml = `<div style="font-size:10px;font-weight:300;color:var(--muted);background:var(--sf);padding:5px 10px;margin-top:4px;border-radius:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-folder" style="font-size:11px;color:var(--text)"></i>${curFolder}</div>`;
         }
         const delBtn = lk._fromLog
           ? ''
@@ -3550,7 +3550,7 @@ function viewProjectDetail(){
         const isNotion=url.includes('notion.');
         const icon2=isDrive?'ti-brand-google-drive':isNotion?'ti-brand-notion':'ti-link';
         return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
-          <i class="ti ${icon2}" style="font-size:16px;color:var(--o);flex-shrink:0"></i>
+          <i class="ti ${icon2}" style="font-size:16px;color:var(--text);flex-shrink:0"></i>
           <a href="${url}" target="_blank" style="flex:1;font-size:12px;font-weight:300;color:var(--o);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${lk.label||url}</a>
           <i class="ti ti-external-link" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
           ${sourceTag}
@@ -3638,9 +3638,21 @@ function viewCalendar(){
   const allEvs = allCalendarEvents();
   const dowNames = ['일','월','화','수','목','금','토'];
   let cells = [];
-  for(let i=0;i<startDay;i++) cells.push(null);
-  for(let d=1;d<=daysInMonth;d++) cells.push(d);
-  while(cells.length%7!==0) cells.push(null);
+  const monthStart = month.startOf('month');
+  for(let i=startDay;i>0;i--){
+    const d = monthStart.subtract(i,'day');
+    cells.push({date: d.format('YYYY-MM-DD'), day: d.date(), otherMonth:true});
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const dt = month.date(d);
+    cells.push({date: dt.format('YYYY-MM-DD'), day: d, otherMonth:false});
+  }
+  let nextOffset=1;
+  while(cells.length%7!==0){
+    const d = month.endOf('month').add(nextOffset,'day');
+    cells.push({date: d.format('YYYY-MM-DD'), day: d.date(), otherMonth:true});
+    nextOffset++;
+  }
 
   // 이번 달 일정 목록 (오늘 이후)
   const monthStr = month.format('YYYY-MM');
@@ -3655,14 +3667,12 @@ function viewCalendar(){
 
   return `
     <div class="sh">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;background:var(--sf);border-radius:10px;padding:3px">
-          <button class="btn" id="prevMonth" style="background:transparent;padding:5px 9px"><i class="ti ti-chevron-left"></i></button>
-          <span style="font-size:13px;font-weight:600;padding:0 10px;min-width:88px;text-align:center">${month.format('YYYY년 M월')}</span>
-          <button class="btn" id="nextMonth" style="background:transparent;padding:5px 9px"><i class="ti ti-chevron-right"></i></button>
-        </div>
-        <button class="btn" id="goTodayBtn" style="font-size:11px;padding:6px 12px;background:var(--ol);color:var(--od);border:none">오늘</button>
-        <span style="font-size:11.5px;color:var(--muted)">${dayjs().format('M월 D일 (ddd)')}</span>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
+        <span style="font-size:16px;font-weight:300">${month.format('YYYY년 M월')}</span>
+        <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn" id="goTodayBtn" style="font-size:11px;padding:4px 10px;background:var(--ol);color:var(--od);border:0.5px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
+        <span style="font-size:12px;color:var(--muted);padding:4px 8px;background:var(--sf);border-radius:6px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
@@ -3673,7 +3683,7 @@ function viewCalendar(){
 
     <div class="legend-row" style="flex-wrap:wrap">
       ${allEventTypes.filter(t=>!['연차','반차','반반차'].includes(t.name)).map(t=>{
-        const c=eventColor(t.name); return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:${c.bg}"><span class="legend-dot" style="background:${c.dot};margin:0"></span><span style="color:${c.text}">${t.name}</span></span>`;
+        const c=eventColor(t.name); return `<span><span class="legend-dot" style="background:${c.dot}"></span>${t.name}</span>`;
       }).join('')}
     </div>
 
@@ -3683,15 +3693,14 @@ function viewCalendar(){
       const BAR_H = 18, BAR_GAP = 3, NUM_H = 22;
 
       const weekBlocks = weeks.map(weekCells=>{
-        const weekDates = weekCells.map(d=> d===null ? null : month.date(d).format('YYYY-MM-DD'));
-        const validDates = weekDates.filter(Boolean);
-        const wMin = validDates[0], wMax = validDates[validDates.length-1];
+        const weekDates = weekCells.map(c=>c.date);
+        const wMin = weekDates[0], wMax = weekDates[weekDates.length-1];
 
         // 기간(다일) 일정 - endDate가 있고 date와 다른 경우
-        const multiEvs = wMin ? allEvs.filter(e=>{
+        const multiEvs = allEvs.filter(e=>{
           if(!e.endDate || e.endDate===e.date) return false;
           return e.date <= wMax && e.endDate >= wMin;
-        }).sort((a,b)=>a.date.localeCompare(b.date)) : [];
+        }).sort((a,b)=>a.date.localeCompare(b.date));
 
         // 레인 배정 (그리디)
         const laneEnds = []; // 각 레인의 마지막 colEnd
@@ -3713,10 +3722,14 @@ function viewCalendar(){
         const cappedBarsAreaH = Math.min(barsAreaH, BARS_MAX_H);
 
         const numbersRow = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
-          ${weekCells.map((d,ci)=>{
-            if(d===null) return `<div class="cal-cell empty" style="aspect-ratio:16/9"></div>`;
-            const dateStr = weekDates[ci];
+          ${weekCells.map((c,ci)=>{
+            const dateStr = c.date;
             const isToday = dateStr===todayStr;
+            if(c.otherMonth){
+              return `<div class="cal-cell other-month" data-date="${dateStr}" style="aspect-ratio:16/9;opacity:.4">
+                <span class="cal-num" style="flex-shrink:0">${c.day}</span>
+              </div>`;
+            }
             const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
             const holidayEvs = dayEvsAll.filter(e=>e.isHoliday);
             const leaveEvs = dayEvsAll.filter(e=>e.isLeave);
@@ -3725,7 +3738,7 @@ function viewCalendar(){
             const labelParts = [...holidayEvs.map(h=>h.title), ...leaveEvs.map(l=>l.title)];
             return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="aspect-ratio:16/9">
               <div style="display:flex;align-items:baseline;gap:4px;min-width:0">
-                <span class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''};flex-shrink:0">${d}</span>
+                <span class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''};flex-shrink:0">${c.day}</span>
                 ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
               </div>
               <div style="height:${cappedBarsAreaH}px"></div>
@@ -3846,7 +3859,7 @@ function modalLogForm(preVendorId, preProjectId){
 
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
-              <i class="ti ti-clipboard-list" style="font-size:13px;color:var(--o)"></i>
+              <i class="ti ti-clipboard-list" style="font-size:13px;color:var(--text)"></i>
               연결 프로젝트
               <span style="font-size:11px;color:var(--muted);font-weight:300">(거래처 선택 시 자동 표시)</span>
             </label>
@@ -3880,10 +3893,10 @@ function modalLogForm(preVendorId, preProjectId){
             <textarea class="inp" id="lmRawText" name="rawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요" style="resize:vertical"></textarea>
           </div>
           <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px">
-            <span style="font-size:10px;color:var(--muted);margin-right:auto">${state.anthropicApiKey?'<i class="ti ti-sparkles" style="color:var(--o)"></i> Claude AI 요약 사용 중':'규칙 기반 요약 (API 키 없음)'}</span>
+            <span style="font-size:10px;color:var(--muted);margin-right:auto">${state.anthropicApiKey?'<i class="ti ti-sparkles" style="color:var(--text)"></i> Claude AI 요약 사용 중':'규칙 기반 요약 (API 키 없음)'}</span>
             <button type="button" class="btn" id="lmApiKeyBtn" title="Claude API 키 설정" style="font-size:11px;padding:5px 8px"><i class="ti ti-key"></i></button>
             <button type="button" class="btn" id="lmAiBtn" style="font-size:12px;padding:5px 12px">
-              <i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성
+              <i class="ti ti-sparkles" style="color:var(--text)"></i> AI 요약 생성
             </button>
           </div>
           <div class="field"><label class="field-label">상황 요약 (한 줄)</label>
@@ -3927,7 +3940,7 @@ function modalLogForm(preVendorId, preProjectId){
             <!-- 파일 업로드 -->
             <div id="lmFileArea" style="display:none">
               <div id="lmFileDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;border:2px dashed var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .2s">
-                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--o)"></i>
+                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text)"></i>
                 <span style="font-size:13px;color:var(--muted)">클릭하거나 파일을 드래그하세요</span>
                 <span style="font-size:11px;color:var(--muted)">PDF, Excel, Word, 이미지, CSV · 파일당 최대 2MB</span>
                 <input type="file" id="lmFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif,.zip" style="display:none"/>
@@ -4635,7 +4648,7 @@ function modalVendorLogForm(vendorId){
             <div class="field"><label class="field-label">우선순위</label><select class="inp" name="priority"><option>높음</option><option>보통</option><option>낮음</option><option>완료</option></select></div>
           </div>
           <div class="field"><label class="field-label">원본 내용 (이메일 전체 등)</label><textarea class="inp" name="rawText" id="vlRawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요"></textarea></div>
-          <button type="button" id="vlAiSummarizeBtn" class="btn" style="margin-bottom:10px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 생성</button>
+          <button type="button" id="vlAiSummarizeBtn" class="btn" style="margin-bottom:10px"><i class="ti ti-sparkles" style="color:var(--text)"></i> AI 요약 생성</button>
           <div class="field"><label class="field-label">상황 요약 (한 줄)</label><input class="inp" type="text" name="summary" id="vlSummaryInput" required/></div>
           <div class="field"><label class="field-label">다음 액션</label><input class="inp" type="text" name="nextStep"/></div>
           <input type="hidden" name="vendorId" value="${vendorId}"/>
@@ -4931,7 +4944,7 @@ function modalMeetingNoteForm(){
         <div class="field"><label class="field-label">연결 프로젝트</label><select class="inp" id="mnProject">${projectOptions}</select></div>
         <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
         <div class="field"><label class="field-label">회의 내용</label><textarea class="inp" id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
-        <button id="mnGenerateBtn" class="btn" style="margin-bottom:14px"><i class="ti ti-sparkles" style="color:var(--o)"></i> AI 요약 및 액션 아이템 생성</button>
+        <button id="mnGenerateBtn" class="btn" style="margin-bottom:14px"><i class="ti ti-sparkles" style="color:var(--text)"></i> AI 요약 및 액션 아이템 생성</button>
         <div id="mnResult"></div>
       </div>
     </div>
@@ -5341,7 +5354,7 @@ function modalVendorMeetingNoteDetail(pid, vid, mid){
   }
   return `
     <div class="modal" style="width:760px">
-      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${m.title||vendor?.name||''}</h3>
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--text)"></i> ${m.title||vendor?.name||''}</h3>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${!isReadOnly()?`<button type="button" class="btn btn-g" id="editVendorMeetingNoteBtn" data-pid="${pid}" data-vid="${vid}" data-mid="${mid}" title="수정"><i class="ti ti-pencil"></i></button>
           <button type="button" class="btn btn-g" id="deleteVendorMeetingNoteBtn" data-pid="${pid}" data-vid="${vid}" data-mid="${mid}" title="삭제"><i class="ti ti-trash" style="color:#DC2626"></i></button>`:''}
@@ -5352,7 +5365,7 @@ function modalVendorMeetingNoteDetail(pid, vid, mid){
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${vendor?.name||''} · ${proj?.title?proj.title+' · ':''}${fmtDateDow(m.date)}</div>
         ${m.personName?`<div style="font-size:12px;color:var(--o);margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-user" style="font-size:12px"></i>${m.personName}</div>`:''}
         <div class="rte-content" style="font-size:13px;line-height:1.7">${m.text||''}</div>
-        ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--o);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
+        ${m.summary?`<div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;border-left:3px solid var(--o)"><i class="ti ti-sparkles" style="color:var(--text);font-size:12px;margin-right:4px"></i>${m.summary}</div>`:''}
       </div>
     </div>
   `;
@@ -5543,7 +5556,7 @@ function modalEditLog(log){
           ${vendorBrands.length > 0 ? `
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
-              <i class="ti ti-brand-tabs" style="font-size:14px;color:var(--o)"></i>
+              <i class="ti ti-brand-tabs" style="font-size:14px;color:var(--text)"></i>
               브랜드
             </label>
             <select class="inp" name="brandId">
@@ -5553,7 +5566,7 @@ function modalEditLog(log){
           ${relatedProjects.length > 0 ? `
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:6px">
-              <i class="ti ti-clipboard-list" style="font-size:14px;color:var(--o)"></i>
+              <i class="ti ti-clipboard-list" style="font-size:14px;color:var(--text)"></i>
               연결 프로젝트 <span style="font-size:11px;color:var(--muted);font-weight:300">(이 거래처가 연결된 프로젝트만 표시)</span>
             </label>
             <select class="inp" name="linkedProjectId">
@@ -5633,7 +5646,7 @@ function modalEditLog(log){
             <!-- 파일 업로드 -->
             <div id="elFileArea" style="display:none">
               <div id="elFileDropZone" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:20px;border:2px dashed var(--bd);border-radius:8px;cursor:pointer;background:#fff;transition:border-color .2s">
-                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--o)"></i>
+                <i class="ti ti-cloud-upload" style="font-size:24px;color:var(--text)"></i>
                 <span style="font-size:13px;color:var(--muted)">클릭하거나 파일을 드래그하세요</span>
                 <span style="font-size:11px;color:var(--muted)">PDF, Excel, Word, 이미지, CSV · 파일당 최대 2MB</span>
                 <input type="file" id="elFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif,.zip" style="display:none"/>
@@ -5974,7 +5987,7 @@ async function callClaudeSummary(text){
 function modalApiKeySettings(){
   return `
     <div class="modal" style="width:440px">
-      <div class="mh"><h3><i class="ti ti-key" style="color:var(--o)"></i> Claude AI 요약 설정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mh"><h3><i class="ti ti-key" style="color:var(--text)"></i> Claude AI 요약 설정</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
         <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:12px">
           Anthropic API 키를 등록하면 "AI 요약 생성"이 실제 Claude 모델을 호출해 요약합니다.<br/>
@@ -7144,7 +7157,7 @@ function bindViewEvents(){
 
     openModal(`
       <div class="modal">
-        <div class="mh"><h3><i class="ti ti-building-store" style="color:var(--o)"></i> 거래처 파일/링크 가져오기</h3>
+        <div class="mh"><h3><i class="ti ti-building-store" style="color:var(--text)"></i> 거래처 파일/링크 가져오기</h3>
           <button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button>
         </div>
         <div class="mb">
@@ -7521,7 +7534,7 @@ function moveCalendarEventToDate(eid, newDate){
             </div>
             <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" placeholder="예: 창고 이전 작업"/></div>
             <div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">
-              <i class="ti ti-info-circle" style="font-size:13px;color:var(--o)"></i>
+              <i class="ti ti-info-circle" style="font-size:13px;color:var(--text)"></i>
               4시간 미만 = 0.25일 / 4시간 = 0.5일 / 8시간 = 1일 기준으로 자동 환산됩니다.
             </div>
           </form>
@@ -7734,7 +7747,7 @@ function moveCalendarEventToDate(eid, newDate){
               </div>
               <div class="field"><label class="field-label">메모</label><input class="inp" type="text" name="memo" value="${(r.memo||'').replace(/"/g,'&quot;')}" placeholder="예: 창고 이전 작업"/></div>
               <div style="background:var(--sf);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--muted)">
-                <i class="ti ti-info-circle" style="font-size:13px;color:var(--o)"></i>
+                <i class="ti ti-info-circle" style="font-size:13px;color:var(--text)"></i>
                 4시간 미만 = 0.25일 / 4시간 = 0.5일 / 8시간 = 1일 기준으로 자동 환산됩니다.
               </div>
             </form>
@@ -7995,14 +8008,14 @@ function modalMeetingNoteFull(ev, noteId){
   if(!note){
     return `
       <div class="modal">
-        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> 회의록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+        <div class="mh"><h3><i class="ti ti-notes" style="color:var(--text)"></i> 회의록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
         <div class="mb"><div class="empty-state" style="padding:24px">회의록을 찾을 수 없습니다.</div></div>
       </div>
     `;
   }
   return `
     <div class="modal" style="width:760px">
-      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> ${(note.title||'제목 없음').replace(/</g,'&lt;')}</h3>
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--text)"></i> ${(note.title||'제목 없음').replace(/</g,'&lt;')}</h3>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
           ${!isReadOnly()?`<button type="button" class="btn btn-g" id="editEventMeetingNoteBtn" data-eid="${ev.id}" data-mid="${note.id}" title="수정"><i class="ti ti-pencil"></i></button>
           <button type="button" class="btn btn-g" id="deleteEventMeetingNoteBtn" data-eid="${ev.id}" data-mid="${note.id}" title="삭제"><i class="ti ti-trash" style="color:#DC2626"></i></button>`:''}
@@ -8114,7 +8127,7 @@ function modalAllMeetingNotes(){
 
   return `
     <div class="modal" style="width:640px">
-      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> 회의록 모아보기</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--text)"></i> 회의록 모아보기</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
         ${yearTabsHtml}
         ${rows.length===0
@@ -8645,7 +8658,7 @@ function showLockScreen(){
   app.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)">
       <div style="background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:36px 32px;width:320px;box-shadow:var(--shadow-md);text-align:center">
-        <div style="font-size:26px;margin-bottom:10px"><i class="ti ti-lock" style="color:var(--o)"></i></div>
+        <div style="font-size:26px;margin-bottom:10px"><i class="ti ti-lock" style="color:var(--text)"></i></div>
         <div style="font-size:15px;font-weight:400;margin-bottom:4px;color:var(--text)">천세나 업무 대시보드</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:18px">비밀번호를 입력해주세요</div>
         <input type="password" id="lockPasswordInput" placeholder="비밀번호" class="inp" style="width:100%;box-sizing:border-box;margin:0 0 10px 0;text-align:center"/>
