@@ -3123,53 +3123,47 @@ function viewProjects(){
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCategoriesBtn"><i class="ti ti-settings"></i> 카테고리 관리</button><button class="btn btn-o" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button></div>`:''}
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px">
-      <div class="card" style="padding:18px">
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:14px">프로젝트 현황</div>
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="position:relative;width:64px;height:64px;flex-shrink:0">
-            <svg width="64" height="64" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--sf)" stroke-width="9"/>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
+      <div class="card" style="padding:26px 24px">
+        <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:20px">프로젝트 현황</div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="position:relative;width:60px;height:60px;flex-shrink:0">
+            <svg width="60" height="60" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--sf)" stroke-width="8"/>
               ${donutSegments}
             </svg>
             <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <div style="font-size:15px;font-weight:600;color:var(--text);line-height:1">${totalAll}</div>
-              <div style="font-size:7.5px;color:var(--muted)">전체</div>
+              <div style="font-size:16px;font-weight:600;color:var(--text);line-height:1">${totalAll}</div>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
-            ${statusCounts.map(s=>`<div style="display:flex;align-items:center;gap:5px;font-size:10.5px">
-              <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0;opacity:.8"></span>
+          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+            ${statusCounts.map(s=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="width:5px;height:5px;border-radius:50%;background:${s.color};flex-shrink:0;opacity:.7"></span>
               <span style="color:var(--muted)">${s.label}</span>
-              <span style="font-weight:600;color:var(--text)">${s.count}</span>
+              <span style="font-weight:500;color:var(--text)">${s.count}</span>
             </div>`).join('')}
           </div>
         </div>
       </div>
 
-      <div class="card" style="padding:18px">
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px">진행중 평균 진행률</div>
-        <div style="font-size:26px;font-weight:600;color:var(--text);margin-bottom:10px">${avgProgress}%</div>
-        <div class="pgb" style="margin-bottom:10px"><div class="pgf" style="width:${avgProgress}%;background:var(--o)"></div></div>
-        <div style="font-size:10.5px;color:var(--muted);line-height:1.5">진행중인 프로젝트 ${activeProjects.length}건의 평균 진행 상황입니다.</div>
+      <div class="card" style="padding:26px 24px">
+        <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:16px">진행중 평균 진행률</div>
+        <div style="font-size:28px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:-.02em">${avgProgress}%</div>
+        <div style="height:3px;border-radius:2px;background:var(--sf);margin-bottom:16px;overflow:hidden"><div style="height:100%;width:${avgProgress}%;background:var(--o);opacity:.55;border-radius:2px"></div></div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">진행중인 프로젝트 ${activeProjects.length}건의 평균 진행 상황입니다.</div>
       </div>
 
-      <div class="card" style="padding:18px">
-        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px">전체 체크리스트</div>
-        <div style="font-size:26px;font-weight:600;color:var(--text);margin-bottom:10px">${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%</div>
-        <div class="pgb" style="margin-bottom:10px"><div class="pgf" style="width:${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%;background:#2DC76D"></div></div>
-        <div style="font-size:10.5px;color:var(--muted);line-height:1.5">전체 ${ckTotals.total}건 중 ${ckTotals.done}건을 완료했습니다.</div>
+      <div class="card" style="padding:26px 24px">
+        <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:16px">전체 체크리스트</div>
+        <div style="font-size:28px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:-.02em">${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%</div>
+        <div style="height:3px;border-radius:2px;background:var(--sf);margin-bottom:16px;overflow:hidden"><div style="height:100%;width:${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%;background:#2DC76D;opacity:.55;border-radius:2px"></div></div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">전체 ${ckTotals.total}건 중 ${ckTotals.done}건을 완료했습니다.</div>
       </div>
 
-      <div class="card" style="padding:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-          <div style="width:32px;height:32px;border-radius:9px;background:${dueSoonCount>0?'#FEE2E2':'#E4F7F1'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <i class="ti ${dueSoonCount>0?'ti-alert-triangle':'ti-shield-check'}" style="color:${dueSoonCount>0?'#DC2626':'#1C9873'};font-size:15px"></i>
-          </div>
-          <div style="font-size:12px;font-weight:600;color:var(--text)">7일 이내 마감</div>
-        </div>
-        <div style="font-size:26px;font-weight:600;color:${dueSoonCount>0?'#DC2626':'var(--text)'};margin-bottom:8px">${dueSoonCount}건</div>
-        <div style="font-size:10.5px;color:var(--muted);line-height:1.5">${dueSoonCount>0?'마감이 임박한 프로젝트가 있습니다.':'임박한 마감 건이 없습니다.'}</div>
+      <div class="card" style="padding:26px 24px">
+        <div style="font-size:12px;font-weight:500;color:var(--muted);margin-bottom:20px">7일 이내 마감</div>
+        <div style="font-size:28px;font-weight:600;color:var(--text);margin-bottom:16px;letter-spacing:-.02em">${dueSoonCount}건</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">${dueSoonCount>0?'마감이 임박한 프로젝트가 있습니다.':'임박한 마감 건이 없습니다.'}</div>
       </div>
     </div>
 
