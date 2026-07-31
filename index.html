@@ -3635,7 +3635,9 @@ function viewCalendarYear(){
   const year = Number(dayjs(state.calMonth+'-01').format('YYYY'));
   const todayStr = dayjs().format('YYYY-MM-DD');
   const dowNamesMon = ['월','화','수','목','금','토','일'];
-  const holidayDates = new Set(allCalendarEvents().filter(e=>e.isHoliday).map(e=>e.date));
+  const allEvsY = allCalendarEvents();
+  const holidayDates = new Set(allEvsY.filter(e=>e.isHoliday).map(e=>e.date));
+  const eventDates = new Set(allEvsY.filter(e=>!e.isHoliday && !e.isLeave).map(e=>e.date));
 
   function miniMonth(m){
     const mm = String(m).padStart(2,'0');
@@ -3657,12 +3659,16 @@ function viewCalendarYear(){
       </div>
       ${weeks.map(week=>`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px">
         ${week.map((d,i)=>{
-          if(d===null) return `<span></span>`;
+          if(d===null) return `<div style="aspect-ratio:1"></div>`;
           const dateStr = `${year}-${mm}-${String(d).padStart(2,'0')}`;
           const isSun = i===6;
           const isHoliday = holidayDates.has(dateStr);
           const isToday = dateStr===todayStr;
-          return `<span style="font-size:10px;text-align:center;padding:2px 0;border-radius:4px;${isToday?'background:var(--o);color:#fff;font-weight:700':(isHoliday||isSun)?'color:#DC2626':'color:var(--text)'}">${d}</span>`;
+          const hasEvent = eventDates.has(dateStr);
+          return `<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border:0.5px solid var(--bd);border-radius:4px;${isToday?'background:var(--o);border-color:var(--o)':''}">
+            <span style="font-size:10px;line-height:1;${isToday?'color:#fff;font-weight:700':(isHoliday||isSun)?'color:#DC2626':'color:var(--text)'}">${d}</span>
+            <span style="width:3px;height:3px;border-radius:50%;background:${isToday?'#fff':'var(--o)'};visibility:${hasEvent?'visible':'hidden'}"></span>
+          </div>`;
         }).join('')}
       </div>`).join('')}
     </div>`;
@@ -3676,6 +3682,7 @@ function viewCalendarYear(){
         <button class="btn" id="prevYear"><i class="ti ti-chevron-left"></i></button>
         <span style="font-size:16px;font-weight:300">${year}년</span>
         <button class="btn" id="nextYear"><i class="ti ti-chevron-right"></i></button>
+        <button class="btn" id="goTodayBtnYear" style="font-size:11px;padding:4px 10px;background:var(--ol);color:var(--od);border:0.5px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
@@ -7292,6 +7299,10 @@ function bindViewEvents(){
   if(prevMonth) prevMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').subtract(1,'month').format('YYYY-MM'); render(); });
   const nextMonth = document.getElementById('nextMonth');
   if(nextMonth) nextMonth.addEventListener('click', ()=>{ state.calMonth = dayjs(state.calMonth+'-01').add(1,'month').format('YYYY-MM'); render(); });
+  const goTodayBtn = document.getElementById('goTodayBtn');
+  if(goTodayBtn) goTodayBtn.addEventListener('click', ()=>{ state.calMonth = dayjs().format('YYYY-MM'); render(); });
+  const goTodayBtnYear = document.getElementById('goTodayBtnYear');
+  if(goTodayBtnYear) goTodayBtnYear.addEventListener('click', ()=>{ state.calMonth = dayjs().format('YYYY-MM'); state.calView = 'month'; render(); });
 
   document.querySelectorAll('.cal-view-toggle').forEach(btn=>{
     btn.addEventListener('click', ()=>{
