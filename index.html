@@ -86,9 +86,11 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:12px;border:1px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:none;transition:border-color .2s var(--ease)}
-.kpi:hover{border-color:#D3D6DB}
-.ki{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
+.kpi{background:var(--card);border-radius:12px;border:1px solid transparent;padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease)}
+.kpi:hover{box-shadow:var(--shadow-md)}
+.proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
+.proj-card:hover{box-shadow:var(--shadow-md)}
+.ki{width:30px;height:30px;border-radius:8px;background:var(--sf);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
