@@ -59,13 +59,11 @@ a{color:inherit}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--o)}
-.btn{font-size:12px;padding:6.5px 13px;border-radius:9px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
-.close-x{width:28px;height:28px;padding:0;justify-content:center;border-radius:50%;background:transparent;color:var(--muted)}
-.close-x:hover{background:var(--sf);color:var(--text)}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:8px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
 .btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
@@ -80,7 +78,7 @@ a{color:inherit}
 .bg{background:#E4F7F1;color:#1C9873}
 .bgr{background:#F0F1F3;color:#5F6672}
 .bw{background:#FFF6E0;color:#B8790A}
-.inp{width:100%;padding:9px 13px;border:1px solid transparent;border-radius:10px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
+.inp{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
 .inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:#fff}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
@@ -88,13 +86,13 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:16px;border:1px solid var(--bd);padding:17px;position:relative;overflow:hidden;box-shadow:none;transition:border-color .2s var(--ease)}
+.kpi{background:var(--card);border-radius:12px;border:1px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:none;transition:border-color .2s var(--ease)}
 .kpi:hover{border-color:#D3D6DB}
-.ki{width:30px;height:30px;border-radius:9px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
+.ki{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:28px;font-weight:700;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1;color:var(--text)}
+.kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
 .kl{font-size:11px;color:var(--muted);font-weight:300}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
@@ -141,14 +139,14 @@ select.inp{cursor:pointer}
 .ck-title.done{text-decoration:line-through;color:var(--muted)}
 .ck-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
 .ck-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.42);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto;animation:overlayIn .15s var(--ease)}
+.overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.5);backdrop-filter:blur(1px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto;animation:overlayIn .15s var(--ease)}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal{background:#fff;border-radius:20px;border:1px solid rgba(11,27,46,.06);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(11,27,46,.18),0 4px 12px rgba(11,27,46,.06);animation:modalIn .18s var(--ease)}
-.mh{padding:18px 24px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.modal{background:#fff;border-radius:12px;border:1px solid var(--bd);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
+.mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .mh h3{font-weight:600;font-size:15px;letter-spacing:-.01em}
-.mb{padding:20px 24px}
-.mf{padding:14px 24px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
+.mb{padding:16px 18px}
+.mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1c1c22;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(4px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateY(0)}
 .dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease)}
@@ -1821,11 +1819,11 @@ function viewHome(){
         </button>
       </div>`:''}
       <div class="krow">
-        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn">${inProgProjects}</div></div>
-        <div class="kpi" style="--ac:${undoneItems>0?'#DC2626':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn">${undoneItems}</div></div>
-        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn">${todayEvs.length}</div></div>
-        <div class="kpi" style="--ac:${deadlines.length>0?'#DC2626':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn">${deadlines.length}</div></div>
-        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn">${thisMonthMeetings}</div></div>
+        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#1C85E8">${inProgProjects}</div></div>
+        <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div></div>
+        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div></div>
+        <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div></div>
+        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div></div>
       </div>
     </div>
 
@@ -2007,13 +2005,13 @@ function viewHome(){
               slice.map(p=>{
                 const idx = state.data.projects.indexOf(p);
                 const prog = progressOf(p);
-                const col = 'var(--o)';
+                const col = projColors[idx % projColors.length];
                 const dday = p.deadline ? dayjs(p.deadline).diff(dayjs().startOf('day'),'day') : null;
                 const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">D-'+dday+'</span>' : '';
                 return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
                   +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
                   +'<span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.title+'</span>'
-                  +'<div class="pgb" style="width:80px;flex-shrink:0"><div class="pgf" style="width:'+prog+'%;background:'+col+'"></div></div>'
+                  +'<div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:'+prog+'%;background:'+col+'"></div></div>'
                   +'<span style="font-size:11px;color:var(--muted);width:30px;text-align:right">'+prog+'%</span>'
                   +ddayBadge+'</div>';
               }).join('');
@@ -2791,7 +2789,7 @@ function viewVendorDetail(){
             const rows = pageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer;padding:6px 0">
               <i class="ti ti-checklist" style="font-size:12px;color:var(--o)"></i>
               <span style="flex:1;font-size:13px;font-weight:300">${p.title}</span>
-              <div class="pgb" style="width:60px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
+              <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
             </div>`).join('');
             const pager = vpTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:8px">
@@ -3060,7 +3058,7 @@ function viewProjects(){
         <span style="font-size:9.5px;color:var(--muted);display:inline-flex;align-items:center;gap:2px"><i class="ti ti-user" style="font-size:9.5px"></i>${p.owner}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <div class="pgb" style="height:4px;flex:1;margin:0"><div class="pgf" style="width:${prog}%;background:var(--o)"></div></div>
+        <div class="pgb" style="flex:1;margin:0"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
         <span style="font-size:9.5px;color:var(--muted);flex-shrink:0;width:26px;text-align:right">${prog}%</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between">
@@ -3188,8 +3186,8 @@ function viewProjectDetail(){
       ${!isReadOnly()?`<button class="btn" id="editProjectBtn"><i class="ti ti-pencil"></i> 편집</button>`:''}
     </div>
 
-    <div class="pgb" style="margin-bottom:14px;height:8px;border-radius:4px">
-      <div class="pgf" style="width:${prog}%;background:var(--o);border-radius:4px"></div>
+    <div class="pgb" style="margin-bottom:14px">
+      <div class="pgf" style="width:${prog}%;background:var(--o)"></div>
     </div>
 
     ${(() => {
