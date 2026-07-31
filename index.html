@@ -2007,7 +2007,7 @@ function viewHome(){
                 const prog = progressOf(p);
                 const col = projColors[idx % projColors.length];
                 const dday = p.deadline ? dayjs(p.deadline).diff(dayjs().startOf('day'),'day') : null;
-                const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">D-'+dday+'</span>' : '';
+                const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">'+(dday>=0?'D-'+dday:'D+'+Math.abs(dday))+'</span>' : '';
                 return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
                   +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
                   +'<span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.title+'</span>'
