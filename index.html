@@ -107,7 +107,9 @@ select.inp{cursor:pointer}
 .rte-btn{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;border-radius:5px;cursor:pointer;color:var(--text);font-size:12px;flex-shrink:0;font-family:inherit}
 .rte-btn:hover{background:var(--ol)}
 .rte-sep{width:1px;height:16px;background:var(--bd);margin:0 4px;flex-shrink:0}
-.rte-editor{border:0.5px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;padding:10px 12px;font-size:13px;line-height:1.6;min-height:160px;max-height:340px;overflow-y:auto;outline:none}
+.rte-editor{border:0.5px solid var(--bd);border-top:none;border-radius:0 0 8px 8px;padding:10px 12px;font-size:13px;line-height:1.6;min-height:160px;max-height:340px;overflow-y:auto;outline:none;font-weight:300}
+.rte-editor b, .rte-editor strong, .rte-content b, .rte-content strong{font-weight:700}
+.rte-content{font-weight:300}
 .rte-editor:empty:before{content:attr(data-placeholder);color:var(--muted)}
 .rte-editor table{border-collapse:collapse;width:100%;margin:8px 0}
 .rte-editor table td{border:1px solid var(--bd);padding:6px 8px;font-size:12px;min-width:40px}
@@ -4971,7 +4973,22 @@ function richToolbarHtml(editorId){
       </div>
     </div>
     <span class="rte-sep"></span>
-    <button type="button" class="rte-btn rte-table-btn" title="표 삽입"><i class="ti ti-table-plus"></i></button>
+    <div style="position:relative">
+      <button type="button" class="rte-btn rte-table-btn" title="표 삽입"><i class="ti ti-table-plus"></i></button>
+      <div class="rte-color-popover rte-table-popover" data-type="table" style="flex-direction:column;min-width:150px;gap:8px;padding:10px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--muted);width:26px;flex-shrink:0">행</label>
+          <input type="number" class="inp rte-table-rows-input" min="1" max="20" value="3" style="margin:0;padding:4px 8px;font-size:12px"/>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="font-size:11px;color:var(--muted);width:26px;flex-shrink:0">열</label>
+          <input type="number" class="inp rte-table-cols-input" min="1" max="10" value="3" style="margin:0;padding:4px 8px;font-size:12px"/>
+        </div>
+        <button type="button" class="btn btn-o rte-table-insert-btn" style="font-size:11px;padding:6px 0;justify-content:center;width:100%">표 삽입</button>
+      </div>
+    </div>
+    <button type="button" class="rte-btn rte-table-addrow-btn" title="행 추가 (표 안에 커서를 두고 클릭)" style="width:auto;padding:0 6px;font-size:11px">+행</button>
+    <button type="button" class="rte-btn rte-table-addcol-btn" title="열 추가 (표 안에 커서를 두고 클릭)" style="width:auto;padding:0 6px;font-size:11px">+열</button>
   </div>`;
 }
 
@@ -5050,27 +5067,98 @@ function bindRichEditor(editorId){
       pop.style.display = 'none';
     });
   });
+  toolbar.querySelectorAll('.rte-color-popover').forEach(pop=>{
+    pop.addEventListener('click', e=>e.stopPropagation());
+    pop.addEventListener('mousedown', e=>e.stopPropagation());
+  });
   document.addEventListener('click', ()=>{
     toolbar.querySelectorAll('.rte-color-popover').forEach(p=>p.style.display='none');
   });
 
+  let savedTableRange = null;
   const tableBtn = toolbar.querySelector('.rte-table-btn');
   if(tableBtn){
     tableBtn.addEventListener('mousedown', e=>e.preventDefault());
-    tableBtn.addEventListener('click', ()=>{
-      const rowsInput = prompt('행(줄) 개수를 입력하세요', '3');
-      if(rowsInput===null) return;
-      const colsInput = prompt('열(칸) 개수를 입력하세요', '3');
-      if(colsInput===null) return;
-      const rows = Math.max(1, parseInt(rowsInput)||3);
-      const cols = Math.max(1, parseInt(colsInput)||3);
+    tableBtn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const sel = window.getSelection();
+      if(sel && sel.rangeCount>0){
+        savedTableRange = sel.getRangeAt(0).cloneRange();
+      }
+      const pop = tableBtn.nextElementSibling;
+      toolbar.querySelectorAll('.rte-color-popover').forEach(p=>{ if(p!==pop) p.style.display='none'; });
+      pop.style.display = pop.style.display==='flex' ? 'none' : 'flex';
+    });
+  }
+  const tableInsertBtn = toolbar.querySelector('.rte-table-insert-btn');
+  if(tableInsertBtn){
+    tableInsertBtn.addEventListener('click', ()=>{
+      const rowsEl = toolbar.querySelector('.rte-table-rows-input');
+      const colsEl = toolbar.querySelector('.rte-table-cols-input');
+      const rows = Math.max(1, parseInt(rowsEl.value)||3);
+      const cols = Math.max(1, parseInt(colsEl.value)||3);
       let html = '<table>';
       for(let r=0;r<rows;r++){
         html += '<tr>' + Array.from({length:cols}).map(()=>'<td>&nbsp;</td>').join('') + '</tr>';
       }
       html += '</table><p><br></p>';
       editor.focus();
+      const sel = window.getSelection();
+      if(savedTableRange){
+        sel.removeAllRanges();
+        sel.addRange(savedTableRange);
+      }
       document.execCommand('insertHTML', false, html);
+      const pop = tableBtn.nextElementSibling;
+      if(pop) pop.style.display = 'none';
+    });
+  }
+
+  function findCurrentTableCell(){
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount===0) return null;
+    let node = sel.getRangeAt(0).startContainer;
+    if(node.nodeType===3) node = node.parentElement;
+    while(node && node!==editor){
+      if(node.tagName==='TD' || node.tagName==='TH') return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  const addRowBtn = toolbar.querySelector('.rte-table-addrow-btn');
+  if(addRowBtn){
+    addRowBtn.addEventListener('mousedown', e=>e.preventDefault());
+    addRowBtn.addEventListener('click', ()=>{
+      const cell = findCurrentTableCell();
+      if(!cell){ showToast('표 안에 커서(클릭)를 두고 눌러주세요.'); return; }
+      const row = cell.closest('tr');
+      const cols = row.children.length;
+      const newRow = document.createElement('tr');
+      for(let i=0;i<cols;i++){
+        const td = document.createElement('td');
+        td.innerHTML = '&nbsp;';
+        newRow.appendChild(td);
+      }
+      row.parentNode.insertBefore(newRow, row.nextSibling);
+    });
+  }
+  const addColBtn = toolbar.querySelector('.rte-table-addcol-btn');
+  if(addColBtn){
+    addColBtn.addEventListener('mousedown', e=>e.preventDefault());
+    addColBtn.addEventListener('click', ()=>{
+      const cell = findCurrentTableCell();
+      if(!cell){ showToast('표 안에 커서(클릭)를 두고 눌러주세요.'); return; }
+      const table = cell.closest('table');
+      const colIndex = Array.from(cell.parentNode.children).indexOf(cell);
+      table.querySelectorAll('tr').forEach(tr=>{
+        const tag = (tr.children[0] && tr.children[0].tagName==='TH') ? 'th' : 'td';
+        const td = document.createElement(tag);
+        td.innerHTML = '&nbsp;';
+        const refCell = tr.children[colIndex];
+        if(refCell && refCell.nextSibling) tr.insertBefore(td, refCell.nextSibling);
+        else tr.appendChild(td);
+      });
     });
   }
 }
