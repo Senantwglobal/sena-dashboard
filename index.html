@@ -59,7 +59,7 @@ a{color:inherit}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:none}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--o)}
@@ -88,13 +88,13 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:12px;border:1px solid var(--bd);padding:16px;position:relative;overflow:hidden;box-shadow:none;transition:border-color .2s var(--ease)}
+.kpi{background:var(--card);border-radius:16px;border:1px solid var(--bd);padding:17px;position:relative;overflow:hidden;box-shadow:none;transition:border-color .2s var(--ease)}
 .kpi:hover{border-color:#D3D6DB}
-.ki{width:30px;height:30px;border-radius:8px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
+.ki{width:30px;height:30px;border-radius:9px;background:color-mix(in srgb, var(--ac,var(--o)) 14%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.kn{font-size:28px;font-weight:700;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1;color:var(--text)}
 .kl{font-size:11px;color:var(--muted);font-weight:300}
 .pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
@@ -1821,11 +1821,11 @@ function viewHome(){
         </button>
       </div>`:''}
       <div class="krow">
-        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#1C85E8">${inProgProjects}</div></div>
-        <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div></div>
-        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div></div>
-        <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div></div>
-        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div></div>
+        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn">${inProgProjects}</div></div>
+        <div class="kpi" style="--ac:${undoneItems>0?'#DC2626':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn">${undoneItems}</div></div>
+        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn">${todayEvs.length}</div></div>
+        <div class="kpi" style="--ac:${deadlines.length>0?'#DC2626':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn">${deadlines.length}</div></div>
+        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn">${thisMonthMeetings}</div></div>
       </div>
     </div>
 
@@ -2007,7 +2007,7 @@ function viewHome(){
               slice.map(p=>{
                 const idx = state.data.projects.indexOf(p);
                 const prog = progressOf(p);
-                const col = projColors[idx % projColors.length];
+                const col = 'var(--o)';
                 const dday = p.deadline ? dayjs(p.deadline).diff(dayjs().startOf('day'),'day') : null;
                 const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px">D-'+dday+'</span>' : '';
                 return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
@@ -3060,7 +3060,7 @@ function viewProjects(){
         <span style="font-size:9.5px;color:var(--muted);display:inline-flex;align-items:center;gap:2px"><i class="ti ti-user" style="font-size:9.5px"></i>${p.owner}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-        <div class="pgb" style="height:4px;flex:1;margin:0"><div class="pgf" style="width:${prog}%;background:${col}"></div></div>
+        <div class="pgb" style="height:4px;flex:1;margin:0"><div class="pgf" style="width:${prog}%;background:var(--o)"></div></div>
         <span style="font-size:9.5px;color:var(--muted);flex-shrink:0;width:26px;text-align:right">${prog}%</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between">
