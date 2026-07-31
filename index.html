@@ -3047,7 +3047,7 @@ function viewProjects(){
     const len = frac*CIRC;
     const rotate = (cum/(totalAll||1))*360 - 90;
     cum += s.count;
-    return `<circle cx="50" cy="50" r="${R}" fill="none" stroke="${s.color}" stroke-width="13" stroke-dasharray="${len} ${CIRC-len}" transform="rotate(${rotate} 50 50)"/>`;
+    return `<circle cx="50" cy="50" r="${R}" fill="none" stroke="${s.color}" stroke-width="7" stroke-dasharray="${len} ${CIRC-len}" transform="rotate(${rotate} 50 50)" opacity=".85"/>`;
   }).join('');
   const activeProjects = allProjects.filter(p=>(p.status||'진행중')==='진행중');
   const avgProgress = activeProjects.length ? Math.round(activeProjects.reduce((s,p)=>s+progressOf(p),0)/activeProjects.length) : 0;
@@ -3121,40 +3121,40 @@ function viewProjects(){
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCategoriesBtn"><i class="ti ti-settings"></i> 카테고리 관리</button><button class="btn btn-o" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button></div>`:''}
     </div>
 
-    <div class="card" style="margin-bottom:14px">
-      <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:14px;flex-shrink:0">
-          <div style="position:relative;width:100px;height:100px;flex-shrink:0">
-            <svg width="100" height="100" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--sf)" stroke-width="13"/>
+    <div class="card" style="margin-bottom:14px;padding:18px 26px">
+      <div style="display:flex;align-items:center;gap:28px">
+        <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0">
+          <div style="position:relative;width:84px;height:84px;flex-shrink:0">
+            <svg width="84" height="84" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--sf)" stroke-width="7"/>
               ${donutSegments}
             </svg>
             <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <div style="font-size:22px;font-weight:700;color:var(--text);line-height:1">${totalAll}</div>
-              <div style="font-size:9px;color:var(--muted)">전체</div>
+              <div style="font-size:18px;font-weight:500;color:var(--text);line-height:1">${totalAll}</div>
+              <div style="font-size:8.5px;color:var(--muted)">전체</div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px">
-            ${statusCounts.map(s=>`<div style="display:flex;align-items:center;gap:6px;font-size:11.5px">
-              <span style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></span>
+            ${statusCounts.map(s=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px">
+              <span style="width:6px;height:6px;border-radius:50%;background:${s.color};flex-shrink:0;opacity:.75"></span>
               <span style="color:var(--muted)">${s.label}</span>
-              <span style="font-weight:700;color:var(--text)">${s.count}</span>
+              <span style="font-weight:500;color:var(--text)">${s.count}</span>
             </div>`).join('')}
           </div>
         </div>
-        <div style="width:1px;align-self:stretch;background:var(--bd)"></div>
-        <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <div style="width:1px;height:52px;background:var(--bd);flex-shrink:0"></div>
+        <div style="display:flex;flex:2;justify-content:space-around;text-align:center">
           <div>
-            <div style="font-size:20px;font-weight:700;color:var(--text)">${avgProgress}%</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">진행중 평균 진행률</div>
+            <div style="font-size:18px;font-weight:500;color:var(--text)">${avgProgress}%</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:3px">진행중 평균 진행률</div>
           </div>
           <div>
-            <div style="font-size:20px;font-weight:700;color:${dueSoonCount>0?'#DC2626':'var(--text)'}">${dueSoonCount}건</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">7일 이내 마감</div>
+            <div style="font-size:18px;font-weight:500;color:${dueSoonCount>0?'#DC2626':'var(--text)'}">${dueSoonCount}건</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:3px">7일 이내 마감</div>
           </div>
           <div>
-            <div style="font-size:20px;font-weight:700;color:var(--text)">${ckTotals.done}/${ckTotals.total}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">전체 체크리스트</div>
+            <div style="font-size:18px;font-weight:500;color:var(--text)">${ckTotals.done}/${ckTotals.total}</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:3px">전체 체크리스트</div>
           </div>
         </div>
       </div>
@@ -3655,12 +3655,14 @@ function viewCalendar(){
 
   return `
     <div class="sh">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <button class="btn" id="prevMonth"><i class="ti ti-chevron-left"></i></button>
-        <span style="font-size:16px;font-weight:300">${month.format('YYYY년 M월')}</span>
-        <button class="btn" id="nextMonth"><i class="ti ti-chevron-right"></i></button>
-        <button class="btn" id="goTodayBtn" style="font-size:11px;padding:4px 10px;background:var(--ol);color:var(--od);border:0.5px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
-        <span style="font-size:12px;color:var(--muted);padding:4px 8px;background:var(--sf);border-radius:6px">${dayjs().format('M월 D일 (ddd)')}</span>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;background:var(--sf);border-radius:10px;padding:3px">
+          <button class="btn" id="prevMonth" style="background:transparent;padding:5px 9px"><i class="ti ti-chevron-left"></i></button>
+          <span style="font-size:13px;font-weight:600;padding:0 10px;min-width:88px;text-align:center">${month.format('YYYY년 M월')}</span>
+          <button class="btn" id="nextMonth" style="background:transparent;padding:5px 9px"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <button class="btn" id="goTodayBtn" style="font-size:11px;padding:6px 12px;background:var(--ol);color:var(--od);border:none">오늘</button>
+        <span style="font-size:11.5px;color:var(--muted)">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px">
         <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
@@ -3671,7 +3673,7 @@ function viewCalendar(){
 
     <div class="legend-row" style="flex-wrap:wrap">
       ${allEventTypes.filter(t=>!['연차','반차','반반차'].includes(t.name)).map(t=>{
-        const c=eventColor(t.name); return `<span><span class="legend-dot" style="background:${c.dot}"></span>${t.name}</span>`;
+        const c=eventColor(t.name); return `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:${c.bg}"><span class="legend-dot" style="background:${c.dot};margin:0"></span><span style="color:${c.text}">${t.name}</span></span>`;
       }).join('')}
     </div>
 
