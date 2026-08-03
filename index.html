@@ -2505,6 +2505,24 @@ function viewVendorDetail(){
   });
   const yearlyAvg = yearsWithData.length>0 ? Math.round(totalAllTime/yearsWithData.length) : 0;
 
+  // 각 지표별 전년 동기 대비 증감률 계산 헬퍼
+  function pctChangeOf(current, previous){
+    if(previous===null || previous===undefined || previous<=0) return null;
+    return Math.round(((current-previous)/previous)*1000)/10;
+  }
+  const prevYearMonthVals = purchaseData[selectedPYear-1] ? Array.from({length:12},(_,i)=>Number(purchaseData[selectedPYear-1][i+1])||0) : null;
+  const prevYtdTotal = prevYearMonthVals ? prevYearMonthVals.slice(0, monthsElapsed).reduce((a,b)=>a+b,0) : null;
+  const prevMonthlyAvg = (prevYtdTotal!==null && monthsElapsed>0) ? prevYtdTotal/monthsElapsed : null;
+  const prevSameMonthVal = (prevYearMonthVals && lastNonZeroIdx>=0) ? prevYearMonthVals[lastNonZeroIdx] : null;
+  const ytdPctChange = pctChangeOf(ytdTotal, prevYtdTotal);
+  const monthlyAvgPctChange = pctChangeOf(monthlyAvg, prevMonthlyAvg);
+  const selectedMonthPctChange = pctChangeOf(selectedMonthAmount, prevSameMonthVal);
+  function pctTagHtml(pct){
+    if(pct===null) return '';
+    const positive = pct>=0;
+    return `<span style="font-size:9.5px;font-weight:600;color:${positive?'#1C9873':'#DC2626'};display:inline-flex;align-items:center;gap:1px;margin-left:5px"><i class="ti ${positive?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:10px"></i>${Math.abs(pct)}%</span>`;
+  }
+
   if(!usdKrwRate) fetchExchangeRate();
   function buildAreaChartSvg(vals, maxVal, labels){
     const W = 700, H = 160, padX = 16, padY = 16, padLeft = 44;
@@ -2653,12 +2671,12 @@ function viewVendorDetail(){
       <div style="display:flex;align-items:center;gap:32px;margin-bottom:16px;flex-wrap:wrap">
         <div>
           <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">YTD 구매액 합계</div>
-          <div style="font-size:19px;font-weight:700;color:var(--text)">$${ytdTotal.toLocaleString()}</div>
+          <div style="font-size:19px;font-weight:700;color:var(--text);display:flex;align-items:center">$${ytdTotal.toLocaleString()}${pctTagHtml(ytdPctChange)}</div>
         </div>
         <div style="width:1px;height:30px;background:var(--bd)"></div>
         <div>
           <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">월간 평균</div>
-          <div style="font-size:19px;font-weight:700;color:var(--text)">$${monthlyAvg.toLocaleString()}</div>
+          <div style="font-size:19px;font-weight:700;color:var(--text);display:flex;align-items:center">$${monthlyAvg.toLocaleString()}${pctTagHtml(monthlyAvgPctChange)}</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -2697,7 +2715,7 @@ function viewVendorDetail(){
         </div>
         <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px">
           <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">선택 월 구매액 (${selectedMonthLabel})</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">$${selectedMonthAmount.toLocaleString()}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center">$${selectedMonthAmount.toLocaleString()}${pctTagHtml(selectedMonthPctChange)}</div>
         </div>
         <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px">
           <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">년간 평균</div>
