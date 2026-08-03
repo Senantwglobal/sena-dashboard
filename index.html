@@ -2467,8 +2467,9 @@ function viewVendorDetail(){
   const vendorTerms = useBrandData ? (activeBrand.vendorTerms || {}) : (v.vendorTerms || {});
   const bId = activeBrandId;
 
-  // 구매 현황 (벤더 유형에 관계없이 표시, 연도별 월별 매출)
-  const purchaseData = v.purchaseData || {};
+  // 구매 현황 - 브랜드 독립 모드면 브랜드 자체 구매 데이터, 상속 모드면 벤더 마스터 구매 데이터
+  const purchaseDataTarget = useBrandData ? activeBrand : v;
+  const purchaseData = purchaseDataTarget.purchaseData || {};
   const purchaseYears = Object.keys(purchaseData).map(Number).sort((a,b)=>b-a);
   const currentYearNum = Number(dayjs().format('YYYY'));
   if(purchaseYears.length===0) purchaseYears.push(currentYearNum);
@@ -2690,6 +2691,10 @@ function viewVendorDetail(){
           ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:5px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
         </div>
       </div>
+      ${hasBrands && activeBrand ? (isInherit
+        ? `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:14px;display:flex;align-items:center;gap:4px"><i class="ti ti-link" style="font-size:10px;color:var(--text)"></i> 벤더 마스터 구매 데이터를 공유합니다 (마스터 상속)</div>`
+        : `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:14px;display:flex;align-items:center;gap:4px"><i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i> "${activeBrand.name}" 브랜드만의 독립 구매 데이터입니다</div>`
+      ) : ''}
 
       <div style="display:flex;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
         <div style="flex:1 1 0;min-width:0">
@@ -5626,16 +5631,21 @@ function bindPriceListLinkForm(){
 
 function modalVendorPurchaseForm(vid){
   const v = state.data.vendors.find(x=>x.id===vid);
+  const brands = (v && v.brands) || [];
+  const activeBrand = state.activeBrandId ? brands.find(b=>b.id===state.activeBrandId) : null;
+  const isBrandIndependent = activeBrand && activeBrand.inherit===false;
+  const target = isBrandIndependent ? activeBrand : v;
   const currentYearNum = Number(dayjs().format('YYYY'));
-  const existingYears = Object.keys((v && v.purchaseData) || {}).map(Number);
+  const existingYears = Object.keys((target && target.purchaseData) || {}).map(Number);
   const year = state.vendorPurchaseYear || existingYears[0] || currentYearNum;
-  const yearData = (v && v.purchaseData && v.purchaseData[year]) || {};
+  const yearData = (target && target.purchaseData && target.purchaseData[year]) || {};
   const yearOptions = [];
   for(let y=currentYearNum+1; y>=currentYearNum-6; y--) yearOptions.push(y);
   return `
     <div class="modal" style="width:560px">
-      <div class="mh"><h3>${v?v.name:''} 구매 현황 입력</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mh"><h3>${v?v.name:''}${isBrandIndependent?` · ${activeBrand.name} (독립)`:''} 구매 현황 입력</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
+        ${isBrandIndependent?`<div style="font-size:10.5px;color:var(--muted);margin-bottom:10px"><i class="ti ti-user-check" style="font-size:11px"></i> "${activeBrand.name}" 브랜드 독립 구매 데이터로 저장됩니다.</div>`:`<div style="font-size:10.5px;color:var(--muted);margin-bottom:10px"><i class="ti ti-link" style="font-size:11px"></i> 벤더 마스터 구매 데이터로 저장됩니다.</div>`}
         <div class="field"><label class="field-label">연도</label>
           <select class="inp" id="vpYearSel">
             ${yearOptions.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}년</option>`).join('')}
@@ -5669,14 +5679,17 @@ function bindVendorPurchaseForm(vid){
   if(saveBtn) saveBtn.addEventListener('click', ()=>{
     const v = state.data.vendors.find(x=>x.id===vid);
     if(!v) return;
+    const brands = v.brands || [];
+    const activeBrand = state.activeBrandId ? brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = (activeBrand && activeBrand.inherit===false) ? activeBrand : v;
     const year = Number(document.getElementById('vpYearSel').value);
     const yearData = {};
     document.querySelectorAll('.vp-month-input').forEach(inp=>{
       const val = Number(inp.value);
       if(val>0) yearData[inp.dataset.month] = val;
     });
-    if(!v.purchaseData) v.purchaseData = {};
-    v.purchaseData[year] = yearData;
+    if(!target.purchaseData) target.purchaseData = {};
+    target.purchaseData[year] = yearData;
     state.vendorPurchaseYear = year;
     closeModal(); persist(false); render();
     showToast('구매 현황이 저장되었습니다.');
