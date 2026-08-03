@@ -2477,7 +2477,16 @@ function viewVendorDetail(){
   const monthVals = Array.from({length:12},(_,i)=> Number(pYearData[i+1]) || 0);
   const maxMonthVal = Math.max(...monthVals, 1);
   const totalPYear = monthVals.reduce((a,b)=>a+b,0);
-  function buildAreaChartSvg(vals, maxVal){
+  const purchaseViewMode = state.vendorPurchaseView || 'month'; // 'month' | 'year'
+  const yearsSortedAsc = purchaseYears.slice().sort((a,b)=>a-b);
+  const yearTotals = yearsSortedAsc.map(y=>{
+    const yd = purchaseData[y] || {};
+    return Object.keys(yd).reduce((s,m)=>s+(Number(yd[m])||0), 0);
+  });
+  const maxYearVal = Math.max(...yearTotals, 1);
+  const totalAllYears = yearTotals.reduce((a,b)=>a+b,0);
+  if(!usdKrwRate) fetchExchangeRate();
+  function buildAreaChartSvg(vals, maxVal, labels){
     const W = 700, H = 160, padX = 16, padY = 16;
     const stepX = vals.length>1 ? (W-2*padX)/(vals.length-1) : 0;
     const points = vals.map((val,i)=>{
@@ -2510,7 +2519,7 @@ function viewVendorDetail(){
     for(let i=1;i<vals.length;i++) if(vals[i]>vals[peakIdx]) peakIdx = i;
     const hasPeak = vals[peakIdx] > 0;
     const peakPt = points[peakIdx];
-    const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const chartLabels = labels || ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
     const calloutW = 92, calloutH = 40;
     let calloutX = peakPt[0] - calloutW/2;
     calloutX = Math.max(4, Math.min(W-calloutW-4, calloutX));
@@ -2530,12 +2539,14 @@ function viewVendorDetail(){
       ${hasPeak?`
       <g>
         <rect x="${calloutX.toFixed(1)}" y="${calloutY.toFixed(1)}" width="${calloutW}" height="${calloutH}" rx="8" fill="#fff" stroke="var(--bd)" stroke-width="1"/>
-        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="#8A8F98" font-family="inherit">${monthNames[peakIdx]}</text>
+        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="#8A8F98" font-family="inherit">${chartLabels[peakIdx]}</text>
         <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+30).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#111114" font-family="inherit">$${vals[peakIdx].toLocaleString()}</text>
       </g>` : ''}
     </svg>`;
   }
-  const purchaseChartSvg = buildAreaChartSvg(monthVals, maxMonthVal);
+  const purchaseChartSvg = purchaseViewMode==='year'
+    ? buildAreaChartSvg(yearTotals, maxYearVal, yearsSortedAsc.map(y=>y+'년'))
+    : buildAreaChartSvg(monthVals, maxMonthVal);
 
   const actionStatuses = [
     {value:'', label:'상태 미지정', bg:'var(--sf)', color:'var(--muted)'},
@@ -2588,19 +2599,28 @@ function viewVendorDetail(){
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:10px">
           <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">구매 현황</span>
-          <select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
+          <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
+            <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
+            <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='year'?'var(--shadow-sm)':'none'}">연도별 추이</button>
+          </div>
+          ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
             ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
-          </select>
+          </select>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:14px;font-weight:700;color:var(--text)">$${totalPYear.toLocaleString()}</div>
+          <div style="text-align:right">
+            <div style="font-size:14px;font-weight:700;color:var(--text)">$${(purchaseViewMode==='year'?totalAllYears:totalPYear).toLocaleString()}</div>
+            ${usdKrwRate?`<div style="font-size:10px;color:var(--muted)">≈ ₩${Math.round((purchaseViewMode==='year'?totalAllYears:totalPYear)*usdKrwRate).toLocaleString()}</div>`:''}
+          </div>
           ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:4px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
         </div>
       </div>
-      ${totalPYear===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
+      ${(purchaseViewMode==='year'?totalAllYears:totalPYear)===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
       <div>${purchaseChartSvg}</div>
-      <div style="display:grid;grid-template-columns:repeat(12,1fr);margin-top:2px">
-        ${Array.from({length:12},(_,i)=>`<span style="font-size:9px;color:var(--muted);text-align:center">${i+1}월</span>`).join('')}
+      <div style="display:grid;grid-template-columns:repeat(${purchaseViewMode==='year'?yearsSortedAsc.length:12},1fr);margin-top:2px">
+        ${purchaseViewMode==='year'
+          ? yearsSortedAsc.map(y=>`<span style="font-size:9px;color:var(--muted);text-align:center">${y}</span>`).join('')
+          : Array.from({length:12},(_,i)=>`<span style="font-size:9px;color:var(--muted);text-align:center">${i+1}월</span>`).join('')}
       </div>`}
     </div>
 
@@ -7143,6 +7163,13 @@ function bindViewEvents(){
     state.vendorPurchaseYear = Number(vendorPurchaseYearSel.value);
     render();
   });
+  // 구매 현황 - 월별/연도별 보기 토글
+  document.querySelectorAll('.purchase-view-toggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorPurchaseView = btn.dataset.view;
+      render();
+    });
+  });
   // 구매 현황 - 입력 버튼
   const editPurchaseDataBtn = document.getElementById('editPurchaseDataBtn');
   if(editPurchaseDataBtn) editPurchaseDataBtn.addEventListener('click', ()=>{
@@ -8954,6 +8981,21 @@ document.addEventListener('click', function(e){
 });
 
 /* ---------- 앱 초기화 ---------- */
+let usdKrwRate = null;
+async function fetchExchangeRate(){
+  if(usdKrwRate) return usdKrwRate;
+  try{
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    if(data && data.rates && data.rates.KRW){
+      usdKrwRate = data.rates.KRW;
+      render();
+    }
+  } catch(e){
+    // 환율 조회 실패 시 조용히 무시 (USD 금액만 표시)
+  }
+}
+
 async function initApp(){
   const app = document.getElementById('app');
   app.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--text-muted);font-size:13px;">불러오는 중...</div>`;
