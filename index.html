@@ -2668,20 +2668,9 @@ function viewVendorDetail(){
 
     <!-- 구매 현황 -->
     <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:32px;margin-bottom:16px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">YTD 구매액 합계</div>
-          <div style="font-size:19px;font-weight:700;color:var(--text);display:flex;align-items:center">$${ytdTotal.toLocaleString()}${pctTagHtml(ytdPctChange)}</div>
-        </div>
-        <div style="width:1px;height:30px;background:var(--bd)"></div>
-        <div>
-          <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px">월간 평균</div>
-          <div style="font-size:19px;font-weight:700;color:var(--text);display:flex;align-items:center">$${monthlyAvg.toLocaleString()}${pctTagHtml(monthlyAvgPctChange)}</div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">구매 현황</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;margin-bottom:18px;border-bottom:0.5px solid var(--bd);flex-wrap:wrap;gap:8px">
+        <div style="font-size:18px;font-weight:700;color:var(--text)">Overview <span style="color:var(--muted);font-weight:400">구매 현황</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
             <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
             <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='year'?'var(--shadow-sm)':'none'}">연도별 추이</button>
@@ -2689,18 +2678,46 @@ function viewVendorDetail(){
           ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
             ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
           </select>`:''}
-        </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <div style="text-align:right">
-            <div style="font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;justify-content:flex-end">
-              $${(purchaseViewMode==='year'?totalAllYears:totalPYear).toLocaleString()}
-              ${purchaseViewMode==='month'&&pctChange!==null?`<span style="font-size:10px;font-weight:600;color:${pctChange>=0?'#1C9873':'#DC2626'};display:inline-flex;align-items:center;gap:1px"><i class="ti ${pctChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(pctChange)}%</span>`:''}
-            </div>
-            ${usdKrwRate?`<div style="font-size:10px;color:var(--muted)">≈ ₩${Math.round((purchaseViewMode==='year'?totalAllYears:totalPYear)*usdKrwRate).toLocaleString()}</div>`:''}
-          </div>
-          ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:4px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
+          ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:5px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
         </div>
       </div>
+
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:20px">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">YTD 구매액 합계</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${ytdTotal.toLocaleString()}</span>
+            ${ytdPctChange!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:${ytdPctChange>=0?'#E4F7F1':'#FDEAEA'};color:${ytdPctChange>=0?'#1C9873':'#C0392B'}">${ytdPctChange>=0?'↑':'↓'} ${Math.abs(ytdPctChange)}%</span>`:''}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">월간 평균</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
+            ${monthlyAvgPctChange!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:${monthlyAvgPctChange>=0?'#E4F7F1':'#FDEAEA'};color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'}">${monthlyAvgPctChange>=0?'↑':'↓'} ${Math.abs(monthlyAvgPctChange)}%</span>`:''}
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">총 구매액</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
+            <span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--sf);color:var(--muted)">누적</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px">년간 평균</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
+            <span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--sf);color:var(--muted)">${yearsWithData.length}개년</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:6px">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span>
+        <span style="font-size:11px;color:var(--muted)">구매액 추이</span>
+      </div>
+
       ${(purchaseViewMode==='year'?totalAllYears:totalPYear)===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
       <div>${purchaseChartSvg}</div>
       <div style="display:grid;grid-template-columns:repeat(${purchaseViewMode==='year'?yearsSortedAsc.length:12},1fr);margin-top:2px;padding-left:6.3%;padding-right:2.3%">
@@ -2708,20 +2725,6 @@ function viewVendorDetail(){
           ? yearsSortedAsc.map(y=>`<span style="font-size:9px;color:var(--muted);text-align:center">${y}</span>`).join('')
           : Array.from({length:12},(_,i)=>`<span style="font-size:9px;color:var(--muted);text-align:center">${i+1}월</span>`).join('')}
       </div>`}
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">
-        <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">총 구매액</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">$${totalAllTime.toLocaleString()}</div>
-        </div>
-        <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">선택 월 구매액 (${selectedMonthLabel})</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center">$${selectedMonthAmount.toLocaleString()}${pctTagHtml(selectedMonthPctChange)}</div>
-        </div>
-        <div style="border:1px solid var(--bd);border-radius:10px;padding:10px 12px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">년간 평균</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text)">$${yearlyAvg.toLocaleString()}</div>
-        </div>
-      </div>
     </div>
 
     ${hasBrands ? `
