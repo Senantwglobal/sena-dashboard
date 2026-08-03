@@ -2529,6 +2529,9 @@ function viewVendorDetail(){
 
   if(!usdKrwRate) fetchExchangeRate();
   function buildAreaChartSvg(vals, maxVal, labels){
+    if(!vals || vals.length===0){
+      return `<div class="purchase-chart-wrap" style="position:relative"></div>`;
+    }
     const W = 700, H = 160, padX = 16, padY = 16, padLeft = 44;
     const stepX = vals.length>1 ? (W-padLeft-padX)/(vals.length-1) : 0;
     const points = vals.map((val,i)=>{
@@ -2539,6 +2542,7 @@ function viewVendorDetail(){
     // 부드러운 곡선 - monotone cubic(Fritsch-Carlson) 보간: Catmull-Rom과 달리 오버슈트(뾰족한 스파이크) 없음
     function monotonePath(pts){
       const n = pts.length;
+      if(n===0) return '';
       if(n<2) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
       const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
       const dxs=[], ms=[];
@@ -5685,7 +5689,7 @@ function modalVendorPurchaseForm(vid){
           ${Array.from({length:12},(_,i)=>i+1).map(m=>`
             <div class="field" style="margin:0">
               <label class="field-label">${m}월 ($)</label>
-              <input class="inp vp-month-input" type="number" min="0" step="1" data-month="${m}" value="${yearData[m]||''}" placeholder="0" style="margin:0"/>
+              <input class="inp vp-month-input" type="number" min="0" step="1" data-month="${m}" value="${yearData[m]!==undefined?yearData[m]:''}" placeholder="" style="margin:0"/>
             </div>`).join('')}
         </div>
       </div>
@@ -5715,8 +5719,8 @@ function bindVendorPurchaseForm(vid){
     const year = Number(document.getElementById('vpYearSel').value);
     const yearData = {};
     document.querySelectorAll('.vp-month-input').forEach(inp=>{
-      const val = Number(inp.value);
-      if(val>0) yearData[inp.dataset.month] = val;
+      const raw = inp.value.trim();
+      if(raw !== '' && Number(raw) >= 0) yearData[inp.dataset.month] = Number(raw);
     });
     if(!target.purchaseData) target.purchaseData = {};
     target.purchaseData[year] = yearData;
