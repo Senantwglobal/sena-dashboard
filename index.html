@@ -2543,36 +2543,35 @@ function viewVendorDetail(){
         <text x="0" y="${(y-3).toFixed(1)}" font-size="9" fill="#B0B4BB" font-family="inherit">$${val.toLocaleString()}</text>`;
     }).join('');
 
-    // 최고값 지점에 콜아웃 표시
-    let peakIdx = 0;
-    for(let i=1;i<vals.length;i++) if(vals[i]>vals[peakIdx]) peakIdx = i;
-    const hasPeak = vals[peakIdx] > 0;
-    const peakPt = points[peakIdx];
     const chartLabels = labels || ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    const calloutW = 92, calloutH = 40;
-    let calloutX = peakPt[0] - calloutW/2;
-    calloutX = Math.max(4, Math.min(W-calloutW-4, calloutX));
-    const calloutY = Math.max(4, peakPt[1]-calloutH-12);
 
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;overflow:visible">
+    // 각 지점의 호버 영역 (해당 지점과 다음/이전 지점의 중간까지)
+    const hitZones = points.map((p,i)=>{
+      const prevMid = i===0 ? padLeft-4 : (points[i-1][0]+p[0])/2;
+      const nextMid = i===points.length-1 ? W-padX+4 : (points[i+1][0]+p[0])/2;
+      return `<rect class="chart-hit-zone" data-idx="${i}" x="${prevMid.toFixed(1)}" y="0" width="${(nextMid-prevMid).toFixed(1)}" height="${H}" fill="transparent" style="cursor:crosshair"/>`;
+    }).join('');
+
+    return `<div class="purchase-chart-wrap" style="position:relative">
+    <svg class="purchase-chart-svg" data-values='${JSON.stringify(vals)}' data-labels='${JSON.stringify(chartLabels)}' data-points='${JSON.stringify(points.map(p=>p.map(n=>Number(n.toFixed(1)))))}' viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;overflow:visible">
       <defs>
         <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--o)" stop-opacity=".22"/>
+          <stop offset="0%" stop-color="var(--o)" stop-opacity=".18"/>
           <stop offset="100%" stop-color="var(--o)" stop-opacity="0"/>
         </linearGradient>
       </defs>
       ${gridLines}
       <path d="${areaPath}" fill="url(#purchaseGrad)"/>
-      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="2.25" stroke-linecap="round"/>
-      ${hasPeak?`<line x1="${peakPt[0].toFixed(1)}" y1="${(calloutY+calloutH).toFixed(1)}" x2="${peakPt[0].toFixed(1)}" y2="${(H-padY).toFixed(1)}" stroke="var(--o)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`:''}
-      ${points.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===peakIdx&&hasPeak?3.5:2.5}" fill="#fff" stroke="var(--o)" stroke-width="1.5"/>`).join('')}
-      ${hasPeak?`
-      <g>
-        <rect x="${calloutX.toFixed(1)}" y="${calloutY.toFixed(1)}" width="${calloutW}" height="${calloutH}" rx="8" fill="#fff" stroke="var(--bd)" stroke-width="1"/>
-        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="#8A8F98" font-family="inherit">${chartLabels[peakIdx]}</text>
-        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+30).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#111114" font-family="inherit">$${vals[peakIdx].toLocaleString()}</text>
-      </g>` : ''}
-    </svg>`;
+      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1.5" stroke-linecap="round"/>
+      <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+      <circle class="chart-hover-dot" cx="0" cy="0" r="3.5" fill="#fff" stroke="var(--o)" stroke-width="2" opacity="0"/>
+      ${hitZones}
+    </svg>
+    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:5px 10px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-125%);z-index:5">
+      <div class="pct-label" style="color:var(--muted);font-size:9px"></div>
+      <div class="pct-value" style="font-weight:700;font-size:12px;color:var(--text)"></div>
+    </div>
+    </div>`;
   }
   const purchaseChartSvg = purchaseViewMode==='year'
     ? buildAreaChartSvg(yearTotals, maxYearVal, yearsSortedAsc.map(y=>y+'년'))
@@ -7185,6 +7184,43 @@ function bindViewEvents(){
     openModal(modalVendorMeetingNoteForm(vid));
     bindModalCommon();
     bindVendorMeetingNoteForm(vid);
+  });
+
+  // 구매 현황 - 차트 호버(마우스 오버 시 해당 월 값 표시)
+  document.querySelectorAll('.purchase-chart-wrap').forEach(wrap=>{
+    const svg = wrap.querySelector('.purchase-chart-svg');
+    const tooltip = wrap.querySelector('.purchase-chart-tooltip');
+    const hoverLine = svg.querySelector('.chart-hover-line');
+    const hoverDot = svg.querySelector('.chart-hover-dot');
+    const labelEl = tooltip.querySelector('.pct-label');
+    const valueEl = tooltip.querySelector('.pct-value');
+    let values, points;
+    try{ values = JSON.parse(svg.dataset.values); }catch(e){ values = []; }
+    let labels;
+    try{ labels = JSON.parse(svg.dataset.labels); }catch(e){ labels = []; }
+    try{ points = JSON.parse(svg.dataset.points); }catch(e){ points = []; }
+    const H = 160;
+    svg.querySelectorAll('.chart-hit-zone').forEach(zone=>{
+      zone.addEventListener('mouseenter', ()=>{
+        const idx = Number(zone.dataset.idx);
+        const pt = points[idx];
+        if(!pt) return;
+        hoverLine.setAttribute('x1', pt[0]); hoverLine.setAttribute('x2', pt[0]); hoverLine.setAttribute('opacity','.5');
+        hoverDot.setAttribute('cx', pt[0]); hoverDot.setAttribute('cy', pt[1]); hoverDot.setAttribute('opacity','1');
+        tooltip.style.display = 'block';
+        labelEl.textContent = labels[idx] || '';
+        valueEl.textContent = '$' + (values[idx]||0).toLocaleString();
+        const leftPct = (pt[0]/700)*100;
+        const topPct = (pt[1]/H)*100;
+        tooltip.style.left = leftPct+'%';
+        tooltip.style.top = topPct+'%';
+      });
+    });
+    wrap.addEventListener('mouseleave', ()=>{
+      hoverLine.setAttribute('opacity','0');
+      hoverDot.setAttribute('opacity','0');
+      tooltip.style.display = 'none';
+    });
   });
 
   // 구매 현황 - 연도 선택
