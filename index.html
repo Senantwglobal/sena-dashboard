@@ -2478,19 +2478,61 @@ function viewVendorDetail(){
   const maxMonthVal = Math.max(...monthVals, 1);
   const totalPYear = monthVals.reduce((a,b)=>a+b,0);
   function buildAreaChartSvg(vals, maxVal){
-    const W = 700, H = 130, padX = 14, padY = 12;
+    const W = 700, H = 160, padX = 16, padY = 16;
     const stepX = vals.length>1 ? (W-2*padX)/(vals.length-1) : 0;
     const points = vals.map((val,i)=>{
       const x = padX + i*stepX;
       const y = H - padY - (maxVal>0 ? (val/maxVal)*(H-2*padY) : 0);
       return [x,y];
     });
-    const linePath = points.map((p,i)=> (i===0?'M':'L')+p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+    // 부드러운 곡선 (Catmull-Rom → Bezier 변환)
+    function smoothPath(pts){
+      if(pts.length<2) return '';
+      let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+      for(let i=0;i<pts.length-1;i++){
+        const p0 = pts[i-1] || pts[i];
+        const p1 = pts[i];
+        const p2 = pts[i+1];
+        const p3 = pts[i+2] || p2;
+        const cp1x = p1[0] + (p2[0]-p0[0])/6;
+        const cp1y = p1[1] + (p2[1]-p0[1])/6;
+        const cp2x = p2[0] - (p3[0]-p1[0])/6;
+        const cp2y = p2[1] - (p3[1]-p1[1])/6;
+        d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+      }
+      return d;
+    }
+    const linePath = smoothPath(points);
     const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padY} L${points[0][0].toFixed(1)},${H-padY} Z`;
-    return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="120" preserveAspectRatio="none" style="display:block">
-      <path d="${areaPath}" fill="var(--o)" opacity=".1"/>
-      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="2"/>
-      ${points.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="var(--o)"/>`).join('')}
+
+    // 최고값 지점에 콜아웃 표시
+    let peakIdx = 0;
+    for(let i=1;i<vals.length;i++) if(vals[i]>vals[peakIdx]) peakIdx = i;
+    const hasPeak = vals[peakIdx] > 0;
+    const peakPt = points[peakIdx];
+    const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    const calloutW = 92, calloutH = 40;
+    let calloutX = peakPt[0] - calloutW/2;
+    calloutX = Math.max(4, Math.min(W-calloutW-4, calloutX));
+    const calloutY = Math.max(4, peakPt[1]-calloutH-12);
+
+    return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" style="display:block;overflow:visible">
+      <defs>
+        <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--o)" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="var(--o)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#purchaseGrad)"/>
+      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="2.25" stroke-linecap="round"/>
+      ${hasPeak?`<line x1="${peakPt[0].toFixed(1)}" y1="${(calloutY+calloutH).toFixed(1)}" x2="${peakPt[0].toFixed(1)}" y2="${(H-padY).toFixed(1)}" stroke="var(--o)" stroke-width="1" stroke-dasharray="3 3" opacity=".5"/>`:''}
+      ${points.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===peakIdx&&hasPeak?3.5:2.5}" fill="#fff" stroke="var(--o)" stroke-width="1.5"/>`).join('')}
+      ${hasPeak?`
+      <g>
+        <rect x="${calloutX.toFixed(1)}" y="${calloutY.toFixed(1)}" width="${calloutW}" height="${calloutH}" rx="8" fill="#fff" stroke="var(--bd)" stroke-width="1"/>
+        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+16).toFixed(1)}" text-anchor="middle" font-size="9" fill="#8A8F98" font-family="inherit">${monthNames[peakIdx]}</text>
+        <text x="${(calloutX+calloutW/2).toFixed(1)}" y="${(calloutY+30).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#111114" font-family="inherit">$${vals[peakIdx].toLocaleString()}</text>
+      </g>` : ''}
     </svg>`;
   }
   const purchaseChartSvg = buildAreaChartSvg(monthVals, maxMonthVal);
@@ -2551,7 +2593,7 @@ function viewVendorDetail(){
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <div style="font-size:14px;font-weight:700;color:var(--text)">${totalPYear.toLocaleString()}원</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text)">$${totalPYear.toLocaleString()}</div>
           ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:4px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
         </div>
       </div>
@@ -5428,7 +5470,7 @@ function modalVendorPurchaseForm(vid){
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px">
           ${Array.from({length:12},(_,i)=>i+1).map(m=>`
             <div class="field" style="margin:0">
-              <label class="field-label">${m}월</label>
+              <label class="field-label">${m}월 ($)</label>
               <input class="inp vp-month-input" type="number" min="0" step="1" data-month="${m}" value="${yearData[m]||''}" placeholder="0" style="margin:0"/>
             </div>`).join('')}
         </div>
