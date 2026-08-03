@@ -2475,9 +2475,13 @@ function viewVendorDetail(){
   if(purchaseYears.length===0) purchaseYears.push(currentYearNum);
   const selectedPYear = state.vendorPurchaseYear && purchaseYears.includes(state.vendorPurchaseYear) ? state.vendorPurchaseYear : purchaseYears[0];
   const pYearData = purchaseData[selectedPYear] || {};
-  const monthVals = Array.from({length:12},(_,i)=> Number(pYearData[i+1]) || 0);
+  // 빈 달 = "아직 도달하지 않음" 으로 처리 - 입력된(키가 존재하는) 마지막 달까지만 표시/계산
+  const filledMonths = Object.keys(pYearData).map(Number).filter(m=>m>=1 && m<=12);
+  const lastFilledMonth = filledMonths.length>0 ? Math.max(...filledMonths) : 0;
+  const monthValsFull = Array.from({length:12},(_,i)=> Number(pYearData[i+1]) || 0);
+  const monthVals = monthValsFull.slice(0, lastFilledMonth);
   const maxMonthVal = Math.max(...monthVals, 1);
-  const totalPYear = monthVals.reduce((a,b)=>a+b,0);
+  const totalPYear = monthValsFull.reduce((a,b)=>a+b,0);
   const purchaseViewMode = state.vendorPurchaseView || 'month'; // 'month' | 'year'
   const yearsSortedAsc = purchaseYears.slice().sort((a,b)=>a-b);
   const yearTotals = yearsSortedAsc.map(y=>{
@@ -2489,16 +2493,15 @@ function viewVendorDetail(){
   const prevYearTotal = purchaseData[selectedPYear-1] ? Object.values(purchaseData[selectedPYear-1]).reduce((a,b)=>a+(Number(b)||0),0) : null;
   const pctChange = (prevYearTotal!==null && prevYearTotal>0) ? Math.round(((totalPYear-prevYearTotal)/prevYearTotal)*1000)/10 : null;
 
-  // 추가 요약 지표
+  // 추가 요약 지표 - "입력된 마지막 달"을 기준으로 YTD/월평균 계산 (빈 달은 반영하지 않음)
   const currentMonthNum = Number(dayjs().format('M'));
   const isCurrentYearSelected = selectedPYear === currentYearNum;
-  const monthsElapsed = isCurrentYearSelected ? currentMonthNum : 12;
-  const ytdTotal = monthVals.slice(0, monthsElapsed).reduce((a,b)=>a+b,0);
+  const monthsElapsed = lastFilledMonth;
+  const ytdTotal = totalPYear;
   const monthlyAvg = monthsElapsed>0 ? Math.round(ytdTotal/monthsElapsed) : 0;
   const totalAllTime = totalAllYears;
-  let lastNonZeroIdx = -1;
-  for(let i=11;i>=0;i--) if(monthVals[i]>0){ lastNonZeroIdx = i; break; }
-  const selectedMonthAmount = lastNonZeroIdx>=0 ? monthVals[lastNonZeroIdx] : 0;
+  let lastNonZeroIdx = lastFilledMonth>0 ? lastFilledMonth-1 : -1;
+  const selectedMonthAmount = lastNonZeroIdx>=0 ? monthValsFull[lastNonZeroIdx] : 0;
   const selectedMonthLabel = lastNonZeroIdx>=0 ? `${lastNonZeroIdx+1}월` : '-';
   const yearsWithData = yearsSortedAsc.filter(y=>{
     const yd = purchaseData[y]||{};
@@ -2694,7 +2697,7 @@ function viewVendorDetail(){
           <span style="font-size:12.5px;font-weight:600;color:${ytdPctChange>=0?'#1C9873':'#C0392B'}">${Math.abs(ytdPctChange)}%</span>
         </div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:10px;color:var(--muted)">${isCurrentYearSelected?`${selectedPYear}년 연간 누계`:`${selectedPYear}년 전체 구매액`}</span>
+          <span style="font-size:10px;color:var(--muted)">${selectedPYear}년 연간 누계</span>
           ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
@@ -2709,7 +2712,7 @@ function viewVendorDetail(){
           <span style="font-size:12.5px;font-weight:600;color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'}">${Math.abs(monthlyAvgPctChange)}%</span>
         </div>`:''}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:10px;color:var(--muted)">${selectedPYear}년 월 평균</span>
+          <span style="font-size:10px;color:var(--muted)">${selectedPYear}년 월 평균 YTD</span>
           ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
@@ -2721,7 +2724,7 @@ function viewVendorDetail(){
         </div>
         <div style="margin-bottom:12px"><span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--sf);color:var(--muted)">누적</span></div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:10px;color:var(--muted)">전체 기간 누적</span>
+          <span style="font-size:10px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
           ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
@@ -2733,14 +2736,15 @@ function viewVendorDetail(){
         </div>
         <div style="margin-bottom:12px"><span style="font-size:10.5px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--sf);color:var(--muted)">${yearsWithData.length}개년</span></div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:10px;color:var(--muted)">${yearsWithData.length}개년 평균</span>
+          <span style="font-size:10px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD 년간 평균</span>
           ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-shrink:0"><span style="width:6px;height:6px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
     </div>
 
     <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:14px;font-weight:400;color:var(--text)">Purchase Summary</div>
         <div style="display:flex;align-items:center;gap:8px">
           <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
             <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
@@ -2939,12 +2943,11 @@ function viewVendorDetail(){
 
         ${(v.companyType||'벤더')==='벤더' ? (() => {
           const priceListTarget = (hasBrands && activeBrand) ? ((activeBrand.inherit===false) ? activeBrand : v) : v;
-          const priceListLinks = priceListTarget.priceListLinks || {};
-          const linkYears = Object.keys(priceListLinks).map(Number).sort((a,b)=>b-a);
+          const priceListLink = priceListTarget.priceListLink || null; // {title, url}
           return `<div class="card" style="padding:14px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">가격표 (Price List)</span>
-              ${!isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> 링크 추가</button>`:''}
+              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Price list folder</span>
+              ${!isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''}
             </div>
             ${hasBrands && activeBrand && isInherit ? `
             <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
@@ -2955,13 +2958,10 @@ function viewVendorDetail(){
               <i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i>
               이 브랜드만의 독립 가격표입니다
             </div>` : ''}
-            ${linkYears.length>0 ? `
-              <div style="display:flex;flex-wrap:wrap;gap:8px">
-                ${linkYears.map((y,i)=>`
-                  <div style="position:relative;display:inline-flex">
-                    <button class="btn price-list-year-btn" data-url="${priceListLinks[y]}" style="font-size:11.5px;padding:6px 16px;font-weight:600;${i===0?'background:var(--text);color:#fff':'background:var(--sf);color:var(--text)'}">${y}년</button>
-                    ${!isReadOnly()?`<i class="ti ti-x price-list-link-remove-btn" data-vid="${v.id}" data-year="${y}" style="position:absolute;top:-5px;right:-5px;background:#fff;border:1px solid var(--bd);border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:8px;cursor:pointer;color:var(--muted)"></i>`:''}
-                  </div>`).join('')}
+            ${priceListLink ? `
+              <div style="position:relative;display:inline-flex;width:100%">
+                <button class="btn price-list-year-btn" data-url="${priceListLink.url}" style="font-size:12px;padding:9px 16px;font-weight:600;background:var(--text);color:#fff;width:100%;justify-content:center;gap:6px"><i class="ti ti-folder"></i> ${priceListLink.title||'가격표 폴더'}</button>
+                ${!isReadOnly()?`<i class="ti ti-x price-list-link-remove-btn" data-vid="${v.id}" style="position:absolute;top:-5px;right:-5px;background:#fff;border:1px solid var(--bd);border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;font-size:8px;cursor:pointer;color:var(--muted)"></i>`:''}
               </div>
             ` : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">등록된 가격표 링크가 없습니다.</div>`}
           </div>`;
@@ -5615,17 +5615,18 @@ function modalPriceListLinkForm(){
   const brands = (v && v.brands) || [];
   const activeBrand = state.activeBrandId ? brands.find(b=>b.id===state.activeBrandId) : null;
   const isBrandIndependent = activeBrand && activeBrand.inherit===false;
-  const currentYearNum = Number(dayjs().format('YYYY'));
+  const target = isBrandIndependent ? activeBrand : v;
+  const existing = target.priceListLink || {};
   return `
     <div class="modal" style="width:460px">
-      <div class="mh"><h3>가격표 링크 추가</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mh"><h3>Price list folder 링크</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
-        ${isBrandIndependent?`<div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">"${activeBrand.name}" 브랜드 독립 가격표에 추가됩니다.</div>`:''}
-        <div class="field"><label class="field-label">연도</label>
-          <input class="inp" type="number" id="plYearInput" value="${currentYearNum}" style="margin:0"/>
+        ${isBrandIndependent?`<div style="font-size:10.5px;color:var(--muted);margin-bottom:10px">"${activeBrand.name}" 브랜드 독립 가격표로 저장됩니다.</div>`:''}
+        <div class="field"><label class="field-label">링크 제목</label>
+          <input class="inp" type="text" id="plTitleInput" value="${(existing.title||'').replace(/"/g,'&quot;')}" placeholder="예: OPLE 가격표 폴더" style="margin:0"/>
         </div>
         <div class="field" style="margin-top:8px"><label class="field-label">OneDrive 링크</label>
-          <input class="inp" type="url" id="plUrlInput" placeholder="https://onedrive.live.com/..." style="margin:0"/>
+          <input class="inp" type="url" id="plUrlInput" value="${(existing.url||'').replace(/"/g,'&quot;')}" placeholder="https://onedrive.live.com/..." style="margin:0"/>
         </div>
       </div>
       <div class="mf" style="gap:8px">
@@ -5639,17 +5640,16 @@ function bindPriceListLinkForm(){
   const saveBtn = document.getElementById('plSaveBtn');
   if(!saveBtn) return;
   saveBtn.addEventListener('click', ()=>{
-    const year = document.getElementById('plYearInput').value.trim();
+    const title = document.getElementById('plTitleInput').value.trim();
     const url = document.getElementById('plUrlInput').value.trim();
-    if(!year){ showToast('연도를 입력해주세요.'); return; }
+    if(!title){ showToast('링크 제목을 입력해주세요.'); return; }
     if(!url){ showToast('링크를 입력해주세요.'); return; }
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(!v) return;
     const brands = v.brands || [];
     const activeBrand = state.activeBrandId ? brands.find(b=>b.id===state.activeBrandId) : null;
     const target = (activeBrand && activeBrand.inherit===false) ? activeBrand : v;
-    if(!target.priceListLinks) target.priceListLinks = {};
-    target.priceListLinks[year] = url;
+    target.priceListLink = { title, url };
     closeModal(); persist(false); render();
     showToast('가격표 링크가 저장되었습니다.');
   });
@@ -7425,14 +7425,13 @@ function bindViewEvents(){
   document.querySelectorAll('.price-list-link-remove-btn').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.stopPropagation();
-      const year = btn.dataset.year;
-      if(!confirm(`${year}년 가격표 링크를 삭제하시겠습니까?`)) return;
+      if(!confirm('가격표 링크를 삭제하시겠습니까?')) return;
       const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
       if(!v) return;
       const brands = v.brands || [];
       const activeBrand = state.activeBrandId ? brands.find(b=>b.id===state.activeBrandId) : null;
       const target = (activeBrand && activeBrand.inherit===false) ? activeBrand : v;
-      if(target.priceListLinks) delete target.priceListLinks[year];
+      delete target.priceListLink;
       persist(false); render();
       showToast('가격표 링크가 삭제되었습니다.');
     });
