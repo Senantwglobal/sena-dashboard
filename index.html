@@ -2527,6 +2527,17 @@ function viewVendorDetail(){
     return `<span style="font-size:9.5px;font-weight:600;color:${positive?'#1C9873':'#DC2626'};display:inline-flex;align-items:center;gap:1px;margin-left:5px"><i class="ti ${positive?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:10px"></i>${Math.abs(pct)}%</span>`;
   }
 
+  // 연도별 요약 (최근 7개년만 - 연도가 늘어나도 목록이 무한정 길어지지 않도록)
+  const yearTotalMap = {};
+  yearsSortedAsc.forEach((y,i)=>{ yearTotalMap[y] = yearTotals[i]; });
+  const recentYearsDesc = yearsSortedAsc.slice(-7).slice().reverse(); // 최신 연도가 위로
+  const yearlySummaryRows = recentYearsDesc.map(y=>{
+    const amt = yearTotalMap[y] || 0;
+    const prevAmt = yearTotalMap[y-1];
+    const change = pctChangeOf(amt, prevAmt);
+    return { year: y, amount: amt, change };
+  });
+
   if(!usdKrwRate) fetchExchangeRate();
   function buildAreaChartSvg(vals, maxVal, labels){
     if(!vals || vals.length===0){
@@ -2750,37 +2761,57 @@ function viewVendorDetail(){
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <div style="font-size:14px;font-weight:400;color:var(--text)">Purchase Summary</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
-            <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
-            <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='year'?'var(--shadow-sm)':'none'}">연도별 추이</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" style="margin-bottom:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:14px;font-weight:400;color:var(--text)">Purchase Summary</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
+              <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
+              <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='year'?'var(--shadow-sm)':'none'}">연도별 추이</button>
+            </div>
+            ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
+              ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
+            </select>`:''}
+            ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:5px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
           </div>
-          ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
-            ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
-          </select>`:''}
-          ${!isReadOnly()?`<button class="btn btn-o" id="editPurchaseDataBtn" data-vid="${v.id}" style="font-size:10px;padding:5px 10px"><i class="ti ti-pencil"></i> 입력</button>`:''}
         </div>
+
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span>
+          <span style="font-size:11px;color:var(--muted)">구매액 추이</span>
+        </div>
+
+        ${(purchaseViewMode==='year'?totalAllYears:totalPYear)===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
+        <div>${purchaseChartSvg}</div>`}
       </div>
 
-      <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:6px">
-        <span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span>
-        <span style="font-size:11px;color:var(--muted)">구매액 추이</span>
+      <div class="card" style="margin-bottom:0">
+        <div style="font-size:14px;font-weight:400;color:var(--text);margin-bottom:14px">Yearly Summary</div>
+        ${yearlySummaryRows.length===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다.</div>` : `
+        <div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
+            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">연도</span>
+            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">구매액</span>
+            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;text-align:right">전년대비</span>
+          </div>
+          ${yearlySummaryRows.map(r=>`
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:center;padding:9px 0;border-bottom:0.5px solid var(--bd)">
+              <span style="font-size:12.5px;font-weight:600;color:var(--text)">${r.year}</span>
+              <span style="font-size:12px;color:var(--text)">$${r.amount.toLocaleString()}</span>
+              <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#E4F7F1':'#FDEAEA'};color:${r.change>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
+            </div>`).join('')}
+        </div>`}
       </div>
-
-      ${(purchaseViewMode==='year'?totalAllYears:totalPYear)===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
-      <div>${purchaseChartSvg}</div>`}
     </div>
 
     ${hasBrands ? `
     <!-- 브랜드 탭 -->
-    <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;border-bottom:2px solid var(--bd);flex-wrap:wrap">
+    <div class="brand-tabs-row" style="display:flex;align-items:center;gap:0;margin-bottom:16px;border-bottom:2px solid var(--bd);flex-wrap:wrap">
       ${brands.map(b=>{
         const isActive = b.id===activeBrandId;
         const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
-        return `<div style="display:flex;align-items:center;border-bottom:${isActive?'2px solid var(--o)':'2px solid transparent'};margin-bottom:-2px">
+        return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;border-bottom:${isActive?'2px solid var(--o)':'2px solid transparent'};margin-bottom:-2px;${!isReadOnly()?'cursor:grab':''}">
           <button class="brand-tab-btn" data-bid="${b.id}" style="padding:8px 14px;font-size:13px;font-weight:${isActive?'700':'300'};color:${isActive?'var(--o)':'var(--muted)'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
             ${av(b.name||b.id, 18, b.logoUrl)}
             ${b.name||b.id}
@@ -7463,6 +7494,42 @@ function bindViewEvents(){
     v.brands.push(newBrand);
     state.activeBrandId = newBrand.id;
     persist(false); render(); showToast(`브랜드 "${name.trim()}" 추가됨`);
+  });
+
+  // 브랜드 탭 드래그앤드롭 순서 변경
+  let draggedBrandId = null;
+  document.querySelectorAll('.brand-tab-item[draggable="true"]').forEach(item=>{
+    item.addEventListener('dragstart', (e)=>{
+      draggedBrandId = item.dataset.bid;
+      item.style.opacity = '.4';
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', ()=>{
+      item.style.opacity = '';
+      document.querySelectorAll('.brand-tab-item').forEach(el=>el.style.borderLeft='');
+    });
+    item.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      if(item.dataset.bid !== draggedBrandId) item.style.borderLeft = '2px solid var(--o)';
+    });
+    item.addEventListener('dragleave', ()=>{
+      item.style.borderLeft = '';
+    });
+    item.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      item.style.borderLeft = '';
+      const targetBid = item.dataset.bid;
+      if(!draggedBrandId || draggedBrandId===targetBid) return;
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v || !v.brands) return;
+      const fromIdx = v.brands.findIndex(b=>b.id===draggedBrandId);
+      const toIdx = v.brands.findIndex(b=>b.id===targetBid);
+      if(fromIdx===-1 || toIdx===-1) return;
+      const [moved] = v.brands.splice(fromIdx, 1);
+      v.brands.splice(toIdx, 0, moved);
+      persist(false); render();
+      showToast('브랜드 순서가 변경되었습니다.');
+    });
   });
 
   // 브랜드 탭 삭제
