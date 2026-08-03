@@ -2585,6 +2585,11 @@ function viewVendorDetail(){
       return `<div style="position:absolute;left:0;top:${topPct.toFixed(1)}%;transform:translateY(-50%);font-size:8px;color:#B0B4BB;white-space:nowrap">$${val.toLocaleString()}</div>`;
     }).join('');
 
+    // 평균선 (연한 회색, 은은하게)
+    const avgVal = vals.length>0 ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+    const avgY = H - padY - (maxVal>0 ? (avgVal/maxVal)*(H-2*padY) : 0);
+    const avgLineHtml = `<line x1="${padLeft}" y1="${avgY.toFixed(1)}" x2="${W-padX}" y2="${avgY.toFixed(1)}" stroke="#D8DADF" stroke-width="1"/>`;
+
     const chartLabels = labels || ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 
     // 각 지점의 호버 영역 (해당 지점과 다음/이전 지점의 중간까지)
@@ -2603,10 +2608,11 @@ function viewVendorDetail(){
         </linearGradient>
       </defs>
       ${gridLines}
+      ${avgLineHtml}
       <path d="${areaPath}" fill="url(#purchaseGrad)"/>
-      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1" stroke-linecap="round"/>
       <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
-      <circle class="chart-hover-dot" cx="0" cy="0" r="3.5" fill="#fff" stroke="var(--o)" stroke-width="2" opacity="0"/>
+      <circle class="chart-hover-dot" cx="0" cy="0" r="2" fill="#fff" stroke="var(--o)" stroke-width="1.25" opacity="0"/>
       ${hitZones}
     </svg>
     ${yAxisLabelsHtml}
