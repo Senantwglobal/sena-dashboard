@@ -166,6 +166,7 @@ select.inp{cursor:pointer}
 .cdd-item.active{background:var(--sf)}
 .cdd-item.active:hover{background:#181A20}
 .cdd-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cdd-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
 .cdd-check{margin-left:auto;font-size:13px;color:var(--o)}
 .cdd-item:hover .cdd-check{color:#fff}
 .cdd-divider{height:1px;background:var(--bd);margin:5px 3px}
@@ -2318,7 +2319,8 @@ function openDropdown(trigger, options){
   menu.className = 'cdd-menu-portal';
   menu.innerHTML = options.map((o,i)=>{
     if(o.divider) return '<div class="cdd-divider"></div>';
-    return `<div class="cdd-item ${o.active?'active':''}" data-idx="${i}">${o.dot?`<span class="cdd-dot" style="background:${o.dot}"></span>`:''}<span>${o.label}</span>${o.active?'<i class="ti ti-check cdd-check"></i>':''}</div>`;
+    const iconHtml = o.icon ? `<i class="ti ${o.icon} cdd-icon" style="color:${o.iconColor||'var(--muted)'}"></i>` : (o.dot?`<span class="cdd-dot" style="background:${o.dot}"></span>`:'');
+    return `<div class="cdd-item ${o.active?'active':''}" data-idx="${i}">${iconHtml}<span>${o.label}</span>${o.active?'<i class="ti ti-check cdd-check"></i>':''}</div>`;
   }).join('');
   document.body.appendChild(menu);
   const mw = menu.offsetWidth, mh = menu.offsetHeight;
@@ -2387,24 +2389,38 @@ window.toggleCdd = function(trigger){
     const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
     if(v){
       const actionStatuses = [
-        {value:'', label:'상태 미지정'},
-        {value:'회신 대기중', label:'⏳ 회신 대기중'},
-        {value:'회신 해야함', label:'📤 회신 해야함'},
-        {value:'미팅 예정', label:'📅 미팅 예정'},
-        {value:'발주 예정', label:'🛒 발주 예정'},
-        {value:'계약 진행중', label:'📝 계약 진행중'},
-        {value:'팔로업 필요', label:'🔔 팔로업 필요'},
-        {value:'신규 브랜드 검토', label:'🔍 신규 브랜드 검토'},
-        {value:'협의 완료', label:'✅ 협의 완료'},
-        {value:'계약 중단', label:'🚫 계약 중단'},
-        {value:'보류', label:'⏸ 보류'},
+        {value:'', label:'상태 미지정', icon:'ti-circle-dashed', iconColor:'var(--muted)'},
+        {value:'회신 대기중', label:'회신 대기중', icon:'ti-hourglass', iconColor:'#92400E'},
+        {value:'회신 해야함', label:'회신 해야함', icon:'ti-send', iconColor:'#A32D2D'},
+        {value:'미팅 예정', label:'미팅 예정', icon:'ti-calendar-event', iconColor:'#0B4E9E'},
+        {value:'발주 예정', label:'발주 예정', icon:'ti-shopping-cart', iconColor:'#0B4E9E'},
+        {value:'계약 진행중', label:'계약 진행중', icon:'ti-file-pencil', iconColor:'#92400E'},
+        {value:'팔로업 필요', label:'팔로업 필요', icon:'ti-bell', iconColor:'#A32D2D'},
+        {value:'신규 브랜드 검토', label:'신규 브랜드 검토', icon:'ti-search', iconColor:'#6B21A8'},
+        {value:'협의 완료', label:'협의 완료', icon:'ti-circle-check', iconColor:'#3B6D11'},
+        {value:'계약 중단', label:'계약 중단', icon:'ti-ban', iconColor:'#475569'},
+        {value:'보류', label:'보류', icon:'ti-player-pause', iconColor:'var(--muted)'},
       ];
       const cur = v.actionStatus || '';
       openDropdown(trigger, actionStatuses.map(s=>({
-        label:s.label, active:s.value===cur,
+        label:s.label, icon:s.icon, iconColor:s.iconColor, active:s.value===cur,
         onSelect:()=>{ v.actionStatus=s.value; persist(false); showToast('액션 상태가 저장되었습니다.'); render(); }
       })));
     }
+  } else if(type === 'vendor-status-filter'){
+    const cur = state.vendorStatusFilter || '전체';
+    const list = [{v:'전체',l:'거래상태 전체',c:'#8A93A3'}, ...CDD_VENDOR_STATUS_LIST];
+    openDropdown(trigger, list.map(s=>({
+      label:s.l, dot:s.c, active:cur===s.v,
+      onSelect:()=>{ state.vendorStatusFilter=s.v; render(); }
+    })));
+  } else if(type === 'vendor-priority-filter'){
+    const cur = state.vendorPriorityFilter || '전체';
+    const list = [{v:'전체',l:'우선순위 전체'},{v:'높음',l:'높음'},{v:'보통',l:'보통'},{v:'낮음',l:'낮음'}];
+    openDropdown(trigger, list.map(s=>({
+      label:s.l, active:cur===s.v,
+      onSelect:()=>{ state.vendorPriorityFilter=s.v; render(); }
+    })));
   }
 };
 
@@ -2486,20 +2502,8 @@ function viewVendorList(){
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
       ${companyTypes.map(t=>`<button class="btn ${activeType===t?'btn-o':''}" data-vendor-type="${t}">${t}${t!=='전체'?` (${state.data.vendors.filter(v=>(v.companyType||'벤더')===t).length})`:` (${state.data.vendors.length})`}</button>`).join('')}
       <div style="margin-left:auto;display:flex;gap:6px">
-        <select class="inp" id="vendorStatusFilter" style="font-size:11px;padding:3px 8px;margin:0;width:auto">
-          <option value="전체" ${statusFilter==='전체'?'selected':''}>거래상태 전체</option>
-          <option value="Active" ${statusFilter==='Active'?'selected':''}>거래중</option>
-          <option value="Pending" ${statusFilter==='Pending'?'selected':''}>대기중</option>
-          <option value="Review" ${statusFilter==='Review'?'selected':''}>검토중</option>
-          <option value="Hold" ${statusFilter==='Hold'?'selected':''}>거래보류</option>
-          <option value="Inactive" ${statusFilter==='Inactive'?'selected':''}>거래중단</option>
-        </select>
-        <select class="inp" id="vendorPriorityFilter" style="font-size:11px;padding:3px 8px;margin:0;width:auto">
-          <option value="전체" ${priorityFilter==='전체'?'selected':''}>우선순위 전체</option>
-          <option value="높음" ${priorityFilter==='높음'?'selected':''}>높음</option>
-          <option value="보통" ${priorityFilter==='보통'?'selected':''}>보통</option>
-          <option value="낮음" ${priorityFilter==='낮음'?'selected':''}>낮음</option>
-        </select>
+        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-status-filter" style="font-size:11px;padding:3px 8px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${{'전체':'거래상태 전체',Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[statusFilter]}<i class="ti ti-chevron-down cdd-caret"></i></button>
+        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-priority-filter" style="font-size:11px;padding:3px 8px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${priorityFilter==='전체'?'우선순위 전체':priorityFilter}<i class="ti ti-chevron-down cdd-caret"></i></button>
       </div>
     </div>
 
@@ -6865,12 +6869,6 @@ function bindViewEvents(){
       render();
     });
   });
-
-  // 거래상태/우선순위 필터
-  const vendorStatusFilter = document.getElementById('vendorStatusFilter');
-  if(vendorStatusFilter) vendorStatusFilter.addEventListener('change', ()=>{ state.vendorStatusFilter=vendorStatusFilter.value; render(); });
-  const vendorPriorityFilter = document.getElementById('vendorPriorityFilter');
-  if(vendorPriorityFilter) vendorPriorityFilter.addEventListener('change', ()=>{ state.vendorPriorityFilter=vendorPriorityFilter.value; render(); });
 
   const backToVendors = document.getElementById('backToVendors');
   if(backToVendors) backToVendors.addEventListener('click', ()=>{ state.selectedVendorId=null; state.vendorLogExpanded=false; render(); });
