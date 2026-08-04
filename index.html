@@ -2296,17 +2296,17 @@ function projStatusStyle(status){
 
 function vendorStatusStyle(status){
   const map = {
-    'Active':   '#16CB6A',
-    'Pending':  '#1C85E8',
-    'Review':   '#1C85E8',
-    'Hold':     '#F77825',
-    'Inactive': '#FE3E58',
+    'Active':   '#30A46C',
+    'Pending':  '#3E7BFA',
+    'Review':   '#3E7BFA',
+    'Hold':     '#F0883E',
+    'Inactive': '#E5484D',
   };
   const c = map[status]||map['Active'];
   return `background:${c}26;color:${c};border-color:transparent`;
 }
 function vendorStatusDotColor(status){
-  const map = {'Active':'#16CB6A','Pending':'#1C85E8','Review':'#1C85E8','Hold':'#F77825','Inactive':'#FE3E58'};
+  const map = {'Active':'#30A46C','Pending':'#3E7BFA','Review':'#3E7BFA','Hold':'#F0883E','Inactive':'#E5484D'};
   return map[status]||map['Active'];
 }
 
@@ -2353,8 +2353,8 @@ function openDropdown(trigger, options){
 }
 
 // 상태 유형별 색상 dot
-const CDD_VENDOR_STATUS_LIST = [{v:'Active',l:'거래중',c:'#16CB6A'},{v:'Pending',l:'대기중',c:'#1C85E8'},{v:'Review',l:'검토중',c:'#1C85E8'},{v:'Hold',l:'거래보류',c:'#F77825'},{v:'Inactive',l:'거래중단',c:'#FE3E58'}];
-const CDD_PROJ_STATUS_LIST = [{v:'진행중',c:'#1C85E8'},{v:'보류',c:'#F59E0B'},{v:'중단',c:'#E24B4A'},{v:'완료',c:'#639922'}];
+const CDD_VENDOR_STATUS_LIST = [{v:'Active',l:'거래중',c:'#30A46C'},{v:'Pending',l:'대기중',c:'#3E7BFA'},{v:'Review',l:'검토중',c:'#3E7BFA'},{v:'Hold',l:'거래보류',c:'#F0883E'},{v:'Inactive',l:'거래중단',c:'#E5484D'}];
+const CDD_PROJ_STATUS_LIST = [{v:'진행중',c:'#3E7BFA'},{v:'보류',c:'#F59E0B'},{v:'중단',c:'#E24B4A'},{v:'완료',c:'#639922'}];
 
 function cddVendorStatusOptions(cur, onPick){
   return CDD_VENDOR_STATUS_LIST.map(s=>({label:s.l, dot:s.c, active:(cur||'Active')===s.v, onSelect:()=>onPick(s.v)}));
@@ -2547,7 +2547,7 @@ function viewVendorList(){
               ? `<span style="color:var(--muted)">-</span>`
               : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             // 거래 상태 dot
-            const dotColor = cs==='Active' ? '#16CB6A' : cs==='Pending' ? '#1C85E8' : cs==='Review' ? '#1C85E8' : cs==='Hold' ? '#F77825' : '#FE3E58';
+            const dotColor = cs==='Active' ? '#30A46C' : cs==='Pending' ? '#3E7BFA' : cs==='Review' ? '#3E7BFA' : cs==='Hold' ? '#F0883E' : '#E5484D';
             const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : cs==='Hold' ? '거래보류' : '거래중단';
             const statusDot = `<button type="button" class="cdd-trigger" data-cdd-type="vendor-status" data-vid="${v.id}" onclick="event.stopPropagation();toggleCdd(this)" style="background:none;border:none;padding:0;gap:5px">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
@@ -2904,7 +2904,7 @@ function viewVendorDetail(){
       <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">YTD 구매액 합계</span>
-          ${ytdPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${ytdPctChange>=0?'#16CB6A':'#FE3E58'};flex-shrink:0"></span>`:''}
+          ${ytdPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${ytdPctChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           <span style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${ytdTotal.toLocaleString()}</span>
@@ -2912,13 +2912,13 @@ function viewVendorDetail(){
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:11px;color:var(--muted)">${selectedPYear}년 연간 누계</span>
-          ${ytdPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${ytdPctChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px">${Math.abs(ytdPctChange)}% <i class="ti ${ytdPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
+          ${ytdPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${ytdPctChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(ytdPctChange)}% <i class="ti ${ytdPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
       <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">월간 평균</span>
-          ${monthlyAvgPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${monthlyAvgPctChange>=0?'#16CB6A':'#FE3E58'};flex-shrink:0"></span>`:''}
+          ${monthlyAvgPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${monthlyAvgPctChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           <span style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
@@ -2926,7 +2926,7 @@ function viewVendorDetail(){
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:11px;color:var(--muted)">${selectedPYear}년 월 평균 YTD</span>
-          ${monthlyAvgPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${monthlyAvgPctChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px">${Math.abs(monthlyAvgPctChange)}% <i class="ti ${monthlyAvgPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
+          ${monthlyAvgPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${monthlyAvgPctChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(monthlyAvgPctChange)}% <i class="ti ${monthlyAvgPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
       <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
@@ -2993,31 +2993,31 @@ function viewVendorDetail(){
         </div>
         ${yearlySummaryRows.length===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다.</div>` : `
         <div>
-          <div style="display:grid;grid-template-columns:20px 70px 1fr 80px;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
+          <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
             <span></span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">연도</span>
-            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">구매액</span>
+            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;text-align:right">구매액</span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;text-align:right">전년대비</span>
           </div>
           ${yearlySummaryRows.map(r=>{
             const isExpanded = !!state.expandedPurchaseYears[r.year];
             return `
             <div>
-              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 70px 1fr 80px;gap:8px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
+              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
                 <span style="font-size:12.5px;font-weight:700;color:var(--text)">${r.year}</span>
-                <span style="font-size:12px;color:var(--muted)">$${r.amount.toLocaleString()}</span>
-                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#16CB6A26':'#FE3E5826'};color:${r.change>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
+                <span style="font-size:12.5px;font-weight:500;color:var(--text);text-align:right">$${r.amount.toLocaleString()}</span>
+                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#30A46C26':'#E5484D26'};color:${r.change>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
               </div>
               ${isExpanded ? `
-              <div style="background:var(--sf);border-radius:8px;padding:8px 10px;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
+              <div style="background:var(--sf);border-radius:8px;padding:8px 0;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
                 ${r.monthlyDetail.length===0 ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">입력된 월별 데이터가 없습니다.</div>` :
                   r.monthlyDetail.map(md=>`
-                  <div style="display:grid;grid-template-columns:20px 70px 1fr 80px;gap:8px;align-items:center;padding:5px 0">
+                  <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:5px 0">
                     <span></span>
                     <span style="font-size:11px;color:var(--muted)">${md.month}월</span>
-                    <span style="font-size:11.5px;color:var(--text)">$${md.amount.toLocaleString()}</span>
-                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#16CB6A26':'#FE3E5826'};color:${md.momChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
+                    <span style="font-size:11.5px;color:var(--text);text-align:right">$${md.amount.toLocaleString()}</span>
+                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#30A46C26':'#E5484D26'};color:${md.momChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
                   </div>`).join('')}
               </div>` : ''}
             </div>`;
