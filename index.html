@@ -2955,7 +2955,7 @@ function viewVendorDetail(){
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:16px;margin-bottom:16px">
       <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
@@ -3003,7 +3003,7 @@ function viewVendorDetail(){
             const isExpanded = !!state.expandedPurchaseYears[r.year];
             return `
             <div>
-              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 70px 1fr 80px;gap:8px;align-items:center;padding:10px 0;border-bottom:none;cursor:pointer">
+              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 70px 1fr 80px;gap:8px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
                 <span style="font-size:12.5px;font-weight:700;color:var(--text)">${r.year}</span>
                 <span style="font-size:12px;color:var(--muted)">$${r.amount.toLocaleString()}</span>
