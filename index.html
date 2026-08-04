@@ -2996,7 +2996,7 @@ function viewVendorDetail(){
           <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
             <span></span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">연도</span>
-            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;text-align:right">구매액</span>
+            <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">구매액</span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;text-align:right">전년대비</span>
           </div>
           ${yearlySummaryRows.map(r=>{
@@ -3006,8 +3006,8 @@ function viewVendorDetail(){
               <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
                 <span style="font-size:12.5px;font-weight:700;color:var(--text)">${r.year}</span>
-                <span style="font-size:12.5px;font-weight:500;color:var(--text);text-align:right">$${r.amount.toLocaleString()}</span>
-                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#30A46C26':'#E5484D26'};color:${r.change>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
+                <span style="font-size:12px;color:var(--muted)">$${r.amount.toLocaleString()}</span>
+                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#30A46C26':'#E5484D26'};color:${r.change>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up':'ti-arrow-down'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
               </div>
               ${isExpanded ? `
               <div style="background:var(--sf);border-radius:8px;padding:8px 0;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
@@ -3016,8 +3016,8 @@ function viewVendorDetail(){
                   <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:5px 0">
                     <span></span>
                     <span style="font-size:11px;color:var(--muted)">${md.month}월</span>
-                    <span style="font-size:11.5px;color:var(--text);text-align:right">$${md.amount.toLocaleString()}</span>
-                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#30A46C26':'#E5484D26'};color:${md.momChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
+                    <span style="font-size:11.5px;color:var(--muted)">$${md.amount.toLocaleString()}</span>
+                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#30A46C26':'#E5484D26'};color:${md.momChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up':'ti-arrow-down'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
                   </div>`).join('')}
               </div>` : ''}
             </div>`;
