@@ -170,6 +170,10 @@ select.inp{cursor:pointer}
 .cdd-check{margin-left:auto;font-size:13px;color:var(--o)}
 .cdd-item:hover .cdd-check{color:#fff}
 .cdd-divider{height:1px;background:var(--bd);margin:5px 3px}
+.brand-tab-item:hover .brand-tab-actions{opacity:1!important}
+.brand-tab-btn:hover{color:#111114!important}
+.brand-del-btn:hover{color:#DC2626!important}
+.brand-edit-btn:hover{color:#111114!important}
 .dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease)}
 .dash-row:last-child{border-bottom:none}
 .feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0;font-size:11px}
@@ -2869,6 +2873,26 @@ function viewVendorDetail(){
       </div>
     </div>
 
+    ${hasBrands ? `
+    <!-- 브랜드 탭 -->
+    <div class="brand-tabs-row" style="display:flex;align-items:flex-end;gap:22px;margin-bottom:18px;border-bottom:1px solid var(--bd);flex-wrap:wrap">
+      ${brands.map(b=>{
+        const isActive = b.id===activeBrandId;
+        const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
+        return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;gap:2px;padding-bottom:9px;border-bottom:2px solid ${isActive?'#111114':'transparent'};margin-bottom:-1px;${!isReadOnly()?'cursor:grab':''}">
+          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:color .12s var(--ease)">
+            ${av(b.name||b.id, 15, b.logoUrl)}
+            <span>${b.name||b.id}</span>
+            ${bLogCount>0?`<span style="font-size:11px;font-weight:400;color:${isActive?'#111114':'#C7CAD1'}">${bLogCount}</span>`:''}
+          </button>
+          <div class="brand-tab-actions" style="display:flex;align-items:center;gap:0;opacity:0;transition:opacity .12s var(--ease)">
+            ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
+            ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 브랜드 삭제" style="padding:4px;font-size:11px;color:#B4B7BE;background:none;border:none;cursor:pointer;display:flex;align-items:center"><i class="ti ti-trash" style="font-size:11px"></i></button>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ``}
+
     <!-- 구매 현황 (벤더 유형에서만 표시) -->
     ${(v.companyType||'벤더')==='벤더' ? `
     ${hasBrands && activeBrand ? (isInherit
@@ -2991,24 +3015,6 @@ function viewVendorDetail(){
       </div>
     </div>
     ` : ''}
-
-    ${hasBrands ? `
-    <!-- 브랜드 탭 -->
-    <div class="brand-tabs-row" style="display:flex;align-items:center;gap:0;margin-bottom:16px;border-bottom:2px solid var(--bd);flex-wrap:wrap">
-      ${brands.map(b=>{
-        const isActive = b.id===activeBrandId;
-        const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
-        return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;border-bottom:${isActive?'2px solid var(--o)':'2px solid transparent'};margin-bottom:-2px;${!isReadOnly()?'cursor:grab':''}">
-          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:8px 14px;font-size:13px;font-weight:${isActive?'700':'300'};color:${isActive?'var(--o)':'var(--muted)'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap">
-            ${av(b.name||b.id, 18, b.logoUrl)}
-            ${b.name||b.id}
-            ${bLogCount>0?`<span style="font-size:10px;background:${isActive?'var(--ol)':'var(--sf)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 5px;border-radius:10px">${bLogCount}</span>`:''}
-          </button>
-          ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px 6px;font-size:11px;color:var(--muted);background:var(--sf);border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
-          ${!isReadOnly()?`<button class="brand-del-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 브랜드 삭제" style="padding:4px 6px;margin-right:6px;font-size:11px;color:#DC2626;background:#FEE2E2;border:none;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:2px"><i class="ti ti-trash" style="font-size:11px"></i></button>`:''}
-        </div>`;
-      }).join('')}
-    </div>` : ``}
 
     ${latest ? `
     <div style="background:${currentStatus.bg};border:0.5px solid ${currentStatus.color}22;border-radius:8px;padding:6px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
