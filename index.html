@@ -2885,10 +2885,10 @@ function viewVendorDetail(){
         const isActive = b.id===activeBrandId;
         const bDotColor = vendorStatusDotColor(b.companyStatus||'Active');
         return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;gap:2px;padding-bottom:9px;border-bottom:2px solid ${isActive?'#111114':'transparent'};margin-bottom:-1px;${!isReadOnly()?'cursor:grab':''}">
-          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:color .12s var(--ease)">
+          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:color .12s var(--ease)">
             ${av(b.name||b.id, 15, b.logoUrl)}
             <span>${b.name||b.id}</span>
-            <span style="width:9px;height:9px;border-radius:50%;background:${bDotColor};flex-shrink:0"></span>
+            <span style="width:5px;height:5px;border-radius:50%;background:${bDotColor};flex-shrink:0"></span>
           </button>
           <div class="brand-tab-actions" style="display:flex;align-items:center;gap:0;opacity:0;transition:opacity .12s var(--ease)">
             ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
