@@ -2296,12 +2296,17 @@ function projStatusStyle(status){
 
 function vendorStatusStyle(status){
   const map = {
-    'Active':   'background:#EAF3DE;color:#3B6D11;border-color:#3B6D11',
-    'Pending':  'background:#FEF3C7;color:#92400E;border-color:#92400E',
-    'Review':   'background:#E8F2FE;color:#0B4E9E;border-color:#1C85E8',
-    'Hold':     'background:#FFF0E8;color:#C2410C;border-color:#EA580C',
-    'Inactive': 'background:#F1EFE8;color:#5F5E5A;border-color:#ccc',
+    'Active':   '#16CB6A',
+    'Pending':  '#1C85E8',
+    'Review':   '#1C85E8',
+    'Hold':     '#F77825',
+    'Inactive': '#FE3E58',
   };
+  const c = map[status]||map['Active'];
+  return `background:${c}26;color:${c};border-color:transparent`;
+}
+function vendorStatusDotColor(status){
+  const map = {'Active':'#16CB6A','Pending':'#1C85E8','Review':'#1C85E8','Hold':'#F77825','Inactive':'#FE3E58'};
   return map[status]||map['Active'];
 }
 
@@ -2348,7 +2353,7 @@ function openDropdown(trigger, options){
 }
 
 // 상태 유형별 색상 dot
-const CDD_VENDOR_STATUS_LIST = [{v:'Active',l:'거래중',c:'#16A34A'},{v:'Pending',l:'대기중',c:'#CA8A04'},{v:'Review',l:'검토중',c:'#1C85E8'},{v:'Hold',l:'거래보류',c:'#EA580C'},{v:'Inactive',l:'거래중단',c:'#DC2626'}];
+const CDD_VENDOR_STATUS_LIST = [{v:'Active',l:'거래중',c:'#16CB6A'},{v:'Pending',l:'대기중',c:'#1C85E8'},{v:'Review',l:'검토중',c:'#1C85E8'},{v:'Hold',l:'거래보류',c:'#F77825'},{v:'Inactive',l:'거래중단',c:'#FE3E58'}];
 const CDD_PROJ_STATUS_LIST = [{v:'진행중',c:'#1C85E8'},{v:'보류',c:'#F59E0B'},{v:'중단',c:'#E24B4A'},{v:'완료',c:'#639922'}];
 
 function cddVendorStatusOptions(cur, onPick){
@@ -2542,7 +2547,7 @@ function viewVendorList(){
               ? `<span style="color:var(--muted)">-</span>`
               : `<span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>`;
             // 거래 상태 dot
-            const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#1C85E8' : cs==='Hold' ? '#EA580C' : '#DC2626';
+            const dotColor = cs==='Active' ? '#16CB6A' : cs==='Pending' ? '#1C85E8' : cs==='Review' ? '#1C85E8' : cs==='Hold' ? '#F77825' : '#FE3E58';
             const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : cs==='Hold' ? '거래보류' : '거래중단';
             const statusDot = `<button type="button" class="cdd-trigger" data-cdd-type="vendor-status" data-vid="${v.id}" onclick="event.stopPropagation();toggleCdd(this)" style="background:none;border:none;padding:0;gap:5px">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
@@ -2878,12 +2883,12 @@ function viewVendorDetail(){
     <div class="brand-tabs-row" style="display:flex;align-items:flex-end;gap:22px;margin-bottom:18px;border-bottom:1px solid var(--bd);flex-wrap:wrap">
       ${brands.map(b=>{
         const isActive = b.id===activeBrandId;
-        const bLogCount = allVendorLogs.filter(l=>l.brandId===b.id).length;
+        const bDotColor = vendorStatusDotColor(b.companyStatus||'Active');
         return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;gap:2px;padding-bottom:9px;border-bottom:2px solid ${isActive?'#111114':'transparent'};margin-bottom:-1px;${!isReadOnly()?'cursor:grab':''}">
-          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:color .12s var(--ease)">
+          <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:color .12s var(--ease)">
             ${av(b.name||b.id, 15, b.logoUrl)}
             <span>${b.name||b.id}</span>
-            ${bLogCount>0?`<span style="font-size:10px;font-weight:600;color:#fff;background:#FF4757;border-radius:50%;min-width:16px;height:16px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;line-height:1">${bLogCount}</span>`:''}
+            <span style="width:9px;height:9px;border-radius:50%;background:${bDotColor};flex-shrink:0"></span>
           </button>
           <div class="brand-tab-actions" style="display:flex;align-items:center;gap:0;opacity:0;transition:opacity .12s var(--ease)">
             ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
@@ -2895,57 +2900,57 @@ function viewVendorDetail(){
 
     <!-- 구매 현황 (벤더 유형에서만 표시) -->
     ${(v.companyType||'벤더')==='벤더' ? `
-    ${hasBrands && activeBrand ? (isInherit
-      ? `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-link" style="font-size:10px;color:var(--text)"></i> 벤더 마스터 구매 데이터를 공유합니다 (마스터 상속)</div>`
-      : `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i> "${activeBrand.name}" 브랜드만의 독립 구매 데이터입니다</div>`
-    ) : ''}
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-      <div class="card" style="padding:12px 14px;background:#111114;border-color:#111114">
-        <div style="font-size:10.5px;color:#9CA3AF;margin-bottom:6px">YTD 구매액 합계</div>
-        <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:15px;font-weight:600;color:#fff;letter-spacing:-.02em">$${ytdTotal.toLocaleString()}</span>
-          ${usdKrwRate?`<span style="font-size:10px;color:#9CA3AF">₩${Math.round(ytdTotal*usdKrwRate).toLocaleString()}</span>`:''}
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--muted)">YTD 구매액 합계</span>
+          ${ytdPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${ytdPctChange>=0?'#16CB6A':'#FE3E58'};flex-shrink:0"></span>`:''}
         </div>
-        <div style="font-size:11px;margin-bottom:6px">
-          ${ytdPctChange!==null?`<span style="font-weight:700;color:${ytdPctChange>=0?'#34D399':'#F87171'}">${ytdPctChange>=0?'↑':'↓'} ${Math.abs(ytdPctChange)}%</span> <span style="color:#9CA3AF">전년 대비</span>`:`<span style="color:#9CA3AF">전년 데이터 없음</span>`}
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${ytdTotal.toLocaleString()}</span>
+          ${usdKrwRate?`<span style="font-size:13px;color:#D7D9DE">₩${Math.round(ytdTotal*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:9.5px;color:#9CA3AF">${selectedPYear}년 연간 누계</span>
+          <span style="font-size:11px;color:var(--muted)">${selectedPYear}년 연간 누계</span>
+          ${ytdPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${ytdPctChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px">${Math.abs(ytdPctChange)}% <i class="ti ${ytdPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
-      <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
-        <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px">월간 평균</div>
-        <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
-          ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(monthlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--muted)">월간 평균</span>
+          ${monthlyAvgPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${monthlyAvgPctChange>=0?'#16CB6A':'#FE3E58'};flex-shrink:0"></span>`:''}
         </div>
-        <div style="font-size:11px;margin-bottom:6px">
-          ${monthlyAvgPctChange!==null?`<span style="font-weight:700;color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'}">${monthlyAvgPctChange>=0?'↑':'↓'} ${Math.abs(monthlyAvgPctChange)}%</span> <span style="color:var(--muted)">전년 대비</span>`:`<span style="color:var(--muted)">전년 데이터 없음</span>`}
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
+          ${usdKrwRate?`<span style="font-size:13px;color:#D7D9DE">₩${Math.round(monthlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:9.5px;color:var(--muted)">${selectedPYear}년 월 평균 YTD</span>
+          <span style="font-size:11px;color:var(--muted)">${selectedPYear}년 월 평균 YTD</span>
+          ${monthlyAvgPctChange!==null?`<span style="font-size:12px;font-weight:700;color:${monthlyAvgPctChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px">${Math.abs(monthlyAvgPctChange)}% <i class="ti ${monthlyAvgPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
-      <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
-        <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px">총 구매액</div>
-        <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
-          ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(totalAllTime*usdKrwRate).toLocaleString()}</span>`:''}
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--muted)">총 구매액</span>
         </div>
-        <div style="font-size:11px;margin-bottom:6px;color:var(--muted)">누적 합계</div>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
+          ${usdKrwRate?`<span style="font-size:13px;color:#D7D9DE">₩${Math.round(totalAllTime*usdKrwRate).toLocaleString()}</span>`:''}
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:9.5px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
+          <span style="font-size:11px;color:var(--muted)">누적 합계 · ${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
         </div>
       </div>
-      <div class="card" style="padding:12px 14px;background:rgba(255,255,255,.7)">
-        <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px">년간 평균</div>
-        <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
-          ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(yearlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--muted)">년간 평균</span>
         </div>
-        <div style="font-size:11px;margin-bottom:6px;color:var(--muted)">${yearsWithData.length}개년 평균</div>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <span style="font-size:24px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
+          ${usdKrwRate?`<span style="font-size:13px;color:#D7D9DE">₩${Math.round(yearlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
+        </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span style="font-size:9.5px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD 년간 평균</span>
+          <span style="font-size:11px;color:var(--muted)">${yearsWithData.length}개년 평균 · ${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
         </div>
       </div>
     </div>
@@ -2979,7 +2984,10 @@ function viewVendorDetail(){
       </div>
 
       <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
-        <div style="font-size:14px;font-weight:400;color:var(--text);margin-bottom:14px">Yearly Summary</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:600;color:var(--text)">Yearly Summary</span>
+        </div>
         ${yearlySummaryRows.length===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다.</div>` : `
         <div>
           <div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
@@ -2992,11 +3000,11 @@ function viewVendorDetail(){
             const isExpanded = !!state.expandedPurchaseYears[r.year];
             return `
             <div>
-              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:8px;align-items:center;padding:9px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
+              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 1fr 1fr 1fr;gap:8px;align-items:center;padding:10px 0;border-bottom:none;cursor:pointer">
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
-                <span style="font-size:12.5px;font-weight:600;color:var(--text)">${r.year}</span>
-                <span style="font-size:12px;color:var(--text)">$${r.amount.toLocaleString()}</span>
-                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#E4F7F1':'#FDEAEA'};color:${r.change>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
+                <span style="font-size:12.5px;font-weight:700;color:var(--text)">${r.year}</span>
+                <span style="font-size:12px;color:var(--muted)">$${r.amount.toLocaleString()}</span>
+                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#16CB6A26':'#FE3E5826'};color:${r.change>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
               </div>
               ${isExpanded ? `
               <div style="background:var(--sf);border-radius:8px;padding:8px 10px;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
@@ -3006,7 +3014,7 @@ function viewVendorDetail(){
                     <span></span>
                     <span style="font-size:11px;color:var(--muted)">${md.month}월</span>
                     <span style="font-size:11.5px;color:var(--text)">$${md.amount.toLocaleString()}</span>
-                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#E4F7F1':'#FDEAEA'};color:${md.momChange>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
+                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#16CB6A26':'#FE3E5826'};color:${md.momChange>=0?'#16CB6A':'#FE3E58'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
                   </div>`).join('')}
               </div>` : ''}
             </div>`;
@@ -3175,15 +3183,6 @@ function viewVendorDetail(){
               <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Price list folder</span>
               ${!isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''}
             </div>
-            ${hasBrands && activeBrand && isInherit ? `
-            <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
-              <i class="ti ti-link" style="font-size:10px;color:var(--text)"></i>
-              벤더 마스터 가격표를 공유합니다 (마스터 상속)
-            </div>` : hasBrands && activeBrand ? `
-            <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
-              <i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i>
-              이 브랜드만의 독립 가격표입니다
-            </div>` : ''}
             ${priceListLink ? `
               <div class="price-list-year-btn" data-url="${priceListLink.url}" style="position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background .12s var(--ease)">
                 <i class="ti ti-folder" style="font-size:16px;color:var(--muted)"></i>
@@ -3200,11 +3199,6 @@ function viewVendorDetail(){
             <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
             ${!isReadOnly()&&(!hasBrands||!isInherit)?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
           </div>
-          ${hasBrands && isInherit && activeBrand ? `
-          <div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:8px;display:flex;align-items:center;gap:4px">
-            <i class="ti ti-link" style="font-size:10px;color:var(--text)"></i>
-            벤더 마스터에서 상속 중
-          </div>` : ''}
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
