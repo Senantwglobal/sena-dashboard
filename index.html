@@ -2883,7 +2883,7 @@ function viewVendorDetail(){
           <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:14px;font-weight:${isActive?'700':'400'};color:${isActive?'#111114':'#B4B7BE'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:color .12s var(--ease)">
             ${av(b.name||b.id, 15, b.logoUrl)}
             <span>${b.name||b.id}</span>
-            ${bLogCount>0?`<span style="font-size:11px;font-weight:400;color:${isActive?'#111114':'#C7CAD1'}">${bLogCount}</span>`:''}
+            ${bLogCount>0?`<span style="font-size:10px;font-weight:600;color:#fff;background:#FF4757;border-radius:50%;min-width:16px;height:16px;padding:0 4px;display:inline-flex;align-items:center;justify-content:center;line-height:1">${bLogCount}</span>`:''}
           </button>
           <div class="brand-tab-actions" style="display:flex;align-items:center;gap:0;opacity:0;transition:opacity .12s var(--ease)">
             ${!isReadOnly()?`<button class="brand-edit-btn" data-bid="${b.id}" data-bname="${(b.name||'').replace(/"/g,'&quot;')}" title="${b.name||''} 이름 편집" style="padding:4px;font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;display:flex;align-items:center"><i class="ti ti-pencil" style="font-size:11px"></i></button>`:''}
