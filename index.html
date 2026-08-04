@@ -2556,7 +2556,7 @@ function viewVendorDetail(){
   });
 
   if(!usdKrwRate) fetchExchangeRate();
-  function buildAreaChartSvg(vals, maxVal, labels){
+  function buildAreaChartSvg(vals, maxVal, labels, compareVals){
     if(!vals || vals.length===0){
       return `<div class="purchase-chart-wrap" style="position:relative"></div>`;
     }
@@ -2567,6 +2567,11 @@ function viewVendorDetail(){
       const y = H - padY - (maxVal>0 ? (val/maxVal)*(H-2*padY) : 0);
       return [x,y];
     });
+    const comparePoints = (compareVals && compareVals.length===vals.length) ? compareVals.map((val,i)=>{
+      const x = padLeft + i*stepX;
+      const y = H - padY - (maxVal>0 ? (Math.max(val,0)/maxVal)*(H-2*padY) : 0);
+      return [x,y];
+    }) : null;
     // 부드러운 곡선 - monotone cubic(Fritsch-Carlson) 보간: Catmull-Rom과 달리 오버슈트(뾰족한 스파이크) 없음
     function monotonePath(pts){
       const n = pts.length;
@@ -2607,6 +2612,7 @@ function viewVendorDetail(){
       return d;
     }
     const linePath = monotonePath(points);
+    const comparePath = comparePoints ? monotonePath(comparePoints) : null;
     const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padY} L${points[0][0].toFixed(1)},${H-padY} Z`;
 
     // 추세선 (연한 회색, 선형 회귀)
@@ -2658,7 +2664,7 @@ function viewVendorDetail(){
     }).join('');
 
     return `<div class="purchase-chart-wrap" style="position:relative">
-    <svg class="purchase-chart-svg" data-values='${JSON.stringify(vals)}' data-labels='${JSON.stringify(chartLabels)}' data-points='${JSON.stringify(points.map(p=>p.map(n=>Number(n.toFixed(1)))))}' viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;aspect-ratio:${W}/${H}">
+    <svg class="purchase-chart-svg" data-values='${JSON.stringify(vals)}' data-labels='${JSON.stringify(chartLabels)}' data-points='${JSON.stringify(points.map(p=>p.map(n=>Number(n.toFixed(1)))))}' data-compare='${JSON.stringify(compareVals||null)}' viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;aspect-ratio:${W}/${H}">
       <defs>
         <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="var(--o)" stop-opacity=".18"/>
@@ -2666,6 +2672,7 @@ function viewVendorDetail(){
         </linearGradient>
       </defs>
       ${gridLines}
+      ${comparePath?`<path d="${comparePath}" fill="none" stroke="#B0B4BB" stroke-width="1" stroke-dasharray="3 3"/>`:''}
       <path d="${areaPath}" fill="url(#purchaseGrad)"/>
       <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1" stroke-linecap="round"/>
       ${trendLineHtml}
@@ -2674,16 +2681,28 @@ function viewVendorDetail(){
       ${hitZones}
     </svg>
     ${yAxisLabelsHtml}
-    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#1C1C22;border-radius:20px;padding:5px 12px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-135%);z-index:5;text-align:center">
-      <div class="pct-label" style="color:rgba(255,255,255,.55);font-size:8.5px;line-height:1.3"></div>
-      <div class="pct-value" style="font-weight:700;font-size:11px;color:#fff;line-height:1.3"></div>
+    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-130%);z-index:5;min-width:110px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px">
+        <span class="pct-label" style="font-size:9px;color:var(--muted)"></span>
+        <span class="pct-change-badge" style="font-size:9px;font-weight:700"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--o);flex-shrink:0"></span>
+        <span class="pct-value" style="font-weight:700;font-size:12px;color:var(--text)"></span>
+      </div>
+      <div class="pct-compare-row" style="display:flex;align-items:center;gap:5px;margin-top:2px">
+        <span style="width:6px;height:6px;border-radius:50%;border:1.5px solid #B0B4BB;background:transparent;flex-shrink:0"></span>
+        <span class="pct-compare-value" style="font-size:10px;color:var(--muted)"></span>
+      </div>
     </div>
     ${xAxisLabelsHtml}
     </div>`;
   }
+  const compareYearVals = (purchaseViewMode==='month' && prevYearMonthVals) ? prevYearMonthVals.slice(0, monthVals.length) : null;
+  const chartMaxMonthVal = compareYearVals ? Math.max(maxMonthVal, ...compareYearVals) : maxMonthVal;
   const purchaseChartSvg = purchaseViewMode==='year'
     ? buildAreaChartSvg(yearTotals, maxYearVal, yearsSortedAsc.map(y=>y+'년'))
-    : buildAreaChartSvg(monthVals, maxMonthVal);
+    : buildAreaChartSvg(monthVals, chartMaxMonthVal, null, compareYearVals);
 
   const actionStatuses = [
     {value:'', label:'상태 미지정', bg:'var(--sf)', color:'var(--muted)'},
@@ -2724,6 +2743,7 @@ function viewVendorDetail(){
         </div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--muted);padding:0 8px;flex-shrink:0"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         ${!isReadOnly()?`<button class="btn btn-o" id="addVendorEventBtn" data-vid="${v.id}" style="font-size:11px;padding:5px 10px"><i class="ti ti-calendar-plus"></i> 회의록 추가</button>`:''}
         ${!isReadOnly()?`<button class="btn" id="addBrandTabBtn" style="font-size:11px;padding:5px 10px"><i class="ti ti-brand-tabs"></i> 브랜드 추가</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-red" id="deleteVendorBtn"><i class="ti ti-trash"></i> 삭제</button>`:''}
@@ -2743,13 +2763,11 @@ function viewVendorDetail(){
           <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${ytdTotal.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(ytdTotal*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;min-height:18px;margin-bottom:6px">
-          ${ytdPctChange!==null?`<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:5px;background:${ytdPctChange>=0?'#E4F7F1':'#FDEAEA'};color:${ytdPctChange>=0?'#1C9873':'#C0392B'};font-size:9px">${ytdPctChange>=0?'▲':'▼'}</span>
-          <span style="font-size:11.5px;font-weight:600;color:${ytdPctChange>=0?'#1C9873':'#C0392B'}">${Math.abs(ytdPctChange)}%</span>`:''}
+        <div style="font-size:11px;margin-bottom:6px">
+          ${ytdPctChange!==null?`<span style="font-weight:700;color:${ytdPctChange>=0?'#1C9873':'#C0392B'}">${ytdPctChange>=0?'↑':'↓'} ${Math.abs(ytdPctChange)}%</span> <span style="color:var(--muted)">전년 대비</span>`:`<span style="color:var(--muted)">전년 데이터 없음</span>`}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:9.5px;color:var(--muted)">${selectedPYear}년 연간 누계</span>
-          ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--muted);flex-shrink:0"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
       <div class="card" style="padding:12px 14px">
@@ -2758,13 +2776,11 @@ function viewVendorDetail(){
           <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(monthlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;min-height:18px;margin-bottom:6px">
-          ${monthlyAvgPctChange!==null?`<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:5px;background:${monthlyAvgPctChange>=0?'#E4F7F1':'#FDEAEA'};color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'};font-size:9px">${monthlyAvgPctChange>=0?'▲':'▼'}</span>
-          <span style="font-size:11.5px;font-weight:600;color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'}">${Math.abs(monthlyAvgPctChange)}%</span>`:''}
+        <div style="font-size:11px;margin-bottom:6px">
+          ${monthlyAvgPctChange!==null?`<span style="font-weight:700;color:${monthlyAvgPctChange>=0?'#1C9873':'#C0392B'}">${monthlyAvgPctChange>=0?'↑':'↓'} ${Math.abs(monthlyAvgPctChange)}%</span> <span style="color:var(--muted)">전년 대비</span>`:`<span style="color:var(--muted)">전년 데이터 없음</span>`}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:9.5px;color:var(--muted)">${selectedPYear}년 월 평균 YTD</span>
-          ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--muted);flex-shrink:0"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
       <div class="card" style="padding:12px 14px">
@@ -2773,12 +2789,9 @@ function viewVendorDetail(){
           <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(totalAllTime*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;min-height:18px;margin-bottom:6px">
-          <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--sf);color:var(--muted)">누적</span>
-        </div>
+        <div style="font-size:11px;margin-bottom:6px;color:var(--muted)">누적 합계</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:9.5px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
-          ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--muted);flex-shrink:0"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
       <div class="card" style="padding:12px 14px">
@@ -2787,12 +2800,9 @@ function viewVendorDetail(){
           <span style="font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:10px;color:var(--muted)">₩${Math.round(yearlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:6px;min-height:18px;margin-bottom:6px">
-          <span style="font-size:10px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--sf);color:var(--muted)">${yearsWithData.length}개년</span>
-        </div>
+        <div style="font-size:11px;margin-bottom:6px;color:var(--muted)">${yearsWithData.length}개년 평균</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span style="font-size:9.5px;color:var(--muted)">${yearsSortedAsc[0]||currentYearNum} ~ YTD 년간 평균</span>
-          ${usdKrwRate?`<span style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:var(--muted);flex-shrink:0"><span style="width:5px;height:5px;border-radius:50%;background:#22C55E"></span>환율 ${Math.round(usdKrwRate).toLocaleString()}</span>`:''}
         </div>
       </div>
     </div>
@@ -2813,9 +2823,12 @@ function viewVendorDetail(){
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:6px">
-          <span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span>
-          <span style="font-size:11px;color:var(--muted)">구매액 추이</span>
+        <div style="display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-bottom:6px">
+          ${compareYearVals?`<div style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:0;border-top:1.5px dashed #B0B4BB"></span><span style="font-size:11px;color:var(--muted)">${selectedPYear-1}년</span></div>`:''}
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span>
+            <span style="font-size:11px;color:var(--muted)">${compareYearVals?`${selectedPYear}년`:'구매액 추이'}</span>
+          </div>
         </div>
 
         ${(purchaseViewMode==='year'?totalAllYears:totalPYear)===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다. "입력" 버튼으로 월별 구매액을 등록해보세요.</div>` : `
@@ -2840,7 +2853,7 @@ function viewVendorDetail(){
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
                 <span style="font-size:12.5px;font-weight:600;color:var(--text)">${r.year}</span>
                 <span style="font-size:12px;color:var(--text)">$${r.amount.toLocaleString()}</span>
-                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#E4F7F1':'#FDEAEA'};color:${r.change>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:3px;white-space:nowrap"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${r.diff>=0?'+':'-'}$${Math.abs(r.diff).toLocaleString()} (${Math.abs(r.change)}%)</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
+                <span style="text-align:right">${r.change!==null?`<span style="font-size:10.5px;font-weight:600;padding:2px 9px;border-radius:20px;background:${r.change>=0?'#E4F7F1':'#FDEAEA'};color:${r.change>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${r.change>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:9px"></i>${Math.abs(r.change)}%</span>`:'<span style="font-size:10.5px;color:var(--muted)">-</span>'}</span>
               </div>
               ${isExpanded ? `
               <div style="background:var(--sf);border-radius:8px;padding:8px 10px;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
@@ -2850,7 +2863,7 @@ function viewVendorDetail(){
                     <span></span>
                     <span style="font-size:11px;color:var(--muted)">${md.month}월</span>
                     <span style="font-size:11.5px;color:var(--text)">$${md.amount.toLocaleString()}</span>
-                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#E4F7F1':'#FDEAEA'};color:${md.momChange>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:3px;white-space:nowrap"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${md.momDiff>=0?'+':'-'}$${Math.abs(md.momDiff).toLocaleString()} (${Math.abs(md.momChange)}%)</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
+                    <span style="text-align:right">${md.momChange!==null?`<span style="font-size:9.5px;font-weight:600;padding:1.5px 8px;border-radius:20px;background:${md.momChange>=0?'#E4F7F1':'#FDEAEA'};color:${md.momChange>=0?'#1C9873':'#C0392B'};display:inline-flex;align-items:center;gap:2px"><i class="ti ${md.momChange>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:8px"></i>${Math.abs(md.momChange)}%</span>`:'<span style="font-size:9.5px;color:var(--muted)">-</span>'}</span>
                   </div>`).join('')}
               </div>` : ''}
             </div>`;
@@ -7457,11 +7470,15 @@ function bindViewEvents(){
     const hoverDot = svg.querySelector('.chart-hover-dot');
     const labelEl = tooltip.querySelector('.pct-label');
     const valueEl = tooltip.querySelector('.pct-value');
-    let values, points;
+    const changeBadgeEl = tooltip.querySelector('.pct-change-badge');
+    const compareRowEl = tooltip.querySelector('.pct-compare-row');
+    const compareValueEl = tooltip.querySelector('.pct-compare-value');
+    let values, points, compareVals;
     try{ values = JSON.parse(svg.dataset.values); }catch(e){ values = []; }
     let labels;
     try{ labels = JSON.parse(svg.dataset.labels); }catch(e){ labels = []; }
     try{ points = JSON.parse(svg.dataset.points); }catch(e){ points = []; }
+    try{ compareVals = JSON.parse(svg.dataset.compare); }catch(e){ compareVals = null; }
     const H = 160;
     svg.querySelectorAll('.chart-hit-zone').forEach(zone=>{
       zone.addEventListener('mouseenter', ()=>{
@@ -7472,7 +7489,25 @@ function bindViewEvents(){
         hoverDot.setAttribute('cx', pt[0]); hoverDot.setAttribute('cy', pt[1]); hoverDot.setAttribute('opacity','1');
         tooltip.style.display = 'block';
         labelEl.textContent = labels[idx] || '';
-        valueEl.textContent = '$' + (values[idx]||0).toLocaleString();
+        const curVal = values[idx]||0;
+        valueEl.textContent = '$' + curVal.toLocaleString();
+        const cmpVal = (compareVals && compareVals[idx]!==undefined) ? compareVals[idx] : null;
+        if(cmpVal!==null){
+          compareRowEl.style.display = 'flex';
+          compareValueEl.textContent = '$' + cmpVal.toLocaleString() + ' (전년)';
+          if(cmpVal>0){
+            const pct = Math.round(((curVal-cmpVal)/cmpVal)*1000)/10;
+            const positive = pct>=0;
+            changeBadgeEl.style.display = 'inline';
+            changeBadgeEl.style.color = positive?'#1C9873':'#C0392B';
+            changeBadgeEl.textContent = (positive?'↑ ':'↓ ')+Math.abs(pct)+'%';
+          } else {
+            changeBadgeEl.style.display = 'none';
+          }
+        } else {
+          compareRowEl.style.display = 'none';
+          changeBadgeEl.style.display = 'none';
+        }
         const leftPct = (pt[0]/700)*100;
         const topPct = (pt[1]/H)*100;
         tooltip.style.left = leftPct+'%';
