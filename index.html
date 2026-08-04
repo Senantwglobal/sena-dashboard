@@ -2748,24 +2748,6 @@ function viewVendorDetail(){
     const comparePath = comparePoints ? monotonePath(comparePoints) : null;
     const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padY} L${points[0][0].toFixed(1)},${H-padY} Z`;
 
-    // 추세선 (연한 회색, 선형 회귀)
-    let trendLineHtml = '';
-    if(vals.length>=2){
-      const n = vals.length;
-      const xMean = (n-1)/2;
-      const yMean = vals.reduce((a,b)=>a+b,0)/n;
-      let num=0, den=0;
-      for(let i=0;i<n;i++){ num += (i-xMean)*(vals[i]-yMean); den += (i-xMean)*(i-xMean); }
-      const slope = den!==0 ? num/den : 0;
-      const intercept = yMean - slope*xMean;
-      const trendStartVal = intercept;
-      const trendEndVal = slope*(n-1)+intercept;
-      const valToY = (val)=> H - padY - (maxVal>0 ? (Math.max(val,0)/maxVal)*(H-2*padY) : 0);
-      const tx1 = points[0][0], ty1 = valToY(trendStartVal);
-      const tx2 = points[n-1][0], ty2 = valToY(trendEndVal);
-      trendLineHtml = `<line x1="${tx1.toFixed(1)}" y1="${ty1.toFixed(1)}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="#B0B4BB" stroke-width="1" opacity=".65"/>`;
-    }
-
     // Y축 기준선 (0 / 중간 / 최대) - 라인만 SVG 안에 (텍스트는 stretch로 왜곡되므로 별도 HTML로 뺌)
     const gridFracs = [0, 0.5, 1];
     const gridLines = gridFracs.map(f=>{
@@ -2808,7 +2790,6 @@ function viewVendorDetail(){
       ${comparePath?`<path d="${comparePath}" fill="none" stroke="#B0B4BB" stroke-width="1" stroke-dasharray="3 3"/>`:''}
       <path d="${areaPath}" fill="url(#purchaseGrad)"/>
       <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1" stroke-linecap="round"/>
-      ${trendLineHtml}
       <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="0.5" stroke-dasharray="2 3" opacity="0"/>
       <circle class="chart-hover-dot" cx="0" cy="0" r="2" fill="#fff" stroke="var(--o)" stroke-width="1.25" opacity="0"/>
       ${hitZones}
@@ -2884,7 +2865,8 @@ function viewVendorDetail(){
       </div>
     </div>
 
-    <!-- 구매 현황 -->
+    <!-- 구매 현황 (벤더 유형에서만 표시) -->
+    ${(v.companyType||'벤더')==='벤더' ? `
     ${hasBrands && activeBrand ? (isInherit
       ? `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-link" style="font-size:10px;color:var(--text)"></i> 벤더 마스터 구매 데이터를 공유합니다 (마스터 상속)</div>`
       : `<div style="font-size:10px;color:var(--muted);background:var(--sf);border-radius:6px;padding:5px 8px;margin-bottom:10px;display:flex;align-items:center;gap:4px"><i class="ti ti-user-check" style="font-size:10px;color:var(--text)"></i> "${activeBrand.name}" 브랜드만의 독립 구매 데이터입니다</div>`
@@ -3004,6 +2986,7 @@ function viewVendorDetail(){
         </div>`}
       </div>
     </div>
+    ` : ''}
 
     ${hasBrands ? `
     <!-- 브랜드 탭 -->
