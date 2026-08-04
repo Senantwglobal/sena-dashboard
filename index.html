@@ -2921,7 +2921,7 @@ function viewVendorDetail(){
           ${monthlyAvgPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${monthlyAvgPctChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
+          <span style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em">$${monthlyAvg.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:11px;color:#D7D9DE">₩${Math.round(monthlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -2934,7 +2934,7 @@ function viewVendorDetail(){
           <span style="font-size:10.5px;color:var(--muted)">총 구매액</span>
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
+          <span style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em">$${totalAllTime.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:11px;color:#D7D9DE">₩${Math.round(totalAllTime*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -2946,7 +2946,7 @@ function viewVendorDetail(){
           <span style="font-size:10.5px;color:var(--muted)">년간 평균</span>
         </div>
         <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
+          <span style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em">$${yearlyAvg.toLocaleString()}</span>
           ${usdKrwRate?`<span style="font-size:11px;color:#D7D9DE">₩${Math.round(yearlyAvg*usdKrwRate).toLocaleString()}</span>`:''}
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
@@ -2993,7 +2993,7 @@ function viewVendorDetail(){
         </div>
         ${yearlySummaryRows.length===0 ? `<div class="empty-state" style="padding:20px">등록된 구매 데이터가 없습니다.</div>` : `
         <div>
-          <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
+          <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:20px;padding-bottom:8px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
             <span></span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">연도</span>
             <span style="font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em">구매액</span>
@@ -3003,7 +3003,7 @@ function viewVendorDetail(){
             const isExpanded = !!state.expandedPurchaseYears[r.year];
             return `
             <div>
-              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
+              <div class="yearly-summary-row" data-year="${r.year}" style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:20px;align-items:center;padding:10px 0;border-bottom:${isExpanded?'none':'0.5px solid var(--bd)'};cursor:pointer">
                 <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);transition:transform .15s var(--ease);transform:rotate(${isExpanded?'90deg':'0deg'})"></i>
                 <span style="font-size:12.5px;font-weight:700;color:var(--text)">${r.year}</span>
                 <span style="font-size:12px;color:var(--muted)">$${r.amount.toLocaleString()}</span>
@@ -3013,7 +3013,7 @@ function viewVendorDetail(){
               <div style="background:var(--sf);border-radius:8px;padding:8px 0;margin:2px 0 8px 0;border-bottom:0.5px solid var(--bd)">
                 ${r.monthlyDetail.length===0 ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding:8px 0">입력된 월별 데이터가 없습니다.</div>` :
                   r.monthlyDetail.map(md=>`
-                  <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:8px;align-items:center;padding:5px 0">
+                  <div style="display:grid;grid-template-columns:20px 60px 1fr 90px;gap:20px;align-items:center;padding:5px 0">
                     <span></span>
                     <span style="font-size:11px;color:var(--muted)">${md.month}월</span>
                     <span style="font-size:11.5px;color:var(--muted)">$${md.amount.toLocaleString()}</span>
