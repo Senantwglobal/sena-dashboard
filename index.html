@@ -153,6 +153,22 @@ select.inp{cursor:pointer}
 .mf{padding:12px 18px;border-top:0.5px solid var(--bd);display:flex;justify-content:flex-end;gap:8px}
 .toast{position:fixed;bottom:20px;right:20px;background:#1c1c22;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transform:translateY(4px);transition:opacity .25s var(--ease),transform .25s var(--ease);pointer-events:none;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateY(0)}
+/* ── 커스텀 드롭다운(cdd) : 상태값 선택용 ── */
+.cdd-trigger{border:none;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:filter .12s var(--ease),box-shadow .12s var(--ease)}
+.cdd-trigger:hover{filter:brightness(.97)}
+.cdd-trigger:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
+.cdd-trigger .cdd-caret{font-size:9px;opacity:.65;transition:transform .16s var(--ease);margin-left:1px}
+.cdd-trigger.cdd-open .cdd-caret{transform:rotate(180deg)}
+.cdd-menu-portal{position:fixed;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
+@keyframes cddIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.cdd-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
+.cdd-item:hover{background:#181A20;color:#fff}
+.cdd-item.active{background:var(--sf)}
+.cdd-item.active:hover{background:#181A20}
+.cdd-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cdd-check{margin-left:auto;font-size:13px;color:var(--o)}
+.cdd-item:hover .cdd-check{color:#fff}
+.cdd-divider{height:1px;background:var(--bd);margin:5px 3px}
 .dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease)}
 .dash-row:last-child{border-bottom:none}
 .feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0;font-size:11px}
@@ -2284,6 +2300,125 @@ function vendorStatusStyle(status){
   return map[status]||map['Active'];
 }
 
+/* ── 커스텀 드롭다운 엔진 ── */
+let _activeDropdown = null; // {trigger, menu}
+let _dropdownOpenedAt = 0;
+
+function closeDropdown(){
+  if(_activeDropdown){
+    _activeDropdown.menu.remove();
+    _activeDropdown.trigger.classList.remove('cdd-open');
+    _activeDropdown = null;
+  }
+}
+
+function openDropdown(trigger, options){
+  const rect = trigger.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'cdd-menu-portal';
+  menu.innerHTML = options.map((o,i)=>{
+    if(o.divider) return '<div class="cdd-divider"></div>';
+    return `<div class="cdd-item ${o.active?'active':''}" data-idx="${i}">${o.dot?`<span class="cdd-dot" style="background:${o.dot}"></span>`:''}<span>${o.label}</span>${o.active?'<i class="ti ti-check cdd-check"></i>':''}</div>`;
+  }).join('');
+  document.body.appendChild(menu);
+  const mw = menu.offsetWidth, mh = menu.offsetHeight;
+  let top = rect.bottom + 6, left = rect.left;
+  if(left + mw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - mw - 8);
+  if(top + mh > window.innerHeight - 8) top = Math.max(8, rect.top - mh - 6);
+  menu.style.top = top+'px';
+  menu.style.left = left+'px';
+  menu.style.minWidth = Math.max(rect.width, 150)+'px';
+  trigger.classList.add('cdd-open');
+  _dropdownOpenedAt = Date.now();
+  menu.querySelectorAll('.cdd-item').forEach(item=>{
+    item.addEventListener('click', ev=>{
+      ev.stopPropagation();
+      const o = options[parseInt(item.dataset.idx)];
+      closeDropdown();
+      if(o && o.onSelect) o.onSelect();
+    });
+  });
+  _activeDropdown = {trigger, menu};
+}
+
+// 상태 유형별 색상 dot
+const CDD_VENDOR_STATUS_LIST = [{v:'Active',l:'거래중',c:'#16A34A'},{v:'Pending',l:'대기중',c:'#CA8A04'},{v:'Review',l:'검토중',c:'#1C85E8'},{v:'Hold',l:'거래보류',c:'#EA580C'},{v:'Inactive',l:'거래중단',c:'#DC2626'}];
+const CDD_PROJ_STATUS_LIST = [{v:'진행중',c:'#1C85E8'},{v:'보류',c:'#F59E0B'},{v:'중단',c:'#E24B4A'},{v:'완료',c:'#639922'}];
+
+function cddVendorStatusOptions(cur, onPick){
+  return CDD_VENDOR_STATUS_LIST.map(s=>({label:s.l, dot:s.c, active:(cur||'Active')===s.v, onSelect:()=>onPick(s.v)}));
+}
+function cddProjStatusOptions(cur, onPick){
+  return CDD_PROJ_STATUS_LIST.map(s=>({label:s.v, dot:s.c, active:(cur||'진행중')===s.v, onSelect:()=>onPick(s.v)}));
+}
+window.addEventListener('scroll', ()=>{ if(Date.now() - _dropdownOpenedAt > 250) closeDropdown(); }, true);
+window.addEventListener('resize', ()=>closeDropdown());
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
+
+// 표(row) 안에 있는 트리거는 onclick="event.stopPropagation()"으로 행 클릭 내비게이션을 막기 때문에
+// document까지 버블링되지 않는다 → 인라인에서 직접 호출 가능한 전역 함수로 노출
+window.toggleCdd = function(trigger){
+  if(_activeDropdown && _activeDropdown.trigger === trigger){ closeDropdown(); return; }
+  closeDropdown();
+  const type = trigger.dataset.cddType;
+  if(type === 'vendor-status'){
+    const v = state.data.vendors.find(x=>x.id===trigger.dataset.vid);
+    if(v) openDropdown(trigger, cddVendorStatusOptions(v.companyStatus, val=>{
+      v.companyStatus = val;
+      if(val==='Inactive'){ v.priority='낮음'; if(!v.actionStatus||v.actionStatus==='') v.actionStatus='계약 중단'; }
+      persist(false); render();
+    }));
+  } else if(type === 'brand-status'){
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
+    if(brand) openDropdown(trigger, cddVendorStatusOptions(brand.companyStatus, val=>{
+      brand.companyStatus = val;
+      persist(false); render(); showToast('브랜드 상태가 변경되었습니다.');
+    }));
+  } else if(type === 'proj-status'){
+    const p = state.data.projects.find(x=>x.id===trigger.dataset.pid);
+    if(p) openDropdown(trigger, cddProjStatusOptions(p.status, val=>{
+      p.status = val;
+      if(val==='완료' && !p.completedDate) p.completedDate = dayjs().format('YYYY-MM-DD');
+      if(val!=='완료') p.completedDate = '';
+      persist(false); render();
+    }));
+  } else if(type === 'action-status'){
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(v){
+      const actionStatuses = [
+        {value:'', label:'상태 미지정'},
+        {value:'회신 대기중', label:'⏳ 회신 대기중'},
+        {value:'회신 해야함', label:'📤 회신 해야함'},
+        {value:'미팅 예정', label:'📅 미팅 예정'},
+        {value:'발주 예정', label:'🛒 발주 예정'},
+        {value:'계약 진행중', label:'📝 계약 진행중'},
+        {value:'팔로업 필요', label:'🔔 팔로업 필요'},
+        {value:'신규 브랜드 검토', label:'🔍 신규 브랜드 검토'},
+        {value:'협의 완료', label:'✅ 협의 완료'},
+        {value:'계약 중단', label:'🚫 계약 중단'},
+        {value:'보류', label:'⏸ 보류'},
+      ];
+      const cur = v.actionStatus || '';
+      openDropdown(trigger, actionStatuses.map(s=>({
+        label:s.label, active:s.value===cur,
+        onSelect:()=>{ v.actionStatus=s.value; persist(false); showToast('액션 상태가 저장되었습니다.'); render(); }
+      })));
+    }
+  }
+};
+
+document.addEventListener('click', function(e){
+  // ── 커스텀 드롭다운 트리거 (document까지 버블링되는 경우 - stopPropagation 없는 트리거) ──
+  const cddTrigger = e.target.closest('.cdd-trigger');
+  if(cddTrigger){
+    e.stopPropagation();
+    toggleCdd(cddTrigger);
+    return;
+  }
+  if(_activeDropdown && !e.target.closest('.cdd-menu-portal')){ closeDropdown(); }
+});
+
 function vendorActionBadge(status){
   const map = {
     '회신 대기중':    {bg:'#FEF3C7', color:'#92400E'},
@@ -2401,13 +2536,11 @@ function viewVendorList(){
             // 거래 상태 dot
             const dotColor = cs==='Active' ? '#16A34A' : cs==='Pending' ? '#CA8A04' : cs==='Review' ? '#1C85E8' : cs==='Hold' ? '#EA580C' : '#DC2626';
             const dotLabel = cs==='Active' ? '거래중' : cs==='Pending' ? '대기중' : cs==='Review' ? '검토중' : cs==='Hold' ? '거래보류' : '거래중단';
-            const statusDot = `<div style="display:flex;align-items:center;gap:5px;cursor:pointer" class="status-dot-wrap" data-vid="${v.id}" onclick="event.stopPropagation()">
+            const statusDot = `<button type="button" class="cdd-trigger" data-cdd-type="vendor-status" data-vid="${v.id}" onclick="event.stopPropagation();toggleCdd(this)" style="background:none;border:none;padding:0;gap:5px">
               <span style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px ${dotColor}22"></span>
               <span style="font-size:12px;color:${dotColor};font-weight:300">${dotLabel}</span>
-              <select class="vendor-status-select" data-vid="${v.id}" onclick="event.stopPropagation()" style="position:absolute;opacity:0;width:80px;cursor:pointer">
-                ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${cs===s.v?'selected':''}>${s.l}</option>`).join('')}
-              </select>
-            </div>`;
+              <i class="ti ti-chevron-down cdd-caret" style="color:${dotColor}"></i>
+            </button>`;
             return `<tr class="clickable vendor-row" data-vid="${v.id}">
               <td><div style="display:flex;align-items:center;gap:10px">${av(v.name,28)}<div><div style="font-weight:600;font-size:13px">${v.name}</div>${(v.brands||[]).length>0?`<div style="font-size:10px;color:var(--o);font-weight:600;margin-top:1px"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${v.brands.map(b=>b.name).filter(Boolean).join(' · ')}</div>`:''}</div></div></td>
               <td style="position:relative">${statusDot}</td>
@@ -2736,7 +2869,7 @@ function viewVendorDetail(){
           <div style="display:flex;gap:6px;margin-top:4px;align-items:center;flex-wrap:wrap">
             <span class="badge ${priorityBadge(v.priority)}">${v.priority}</span>
             ${v.companyType?`<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${typeColorFor(v.companyType).bg};color:${typeColorFor(v.companyType).color}">${v.companyType}</span>`:''}
-            <select class="vendor-status-select" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(v.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}</select>
+            <button type="button" class="cdd-trigger" data-cdd-type="vendor-status" data-vid="${v.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;outline:none;${vendorStatusStyle(v.companyStatus||'Active')}">${{Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[v.companyStatus||'Active']}<i class="ti ti-chevron-down cdd-caret"></i></button>
             ${days!==null?`<span style="font-size:11px;color:var(--muted)"><i class="ti ti-clock" style="font-size:10px"></i> ${days}일 경과</span>`:''}
             ${v.logoUrl?`<button id="removeLogoBtn" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0"><i class="ti ti-photo-off"></i> 로고 삭제</button>`:''}
           </div>
@@ -2897,9 +3030,7 @@ function viewVendorDetail(){
         <span style="font-size:12px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${latest.summary}</span>
       </div>
       ${!isReadOnly()?`
-      <select id="actionStatusSelect" style="font-size:10.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${currentStatus.color};background:${currentStatus.bg};color:${currentStatus.color};cursor:pointer;font-weight:500;outline:none;flex-shrink:0">
-        ${actionStatuses.map(s=>`<option value="${s.value}" ${v.actionStatus===s.value?'selected':''}>${s.label}</option>`).join('')}
-      </select>`:
+      <button type="button" class="cdd-trigger" data-cdd-type="action-status" style="font-size:10.5px;padding:3px 9px;border-radius:20px;border:1.5px solid ${currentStatus.color};background:${currentStatus.bg};color:${currentStatus.color};font-weight:500;outline:none;flex-shrink:0">${currentStatus.label}<i class="ti ti-chevron-down cdd-caret"></i></button>`:
       v.actionStatus?`<span style="font-size:10.5px;padding:3px 9px;border-radius:20px;background:${currentStatus.bg};color:${currentStatus.color};font-weight:500;border:1px solid ${currentStatus.color}22;flex-shrink:0">${currentStatus.label}</span>`:''}
     </div>` : `
     <div style="background:var(--sf);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11.5px;color:var(--muted);text-align:center">
@@ -3021,9 +3152,9 @@ function viewVendorDetail(){
           <!-- 브랜드 상태 -->
           <div style="margin-bottom:8px">
             <div style="font-size:10px;color:var(--muted);margin-bottom:4px">브랜드 거래 상태</div>
-            <select id="brandStatusSelect" style="width:100%;font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--bd);outline:none;cursor:pointer;${vendorStatusStyle(activeBrand.companyStatus||'Active')}">
-              ${[{v:'Active',l:'거래중'},{v:'Pending',l:'대기중'},{v:'Review',l:'검토중'},{v:'Hold',l:'거래보류'},{v:'Inactive',l:'거래중단'}].map(s=>`<option value="${s.v}" ${(activeBrand.companyStatus||'Active')===s.v?'selected':''}>${s.l}</option>`).join('')}
-            </select>
+            <button type="button" class="cdd-trigger" data-cdd-type="brand-status" style="width:100%;font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--bd);outline:none;justify-content:space-between;${vendorStatusStyle(activeBrand.companyStatus||'Active')}">
+              <span>${{Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[activeBrand.companyStatus||'Active']}</span><i class="ti ti-chevron-down cdd-caret"></i>
+            </button>
           </div>
           <!-- 정보 모드 -->
           <div style="display:flex;gap:6px">
@@ -3643,7 +3774,7 @@ function viewProjectDetail(){
         <div class="editorial" style="font-size:21px;color:#111114">${p.title}</div>
         <div style="display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap">
           <span class="badge bo">${p.category}</span>
-          <select class="proj-status-select" data-pid="${p.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;cursor:pointer;outline:none;${projStatusStyle(p.status||'진행중')}">${['진행중','보류','중단','완료'].map(s=>`<option value="${s}" ${(p.status||'진행중')===s?'selected':''}>${s}</option>`).join('')}</select>
+          <button type="button" class="cdd-trigger" data-cdd-type="proj-status" data-pid="${p.id}" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid;outline:none;${projStatusStyle(p.status||'진행중')}">${p.status||'진행중'}<i class="ti ti-chevron-down cdd-caret"></i></button>
           <span style="font-size:12px;color:var(--muted)">담당: ${p.owner}</span>
           ${p.deadline?`<span class="dlc ${dday!==null&&dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok'}">${fmtDate(p.deadline)} (D-${dday})</span>`:''}
           ${linkedVendors.map(v=>`<span style="display:flex;align-items:center;gap:4px;font-size:12px;background:var(--sf);padding:2px 8px;border-radius:20px">${av(v.name,16)} ${v.name}</span>`).join('')}
@@ -6758,13 +6889,6 @@ function bindViewEvents(){
   const vendorPriorityFilter = document.getElementById('vendorPriorityFilter');
   if(vendorPriorityFilter) vendorPriorityFilter.addEventListener('change', ()=>{ state.vendorPriorityFilter=vendorPriorityFilter.value; render(); });
 
-  // 액션 상태 드롭다운 즉시 저장
-  const actionStatusSelect = document.getElementById('actionStatusSelect');
-  if(actionStatusSelect) actionStatusSelect.addEventListener('change', e=>{
-    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    if(v){ v.actionStatus = e.target.value; persist(false); showToast('액션 상태가 저장되었습니다.'); }
-  });
-
   const backToVendors = document.getElementById('backToVendors');
   if(backToVendors) backToVendors.addEventListener('click', ()=>{ state.selectedVendorId=null; state.vendorLogExpanded=false; render(); });
 
@@ -7399,16 +7523,6 @@ function bindViewEvents(){
     if(!brand) return;
     delete brand.logoUrl;
     persist(false); render(); showToast('로고가 삭제됐습니다.');
-  });
-
-  // ── 브랜드 상태 변경 ──
-  const brandStatusSel = document.getElementById('brandStatusSelect');
-  if(brandStatusSel) brandStatusSel.addEventListener('change', ()=>{
-    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    const brand = v?.brands?.find(b=>b.id===state.activeBrandId);
-    if(!brand) return;
-    brand.companyStatus = brandStatusSel.value;
-    persist(false); render(); showToast('브랜드 상태가 변경되었습니다.');
   });
 
   // ── 브랜드 상속/독립 모드 토글 ──
@@ -8160,45 +8274,6 @@ function moveCalendarEventToDate(eid, newDate){
   bindLinkAdder('addEditLinkBtn', 'editLinkList', 'editLinkInput', 'editLinkLabel');
 
   // ── 거래처 상태값 인라인 변경 ──
-  // 거래 상태 dot 클릭 → select 열기
-  document.querySelectorAll('.status-dot-wrap').forEach(wrap=>{
-    wrap.addEventListener('click', e=>{
-      e.stopPropagation();
-      const sel = wrap.querySelector('.vendor-status-select');
-      if(sel) sel.click();
-    });
-  });
-
-  document.querySelectorAll('.vendor-status-select').forEach(sel=>{
-    sel.addEventListener('change', e=>{
-      e.stopPropagation();
-      const v = state.data.vendors.find(x=>x.id===sel.dataset.vid);
-      if(!v) return;
-      v.companyStatus = sel.value;
-      // Inactive 선택 시 우선순위 낮음 + 액션상태 계약중단 자동 설정
-      if(sel.value === 'Inactive'){
-        v.priority = '낮음';
-        if(!v.actionStatus || v.actionStatus === '') v.actionStatus = '계약 중단';
-      }
-      persist(false);
-      render();
-    });
-  });
-
-  // ── 프로젝트 상태값 인라인 변경 ──
-  document.querySelectorAll('.proj-status-select').forEach(sel=>{
-    sel.addEventListener('change', e=>{
-      e.stopPropagation();
-      const p = state.data.projects.find(x=>x.id===sel.dataset.pid);
-      if(p){
-        p.status = sel.value;
-        if(sel.value==='완료' && !p.completedDate) p.completedDate = dayjs().format('YYYY-MM-DD');
-        if(sel.value!=='완료') p.completedDate = '';
-        persist(false); render();
-      }
-    });
-  });
-
   // 대표님 승인 항목 클릭 → 벤더 상세로 이동
   document.querySelectorAll('.approval-item').forEach(el=>{
     el.addEventListener('click', ()=>{
