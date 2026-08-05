@@ -2841,18 +2841,18 @@ function viewVendorList(){
       ${hitZones}
     </svg>
     ${yAxisLabelsHtml}
-    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-130%);z-index:5;min-width:110px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px">
-        <span class="pct-label" style="font-size:9px;color:var(--muted)"></span>
-        <span class="pct-change-badge" style="font-size:9px;font-weight:700"></span>
+    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#1C1C22;border-radius:10px;padding:10px 13px;font-size:10px;box-shadow:0 8px 20px rgba(0,0,0,.25);white-space:nowrap;transform:translate(-50%,-130%);z-index:5;min-width:120px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px">
+        <span class="pct-label" style="font-size:9.5px;color:rgba(255,255,255,.55)"></span>
+        <span class="pct-change-badge" style="font-size:9.5px;font-weight:700"></span>
       </div>
-      <div style="display:flex;align-items:center;gap:5px">
+      <div style="display:flex;align-items:center;gap:6px">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--o);flex-shrink:0"></span>
-        <span class="pct-value" style="font-weight:700;font-size:12px;color:var(--text)"></span>
+        <span class="pct-value" style="font-weight:700;font-size:13px;color:#fff"></span>
       </div>
-      <div class="pct-compare-row" style="display:flex;align-items:center;gap:5px;margin-top:2px">
-        <span style="width:6px;height:6px;border-radius:50%;border:1.5px solid #B0B4BB;background:transparent;flex-shrink:0"></span>
-        <span class="pct-compare-value" style="font-size:10px;color:var(--muted)"></span>
+      <div class="pct-compare-row" style="display:flex;align-items:center;gap:6px;margin-top:3px">
+        <span style="width:6px;height:6px;border-radius:50%;border:1.5px solid rgba(255,255,255,.4);background:transparent;flex-shrink:0"></span>
+        <span class="pct-compare-value" style="font-size:10px;color:rgba(255,255,255,.55)"></span>
       </div>
     </div>
     ${xAxisLabelsHtml}
@@ -2893,7 +2893,7 @@ function computeVendorAnalyticsData(){
   return { vendors, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear };
 }
 
-function buildDonutChart(segments, size=132, thickness=20){
+function buildDonutChart(segments, size=132, thickness=20, centerLabel=null){
   const total = segments.reduce((a,s)=>a+s.value,0) || 1;
   const r = (size - thickness)/2;
   const cx = size/2, cy = size/2;
@@ -2907,10 +2907,18 @@ function buildDonutChart(segments, size=132, thickness=20){
     offset += frac*circumference;
     return el;
   }).join('');
-  return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--sf)" stroke-width="${thickness}"/>
-    ${arcs}
-  </svg>`;
+  const centerHtml = centerLabel ? `
+    <div style="position:absolute;top:0;left:0;width:${size}px;height:${size}px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none">
+      <div style="font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.02em;line-height:1.15">${centerLabel.value}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:1px">${centerLabel.label}</div>
+    </div>` : '';
+  return `<div style="position:relative;width:${size}px;height:${size}px;flex-shrink:0">
+    <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" style="display:block">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--sf)" stroke-width="${thickness}"/>
+      ${arcs}
+    </svg>
+    ${centerHtml}
+  </div>`;
 }
 
 function viewVendorAnalytics(){
@@ -2986,19 +2994,29 @@ function viewVendorAnalytics(){
   const donutSegments = donutTop.map((x,i)=>({ label:x.v.name, value:x.total, color:donutPalette[i] }));
   if(donutOthersTotal>0) donutSegments.push({ label:'기타', value:donutOthersTotal, color:'#D7D9DE' });
   const donutTotal = donutSegments.reduce((a,s)=>a+s.value,0) || 1;
+  const formatCompact = (n) => {
+    if(n>=1000000) return '$'+(n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
+    if(n>=1000) return '$'+(n/1000).toFixed(1).replace(/\.0$/,'')+'K';
+    return '$'+n.toLocaleString();
+  };
 
-  const kpiCard = (icon, iconColor, label, value, sub, badge) => `
+  const kpiCard = (icon, iconColor, label, value, trendHtml) => `
     <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <span style="width:30px;height:30px;border-radius:9px;background:${iconColor}1f;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ${icon}" style="font-size:15px;color:${iconColor}"></i>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="width:26px;height:26px;border-radius:8px;background:${iconColor}1f;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ${icon}" style="font-size:13px;color:${iconColor}"></i>
         </span>
-        ${badge||''}
+        <span style="font-size:11.5px;color:var(--muted);font-weight:500">${label}</span>
       </div>
-      <div style="font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:4px">${value}</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px">${label}</div>
-      ${sub||''}
+      <div style="font-size:19px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:8px">${value}</div>
+      ${trendHtml||''}
     </div>`;
+  const trendRow = (pct, compareLabel) => pct===null
+    ? `<div style="font-size:10.5px;color:var(--muted)">${compareLabel}</div>`
+    : `<div style="font-size:11px;display:flex;align-items:center;gap:5px">
+        <span style="color:${pct>=0?'#30A46C':'#E5484D'};font-weight:600;display:inline-flex;align-items:center;gap:2px"><i class="ti ${pct>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(pct)}%</span>
+        <span style="color:var(--muted)">${compareLabel}</span>
+      </div>`;
 
   const segBtn = (key, label, active) => `<button type="button" class="rank-scope-btn" data-scope="${key}" style="font-size:11px;padding:4px 10px;border-radius:7px;border:none;cursor:pointer;background:${active?'#111114':'transparent'};color:${active?'#fff':'var(--muted)'};font-weight:${active?'600':'400'}">${label}</button>`;
 
@@ -3015,16 +3033,15 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
       ${kpiCard('ti-report-money', '#3E7BFA', '전체 누적 구매액', `$${allTimeTotal.toLocaleString()}`,
-        `<div style="font-size:10.5px;color:var(--muted)">${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳</div>`)}
+        trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`))}
       ${kpiCard('ti-calendar-stats', '#8E4EC6', `${selectedYear}년 총 구매액`, `$${thisYearTotal.toLocaleString()}`,
-        yoyChange!==null?`<div style="font-size:10.5px;color:${yoyChange>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px">${yoyChange>=0?'↑':'↓'} ${Math.abs(yoyChange)}% <span style="color:var(--muted);font-weight:400">전년대비</span></div>`:`<div style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</div>`,
-        yoyChange!==null?`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:${yoyChange>=0?'#30A46C1a':'#E5484D1a'};color:${yoyChange>=0?'#30A46C':'#E5484D'}">${yoyChange>=0?'+':''}${yoyChange}%</span>`:'')}
+        trendRow(yoyChange, yoyChange!==null?'전년대비':'전년 데이터 없음'))}
       ${kpiCard('ti-chart-bar', '#F0883E', `${selectedYear}년 월평균`, `$${avgMonthlyThisYear.toLocaleString()}`,
-        `<div style="font-size:10.5px;color:var(--muted)">데이터 있는 ${selMonthKeysWithData.length}개월 기준</div>`)}
+        trendRow(null, `데이터 있는 ${selMonthKeysWithData.length}개월 기준`))}
       ${kpiCard('ti-building-store', '#111114', '벤더당 누적 평균 구매액', `$${avgPerVendor.toLocaleString()}`,
-        `<div style="font-size:10.5px;color:var(--muted)">활성 벤더 ${activeVendorCount}곳 · 전체 누적 기준</div>`)}
+        trendRow(null, `활성 벤더 ${activeVendorCount}곳 · 전체 누적 기준`))}
       ${kpiCard('ti-chart-pie', concentrationPct>=60?'#E5484D':'#30A46C', '상위 3개 벤더 집중도', `${concentrationPct}%`,
-        `<div style="font-size:10.5px;color:var(--muted)">전체 누적 구매액 중 비중</div>`)}
+        trendRow(null, '전체 누적 구매액 중 비중'))}
     </div>
 
     <div class="card" style="margin-bottom:16px;background:rgba(255,255,255,.7)">
@@ -3048,10 +3065,16 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
       <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-          <span style="font-size:14px;font-weight:600;color:var(--text)">월별 구매 현황 (${selectedYear}년)</span>
-          ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+            <span style="font-size:14px;font-weight:600;color:var(--text)">월별 구매 현황</span>
+            ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;font-size:11px">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">${selectedYear}년</span><span style="font-weight:700;color:var(--text)">$${thisYearTotal.toLocaleString()}</span></span>
+            ${hasCompare?`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">${selectedYear-1}년</span><span style="font-weight:700;color:var(--text)">$${prevYearTotal.toLocaleString()}</span></span>`:''}
+          </div>
         </div>
         ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
@@ -3092,7 +3115,7 @@ function viewVendorAnalytics(){
         </div>
         ${donutSegments.length===0 ? `<div class="empty-state" style="padding:20px 0">데이터가 없습니다.</div>` : `
         <div style="display:flex;align-items:center;gap:18px">
-          <div style="flex-shrink:0">${buildDonutChart(donutSegments)}</div>
+          ${buildDonutChart(donutSegments, 132, 20, {value: formatCompact(donutTotal), label: rankScopeLabel})}
           <div style="flex:1;min-width:0">
             ${donutSegments.map(s=>{
               const pct = Math.round((s.value/donutTotal)*100);
@@ -8366,7 +8389,7 @@ function bindViewEvents(){
             const pct = Math.round(((curVal-cmpVal)/cmpVal)*1000)/10;
             const positive = pct>=0;
             changeBadgeEl.style.display = 'inline';
-            changeBadgeEl.style.color = positive?'#1C9873':'#C0392B';
+            changeBadgeEl.style.color = positive?'#30A46C':'#E5484D';
             changeBadgeEl.textContent = (positive?'↑ ':'↓ ')+Math.abs(pct)+'%';
           } else {
             changeBadgeEl.style.display = 'none';
