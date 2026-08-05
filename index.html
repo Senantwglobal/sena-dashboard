@@ -3814,22 +3814,28 @@ function viewVendorDetail(){
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
-              <div class="person-row" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd)">
-                ${av(p.name, 28)}
-                <div style="flex:1;min-width:0">
-                  <div style="display:flex;align-items:center;gap:4px">
-                    <span style="font-size:12px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
-                    ${p.isMain?`<span style="font-size:9px;background:var(--ol);color:var(--od);padding:1px 5px;border-radius:20px;flex-shrink:0">메인</span>`:''}
-                  </div>
-                  ${p.title?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</div>`:''}
-                  ${p.email?`<a href="mailto:${p.email}" style="font-size:10px;color:var(--o);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</a>`:''}
-                  ${p.phone?`<div style="font-size:10px;color:var(--muted)">${p.phone}</div>`:''}
-                </div>
-                ${!isReadOnly()?`<div style="display:flex;gap:2px;flex-shrink:0">
-                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px"><i class="ti ti-pencil"></i></button>
-                  ${!p.isMain?`<button class="btn person-set-main-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px">⭐</button>`:''}
-                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 5px;font-size:10px"><i class="ti ti-trash"></i></button>
+              <div class="person-row" style="padding:12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px;position:relative">
+                ${!isReadOnly()?`<div style="position:absolute;top:10px;right:10px;display:flex;gap:2px">
+                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none"><i class="ti ti-pencil"></i></button>
+                  ${!p.isMain?`<button class="btn person-set-main-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none">⭐</button>`:''}
+                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none"><i class="ti ti-trash"></i></button>
                 </div>`:''}
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                  ${av(p.name, 36)}
+                  <div style="flex:1;min-width:0;padding-right:${!isReadOnly()?'60px':'0'}">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
+                      ${p.isMain?`<span style="font-size:9px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:2px 8px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:3px"><span style="width:5px;height:5px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
+                    </div>
+                    ${p.email?`<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${p.email}</div>`:''}
+                  </div>
+                </div>
+                ${p.title?`<span style="display:inline-block;font-size:10.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:3px 10px;border-radius:20px;margin-bottom:10px">${p.title}</span>`:''}
+                <div style="display:flex;gap:8px">
+                  ${p.email?`<a href="mailto:${p.email}" class="btn" style="flex:1;justify-content:center;font-size:11px"><i class="ti ti-mail"></i> 이메일</a>`:''}
+                  ${p.phone?`<a href="tel:${p.phone}" class="btn" style="flex:1;justify-content:center;font-size:11px"><i class="ti ti-phone"></i> ${p.phone}</a>`:''}
+                  ${!p.email&&!p.phone?`<div style="flex:1;text-align:center;font-size:11px;color:var(--muted);padding:6.5px 0">연락처 정보 없음</div>`:''}
+                </div>
               </div>`).join('');
           })()}
         </div>
@@ -3842,25 +3848,27 @@ function viewVendorDetail(){
 
           ${(v.companyType==='벤더'||!v.companyType)?`
           <!-- 벤더 필수 필드 -->
-          <div style="font-size:10px;font-weight:300;color:var(--o);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">벤더 조건</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:10px;font-weight:300;color:var(--o);text-transform:uppercase;letter-spacing:.05em">벤더 조건</span>
+            ${!isReadOnly()?`<button class="btn" id="editVendorTermsBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-pencil"></i> 수정</button>`:''}
+          </div>
           ${(() => {
-            // vendorTerms는 상단에서 activeBrand 기반으로 결정됨
             const fields = [
-              {key:'discount', label:'할인율', placeholder:'예: 25%', suffix:''},
-              {key:'payment',  label:'거래 조건', placeholder:'예: NET30/ACH'},
-              {key:'moq',      label:'MOQ', placeholder:'예: $500'},
-              {key:'creditLimit', label:'Credit Limit', placeholder:'예: $10,000'},
-              {key:'shipping', label:'Shipping Terms', placeholder:'예: FOB, DDP'},
+              {key:'discount', label:'할인율', icon:'ti-discount-2', color:'#30A46C'},
+              {key:'payment',  label:'거래 조건', icon:'ti-file-invoice', color:'#3E7BFA'},
+              {key:'moq',      label:'MOQ', icon:'ti-package', color:'#F0883E'},
+              {key:'creditLimit', label:'Credit Limit', icon:'ti-credit-card', color:'#8E4EC6'},
+              {key:'shipping', label:'Shipping Terms', icon:'ti-truck-delivery', color:'#E5484D'},
             ];
-            return fields.map(f=>`
-              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bd)">
-                <span style="font-size:11px;color:var(--muted);width:90px;flex-shrink:0">${f.label}</span>
-                ${!isReadOnly()
-                  ?`<input type="text" class="inp vterm-input" data-key="${f.key}" value="${((vendorTerms[f.key]||v.notes?.[f.key])||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder}" style="flex:1;margin:0;font-size:12px;padding:3px 8px"/>`
-                  :`<span style="font-size:12px;font-weight:300;flex:1">${vendorTerms[f.key]||v.notes?.[f.key]||'-'}</span>`}
-              </div>`).join('');
+            return fields.map(f=>{
+              const val = vendorTerms[f.key]||v.notes?.[f.key]||'';
+              return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--bd)">
+                <span style="width:26px;height:26px;border-radius:8px;background:${f.color}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${f.icon}" style="font-size:12px;color:${f.color}"></i></span>
+                <span style="font-size:11.5px;color:var(--muted);flex:1">${f.label}</span>
+                <span style="font-size:12px;font-weight:600;color:${val?'var(--text)':'var(--muted)'}">${val||'-'}</span>
+              </div>`;
+            }).join('');
           })()}
-          ${!isReadOnly()?`<button class="btn btn-o" id="saveVendorTermsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 조건 저장</button>`:''}
           <div style="height:12px"></div>
           `:''}
 
@@ -5924,6 +5932,36 @@ function bindBulkPurchaseUpdateModal(){
     if(file) handleBulkPurchaseFile(file);
     e.target.value='';
   });
+}
+
+function modalVendorTermsEdit(){
+  const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+  const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+  const isIndependent = brand && brand.inherit===false;
+  const target = isIndependent ? brand : v;
+  const vendorTerms = target.vendorTerms || {};
+  const fields = [
+    {key:'discount', label:'할인율', placeholder:'예: 25% 또는 0~10'},
+    {key:'payment',  label:'거래 조건', placeholder:'예: NET30/ACH'},
+    {key:'moq',      label:'MOQ', placeholder:'예: $500'},
+    {key:'creditLimit', label:'Credit Limit', placeholder:'예: $10,000'},
+    {key:'shipping', label:'Shipping Terms', placeholder:'예: FOB, DDP'},
+  ];
+  return `
+    <div class="modal" style="max-width:420px">
+      <div class="mh"><h3>벤더 조건 수정${isIndependent?` · ${brand.name} (독립)`:''}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        ${fields.map(f=>`
+          <div class="field">
+            <label class="field-label">${f.label}</label>
+            <input type="text" class="inp vterm-input" data-key="${f.key}" value="${((vendorTerms[f.key]||target.notes?.[f.key])||'').replace(/"/g,'&quot;')}" placeholder="${f.placeholder}"/>
+          </div>`).join('')}
+      </div>
+      <div class="mf">
+        <button class="btn btn-o" id="saveVendorTermsBtn"><i class="ti ti-device-floppy"></i> 저장</button>
+      </div>
+    </div>
+  `;
 }
 
 function modalVendorForm(vendor){
@@ -8791,26 +8829,31 @@ function bindViewEvents(){
 
   // person-set-main-btn, person-del-btn → 전역 위임 처리
 
-  // ── 벤더 조건 저장 ──
-  const saveVendorTermsBtn = document.getElementById('saveVendorTermsBtn');
-  if(saveVendorTermsBtn) saveVendorTermsBtn.addEventListener('click', ()=>{
-    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
-    if(!v) return;
-    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
-    const target = (brand && brand.inherit === false) ? brand : v;
-    // 직접 초기화 보장
-    if(!target.vendorTerms) target.vendorTerms = {};
-    document.querySelectorAll('.vterm-input').forEach(inp=>{
-      target.vendorTerms[inp.dataset.key] = inp.value.trim();
+  // ── 벤더 조건 수정 모달 열기 ──
+  const editVendorTermsBtn = document.getElementById('editVendorTermsBtn');
+  if(editVendorTermsBtn) editVendorTermsBtn.addEventListener('click', ()=>{
+    openModal(modalVendorTermsEdit());
+    bindModalCommon();
+    const saveVendorTermsBtn = document.getElementById('saveVendorTermsBtn');
+    if(saveVendorTermsBtn) saveVendorTermsBtn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v) return;
+      const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = (brand && brand.inherit === false) ? brand : v;
+      if(!target.vendorTerms) target.vendorTerms = {};
+      document.querySelectorAll('.vterm-input').forEach(inp=>{
+        target.vendorTerms[inp.dataset.key] = inp.value.trim();
+      });
+      if(!brand){
+        if(!v.notes) v.notes = {};
+        v.notes.discount    = target.vendorTerms.discount    || '';
+        v.notes.payment     = target.vendorTerms.payment     || '';
+        v.notes.moq         = target.vendorTerms.moq         || '';
+        v.notes.creditLimit = target.vendorTerms.creditLimit || '';
+      }
+      closeModal();
+      persist(false); render(); showToast('벤더 조건이 저장되었습니다.');
     });
-    if(!brand){
-      if(!v.notes) v.notes = {};
-      v.notes.discount    = target.vendorTerms.discount    || '';
-      v.notes.payment     = target.vendorTerms.payment     || '';
-      v.notes.moq         = target.vendorTerms.moq         || '';
-      v.notes.creditLimit = target.vendorTerms.creditLimit || '';
-    }
-    persist(false); showToast('벤더 조건이 저장되었습니다.');
   });
 
   // ── 거래 메모 저장 / 삭제 / 추가 ──
