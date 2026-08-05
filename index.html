@@ -3852,27 +3852,22 @@ function viewVendorDetail(){
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
-              <div class="person-row" style="padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;position:relative">
-                ${!isReadOnly()?`<div style="position:absolute;top:7px;right:7px;display:flex;gap:0">
-                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:11px"></i></button>
-                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none"><i class="ti ti-trash" style="font-size:11px"></i></button>
-                </div>`:''}
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                  ${av(p.name, 26)}
-                  <div style="flex:1;min-width:0;padding-right:${!isReadOnly()?'42px':'0'}">
-                    <div style="display:flex;align-items:center;gap:5px">
-                      <span style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
-                      ${p.isMain?`<span style="font-size:8.5px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:1.5px 6px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:2px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
-                    </div>
-                    ${p.email?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</div>`:''}
+              <div class="person-row" style="padding:12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+                  ${av(p.name, 30)}
+                  <div style="flex:1;min-width:0;display:flex;align-items:center;gap:5px">
+                    <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
+                    ${p.isMain?`<span style="font-size:9px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:2px 7px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:3px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
                   </div>
+                  ${!isReadOnly()?`<div style="display:flex;gap:2px;flex-shrink:0">
+                    <button class="btn person-edit-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:12px"></i></button>
+                    <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none"><i class="ti ti-trash" style="font-size:12px"></i></button>
+                  </div>`:''}
                 </div>
-                ${p.title?`<span style="display:inline-block;font-size:9.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:2px 8px;border-radius:20px;margin-bottom:7px">${p.title}</span>`:''}
-                <div style="display:flex;gap:6px">
-                  ${p.email?`<a href="mailto:${p.email}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-mail" style="font-size:11px"></i> 이메일</a>`:''}
-                  ${p.phone?`<a href="tel:${p.phone}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-phone" style="font-size:11px"></i> ${p.phone}</a>`:''}
-                  ${!p.email&&!p.phone?`<div style="flex:1;text-align:center;font-size:10px;color:var(--muted);padding:5px 0">연락처 정보 없음</div>`:''}
-                </div>
+                ${p.title?`<span style="display:inline-block;font-size:10.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:3px 10px;border-radius:20px;margin-bottom:10px">${p.title}</span>`:''}
+                ${p.email?`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:6px"><i class="ti ti-mail" style="font-size:13px;flex-shrink:0"></i><a href="mailto:${p.email}" style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</a></div>`:''}
+                ${p.phone?`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)"><i class="ti ti-phone" style="font-size:13px;flex-shrink:0"></i><a href="tel:${p.phone}" style="color:var(--muted)">${p.phone}</a></div>`:''}
+                ${!p.email&&!p.phone?`<div style="font-size:11px;color:var(--muted)">연락처 정보 없음</div>`:''}
               </div>`).join('');
           })()}
         </div>
