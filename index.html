@@ -9599,29 +9599,64 @@ function bindVendorFormSubmit(existingVendor){
   document.getElementById('vendorForm').addEventListener('submit', e=>{
     e.preventDefault();
     const fd = new FormData(e.target);
+    const nameVal = (fd.get('name')||'').trim();
     const updates = {
-      name: fd.get('name'),
+      name: nameVal,
       priority: fd.get('priority'),
       companyType: fd.get('companyType') || '벤더',
       contact:{name:fd.get('contactName'), title:fd.get('contactTitle'), email:fd.get('contactEmail'), phone:fd.get('contactPhone')},
       notes:{discount:fd.get('discount'), payment:fd.get('payment'), moq:fd.get('moq'), creditLimit:fd.get('creditLimit')}
     };
-    if(existingVendor){
-      const idx = state.data.vendors.findIndex(v=>v.id===existingVendor.id);
-      // 기존 데이터(people, customNotes, logoUrl, companyStatus 등) 보존하고 편집 필드만 업데이트
-      state.data.vendors[idx] = { ...state.data.vendors[idx], ...updates };
-    } else {
-      state.data.vendors.push({
-        id: uid('v'),
-        status: '전송',
-        actionStatus: '',
-        companyStatus: 'Active',
-        people: [],
-        customNotes: [],
-        ...updates
-      });
+
+    const doSave = ()=>{
+      if(existingVendor){
+        const idx = state.data.vendors.findIndex(v=>v.id===existingVendor.id);
+        // 기존 데이터(people, customNotes, logoUrl, companyStatus 등) 보존하고 편집 필드만 업데이트
+        state.data.vendors[idx] = { ...state.data.vendors[idx], ...updates };
+      } else {
+        state.data.vendors.push({
+          id: uid('v'),
+          status: '전송',
+          actionStatus: '',
+          companyStatus: 'Active',
+          people: [],
+          customNotes: [],
+          ...updates
+        });
+      }
+      closeModal(); persist(false); showToast('회사 정보가 저장되었습니다.');
+    };
+
+    // 신규 등록 시 동일 이름의 거래처가 이미 있으면 경고 모달 표시
+    if(!existingVendor && nameVal){
+      const dup = state.data.vendors.find(v=>(v.name||'').trim().toLowerCase()===nameVal.toLowerCase());
+      if(dup){
+        openModal(`
+          <div class="modal" style="max-width:400px">
+            <div class="mh"><h3>중복된 거래처</h3><button class="btn btn-g close-x" id="closeDupModal"><i class="ti ti-x"></i></button></div>
+            <div class="mb">
+              <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:18px">
+                <span style="width:36px;height:36px;border-radius:10px;background:#F0883E1a;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-alert-triangle" style="font-size:18px;color:#F0883E"></i></span>
+                <div style="font-size:13px;color:var(--text);line-height:1.6">"<b>${dup.name}</b>" 이름으로 이미 등록된 거래처가 있습니다.<br/>그래도 새로 추가하시겠어요?</div>
+              </div>
+              <div style="display:flex;gap:8px;justify-content:flex-end">
+                <button type="button" class="btn" id="cancelDupBtn">취소</button>
+                <button type="button" class="btn btn-o" id="proceedDupBtn">그래도 추가</button>
+              </div>
+            </div>
+          </div>
+        `);
+        document.getElementById('closeDupModal').addEventListener('click', closeModal);
+        document.getElementById('cancelDupBtn').addEventListener('click', closeModal);
+        document.getElementById('proceedDupBtn').addEventListener('click', ()=>{
+          closeModal();
+          doSave();
+        });
+        return;
+      }
     }
-    closeModal(); persist(false); showToast('회사 정보가 저장되었습니다.');
+
+    doSave();
   });
   // 모달 내 삭제 버튼 (편집 모달에서)
   const deleteBtn = document.getElementById('deleteVendorBtn');
