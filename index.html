@@ -2834,7 +2834,7 @@ function viewVendorList(){
       ${(anomalyIndices||[]).map(idx=>{
         const p = points[idx];
         if(!p) return '';
-        return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" fill="none" stroke="#E5484D" stroke-width="1.5"><animate attributeName="r" values="4;6;4" dur="1.6s" repeatCount="indefinite"/></circle>`;
+        return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="none" stroke="#E5484D" stroke-width="1.25"><animate attributeName="r" values="3;4;3" dur="1.6s" repeatCount="indefinite"/></circle>`;
       }).join('')}
       <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="0.5" stroke-dasharray="2 3" opacity="0"/>
       <circle class="chart-hover-dot" cx="0" cy="0" r="2" fill="#fff" stroke="var(--o)" stroke-width="1.25" opacity="0"/>
@@ -2975,7 +2975,11 @@ function viewVendorAnalytics(){
     .sort((a,b)=>b[1]-a[1])
     .map(([vid,total])=>({ v: vendors.find(x=>x.id===vid), total }))
     .filter(x=>x.v);
-  const topVendors = rankedVendors;
+  const searchQuery = (state.vendorAnalyticsSearch||'').trim().toLowerCase();
+  const topVendors = !searchQuery ? rankedVendors : rankedVendors.filter(x=>{
+    if(x.v.name.toLowerCase().includes(searchQuery)) return true;
+    return (x.v.brands||[]).some(b=>(b.name||'').toLowerCase().includes(searchQuery));
+  });
   const topMax = Math.max(1, ...rankedVendors.map(x=>x.total));
 
   const donutPalette = ['#111114','#3E7BFA','#30A46C','#F0883E','#8E4EC6'];
@@ -3049,6 +3053,7 @@ function viewVendorAnalytics(){
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:18px;font-weight:700;margin:0">Vendor Analytics</h2>
+      <button type="button" class="cdd-trigger" data-cdd-type="vendor-analytics-year" style="font-size:12.5px;font-weight:600;padding:8px 14px;margin:0;width:auto;justify-content:space-between;gap:8px;background:var(--o);color:#fff;border-radius:9px"><i class="ti ti-calendar" style="font-size:13px"></i>${selectedYear}년<i class="ti ti-chevron-down cdd-caret" style="color:#fff"></i></button>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
@@ -3070,12 +3075,9 @@ function viewVendorAnalytics(){
           <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
           ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
         </div>
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:14px;font-size:11px">
-            <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">${selectedYear}년</span><span style="font-weight:700;color:var(--text)">$${thisYearTotal.toLocaleString()}</span></span>
-            ${hasCompare?`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">${selectedYear-1}년</span><span style="font-weight:700;color:var(--text)">$${prevYearTotal.toLocaleString()}</span></span>`:''}
-          </div>
-          <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-analytics-year" style="font-size:12px;padding:5px 10px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${selectedYear}년<i class="ti ti-chevron-down cdd-caret"></i></button>
+        <div style="display:flex;align-items:center;gap:14px;font-size:11px">
+          <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">${selectedYear}년</span><span style="font-weight:700;color:var(--text)">$${thisYearTotal.toLocaleString()}</span></span>
+          ${hasCompare?`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">${selectedYear-1}년</span><span style="font-weight:700;color:var(--text)">$${prevYearTotal.toLocaleString()}</span></span>`:''}
         </div>
       </div>
       ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
@@ -3103,7 +3105,7 @@ function viewVendorAnalytics(){
         </div>
         <button type="button" id="regenVendorTrendBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:6px 6px 6px 16px;background:var(--sf);border:none;border-radius:24px;cursor:pointer;font-size:12.5px;color:var(--muted)">
           <span>${state.anthropicApiKey ? 'Claude로 정밀 분석하기' : 'Claude 연동해서 더 똑똑하게 분석하기'}</span>
-          <span style="width:32px;height:32px;border-radius:50%;background:#111114;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <span style="width:32px;height:32px;border-radius:50%;background:var(--o);display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <i class="ti ti-sparkles" style="font-size:14px;color:#fff"></i>
           </span>
         </button>
@@ -3123,7 +3125,7 @@ function viewVendorAnalytics(){
                 <span style="color:var(--muted)">$${amt.toLocaleString()}</span>
               </div>
               <div style="height:6px;border-radius:4px;background:var(--sf);overflow:hidden">
-                <div style="width:${pct}%;height:100%;border-radius:4px;background:${isCur?'#111114':'#B4B7BE'}"></div>
+                <div style="width:${pct}%;height:100%;border-radius:4px;background:${isCur?'var(--o)':'#B4B7BE'}"></div>
               </div>
             </div>`;
           }).join('')
@@ -3160,23 +3162,34 @@ function viewVendorAnalytics(){
       </div>
 
       <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매액 상위 벤더 (${selectedYear}년)</span>
           <span style="font-size:11px;color:var(--muted)">총 ${rankedVendors.length}곳</span>
         </div>
+        <div class="search-wrap" style="margin-bottom:12px"><i class="ti ti-search"></i><input class="inp" id="vendorAnalyticsSearchInput" placeholder="벤더 또는 브랜드 검색..." value="${(state.vendorAnalyticsSearch||'').replace(/"/g,'&quot;')}" style="margin:0"/></div>
         <div style="max-height:520px;overflow-y:auto">
-        ${topVendors.length===0 ? `<div class="empty-state" style="padding:20px 0">구매 데이터가 있는 벤더가 없습니다.</div>` :
-          topVendors.map((x,i)=>{
+        ${topVendors.length===0 ? `<div class="empty-state" style="padding:20px 0">${state.vendorAnalyticsSearch?'검색 결과가 없습니다.':'구매 데이터가 있는 벤더가 없습니다.'}</div>` :
+          topVendors.map((x)=>{
+            const i = rankedVendors.indexOf(x);
             const badgeColors = ['#3E7BFA','#30A46C','#F0883E','#8E4EC6','#E5484D'];
             const bc = badgeColors[i%badgeColors.length];
             const prevYearAmt = (vendorYearTotals[selectedYear-1]||{})[x.v.id] || 0;
             const vYoy = prevYearAmt>0 ? Math.round(((x.total-prevYearAmt)/prevYearAmt)*1000)/10 : null;
+            const brandNames = (x.v.brands||[]).map(b=>b.name).filter(Boolean);
+            const brandLabel = brandNames.length===0 ? '' : brandNames.length<=2 ? brandNames.join(', ') : `${brandNames.slice(0,2).join(', ')} 외 ${brandNames.length-2}개`;
+            const discountStr = (x.v.notes && x.v.notes.discount) || '';
+            const discountNumMatch = discountStr.match(/[\d.]+/);
+            const discountNum = discountNumMatch ? parseFloat(discountNumMatch[0]) : NaN;
+            const hasDiscount = !isNaN(discountNum) && discountNum>0 && discountNum<100;
+            const originalAmt = hasDiscount ? Math.round(x.total/(1-discountNum/100)) : null;
+            const savedAmt = hasDiscount ? originalAmt - x.total : null;
             return `<div class="vendor-link" data-vid="${x.v.id}" style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-radius:8px;transition:background .12s" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span style="font-size:10.5px;font-weight:700;color:${bc};background:${bc}1a;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</span>
               ${av(x.v.name, 30, x.v.logoUrl)}
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.v.name}</div>
-                <span style="font-size:9.5px;font-weight:600;color:${bc};background:${bc}14;padding:1.5px 7px;border-radius:20px;display:inline-block;margin-top:2px">${x.v.companyType||'벤더'}</span>
+                ${brandLabel?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-tag" style="font-size:9px"></i> ${brandLabel}</div>`:''}
+                ${hasDiscount?`<div style="font-size:10px;color:#30A46C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-discount-2" style="font-size:9px"></i> ${discountNum}% 할인 · $${savedAmt.toLocaleString()} 절감 (정가 $${originalAmt.toLocaleString()})</div>`:''}
               </div>
               ${vYoy!==null?`<span style="font-size:10.5px;font-weight:600;color:${vYoy>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px;flex-shrink:0"><i class="ti ${vYoy>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(vYoy)}%</span>`:''}
               <span style="font-size:11.5px;font-weight:700;color:var(--text);background:var(--sf);padding:5px 11px;border-radius:20px;flex-shrink:0">$${x.total.toLocaleString()}</span>
@@ -7582,6 +7595,26 @@ function bindViewEvents(){
     bindModalCommon();
     bindBulkPurchaseUpdateModal();
   });
+
+  const vaSearch = document.getElementById('vendorAnalyticsSearchInput');
+  if(vaSearch){
+    let vaComposing = false;
+    vaSearch.addEventListener('compositionstart', ()=>{ vaComposing = true; });
+    vaSearch.addEventListener('compositionend', e=>{
+      vaComposing = false;
+      state.vendorAnalyticsSearch = e.target.value;
+      render();
+      const el = document.getElementById('vendorAnalyticsSearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+    vaSearch.addEventListener('input', e=>{
+      if(vaComposing) return;
+      state.vendorAnalyticsSearch = e.target.value;
+      render();
+      const el = document.getElementById('vendorAnalyticsSearchInput');
+      if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+    });
+  }
 
   const regenVendorTrendBtn = document.getElementById('regenVendorTrendBtn');
   if(regenVendorTrendBtn) regenVendorTrendBtn.addEventListener('click', async ()=>{
