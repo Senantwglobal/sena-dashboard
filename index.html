@@ -3007,6 +3007,18 @@ function viewVendorAnalytics(){
     </svg>`;
   };
 
+  const miniSparkline = (vals, color, w=60, h=26) => {
+    if(!vals || vals.length<2) return '';
+    const max = Math.max(...vals, 1), min = Math.min(...vals, 0);
+    const range = (max-min)||1;
+    const stepX = w/(vals.length-1);
+    const pts = vals.map((v,i)=>[i*stepX, h - ((v-min)/range)*h]);
+    const path = pts.map((p,i)=>`${i===0?'M':'L'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" style="flex-shrink:0;display:block">
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+  };
+
   const kpiCard = (icon, iconColor, label, value, trendHtml, sideVisual) => `
     <div class="card" style="padding:16px 18px;background:#fff;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
@@ -3025,8 +3037,8 @@ function viewVendorAnalytics(){
     </div>`;
   const trendRow = (pct, compareLabel) => pct===null
     ? `<div style="font-size:10.5px;color:var(--muted)">${compareLabel}</div>`
-    : `<div style="font-size:11px;display:flex;align-items:center;gap:5px">
-        <span style="color:${pct>=0?'#30A46C':'#E5484D'};font-weight:600;display:inline-flex;align-items:center;gap:2px"><i class="ti ${pct>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(pct)}%</span>
+    : `<div style="font-size:11px;display:flex;align-items:center;gap:6px">
+        <span style="background:${pct>=0?'#30A46C1a':'#E5484D1a'};color:${pct>=0?'#30A46C':'#E5484D'};font-weight:600;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;gap:2px"><i class="ti ${pct>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:10px"></i>${Math.abs(pct)}%</span>
         <span style="color:var(--muted)">${compareLabel}</span>
       </div>`;
 
@@ -3042,11 +3054,14 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
       ${kpiCard('ti-report-money', '#3E7BFA', '전체 누적 구매액', `$${allTimeTotal.toLocaleString()}`,
-        trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`))}
+        trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`),
+        miniSparkline(yearBarYears.map(y=>yearTotals[y]||0), '#3E7BFA'))}
       ${kpiCard('ti-calendar-stats', '#8E4EC6', `${selectedYear}년 총 구매액`, `$${thisYearTotal.toLocaleString()}`,
-        trendRow(yoyChange, yoyChange!==null?'전년대비':'전년 데이터 없음'))}
+        trendRow(yoyChange, yoyChange!==null?'전년대비':'전년 데이터 없음'),
+        miniSparkline(monthVals, yoyChange!==null&&yoyChange<0?'#E5484D':'#8E4EC6'))}
       ${kpiCard('ti-chart-bar', '#F0883E', `${selectedYear}년 월평균`, `$${avgMonthlyThisYear.toLocaleString()}`,
-        trendRow(null, `데이터 있는 ${selMonthKeysWithData.length}개월`), null)}
+        trendRow(null, `데이터 있는 ${selMonthKeysWithData.length}개월`),
+        miniSparkline(monthVals, '#F0883E'))}
       ${kpiCard('ti-building-store', '#111114', '벤더당 누적 평균', `$${avgPerVendor.toLocaleString()}`,
         trendRow(null, `활성 벤더 ${activeVendorCount}곳`))}
       ${kpiCard('ti-chart-pie', concentrationPct>=60?'#E5484D':'#30A46C', '상위 3개 벤더 집중도', `${concentrationPct}%`,
@@ -3159,7 +3174,7 @@ function viewVendorAnalytics(){
               ${av(x.v.name, 30, x.v.logoUrl)}
               <div style="flex:1;min-width:0">
                 <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.v.name}</div>
-                <div style="font-size:10.5px;color:var(--muted)">${x.v.companyType||'벤더'}</div>
+                <span style="font-size:9.5px;font-weight:600;color:${bc};background:${bc}14;padding:1.5px 7px;border-radius:20px;display:inline-block;margin-top:2px">${x.v.companyType||'벤더'}</span>
               </div>
               ${vYoy!==null?`<span style="font-size:10.5px;font-weight:600;color:${vYoy>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px;flex-shrink:0"><i class="ti ${vYoy>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(vYoy)}%</span>`:''}
               <span style="font-size:11.5px;font-weight:700;color:var(--text);background:var(--sf);padding:5px 11px;border-radius:20px;flex-shrink:0">$${x.total.toLocaleString()}</span>
@@ -7362,11 +7377,13 @@ async function callClaudeVendorTrend(ctx){
   const textBlock = data.content?.find(b=>b.type==='text');
   if(!textBlock?.text) return null;
   try{
-    const cleaned = textBlock.text.trim().replace(/^```json\s*|```$/g,'');
-    const arr = JSON.parse(cleaned);
+    const raw = textBlock.text.trim();
+    const match = raw.match(/\[[\s\S]*\]/); // 앞뒤에 설명/마크다운이 섞여 있어도 배열 부분만 추출
+    if(!match){ console.error('Claude 트렌드 분석: JSON 배열을 찾지 못함. 원문:', raw); return null; }
+    const arr = JSON.parse(match[0]);
     const tagColors = {'상승':'#30A46C','하락':'#E5484D','급변동':'#E5484D','집중리스크':'#E5484D','양호':'#30A46C','최다구매':'#3E7BFA'};
     return arr.map(it=>({ tag: it.tag||'인사이트', tagColor: tagColors[it.tag]||'#8E4EC6', text: it.text||'' })).filter(it=>it.text);
-  }catch(e){ return null; }
+  }catch(e){ console.error('Claude 트렌드 분석 파싱 실패:', e, textBlock.text); return null; }
 }
 
 async function callClaudeSummary(text){
