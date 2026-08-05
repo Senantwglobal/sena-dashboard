@@ -348,6 +348,79 @@ function compressImageToBlob(file, maxDim=480, quality=0.8){
   });
 }
 
+function dataUrlToBlob(dataUrl){
+  const match = dataUrl.match(/^data:([^;]+);base64,(.*)$/);
+  if(!match) return null;
+  return base64ToBlob(match[2], match[1]);
+}
+function base64ToBlob(b64, mime){
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+  return new Blob([bytes], {type: mime||'application/octet-stream'});
+}
+
+// ── 일회성 정리 도구: 예전에 JSON 안에 base64로 박혀있던 로고/파일을 전부 Storage로 이전 ──
+// 브라우저 콘솔에서 migrateOldAttachmentsToStorage() 실행
+window.migrateOldAttachmentsToStorage = async function(){
+  const beforeSize = new Blob([JSON.stringify(state.data)]).size;
+  let count = 0, failCount = 0;
+  showToast('기존 첨부파일 정리를 시작합니다... (콘솔에서 진행상황 확인)');
+
+  async function migrateLogo(obj, label){
+    if(obj.logoUrl && obj.logoUrl.startsWith('data:')){
+      try{
+        const blob = dataUrlToBlob(obj.logoUrl);
+        obj.logoUrl = await uploadFileToStorage(blob, 'logos', (label||'logo')+'.jpg');
+        count++;
+        console.log('✔ 로고 이전 완료:', label);
+      }catch(e){ failCount++; console.error('✘ 로고 이전 실패:', label, e); }
+    }
+  }
+  async function migrateLinks(links, label){
+    if(!links) return;
+    for(const lk of links){
+      if(lk.data){
+        try{
+          const blob = base64ToBlob(lk.data, lk.type);
+          lk.url = await uploadFileToStorage(blob, 'attachments', lk.label||'file');
+          delete lk.data;
+          count++;
+          console.log('✔ 파일 이전 완료:', label, lk.label);
+        }catch(e){ failCount++; console.error('✘ 파일 이전 실패:', label, lk.label, e); }
+      }
+    }
+  }
+
+  if(state.data.profilePhotoUrl && state.data.profilePhotoUrl.startsWith('data:')){
+    try{
+      const blob = dataUrlToBlob(state.data.profilePhotoUrl);
+      state.data.profilePhotoUrl = await uploadFileToStorage(blob, 'profile-photos', 'profile.jpg');
+      count++;
+      console.log('✔ 프로필 사진 이전 완료');
+    }catch(e){ failCount++; console.error('✘ 프로필 사진 이전 실패:', e); }
+  }
+
+  for(const v of (state.data.vendors||[])){
+    await migrateLogo(v, v.name);
+    await migrateLinks(v.links, v.name);
+    for(const b of (v.brands||[])){
+      await migrateLogo(b, `${v.name} - ${b.name}`);
+      await migrateLinks(b.links, `${v.name} - ${b.name}`);
+    }
+  }
+  for(const p of (state.data.projects||[])){
+    await migrateLinks(p.links, p.title);
+  }
+
+  const afterSize = new Blob([JSON.stringify(state.data)]).size;
+  persist(false);
+  render();
+  const msg = `정리 완료! ${count}개 이전 (실패 ${failCount}개), 용량 ${(beforeSize/1024/1024).toFixed(1)}MB → ${(afterSize/1024/1024).toFixed(1)}MB`;
+  showToast(msg);
+  console.log(msg);
+};
+
 async function supabaseFetch(path, options={}){
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
   const {prefer, body, method, ...rest} = options;
