@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/tabler-icons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.1.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 // 아이콘 폰트가 실제로 로드됐는지 확인 → 실패 시 폰트 없이도 KPI 카드가 비어보이지 않게 이모지 폴백 적용
 (function(){
@@ -1778,6 +1779,7 @@ function render(){
   const tabs = [
     {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
     {view:'vendors', icon:'ti-building-store', label:'거래처'},
+    {view:'vendorAnalytics', icon:'ti-chart-histogram', label:'벤더 통합'},
     {view:'projects', icon:'ti-checklist', label:'프로젝트'},
     {view:'calendar', icon:'ti-calendar', label:'캘린더'},
     {view:'leave', icon:'ti-beach', label:'연차'},
@@ -1902,6 +1904,7 @@ function render(){
   const root = document.getElementById('viewRoot');
   if(state.view==='home') root.innerHTML = viewHome();
   else if(state.view==='vendors') root.innerHTML = state.selectedVendorId ? viewVendorDetail() : viewVendorList();
+  else if(state.view==='vendorAnalytics') root.innerHTML = viewVendorAnalytics();
   else if(state.view==='projects') root.innerHTML = state.selectedProjectId ? viewProjectDetail() : viewProjects();
   else if(state.view==='calendar') root.innerHTML = viewCalendar();
   else if(state.view==='log') root.innerHTML = viewLogInput();
@@ -2575,6 +2578,16 @@ window.toggleCdd = function(trigger){
       label:s.l, active:cur===s.v,
       onSelect:()=>{ state.vendorPriorityFilter=s.v; render(); }
     })));
+  } else if(type === 'vendor-analytics-year'){
+    const { yearTotals } = computeVendorAnalyticsData();
+    const currentYearNum = Number(dayjs().format('YYYY'));
+    let years = Object.keys(yearTotals).map(Number).sort((a,b)=>b-a);
+    if(!years.includes(currentYearNum)) years = [currentYearNum, ...years];
+    const cur = state.vendorAnalyticsYear || (years.includes(currentYearNum) ? currentYearNum : years[0]);
+    openDropdown(trigger, years.map(y=>({
+      label: y+'년', active: cur===y,
+      onSelect:()=>{ state.vendorAnalyticsYear=y; render(); }
+    })));
   }
 };
 
@@ -2650,7 +2663,7 @@ function viewVendorList(){
         <span style="font-size:16px;font-weight:300">Company</span>
         <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="vendorSearchInput" placeholder="회사명 또는 담당자 검색" value="${state.vendorSearch}" style="margin:0"/></div>
       </div>
-      ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCompanyTypesBtn"><i class="ti ti-settings"></i> 유형 관리</button><button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 회사 추가</button></div>`:''}
+      ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCompanyTypesBtn"><i class="ti ti-settings"></i> 유형 관리</button><button class="btn" id="bulkPurchaseUpdateBtn"><i class="ti ti-file-spreadsheet"></i> 구매액 일괄 업데이트</button><button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 회사 추가</button></div>`:''}
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
@@ -2712,6 +2725,313 @@ function viewVendorList(){
           }).join('')}
         </tbody>
       </table>
+    </div>
+  `;
+}
+
+
+  function buildAreaChartSvg(vals, maxVal, labels, compareVals, anomalyIndices){
+    if(!vals || vals.length===0){
+      return `<div class="purchase-chart-wrap" style="position:relative"></div>`;
+    }
+    const W = 700, H = 160, padX = 16, padY = 16, padLeft = 44;
+    const stepX = vals.length>1 ? (W-padLeft-padX)/(vals.length-1) : 0;
+    const points = vals.map((val,i)=>{
+      const x = padLeft + i*stepX;
+      const y = H - padY - (maxVal>0 ? (val/maxVal)*(H-2*padY) : 0);
+      return [x,y];
+    });
+    const comparePoints = (compareVals && compareVals.length===vals.length) ? compareVals.map((val,i)=>{
+      const x = padLeft + i*stepX;
+      const y = H - padY - (maxVal>0 ? (Math.max(val,0)/maxVal)*(H-2*padY) : 0);
+      return [x,y];
+    }) : null;
+    // 부드러운 곡선 - monotone cubic(Fritsch-Carlson) 보간: Catmull-Rom과 달리 오버슈트(뾰족한 스파이크) 없음
+    function monotonePath(pts){
+      const n = pts.length;
+      if(n===0) return '';
+      if(n<2) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+      const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
+      const dxs=[], ms=[];
+      for(let i=0;i<n-1;i++){
+        const dx = xs[i+1]-xs[i];
+        dxs.push(dx);
+        ms.push(dx!==0 ? (ys[i+1]-ys[i])/dx : 0);
+      }
+      const tangents = [ms[0]];
+      for(let i=1;i<n-1;i++){
+        tangents.push(ms[i-1]*ms[i] <= 0 ? 0 : (ms[i-1]+ms[i])/2);
+      }
+      tangents.push(ms[n-2]);
+      for(let i=0;i<n-1;i++){
+        if(ms[i]===0){ tangents[i]=0; tangents[i+1]=0; continue; }
+        const a = tangents[i]/ms[i];
+        const b = tangents[i+1]/ms[i];
+        const s = a*a+b*b;
+        if(s>9){
+          const t = 3/Math.sqrt(s);
+          tangents[i] = t*a*ms[i];
+          tangents[i+1] = t*b*ms[i];
+        }
+      }
+      let d = `M${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
+      for(let i=0;i<n-1;i++){
+        const h = dxs[i];
+        const cp1x = xs[i]+h/3;
+        const cp1y = ys[i]+tangents[i]*h/3;
+        const cp2x = xs[i+1]-h/3;
+        const cp2y = ys[i+1]-tangents[i+1]*h/3;
+        d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${xs[i+1].toFixed(1)},${ys[i+1].toFixed(1)}`;
+      }
+      return d;
+    }
+    const linePath = monotonePath(points);
+    const comparePath = comparePoints ? monotonePath(comparePoints) : null;
+    const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padY} L${points[0][0].toFixed(1)},${H-padY} Z`;
+
+    // Y축 기준선 (0 / 중간 / 최대) - 라인만 SVG 안에 (텍스트는 stretch로 왜곡되므로 별도 HTML로 뺌)
+    const gridFracs = [0, 0.5, 1];
+    const gridLines = gridFracs.map(f=>{
+      const y = H - padY - f*(H-2*padY);
+      return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" stroke="var(--bd)" stroke-width="0.5" stroke-dasharray="${f===0?'0':'2 4'}"/>`;
+    }).join('');
+    const yAxisLabelsHtml = gridFracs.map(f=>{
+      const val = Math.round(maxVal*f);
+      const topPct = ((H-padY-f*(H-2*padY))/H)*100;
+      return `<div style="position:absolute;left:0;top:${topPct.toFixed(1)}%;transform:translateY(-50%);font-size:8px;color:#B0B4BB;white-space:nowrap">$${val.toLocaleString()}</div>`;
+    }).join('');
+
+    const chartLabels = labels || ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+    // x축 라벨 - 실제 데이터 포인트와 동일한 좌표계산식 사용 (그리드 기반 라벨과의 정렬 어긋남 방지)
+    const xAxisLabelsHtml = `<div style="position:relative;height:14px;margin-top:2px">
+      ${points.map((p,i)=>{
+        const leftPct = (p[0]/W)*100;
+        const isEdge = i===0 || i===points.length-1;
+        const transform = i===0 ? 'translateX(0)' : (i===points.length-1 ? 'translateX(-100%)' : 'translateX(-50%)');
+        return `<span style="position:absolute;left:${leftPct.toFixed(2)}%;transform:${transform};font-size:9px;color:var(--muted);white-space:nowrap;top:0">${chartLabels[i]}</span>`;
+      }).join('')}
+    </div>`;
+
+    // 각 지점의 호버 영역 (해당 지점과 다음/이전 지점의 중간까지)
+    const hitZones = points.map((p,i)=>{
+      const prevMid = i===0 ? padLeft-4 : (points[i-1][0]+p[0])/2;
+      const nextMid = i===points.length-1 ? W-padX+4 : (points[i+1][0]+p[0])/2;
+      return `<rect class="chart-hit-zone" data-idx="${i}" x="${prevMid.toFixed(1)}" y="0" width="${(nextMid-prevMid).toFixed(1)}" height="${H}" fill="transparent" style="cursor:crosshair"/>`;
+    }).join('');
+
+    return `<div class="purchase-chart-wrap" style="position:relative">
+    <svg class="purchase-chart-svg" data-values='${JSON.stringify(vals)}' data-labels='${JSON.stringify(chartLabels)}' data-points='${JSON.stringify(points.map(p=>p.map(n=>Number(n.toFixed(1)))))}' data-compare='${JSON.stringify(compareVals||null)}' viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;aspect-ratio:${W}/${H}">
+      <defs>
+        <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="var(--o)" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="var(--o)" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${gridLines}
+      ${comparePath?`<path d="${comparePath}" fill="none" stroke="#B0B4BB" stroke-width="1" stroke-dasharray="3 3"/>`:''}
+      <path d="${areaPath}" fill="url(#purchaseGrad)"/>
+      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1" stroke-linecap="round"/>
+      ${(anomalyIndices||[]).map(idx=>{
+        const p = points[idx];
+        if(!p) return '';
+        return `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="5" fill="none" stroke="#E5484D" stroke-width="1.5"><animate attributeName="r" values="4;6;4" dur="1.6s" repeatCount="indefinite"/></circle>`;
+      }).join('')}
+      <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="0.5" stroke-dasharray="2 3" opacity="0"/>
+      <circle class="chart-hover-dot" cx="0" cy="0" r="2" fill="#fff" stroke="var(--o)" stroke-width="1.25" opacity="0"/>
+      ${hitZones}
+    </svg>
+    ${yAxisLabelsHtml}
+    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-130%);z-index:5;min-width:110px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px">
+        <span class="pct-label" style="font-size:9px;color:var(--muted)"></span>
+        <span class="pct-change-badge" style="font-size:9px;font-weight:700"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--o);flex-shrink:0"></span>
+        <span class="pct-value" style="font-weight:700;font-size:12px;color:var(--text)"></span>
+      </div>
+      <div class="pct-compare-row" style="display:flex;align-items:center;gap:5px;margin-top:2px">
+        <span style="width:6px;height:6px;border-radius:50%;border:1.5px solid #B0B4BB;background:transparent;flex-shrink:0"></span>
+        <span class="pct-compare-value" style="font-size:10px;color:var(--muted)"></span>
+      </div>
+    </div>
+    ${xAxisLabelsHtml}
+    </div>`;
+  }
+
+/* ============================================================
+   벤더 통합 (전체 벤더 구매 분석)
+   ============================================================ */
+function computeVendorAnalyticsData(){
+  const vendors = (state.data.vendors||[]).filter(v => (v.companyType||'벤더')==='벤더');
+  const yearTotals = {};       // {year: amount}
+  const vendorTotals = {};     // {vendorId: amount} (전체 누적)
+  const monthlyByYear = {};    // {year: {month: amount}}
+  vendors.forEach(v=>{
+    const pd = v.purchaseData || {};
+    let vTotal = 0;
+    Object.keys(pd).forEach(year=>{
+      const months = pd[year] || {};
+      Object.keys(months).forEach(month=>{
+        const amt = Number(months[month])||0;
+        if(!amt) return;
+        vTotal += amt;
+        yearTotals[year] = (yearTotals[year]||0) + amt;
+        if(!monthlyByYear[year]) monthlyByYear[year] = {};
+        monthlyByYear[year][month] = (monthlyByYear[year][month]||0) + amt;
+      });
+    });
+    if(vTotal>0) vendorTotals[v.id] = vTotal;
+  });
+  return { vendors, yearTotals, vendorTotals, monthlyByYear };
+}
+
+function viewVendorAnalytics(){
+  const { vendors, yearTotals, vendorTotals, monthlyByYear } = computeVendorAnalyticsData();
+  const currentYearNum = Number(dayjs().format('YYYY'));
+  const currentMonthNum = Number(dayjs().format('M'));
+  const yearsWithData = Object.keys(yearTotals).map(Number).sort((a,b)=>b-a);
+  const selectedYear = state.vendorAnalyticsYear && yearTotals[state.vendorAnalyticsYear]!==undefined
+    ? state.vendorAnalyticsYear
+    : (yearsWithData.includes(currentYearNum) ? currentYearNum : (yearsWithData[0] || currentYearNum));
+
+  const allTimeTotal = Object.values(yearTotals).reduce((a,b)=>a+b,0);
+  const thisYearTotal = yearTotals[selectedYear] || 0;
+  const prevYearTotal = yearTotals[selectedYear-1] || 0;
+  const yoyChange = prevYearTotal>0 ? Math.round(((thisYearTotal-prevYearTotal)/prevYearTotal)*1000)/10 : null;
+
+  const thisMonthAmt = (monthlyByYear[currentYearNum]||{})[currentMonthNum] || 0;
+  const prevMonthYear = currentMonthNum===1 ? currentYearNum-1 : currentYearNum;
+  const prevMonthNum  = currentMonthNum===1 ? 12 : currentMonthNum-1;
+  const prevMonthAmt = (monthlyByYear[prevMonthYear]||{})[prevMonthNum] || 0;
+  const momChange = prevMonthAmt>0 ? Math.round(((thisMonthAmt-prevMonthAmt)/prevMonthAmt)*1000)/10 : null;
+
+  const activeVendorCount = Object.keys(vendorTotals).length;
+  const avgPerVendor = activeVendorCount>0 ? Math.round(allTimeTotal/activeVendorCount) : 0;
+
+  // 선택 연도 월별 값 + 전년 동월 비교값 + 이상치(전월대비 ±40% 이상) 인덱스
+  const selMonths = monthlyByYear[selectedYear] || {};
+  const prevMonths = monthlyByYear[selectedYear-1] || {};
+  const monthCount = selectedYear===currentYearNum ? currentMonthNum : 12;
+  const monthVals = [];
+  const compareVals = [];
+  for(let m=1; m<=monthCount; m++){ monthVals.push(selMonths[m]||0); compareVals.push(prevMonths[m]!==undefined ? prevMonths[m] : null); }
+  const hasCompare = compareVals.some(v=>v!==null);
+  const anomalyIdx = [];
+  for(let i=1;i<monthVals.length;i++){
+    const prev = monthVals[i-1];
+    if(prev>0){
+      const chg = ((monthVals[i]-prev)/prev)*100;
+      if(Math.abs(chg) >= 40) anomalyIdx.push(i);
+    }
+  }
+  const maxMonthVal = Math.max(1, ...monthVals, ...(hasCompare?compareVals.filter(v=>v!==null):[]));
+  const monthChart = buildAreaChartSvg(monthVals, maxMonthVal, monthVals.map((_,i)=>`${i+1}월`), hasCompare?compareVals:null, anomalyIdx);
+
+  // 연도별 막대 요약 (최근 7개년)
+  const yearBarYears = yearsWithData.slice(0,7).reverse();
+  const yearBarMax = Math.max(1, ...yearBarYears.map(y=>yearTotals[y]||0));
+
+  // Top 벤더/브랜드 순위 (전체 누적 기준 상위 6)
+  const topVendors = Object.entries(vendorTotals)
+    .sort((a,b)=>b[1]-a[1]).slice(0,6)
+    .map(([vid,total])=>({ v: vendors.find(x=>x.id===vid), total }))
+    .filter(x=>x.v);
+  const topMax = Math.max(1, ...topVendors.map(x=>x.total));
+
+  return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+      <h2 style="font-size:18px;font-weight:700;margin:0">벤더 통합</h2>
+      <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-analytics-year" style="font-size:12px;padding:5px 10px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${selectedYear}년<i class="ti ti-chevron-down cdd-caret"></i></button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">전체 누적 구매액</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.02em;margin-bottom:8px">$${allTimeTotal.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted)">${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳</div>
+      </div>
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--muted)">${selectedYear}년 총 구매액</span>
+          ${yoyChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${yoyChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
+        </div>
+        <div style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em;margin-bottom:8px">$${thisYearTotal.toLocaleString()}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:11px;color:var(--muted)">전년대비</span>
+          ${yoyChange!==null?`<span style="font-size:12px;font-weight:700;color:${yoyChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(yoyChange)}% <i class="ti ${yoyChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
+        </div>
+      </div>
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--muted)">이번달 구매액</span>
+          ${momChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${momChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
+        </div>
+        <div style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em;margin-bottom:8px">$${thisMonthAmt.toLocaleString()}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:11px;color:var(--muted)">전월대비</span>
+          ${momChange!==null?`<span style="font-size:12px;font-weight:700;color:${momChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(momChange)}% <i class="ti ${momChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전월 데이터 없음</span>`}
+        </div>
+      </div>
+      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">벤더당 평균 구매액</div>
+        <div style="font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em;margin-bottom:8px">$${avgPerVendor.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--muted)">활성 벤더 ${activeVendorCount}곳 기준</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:600;color:var(--text)">월별 구매 현황 (${selectedYear}년)</span>
+          ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건 (점선 원 표시, 마우스 오버로 확인)</span>`:''}
+        </div>
+        ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
+      </div>
+      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:600;color:var(--text)">연도별 구매 추이</span>
+        </div>
+        ${yearBarYears.length===0 ? `<div class="empty-state" style="padding:30px 0">데이터가 없습니다.</div>` :
+          yearBarYears.map(y=>{
+            const amt = yearTotals[y]||0;
+            const pct = Math.max(2, Math.round((amt/yearBarMax)*100));
+            const isCur = y===selectedYear;
+            return `<div style="margin-bottom:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:4px">
+                <span style="font-weight:${isCur?'700':'400'};color:${isCur?'var(--text)':'var(--muted)'}">${y}년</span>
+                <span style="color:var(--muted)">$${amt.toLocaleString()}</span>
+              </div>
+              <div style="height:6px;border-radius:4px;background:var(--sf);overflow:hidden">
+                <div style="width:${pct}%;height:100%;border-radius:4px;background:${isCur?'#111114':'#B4B7BE'}"></div>
+              </div>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+
+    <div class="card" style="background:rgba(255,255,255,.7)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+        <span style="font-size:14px;font-weight:600;color:var(--text)">구매액 상위 벤더 (전체 누적)</span>
+      </div>
+      ${topVendors.length===0 ? `<div class="empty-state" style="padding:20px 0">구매 데이터가 있는 벤더가 없습니다.</div>` :
+        topVendors.map((x,i)=>{
+          const pct = Math.max(2, Math.round((x.total/topMax)*100));
+          return `<div class="vendor-link" data-vid="${x.v.id}" style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:0.5px solid var(--bd);cursor:pointer">
+            <span style="font-size:12px;font-weight:700;color:var(--muted);width:16px;flex-shrink:0">${i+1}</span>
+            ${av(x.v.name, 22, x.v.logoUrl)}
+            <span style="font-size:13px;font-weight:500;color:var(--text);width:140px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.v.name}</span>
+            <div style="flex:1;height:6px;border-radius:4px;background:var(--sf);overflow:hidden">
+              <div style="width:${pct}%;height:100%;border-radius:4px;background:#111114"></div>
+            </div>
+            <span style="font-size:12px;color:var(--muted);width:100px;text-align:right;flex-shrink:0">$${x.total.toLocaleString()}</span>
+          </div>`;
+        }).join('')
+      }
     </div>
   `;
 }
@@ -2847,129 +3167,6 @@ function viewVendorDetail(){
   });
 
   if(!usdKrwRate) fetchExchangeRate();
-  function buildAreaChartSvg(vals, maxVal, labels, compareVals){
-    if(!vals || vals.length===0){
-      return `<div class="purchase-chart-wrap" style="position:relative"></div>`;
-    }
-    const W = 700, H = 160, padX = 16, padY = 16, padLeft = 44;
-    const stepX = vals.length>1 ? (W-padLeft-padX)/(vals.length-1) : 0;
-    const points = vals.map((val,i)=>{
-      const x = padLeft + i*stepX;
-      const y = H - padY - (maxVal>0 ? (val/maxVal)*(H-2*padY) : 0);
-      return [x,y];
-    });
-    const comparePoints = (compareVals && compareVals.length===vals.length) ? compareVals.map((val,i)=>{
-      const x = padLeft + i*stepX;
-      const y = H - padY - (maxVal>0 ? (Math.max(val,0)/maxVal)*(H-2*padY) : 0);
-      return [x,y];
-    }) : null;
-    // 부드러운 곡선 - monotone cubic(Fritsch-Carlson) 보간: Catmull-Rom과 달리 오버슈트(뾰족한 스파이크) 없음
-    function monotonePath(pts){
-      const n = pts.length;
-      if(n===0) return '';
-      if(n<2) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-      const xs = pts.map(p=>p[0]), ys = pts.map(p=>p[1]);
-      const dxs=[], ms=[];
-      for(let i=0;i<n-1;i++){
-        const dx = xs[i+1]-xs[i];
-        dxs.push(dx);
-        ms.push(dx!==0 ? (ys[i+1]-ys[i])/dx : 0);
-      }
-      const tangents = [ms[0]];
-      for(let i=1;i<n-1;i++){
-        tangents.push(ms[i-1]*ms[i] <= 0 ? 0 : (ms[i-1]+ms[i])/2);
-      }
-      tangents.push(ms[n-2]);
-      for(let i=0;i<n-1;i++){
-        if(ms[i]===0){ tangents[i]=0; tangents[i+1]=0; continue; }
-        const a = tangents[i]/ms[i];
-        const b = tangents[i+1]/ms[i];
-        const s = a*a+b*b;
-        if(s>9){
-          const t = 3/Math.sqrt(s);
-          tangents[i] = t*a*ms[i];
-          tangents[i+1] = t*b*ms[i];
-        }
-      }
-      let d = `M${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
-      for(let i=0;i<n-1;i++){
-        const h = dxs[i];
-        const cp1x = xs[i]+h/3;
-        const cp1y = ys[i]+tangents[i]*h/3;
-        const cp2x = xs[i+1]-h/3;
-        const cp2y = ys[i+1]-tangents[i+1]*h/3;
-        d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${xs[i+1].toFixed(1)},${ys[i+1].toFixed(1)}`;
-      }
-      return d;
-    }
-    const linePath = monotonePath(points);
-    const comparePath = comparePoints ? monotonePath(comparePoints) : null;
-    const areaPath = linePath + ` L${points[points.length-1][0].toFixed(1)},${H-padY} L${points[0][0].toFixed(1)},${H-padY} Z`;
-
-    // Y축 기준선 (0 / 중간 / 최대) - 라인만 SVG 안에 (텍스트는 stretch로 왜곡되므로 별도 HTML로 뺌)
-    const gridFracs = [0, 0.5, 1];
-    const gridLines = gridFracs.map(f=>{
-      const y = H - padY - f*(H-2*padY);
-      return `<line x1="${padLeft}" y1="${y.toFixed(1)}" x2="${W-padX}" y2="${y.toFixed(1)}" stroke="var(--bd)" stroke-width="0.5" stroke-dasharray="${f===0?'0':'2 4'}"/>`;
-    }).join('');
-    const yAxisLabelsHtml = gridFracs.map(f=>{
-      const val = Math.round(maxVal*f);
-      const topPct = ((H-padY-f*(H-2*padY))/H)*100;
-      return `<div style="position:absolute;left:0;top:${topPct.toFixed(1)}%;transform:translateY(-50%);font-size:8px;color:#B0B4BB;white-space:nowrap">$${val.toLocaleString()}</div>`;
-    }).join('');
-
-    const chartLabels = labels || ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-    // x축 라벨 - 실제 데이터 포인트와 동일한 좌표계산식 사용 (그리드 기반 라벨과의 정렬 어긋남 방지)
-    const xAxisLabelsHtml = `<div style="position:relative;height:14px;margin-top:2px">
-      ${points.map((p,i)=>{
-        const leftPct = (p[0]/W)*100;
-        const isEdge = i===0 || i===points.length-1;
-        const transform = i===0 ? 'translateX(0)' : (i===points.length-1 ? 'translateX(-100%)' : 'translateX(-50%)');
-        return `<span style="position:absolute;left:${leftPct.toFixed(2)}%;transform:${transform};font-size:9px;color:var(--muted);white-space:nowrap;top:0">${chartLabels[i]}</span>`;
-      }).join('')}
-    </div>`;
-
-    // 각 지점의 호버 영역 (해당 지점과 다음/이전 지점의 중간까지)
-    const hitZones = points.map((p,i)=>{
-      const prevMid = i===0 ? padLeft-4 : (points[i-1][0]+p[0])/2;
-      const nextMid = i===points.length-1 ? W-padX+4 : (points[i+1][0]+p[0])/2;
-      return `<rect class="chart-hit-zone" data-idx="${i}" x="${prevMid.toFixed(1)}" y="0" width="${(nextMid-prevMid).toFixed(1)}" height="${H}" fill="transparent" style="cursor:crosshair"/>`;
-    }).join('');
-
-    return `<div class="purchase-chart-wrap" style="position:relative">
-    <svg class="purchase-chart-svg" data-values='${JSON.stringify(vals)}' data-labels='${JSON.stringify(chartLabels)}' data-points='${JSON.stringify(points.map(p=>p.map(n=>Number(n.toFixed(1)))))}' data-compare='${JSON.stringify(compareVals||null)}' viewBox="0 0 ${W} ${H}" width="100%" style="display:block;overflow:visible;aspect-ratio:${W}/${H}">
-      <defs>
-        <linearGradient id="purchaseGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="var(--o)" stop-opacity=".18"/>
-          <stop offset="100%" stop-color="var(--o)" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${gridLines}
-      ${comparePath?`<path d="${comparePath}" fill="none" stroke="#B0B4BB" stroke-width="1" stroke-dasharray="3 3"/>`:''}
-      <path d="${areaPath}" fill="url(#purchaseGrad)"/>
-      <path d="${linePath}" fill="none" stroke="var(--o)" stroke-width="1" stroke-linecap="round"/>
-      <line class="chart-hover-line" x1="0" y1="0" x2="0" y2="${H-padY}" stroke="var(--o)" stroke-width="0.5" stroke-dasharray="2 3" opacity="0"/>
-      <circle class="chart-hover-dot" cx="0" cy="0" r="2" fill="#fff" stroke="var(--o)" stroke-width="1.25" opacity="0"/>
-      ${hitZones}
-    </svg>
-    ${yAxisLabelsHtml}
-    <div class="purchase-chart-tooltip" style="display:none;position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bd);border-radius:10px;padding:8px 12px;font-size:10px;box-shadow:var(--shadow-md);white-space:nowrap;transform:translate(-50%,-130%);z-index:5;min-width:110px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:5px">
-        <span class="pct-label" style="font-size:9px;color:var(--muted)"></span>
-        <span class="pct-change-badge" style="font-size:9px;font-weight:700"></span>
-      </div>
-      <div style="display:flex;align-items:center;gap:5px">
-        <span style="width:6px;height:6px;border-radius:50%;background:var(--o);flex-shrink:0"></span>
-        <span class="pct-value" style="font-weight:700;font-size:12px;color:var(--text)"></span>
-      </div>
-      <div class="pct-compare-row" style="display:flex;align-items:center;gap:5px;margin-top:2px">
-        <span style="width:6px;height:6px;border-radius:50%;border:1.5px solid #B0B4BB;background:transparent;flex-shrink:0"></span>
-        <span class="pct-compare-value" style="font-size:10px;color:var(--muted)"></span>
-      </div>
-    </div>
-    ${xAxisLabelsHtml}
-    </div>`;
-  }
   const compareYearVals = (purchaseViewMode==='month' && prevYearMonthVals) ? prevYearMonthVals.slice(0, monthVals.length) : null;
   const chartMaxMonthVal = compareYearVals ? Math.max(maxMonthVal, ...compareYearVals) : maxMonthVal;
   const purchaseChartSvg = purchaseViewMode==='year'
@@ -5324,6 +5521,123 @@ function closeModal(){
   if(last) last.remove();
 }
 
+function modalBulkPurchaseUpdate(){
+  const currentYearNum = Number(dayjs().format('YYYY'));
+  const years = [];
+  for(let y=currentYearNum+1; y>=currentYearNum-4; y--) years.push(y);
+  const vendorCount = (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더').length;
+  return `
+    <div class="modal" style="max-width:520px">
+      <div class="mh"><h3>구매액 일괄 업데이트</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+          "벤더" 유형 거래처(${vendorCount}곳)의 월별 구매액을 엑셀로 다운로드해서 채운 뒤 다시 업로드하면 한 번에 반영됩니다.
+        </p>
+        <div class="field">
+          <label class="field-label">연도 선택</label>
+          <select class="inp" id="bulkPurchaseYearSel">
+            ${years.map(y=>`<option value="${y}" ${y===currentYearNum?'selected':''}>${y}년</option>`).join('')}
+          </select>
+        </div>
+        <button type="button" class="btn btn-o" id="downloadPurchaseTemplateBtn" style="width:100%;justify-content:center;margin:10px 0 16px"><i class="ti ti-download"></i> 엑셀 템플릿 다운로드</button>
+        <div id="bulkUploadDropZone" style="border:1.5px dashed var(--bd);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s">
+          <i class="ti ti-file-upload" style="font-size:22px;color:var(--muted)"></i>
+          <div style="font-size:12px;color:var(--muted);margin-top:8px">작성한 엑셀 파일을 여기로 드래그하거나 클릭해서 업로드</div>
+          <input type="file" id="bulkUploadFileInput" accept=".xlsx,.xls" style="display:none"/>
+        </div>
+        <div id="bulkUploadResult" style="margin-top:14px;font-size:12px"></div>
+      </div>
+    </div>
+  `;
+}
+
+function bindBulkPurchaseUpdateModal(){
+  const yearSel = document.getElementById('bulkPurchaseYearSel');
+  const downloadBtn = document.getElementById('downloadPurchaseTemplateBtn');
+  const dropZone = document.getElementById('bulkUploadDropZone');
+  const fileInput = document.getElementById('bulkUploadFileInput');
+  const resultEl = document.getElementById('bulkUploadResult');
+
+  if(downloadBtn) downloadBtn.addEventListener('click', ()=>{
+    const year = Number(yearSel.value);
+    const vendors = (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더');
+    const rows = vendors.map(v=>{
+      const pd = (v.purchaseData && v.purchaseData[year]) || {};
+      const row = {'벤더명': v.name};
+      for(let m=1;m<=12;m++){ row[`${m}월`] = pd[m]!==undefined ? pd[m] : ''; }
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{wch:24}, ...Array(12).fill({wch:10})];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, `${year}년 구매액`);
+    XLSX.writeFile(wb, `벤더_구매액_${year}.xlsx`);
+    showToast('엑셀 템플릿을 다운로드했습니다.');
+  });
+
+  function handleBulkPurchaseFile(file){
+    const year = Number(yearSel.value);
+    resultEl.innerHTML = '<span style="color:var(--muted)">처리 중...</span>';
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      try{
+        const data = new Uint8Array(ev.target.result);
+        const wb = XLSX.read(data, {type:'array'});
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
+        let matched = 0, updatedCells = 0;
+        const unmatched = [];
+        json.forEach(row=>{
+          const name = (row['벤더명']||'').toString().trim();
+          if(!name) return;
+          const v = state.data.vendors.find(x=>x.name.trim()===name && (x.companyType||'벤더')==='벤더');
+          if(!v){ unmatched.push(name); return; }
+          matched++;
+          if(!v.purchaseData) v.purchaseData = {};
+          if(!v.purchaseData[year]) v.purchaseData[year] = {};
+          for(let m=1;m<=12;m++){
+            const raw = row[`${m}월`];
+            if(raw===''||raw===undefined||raw===null) continue;
+            const num = Number(raw);
+            if(!isNaN(num)){
+              v.purchaseData[year][m] = num;
+              updatedCells++;
+            }
+          }
+        });
+        persist(false); render();
+        resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--sf);border-radius:8px">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">✔ 업로드 완료</div>
+          <div style="color:var(--muted)">${matched}개 벤더, ${updatedCells}개 값 업데이트됨</div>
+          ${unmatched.length>0?`<div style="color:#E5484D;margin-top:6px">일치하는 벤더명을 찾지 못함 (${unmatched.length}개): ${unmatched.slice(0,5).join(', ')}${unmatched.length>5?' 외':''}</div>`:''}
+        </div>`;
+        showToast(`구매액 업데이트 완료: ${matched}개 벤더`);
+      }catch(err){
+        console.error(err);
+        resultEl.innerHTML = `<span style="color:#E5484D">파일을 읽을 수 없습니다. 엑셀 템플릿 형식을 확인해주세요.</span>`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  if(dropZone){
+    dropZone.addEventListener('click', ()=>fileInput.click());
+    dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.style.borderColor='var(--o)'; dropZone.style.background='var(--ol)'; });
+    dropZone.addEventListener('dragleave', ()=>{ dropZone.style.borderColor='var(--bd)'; dropZone.style.background='transparent'; });
+    dropZone.addEventListener('drop', e=>{
+      e.preventDefault();
+      dropZone.style.borderColor='var(--bd)'; dropZone.style.background='transparent';
+      const file = e.dataTransfer.files[0];
+      if(file) handleBulkPurchaseFile(file);
+    });
+  }
+  if(fileInput) fileInput.addEventListener('change', e=>{
+    const file = e.target.files[0];
+    if(file) handleBulkPurchaseFile(file);
+    e.target.value='';
+  });
+}
+
 function modalVendorForm(vendor){
   const isEdit = !!vendor;
   const v = vendor || {name:'', priority:'보통', status:'전송', companyType:'벤더', contact:{name:'',title:'',email:'',phone:''}, notes:{discount:'',payment:'',moq:'',creditLimit:''}, actionStatus:''};
@@ -6991,6 +7305,13 @@ function bindViewEvents(){
   // Company 추가/편집/삭제
   const addVendorBtn = document.getElementById('addVendorBtn');
   if(addVendorBtn) addVendorBtn.addEventListener('click', ()=>{ openModal(modalVendorForm(null)); bindModalCommon(); bindVendorFormSubmit(null); });
+
+  const bulkPurchaseUpdateBtn = document.getElementById('bulkPurchaseUpdateBtn');
+  if(bulkPurchaseUpdateBtn) bulkPurchaseUpdateBtn.addEventListener('click', ()=>{
+    openModal(modalBulkPurchaseUpdate());
+    bindModalCommon();
+    bindBulkPurchaseUpdateModal();
+  });
 
   const editVendorBtn = document.getElementById('editVendorBtn');
   if(editVendorBtn) editVendorBtn.addEventListener('click', ()=>{
