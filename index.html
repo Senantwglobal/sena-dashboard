@@ -2661,7 +2661,7 @@ function viewVendorList(){
     <div class="sh">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span style="font-size:16px;font-weight:300">Company</span>
-        <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="vendorSearchInput" placeholder="회사명 또는 담당자 검색" value="${state.vendorSearch}" style="margin:0"/></div>
+        <div class="search-wrap" style="width:220px"><i class="ti ti-search"></i><input class="inp" id="vendorSearchInput" placeholder="회사명 또는 담당자 검색" value="${state.vendorSearch}" style="margin:0;padding-right:${state.vendorSearch?'26px':'12px'}"/>${state.vendorSearch?`<i class="ti ti-x" id="vendorSearchClearBtn" style="position:absolute;left:auto;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;cursor:pointer;pointer-events:auto"></i>`:''}</div>
       </div>
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCompanyTypesBtn"><i class="ti ti-settings"></i> 유형 관리</button><button class="btn" id="bulkPurchaseUpdateBtn"><i class="ti ti-file-spreadsheet"></i> 구매액 일괄 업데이트</button><button class="btn btn-o" id="addVendorBtn"><i class="ti ti-plus"></i> 회사 추가</button></div>`:''}
     </div>
@@ -3489,7 +3489,7 @@ function viewVendorDetail(){
 
     ${hasBrands ? `
     <!-- 브랜드 탭 -->
-    <div class="brand-tabs-row" style="display:inline-flex;align-items:center;gap:2px;margin-bottom:18px;flex-wrap:wrap;background:var(--sf);padding:4px;border-radius:12px">
+    <div class="brand-tabs-row" style="display:inline-flex;align-items:center;gap:2px;margin-bottom:18px;flex-wrap:wrap;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
       ${brands.map(b=>{
         const isActive = b.id===activeBrandId;
         const bDotColor = vendorStatusDotColor(b.companyStatus||'Active');
@@ -3787,58 +3787,6 @@ function viewVendorDetail(){
           </div>
         </div>` : ''}
 
-        ${(v.companyType||'벤더')==='벤더' ? (() => {
-          const priceListTarget = (hasBrands && activeBrand) ? ((activeBrand.inherit===false) ? activeBrand : v) : v;
-          const priceListLink = priceListTarget.priceListLink || null; // {title, url}
-          return `<div class="card" style="padding:14px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Price list folder</span>
-              ${!isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''}
-            </div>
-            ${priceListLink ? `
-              <div class="price-list-year-btn" data-url="${priceListLink.url}" style="position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background .12s var(--ease)">
-                <i class="ti ti-folder" style="font-size:16px;color:var(--muted)"></i>
-                <span style="font-size:13px;color:var(--text)">${priceListLink.title||'가격표 폴더'}</span>
-                ${!isReadOnly()?`<i class="ti ti-x price-list-link-remove-btn" data-vid="${v.id}" style="margin-left:auto;cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px"></i>`:''}
-              </div>
-            ` : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">등록된 가격표 링크가 없습니다.</div>`}
-          </div>`;
-        })() : ''}
-
-        <!-- 담당자 -->
-        <div class="card" style="padding:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
-            ${!isReadOnly()&&(!hasBrands||!isInherit)?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
-          </div>
-          ${(() => {
-            if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
-            return people.map((p,i) => `
-              <div class="person-row" style="padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;position:relative">
-                ${!isReadOnly()?`<div style="position:absolute;top:7px;right:7px;display:flex;gap:0">
-                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:11px"></i></button>
-                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none"><i class="ti ti-trash" style="font-size:11px"></i></button>
-                </div>`:''}
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                  ${av(p.name, 26)}
-                  <div style="flex:1;min-width:0;padding-right:${!isReadOnly()?'42px':'0'}">
-                    <div style="display:flex;align-items:center;gap:5px">
-                      <span style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
-                      ${p.isMain?`<span style="font-size:8.5px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:1.5px 6px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:2px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
-                    </div>
-                    ${p.email?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</div>`:''}
-                  </div>
-                </div>
-                ${p.title?`<span style="display:inline-block;font-size:9.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:2px 8px;border-radius:20px;margin-bottom:7px">${p.title}</span>`:''}
-                <div style="display:flex;gap:6px">
-                  ${p.email?`<a href="mailto:${p.email}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-mail" style="font-size:11px"></i> 이메일</a>`:''}
-                  ${p.phone?`<a href="tel:${p.phone}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-phone" style="font-size:11px"></i> ${p.phone}</a>`:''}
-                  ${!p.email&&!p.phone?`<div style="flex:1;text-align:center;font-size:10px;color:var(--muted);padding:5px 0">연락처 정보 없음</div>`:''}
-                </div>
-              </div>`).join('');
-          })()}
-        </div>
-
         <!-- 거래 메모 -->
         <div class="card" style="padding:14px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -3893,6 +3841,58 @@ function viewVendorDetail(){
           </div>
           ${!isReadOnly()&&customNotes.length>0?`<button class="btn btn-o" id="saveNoteFieldsBtn" style="width:100%;margin-top:8px;font-size:11px"><i class="ti ti-device-floppy"></i> 메모 저장</button>`:''}
         </div>
+
+        <!-- 담당자 -->
+        <div class="card" style="padding:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">담당자</span>
+            ${!isReadOnly()&&(!hasBrands||!isInherit)?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''}
+          </div>
+          ${(() => {
+            if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
+            return people.map((p,i) => `
+              <div class="person-row" style="padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;position:relative">
+                ${!isReadOnly()?`<div style="position:absolute;top:7px;right:7px;display:flex;gap:0">
+                  <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:11px"></i></button>
+                  <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 4px;font-size:9px;background:none;border:none"><i class="ti ti-trash" style="font-size:11px"></i></button>
+                </div>`:''}
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  ${av(p.name, 26)}
+                  <div style="flex:1;min-width:0;padding-right:${!isReadOnly()?'42px':'0'}">
+                    <div style="display:flex;align-items:center;gap:5px">
+                      <span style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
+                      ${p.isMain?`<span style="font-size:8.5px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:1.5px 6px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:2px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
+                    </div>
+                    ${p.email?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</div>`:''}
+                  </div>
+                </div>
+                ${p.title?`<span style="display:inline-block;font-size:9.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:2px 8px;border-radius:20px;margin-bottom:7px">${p.title}</span>`:''}
+                <div style="display:flex;gap:6px">
+                  ${p.email?`<a href="mailto:${p.email}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-mail" style="font-size:11px"></i> 이메일</a>`:''}
+                  ${p.phone?`<a href="tel:${p.phone}" class="btn" style="flex:1;justify-content:center;font-size:10px;padding:5px 8px"><i class="ti ti-phone" style="font-size:11px"></i> ${p.phone}</a>`:''}
+                  ${!p.email&&!p.phone?`<div style="flex:1;text-align:center;font-size:10px;color:var(--muted);padding:5px 0">연락처 정보 없음</div>`:''}
+                </div>
+              </div>`).join('');
+          })()}
+        </div>
+
+        ${(v.companyType||'벤더')==='벤더' ? (() => {
+          const priceListTarget = (hasBrands && activeBrand) ? ((activeBrand.inherit===false) ? activeBrand : v) : v;
+          const priceListLink = priceListTarget.priceListLink || null; // {title, url}
+          return `<div class="card" style="padding:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <span style="font-size:11px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Price list folder</span>
+              ${!isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''}
+            </div>
+            ${priceListLink ? `
+              <div class="price-list-year-btn" data-url="${priceListLink.url}" style="position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background .12s var(--ease)">
+                <i class="ti ti-folder" style="font-size:16px;color:var(--muted)"></i>
+                <span style="font-size:13px;color:var(--text)">${priceListLink.title||'가격표 폴더'}</span>
+                ${!isReadOnly()?`<i class="ti ti-x price-list-link-remove-btn" data-vid="${v.id}" style="margin-left:auto;cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px"></i>`:''}
+              </div>
+            ` : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px 0">등록된 가격표 링크가 없습니다.</div>`}
+          </div>`;
+        })() : ''}
 
       </div>
 
@@ -7723,6 +7723,12 @@ function bindViewEvents(){
       if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
     });
   }
+
+  const vSearchClearBtn = document.getElementById('vendorSearchClearBtn');
+  if(vSearchClearBtn) vSearchClearBtn.addEventListener('click', ()=>{
+    state.vendorSearch = '';
+    render();
+  });
 
   // Company 추가/편집/삭제
   const addVendorBtn = document.getElementById('addVendorBtn');
