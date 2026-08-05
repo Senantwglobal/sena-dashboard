@@ -60,7 +60,7 @@ a{color:inherit}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.card{background:linear-gradient(180deg,#ffffff 0%,#FAFBFD 100%);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
@@ -160,7 +160,7 @@ select.inp{cursor:pointer}
 .cdd-trigger:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
 .cdd-trigger .cdd-caret{font-size:9px;opacity:.65;transition:transform .16s var(--ease);margin-left:1px}
 .cdd-trigger.cdd-open .cdd-caret{transform:rotate(180deg)}
-.cdd-menu-portal{position:fixed;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
+.cdd-menu-portal{position:fixed;border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
 @keyframes cddIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .cdd-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
 .cdd-item:hover{background:#181A20;color:#fff}
@@ -3019,7 +3019,7 @@ function viewVendorAnalytics(){
   };
 
   const kpiCard = (icon, iconColor, label, value, trendHtml, sideVisual) => `
-    <div class="card" style="padding:16px 18px;background:#fff;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
+    <div class="card" style="padding:16px 18px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <span style="width:26px;height:26px;border-radius:8px;background:${iconColor}1f;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="ti ${icon}" style="font-size:13px;color:${iconColor}"></i>
@@ -3064,7 +3064,7 @@ function viewVendorAnalytics(){
         trendRow(null, '전체 누적 중 비중'), miniRing(concentrationPct, concentrationPct>=60?'#E5484D':'#30A46C'))}
     </div>
 
-    <div class="card" style="margin-bottom:16px;background:#fff;border:1px solid var(--bd)">
+    <div class="card" style="margin-bottom:16px;border:1px solid var(--bd)">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:8px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
@@ -3082,7 +3082,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FDE2E4,#E0C3FC,#8EC5FC);flex-shrink:0"></span>
           <div>
@@ -3108,7 +3108,7 @@ function viewVendorAnalytics(){
           </span>
         </button>
       </div>
-      <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
         <div style="margin-bottom:14px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">연도별 구매 추이</span>
         </div>
@@ -3131,8 +3131,8 @@ function viewVendorAnalytics(){
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
-      <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
         <div style="margin-bottom:18px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매 비중 (${selectedYear}년)</span>
         </div>
@@ -3151,9 +3151,15 @@ function viewVendorAnalytics(){
             </div>`;
           }).join('')
         }
+        ${donutTop.length>0 ? `
+        <div style="margin-top:8px;padding:12px 14px;background:var(--sf);border-radius:12px">
+          <div style="font-size:11px;color:var(--muted);line-height:1.6">
+            상위 ${donutTop.length}개 벤더가 ${selectedYear}년 전체 구매액의 <b style="color:var(--text)">${Math.round(((donutTotal-donutOthersTotal)/donutTotal)*100)}%</b>를 차지하고 있습니다.
+          </div>
+        </div>` : ''}
       </div>
 
-      <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매액 상위 벤더 (${selectedYear}년)</span>
           <span style="font-size:11px;color:var(--muted)">총 ${rankedVendors.length}곳</span>
