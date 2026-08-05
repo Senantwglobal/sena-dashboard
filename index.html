@@ -2938,6 +2938,9 @@ function viewVendorAnalytics(){
   const allRanked = Object.entries(vendorTotals).sort((a,b)=>b[1]-a[1]);
   const top3Total = allRanked.slice(0,3).reduce((a,[,t])=>a+t,0);
   const concentrationPct = allTimeTotal>0 ? Math.round((top3Total/allTimeTotal)*1000)/10 : 0;
+  const topVendorEntry = allRanked[0];
+  const topVendorName = topVendorEntry ? (vendors.find(x=>x.id===topVendorEntry[0])||{}).name : null;
+  const topVendorTotal = topVendorEntry ? topVendorEntry[1] : 0;
 
   // 선택 연도 월별 값 + 전년 동월 비교값 + 이상치(전월대비 ±40% 이상) 인덱스
   const selMonths = monthlyByYear[selectedYear] || {};
@@ -2999,6 +3002,11 @@ function viewVendorAnalytics(){
 
   const segBtn = (key, label, active) => `<button type="button" class="rank-scope-btn" data-scope="${key}" style="font-size:11px;padding:4px 10px;border-radius:7px;border:none;cursor:pointer;background:${active?'#111114':'transparent'};color:${active?'#fff':'var(--muted)'};font-weight:${active?'600':'400'}">${label}</button>`;
 
+  // AI 트렌드 분석 - Claude 결과가 있고 같은 연도 기준이면 사용, 아니면 규칙 기반으로 즉시 생성
+  const trendCtx = { selectedYear, thisYearTotal, yoyChange, monthVals, anomalyIdx, concentrationPct, topVendorName, topVendorTotal, avgMonthlyThisYear };
+  const usingClaudeInsights = state.vendorTrendInsightsClaude && state.vendorTrendInsightsClaudeYear===selectedYear;
+  const trendInsights = usingClaudeInsights ? state.vendorTrendInsightsClaude : generateVendorTrendInsightsRuleBased(trendCtx);
+
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:18px;font-weight:700;margin:0">벤더 통합</h2>
@@ -3017,6 +3025,25 @@ function viewVendorAnalytics(){
         `<div style="font-size:10.5px;color:var(--muted)">활성 벤더 ${activeVendorCount}곳 · 전체 누적 기준</div>`)}
       ${kpiCard('ti-chart-pie', concentrationPct>=60?'#E5484D':'#30A46C', '상위 3개 벤더 집중도', `${concentrationPct}%`,
         `<div style="font-size:10.5px;color:var(--muted)">전체 누적 구매액 중 비중</div>`)}
+    </div>
+
+    <div class="card" style="margin-bottom:16px;background:rgba(255,255,255,.7)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
+          <span style="font-size:14px;font-weight:600;color:var(--text)">AI 트렌드 분석</span>
+          <span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:3px">${usingClaudeInsights?'<i class="ti ti-sparkles"></i> Claude AI 분석':'규칙 기반 분석'}</span>
+        </div>
+        <button type="button" id="regenVendorTrendBtn" class="btn" style="font-size:11px;padding:5px 10px"><i class="ti ti-sparkles"></i> ${state.anthropicApiKey ? 'Claude로 정밀 분석' : 'Claude 연동 설정'}</button>
+      </div>
+      <div id="vendorTrendInsightsWrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">
+        ${trendInsights.map(it=>`
+          <div style="padding:11px 13px;background:var(--sf);border-radius:9px">
+            <span style="font-size:9.5px;font-weight:700;color:${it.tagColor};text-transform:uppercase;letter-spacing:.03em">${it.tag}</span>
+            <div style="font-size:12px;color:var(--text);margin-top:5px;line-height:1.5">${it.text}</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
@@ -7211,6 +7238,100 @@ function generateMeetingSummary(text){
 /* ============================================================
    실제 Claude API를 이용한 AI 요약 (선택사항, API 키 필요)
    ============================================================ */
+/* ============================================================
+   벤더 통합 - AI 트렌드 분석
+   ============================================================ */
+function generateVendorTrendInsightsRuleBased(ctx){
+  const { selectedYear, thisYearTotal, yoyChange, monthVals, anomalyIdx, concentrationPct, topVendorName, topVendorTotal, avgMonthlyThisYear } = ctx;
+  const insights = [];
+
+  if(yoyChange !== null){
+    insights.push({
+      tag: yoyChange>=0?'상승':'하락', tagColor: yoyChange>=0?'#30A46C':'#E5484D',
+      text: `${selectedYear}년 총 구매액이 전년대비 ${Math.abs(yoyChange)}% ${yoyChange>=0?'증가':'감소'}했습니다.`
+    });
+  }
+
+  if(anomalyIdx && anomalyIdx.length>0){
+    anomalyIdx.slice(0,2).forEach(idx=>{
+      const cur = monthVals[idx], prev = monthVals[idx-1];
+      const pct = prev>0 ? Math.round(((cur-prev)/prev)*1000)/10 : null;
+      if(pct!==null){
+        insights.push({
+          tag:'급변동', tagColor:'#E5484D',
+          text:`${idx+1}월 구매액이 전월대비 ${pct>=0?'':''}${pct}% ${pct>=0?'급증':'급감'}했습니다 (전월 $${prev.toLocaleString()} → $${cur.toLocaleString()}).`
+        });
+      }
+    });
+  }
+
+  insights.push({
+    tag: concentrationPct>=60?'집중 리스크':'양호', tagColor: concentrationPct>=60?'#E5484D':'#30A46C',
+    text: concentrationPct>=60
+      ? `상위 3개 벤더에 구매가 ${concentrationPct}% 집중되어 있어, 특정 벤더 의존도가 높은 편입니다.`
+      : `상위 3개 벤더 비중이 ${concentrationPct}%로 벤더 구성이 비교적 분산되어 있습니다.`
+  });
+
+  if(topVendorName){
+    insights.push({
+      tag:'최다 구매', tagColor:'#3E7BFA',
+      text:`전체 누적 기준 가장 많이 구매한 벤더는 "${topVendorName}"이며, 누적 $${topVendorTotal.toLocaleString()}를 기록했습니다.`
+    });
+  }
+
+  if(avgMonthlyThisYear>0){
+    insights.push({
+      tag:'평균', tagColor:'#8E4EC6',
+      text:`${selectedYear}년 월평균 구매액은 $${avgMonthlyThisYear.toLocaleString()} 수준입니다.`
+    });
+  }
+
+  return insights.slice(0,5);
+}
+
+async function callClaudeVendorTrend(ctx){
+  if(!state.anthropicApiKey) return null;
+  const digest = {
+    선택연도: ctx.selectedYear,
+    올해총구매액: ctx.thisYearTotal,
+    전년대비증감률: ctx.yoyChange,
+    월별구매액: ctx.monthVals,
+    급변동월인덱스: ctx.anomalyIdx,
+    상위3개벤더집중도: ctx.concentrationPct,
+    최다구매벤더: ctx.topVendorName,
+    최다구매벤더누적액: ctx.topVendorTotal,
+    월평균구매액: ctx.avgMonthlyThisYear,
+  };
+  const prompt = `다음은 회사의 벤더(공급업체) 구매 데이터 요약(JSON)입니다. 이 데이터를 분석해서 경영진이 참고할 만한 핵심 트렌드 인사이트를 3~5개, 각각 15~50자 내외의 한국어 한 문장으로 작성해줘.\n각 인사이트는 {"tag": "짧은 태그(2~5자, 예: 상승/하락/급변동/집중리스크/양호/최다구매)", "text": "인사이트 문장"} 형태의 객체로, 전체를 JSON 배열로만 출력해. 다른 설명이나 마크다운은 절대 포함하지마.\n\n데이터: ${JSON.stringify(digest)}`;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': state.anthropicApiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 500,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if(!res.ok){
+    const errBody = await res.text().catch(()=>'');
+    throw new Error(`API 오류 (${res.status}): ${errBody.slice(0,200)}`);
+  }
+  const data = await res.json();
+  const textBlock = data.content?.find(b=>b.type==='text');
+  if(!textBlock?.text) return null;
+  try{
+    const cleaned = textBlock.text.trim().replace(/^```json\s*|```$/g,'');
+    const arr = JSON.parse(cleaned);
+    const tagColors = {'상승':'#30A46C','하락':'#E5484D','급변동':'#E5484D','집중리스크':'#E5484D','양호':'#30A46C','최다구매':'#3E7BFA'};
+    return arr.map(it=>({ tag: it.tag||'인사이트', tagColor: tagColors[it.tag]||'#8E4EC6', text: it.text||'' })).filter(it=>it.text);
+  }catch(e){ return null; }
+}
+
 async function callClaudeSummary(text){
   if(!state.anthropicApiKey) return null;
   const prompt = `다음은 업무 이메일/통화/미팅 원문입니다. 인사말이나 서명은 무시하고, 핵심 요청사항·결정사항·다음 액션이 드러나도록 15~40자 내외의 한국어 한 줄로 요약해줘. 요약 문장 하나만 출력하고 다른 설명은 절대 하지마.\n\n---\n${text.slice(0,4000)}`;
@@ -7404,6 +7525,61 @@ function bindViewEvents(){
     openModal(modalBulkPurchaseUpdate());
     bindModalCommon();
     bindBulkPurchaseUpdateModal();
+  });
+
+  const regenVendorTrendBtn = document.getElementById('regenVendorTrendBtn');
+  if(regenVendorTrendBtn) regenVendorTrendBtn.addEventListener('click', async ()=>{
+    if(!state.anthropicApiKey){
+      openModal(modalApiKeySettings());
+      bindModalCommon();
+      bindApiKeySettings();
+      return;
+    }
+    regenVendorTrendBtn.disabled = true;
+    const origHtml = regenVendorTrendBtn.innerHTML;
+    regenVendorTrendBtn.innerHTML = '<i class="ti ti-loader-2"></i> 분석 중...';
+    try{
+      const { yearTotals, vendorTotals, monthlyByYear } = computeVendorAnalyticsData();
+      const currentYearNum = Number(dayjs().format('YYYY'));
+      const currentMonthNum = Number(dayjs().format('M'));
+      const yearsWithData = Object.keys(yearTotals).map(Number).sort((a,b)=>b-a);
+      const selectedYear = state.vendorAnalyticsYear && yearTotals[state.vendorAnalyticsYear]!==undefined
+        ? state.vendorAnalyticsYear
+        : (yearsWithData.includes(currentYearNum) ? currentYearNum : (yearsWithData[0] || currentYearNum));
+      const thisYearTotal = yearTotals[selectedYear]||0;
+      const prevYearTotal = yearTotals[selectedYear-1]||0;
+      const yoyChange = prevYearTotal>0 ? Math.round(((thisYearTotal-prevYearTotal)/prevYearTotal)*1000)/10 : null;
+      const monthCount = selectedYear===currentYearNum ? currentMonthNum : 12;
+      const selMonths = monthlyByYear[selectedYear]||{};
+      const monthVals = []; for(let m=1;m<=monthCount;m++) monthVals.push(selMonths[m]||0);
+      const anomalyIdx = [];
+      for(let i=1;i<monthVals.length;i++){ const prev=monthVals[i-1]; if(prev>0){ const chg=((monthVals[i]-prev)/prev)*100; if(Math.abs(chg)>=40) anomalyIdx.push(i); } }
+      const allTimeTotal = Object.values(yearTotals).reduce((a,b)=>a+b,0);
+      const allRanked = Object.entries(vendorTotals).sort((a,b)=>b[1]-a[1]);
+      const top3Total = allRanked.slice(0,3).reduce((a,[,t])=>a+t,0);
+      const concentrationPct = allTimeTotal>0 ? Math.round((top3Total/allTimeTotal)*1000)/10 : 0;
+      const topEntry = allRanked[0];
+      const vendorsList = (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더');
+      const topVendorName = topEntry ? (vendorsList.find(x=>x.id===topEntry[0])||{}).name : null;
+      const topVendorTotal = topEntry ? topEntry[1] : 0;
+      const selMonthKeysWithData = Object.keys(selMonths).filter(m=>selMonths[m]>0);
+      const avgMonthlyThisYear = selMonthKeysWithData.length>0 ? Math.round(thisYearTotal/selMonthKeysWithData.length) : 0;
+
+      const ctx = { selectedYear, thisYearTotal, yoyChange, monthVals, anomalyIdx, concentrationPct, topVendorName, topVendorTotal, avgMonthlyThisYear };
+      const result = await callClaudeVendorTrend(ctx);
+      if(result && result.length>0){
+        state.vendorTrendInsightsClaude = result;
+        state.vendorTrendInsightsClaudeYear = selectedYear;
+        showToast('Claude AI 트렌드 분석이 생성되었습니다.');
+      } else {
+        showToast('AI 응답이 비어있어 규칙 기반 분석을 사용합니다.');
+      }
+    }catch(err){
+      console.error(err);
+      showToast('AI 분석 실패: ' + (err.message||'').slice(0,100));
+    }finally{
+      render();
+    }
   });
 
   const toggleTopVendorsBtn = document.getElementById('toggleTopVendorsBtn');
