@@ -2864,26 +2864,33 @@ function viewVendorList(){
    ============================================================ */
 function computeVendorAnalyticsData(){
   const vendors = (state.data.vendors||[]).filter(v => (v.companyType||'벤더')==='벤더');
-  const yearTotals = {};       // {year: amount}
-  const vendorTotals = {};     // {vendorId: amount} (전체 누적)
-  const monthlyByYear = {};    // {year: {month: amount}}
+  const yearTotals = {};        // {year: amount}
+  const vendorTotals = {};      // {vendorId: amount} (전체 누적)
+  const vendorYearTotals = {};  // {year: {vendorId: amount}}
+  const monthlyByYear = {};     // {year: {month: amount}}
   vendors.forEach(v=>{
     const pd = v.purchaseData || {};
     let vTotal = 0;
     Object.keys(pd).forEach(year=>{
       const months = pd[year] || {};
+      let vYearTotal = 0;
       Object.keys(months).forEach(month=>{
         const amt = Number(months[month])||0;
         if(!amt) return;
         vTotal += amt;
+        vYearTotal += amt;
         yearTotals[year] = (yearTotals[year]||0) + amt;
         if(!monthlyByYear[year]) monthlyByYear[year] = {};
         monthlyByYear[year][month] = (monthlyByYear[year][month]||0) + amt;
       });
+      if(vYearTotal>0){
+        if(!vendorYearTotals[year]) vendorYearTotals[year] = {};
+        vendorYearTotals[year][v.id] = vYearTotal;
+      }
     });
     if(vTotal>0) vendorTotals[v.id] = vTotal;
   });
-  return { vendors, yearTotals, vendorTotals, monthlyByYear };
+  return { vendors, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear };
 }
 
 function buildDonutChart(segments, size=132, thickness=20){
@@ -2907,7 +2914,7 @@ function buildDonutChart(segments, size=132, thickness=20){
 }
 
 function viewVendorAnalytics(){
-  const { vendors, yearTotals, vendorTotals, monthlyByYear } = computeVendorAnalyticsData();
+  const { vendors, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear } = computeVendorAnalyticsData();
   const currentYearNum = Number(dayjs().format('YYYY'));
   const currentMonthNum = Number(dayjs().format('M'));
   const yearsWithData = Object.keys(yearTotals).map(Number).sort((a,b)=>b-a);
@@ -2920,18 +2927,17 @@ function viewVendorAnalytics(){
   const prevYearTotal = yearTotals[selectedYear-1] || 0;
   const yoyChange = prevYearTotal>0 ? Math.round(((thisYearTotal-prevYearTotal)/prevYearTotal)*1000)/10 : null;
 
-  const thisMonthAmt = (monthlyByYear[currentYearNum]||{})[currentMonthNum] || 0;
-  const prevMonthYear = currentMonthNum===1 ? currentYearNum-1 : currentYearNum;
-  const prevMonthNum  = currentMonthNum===1 ? 12 : currentMonthNum-1;
-  const prevMonthAmt = (monthlyByYear[prevMonthYear]||{})[prevMonthNum] || 0;
-  const momChange = prevMonthAmt>0 ? Math.round(((thisMonthAmt-prevMonthAmt)/prevMonthAmt)*1000)/10 : null;
-
   const activeVendorCount = Object.keys(vendorTotals).length;
   const avgPerVendor = activeVendorCount>0 ? Math.round(allTimeTotal/activeVendorCount) : 0;
   // 선택 연도의 월평균 (데이터 있는 개월수 기준)
   const selMonthsAll = monthlyByYear[selectedYear] || {};
   const selMonthKeysWithData = Object.keys(selMonthsAll).filter(m=>selMonthsAll[m]>0);
   const avgMonthlyThisYear = selMonthKeysWithData.length>0 ? Math.round(thisYearTotal/selMonthKeysWithData.length) : 0;
+
+  // 상위 3개 벤더 집중도 (전체 누적 기준 - 구매가 소수 벤더에 얼마나 쏠려있는지)
+  const allRanked = Object.entries(vendorTotals).sort((a,b)=>b[1]-a[1]);
+  const top3Total = allRanked.slice(0,3).reduce((a,[,t])=>a+t,0);
+  const concentrationPct = allTimeTotal>0 ? Math.round((top3Total/allTimeTotal)*1000)/10 : 0;
 
   // 선택 연도 월별 값 + 전년 동월 비교값 + 이상치(전월대비 ±40% 이상) 인덱스
   const selMonths = monthlyByYear[selectedYear] || {};
@@ -2956,9 +2962,14 @@ function viewVendorAnalytics(){
   const yearBarYears = yearsWithData.slice(0,7).reverse();
   const yearBarMax = Math.max(1, ...yearBarYears.map(y=>yearTotals[y]||0));
 
-  // Top 벤더 순위 (전체 누적 기준) - 기본 8곳, "더보기"로 전체 표시
+  // 구매 비중 / 상위 벤더 랭킹 범위: 전체 누적 vs 선택 연도
+  const rankScope = state.vendorAnalyticsRankScope === 'year' ? 'year' : 'all';
+  const rankSourceTotals = rankScope==='year' ? (vendorYearTotals[selectedYear] || {}) : vendorTotals;
+  const rankScopeLabel = rankScope==='year' ? `${selectedYear}년` : '전체 누적';
+
+  // Top 벤더 순위 - 기본 8곳, "더보기"로 전체 표시
   const showAllTop = !!state.vendorAnalyticsShowAllTop;
-  const rankedVendors = Object.entries(vendorTotals)
+  const rankedVendors = Object.entries(rankSourceTotals)
     .sort((a,b)=>b[1]-a[1])
     .map(([vid,total])=>({ v: vendors.find(x=>x.id===vid), total }))
     .filter(x=>x.v);
@@ -2986,6 +2997,8 @@ function viewVendorAnalytics(){
       ${sub||''}
     </div>`;
 
+  const segBtn = (key, label, active) => `<button type="button" class="rank-scope-btn" data-scope="${key}" style="font-size:11px;padding:4px 10px;border-radius:7px;border:none;cursor:pointer;background:${active?'#111114':'transparent'};color:${active?'#fff':'var(--muted)'};font-weight:${active?'600':'400'}">${label}</button>`;
+
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:18px;font-weight:700;margin:0">벤더 통합</h2>
@@ -2998,12 +3011,12 @@ function viewVendorAnalytics(){
       ${kpiCard('ti-calendar-stats', '#8E4EC6', `${selectedYear}년 총 구매액`, `$${thisYearTotal.toLocaleString()}`,
         yoyChange!==null?`<div style="font-size:10.5px;color:${yoyChange>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px">${yoyChange>=0?'↑':'↓'} ${Math.abs(yoyChange)}% <span style="color:var(--muted);font-weight:400">전년대비</span></div>`:`<div style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</div>`,
         yoyChange!==null?`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:${yoyChange>=0?'#30A46C1a':'#E5484D1a'};color:${yoyChange>=0?'#30A46C':'#E5484D'}">${yoyChange>=0?'+':''}${yoyChange}%</span>`:'')}
-      ${kpiCard('ti-coin', momChange!==null&&momChange<0?'#E5484D':'#30A46C', '이번달 구매액', `$${thisMonthAmt.toLocaleString()}`,
-        momChange!==null?`<div style="font-size:10.5px;color:${momChange>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px">${momChange>=0?'↑':'↓'} ${Math.abs(momChange)}% <span style="color:var(--muted);font-weight:400">전월대비</span></div>`:`<div style="font-size:10.5px;color:var(--muted)">전월 데이터 없음</div>`)}
       ${kpiCard('ti-chart-bar', '#F0883E', `${selectedYear}년 월평균`, `$${avgMonthlyThisYear.toLocaleString()}`,
         `<div style="font-size:10.5px;color:var(--muted)">데이터 있는 ${selMonthKeysWithData.length}개월 기준</div>`)}
-      ${kpiCard('ti-building-store', '#111114', '벤더당 평균 구매액', `$${avgPerVendor.toLocaleString()}`,
-        `<div style="font-size:10.5px;color:var(--muted)">활성 벤더 ${activeVendorCount}곳 기준</div>`)}
+      ${kpiCard('ti-building-store', '#111114', '벤더당 누적 평균 구매액', `$${avgPerVendor.toLocaleString()}`,
+        `<div style="font-size:10.5px;color:var(--muted)">활성 벤더 ${activeVendorCount}곳 · 전체 누적 기준</div>`)}
+      ${kpiCard('ti-chart-pie', concentrationPct>=60?'#E5484D':'#30A46C', '상위 3개 벤더 집중도', `${concentrationPct}%`,
+        `<div style="font-size:10.5px;color:var(--muted)">전체 누적 구매액 중 비중</div>`)}
     </div>
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
@@ -3011,7 +3024,7 @@ function viewVendorAnalytics(){
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
           <span style="font-size:14px;font-weight:600;color:var(--text)">월별 구매 현황 (${selectedYear}년)</span>
-          ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건 (마우스 오버로 확인)</span>`:''}
+          ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
         </div>
         ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
@@ -3039,11 +3052,16 @@ function viewVendorAnalytics(){
       </div>
     </div>
 
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--sf);width:fit-content;padding:3px;border-radius:9px">
+      ${segBtn('all', '전체 누적', rankScope==='all')}
+      ${segBtn('year', `${selectedYear}년`, rankScope==='year')}
+    </div>
+
     <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
       <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-          <span style="font-size:14px;font-weight:600;color:var(--text)">구매 비중 (전체 누적)</span>
+          <span style="font-size:14px;font-weight:600;color:var(--text)">구매 비중 (${rankScopeLabel})</span>
         </div>
         ${donutSegments.length===0 ? `<div class="empty-state" style="padding:20px 0">데이터가 없습니다.</div>` : `
         <div style="display:flex;align-items:center;gap:18px">
@@ -3065,7 +3083,7 @@ function viewVendorAnalytics(){
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-            <span style="font-size:14px;font-weight:600;color:var(--text)">구매액 상위 벤더 (전체 누적)</span>
+            <span style="font-size:14px;font-weight:600;color:var(--text)">구매액 상위 벤더 (${rankScopeLabel})</span>
           </div>
           ${rankedVendors.length>8?`<button type="button" id="toggleTopVendorsBtn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:2px">${showAllTop?'접기':`전체 ${rankedVendors.length}곳 보기`} <i class="ti ti-chevron-${showAllTop?'up':'down'}" style="font-size:11px"></i></button>`:''}
         </div>
@@ -7392,6 +7410,12 @@ function bindViewEvents(){
   if(toggleTopVendorsBtn) toggleTopVendorsBtn.addEventListener('click', ()=>{
     state.vendorAnalyticsShowAllTop = !state.vendorAnalyticsShowAllTop;
     render();
+  });
+  document.querySelectorAll('.rank-scope-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.vendorAnalyticsRankScope = btn.dataset.scope;
+      render();
+    });
   });
 
   const editVendorBtn = document.getElementById('editVendorBtn');
