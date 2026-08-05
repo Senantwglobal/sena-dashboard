@@ -5578,25 +5578,34 @@ function closeModal(){
 function modalBulkPurchaseUpdate(){
   const currentYearNum = Number(dayjs().format('YYYY'));
   const years = [];
-  for(let y=currentYearNum+1; y>=currentYearNum-4; y--) years.push(y);
+  for(let y=currentYearNum+1; y>=currentYearNum-6; y--) years.push(y);
   const vendorCount = (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더').length;
   return `
     <div class="modal" style="max-width:520px">
       <div class="mh"><h3>구매액 일괄 업데이트</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
         <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
-          "벤더" 유형 거래처(${vendorCount}곳)의 월별 구매액을 엑셀로 다운로드해서 채운 뒤 다시 업로드하면 한 번에 반영됩니다.
+          "벤더" 유형 거래처(${vendorCount}곳)의 월별 구매액을 엑셀로 다운로드해서 채운 뒤 다시 업로드하면 한 번에 반영됩니다. 한 파일에 <b>여러 연도</b>를 같이 넣어서 업로드할 수 있습니다.
         </p>
-        <div class="field">
-          <label class="field-label">연도 선택</label>
-          <select class="inp" id="bulkPurchaseYearSel">
-            ${years.map(y=>`<option value="${y}" ${y===currentYearNum?'selected':''}>${y}년</option>`).join('')}
-          </select>
+        <div class="two">
+          <div class="field">
+            <label class="field-label">시작 연도</label>
+            <select class="inp" id="bulkPurchaseYearFromSel">
+              ${years.map(y=>`<option value="${y}" ${y===currentYearNum-1?'selected':''}>${y}년</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">종료 연도</label>
+            <select class="inp" id="bulkPurchaseYearToSel">
+              ${years.map(y=>`<option value="${y}" ${y===currentYearNum?'selected':''}>${y}년</option>`).join('')}
+            </select>
+          </div>
         </div>
         <button type="button" class="btn btn-o" id="downloadPurchaseTemplateBtn" style="width:100%;justify-content:center;margin:10px 0 16px"><i class="ti ti-download"></i> 엑셀 템플릿 다운로드</button>
         <div id="bulkUploadDropZone" style="border:1.5px dashed var(--bd);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s">
           <i class="ti ti-file-upload" style="font-size:22px;color:var(--muted)"></i>
           <div style="font-size:12px;color:var(--muted);margin-top:8px">작성한 엑셀 파일을 여기로 드래그하거나 클릭해서 업로드</div>
+          <div style="font-size:10.5px;color:var(--muted);margin-top:2px">(파일 안에 여러 연도의 시트가 있어도 전부 자동으로 반영됩니다)</div>
           <input type="file" id="bulkUploadFileInput" accept=".xlsx,.xls" style="display:none"/>
         </div>
         <div id="bulkUploadResult" style="margin-top:14px;font-size:12px"></div>
@@ -5606,31 +5615,37 @@ function modalBulkPurchaseUpdate(){
 }
 
 function bindBulkPurchaseUpdateModal(){
-  const yearSel = document.getElementById('bulkPurchaseYearSel');
+  const yearFromSel = document.getElementById('bulkPurchaseYearFromSel');
+  const yearToSel = document.getElementById('bulkPurchaseYearToSel');
   const downloadBtn = document.getElementById('downloadPurchaseTemplateBtn');
   const dropZone = document.getElementById('bulkUploadDropZone');
   const fileInput = document.getElementById('bulkUploadFileInput');
   const resultEl = document.getElementById('bulkUploadResult');
 
   if(downloadBtn) downloadBtn.addEventListener('click', ()=>{
-    const year = Number(yearSel.value);
+    let yFrom = Number(yearFromSel.value), yTo = Number(yearToSel.value);
+    if(yFrom > yTo){ [yFrom, yTo] = [yTo, yFrom]; }
+    const yearRange = [];
+    for(let y=yFrom; y<=yTo; y++) yearRange.push(y);
     const vendors = (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더');
-    const rows = vendors.map(v=>{
-      const pd = (v.purchaseData && v.purchaseData[year]) || {};
-      const row = {'벤더명': v.name};
-      for(let m=1;m<=12;m++){ row[`${m}월`] = pd[m]!==undefined ? pd[m] : ''; }
-      return row;
+    const rows = [];
+    vendors.forEach(v=>{
+      yearRange.forEach(year=>{
+        const pd = (v.purchaseData && v.purchaseData[year]) || {};
+        const row = {'벤더명': v.name, '연도': year};
+        for(let m=1;m<=12;m++){ row[`${m}월`] = pd[m]!==undefined ? pd[m] : ''; }
+        rows.push(row);
+      });
     });
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{wch:24}, ...Array(12).fill({wch:10})];
+    ws['!cols'] = [{wch:24}, {wch:8}, ...Array(12).fill({wch:10})];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, `${year}년 구매액`);
-    XLSX.writeFile(wb, `벤더_구매액_${year}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, `구매액`);
+    XLSX.writeFile(wb, `벤더_구매액_${yFrom}-${yTo}.xlsx`);
     showToast('엑셀 템플릿을 다운로드했습니다.');
   });
 
   function handleBulkPurchaseFile(file){
-    const year = Number(yearSel.value);
     resultEl.innerHTML = '<span style="color:var(--muted)">처리 중...</span>';
     const reader = new FileReader();
     reader.onload = ev=>{
@@ -5639,14 +5654,19 @@ function bindBulkPurchaseUpdateModal(){
         const wb = XLSX.read(data, {type:'array'});
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
-        let matched = 0, updatedCells = 0;
+        const matchedVendors = new Set();
+        const yearsUpdated = new Set();
+        let updatedCells = 0;
         const unmatched = [];
         json.forEach(row=>{
           const name = (row['벤더명']||'').toString().trim();
           if(!name) return;
+          const year = Number(row['연도']);
+          if(!year || isNaN(year)){ return; }
           const v = state.data.vendors.find(x=>x.name.trim()===name && (x.companyType||'벤더')==='벤더');
-          if(!v){ unmatched.push(name); return; }
-          matched++;
+          if(!v){ if(!unmatched.includes(name)) unmatched.push(name); return; }
+          matchedVendors.add(v.id);
+          yearsUpdated.add(year);
           if(!v.purchaseData) v.purchaseData = {};
           if(!v.purchaseData[year]) v.purchaseData[year] = {};
           for(let m=1;m<=12;m++){
@@ -5660,12 +5680,13 @@ function bindBulkPurchaseUpdateModal(){
           }
         });
         persist(false); render();
+        const yearsList = Array.from(yearsUpdated).sort((a,b)=>a-b).join(', ');
         resultEl.innerHTML = `<div style="padding:10px 12px;background:var(--sf);border-radius:8px">
           <div style="font-weight:600;color:var(--text);margin-bottom:4px">✔ 업로드 완료</div>
-          <div style="color:var(--muted)">${matched}개 벤더, ${updatedCells}개 값 업데이트됨</div>
+          <div style="color:var(--muted)">${matchedVendors.size}개 벤더 · ${yearsUpdated.size}개 연도(${yearsList}) · ${updatedCells}개 값 업데이트됨</div>
           ${unmatched.length>0?`<div style="color:#E5484D;margin-top:6px">일치하는 벤더명을 찾지 못함 (${unmatched.length}개): ${unmatched.slice(0,5).join(', ')}${unmatched.length>5?' 외':''}</div>`:''}
         </div>`;
-        showToast(`구매액 업데이트 완료: ${matched}개 벤더`);
+        showToast(`구매액 업데이트 완료: ${matchedVendors.size}개 벤더, ${yearsUpdated.size}개 연도`);
       }catch(err){
         console.error(err);
         resultEl.innerHTML = `<span style="color:#E5484D">파일을 읽을 수 없습니다. 엑셀 템플릿 형식을 확인해주세요.</span>`;
