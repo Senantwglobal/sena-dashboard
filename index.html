@@ -33,7 +33,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --o:#1C85E8;--ol:#E8F2FE;--od:#0B4E9E;--ob:#A9D2F8;
-  --bg:#FAFAFA;--card:#fff;--bd:#EDEDEF;--text:#0B1B2E;--muted:#8A8F98;--sf:#F5F5F6;
+  --bg:#F4F5F7;--card:#fff;--bd:#EDEDEF;--text:#0B1B2E;--muted:#8A8F98;--sf:#F5F5F6;
   --sans:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
   --shadow-xs:none;
   --shadow-sm:0 1px 2px rgba(11,27,46,.04);
@@ -60,7 +60,7 @@ a{color:inherit}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:none}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,23,42,.04)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
@@ -2971,12 +2971,11 @@ function viewVendorAnalytics(){
 
   // 구매 비중 / 상위 벤더 - 항상 선택된 연도 기준 (상단 연도 선택과 100% 연동)
   const rankSourceTotals = vendorYearTotals[selectedYear] || {};
-  const showAllTop = !!state.vendorAnalyticsShowAllTop;
   const rankedVendors = Object.entries(rankSourceTotals)
     .sort((a,b)=>b[1]-a[1])
     .map(([vid,total])=>({ v: vendors.find(x=>x.id===vid), total }))
     .filter(x=>x.v);
-  const topVendors = showAllTop ? rankedVendors : rankedVendors.slice(0,8);
+  const topVendors = rankedVendors;
   const topMax = Math.max(1, ...rankedVendors.map(x=>x.total));
 
   const donutPalette = ['#111114','#3E7BFA','#30A46C','#F0883E','#8E4EC6'];
@@ -3054,14 +3053,11 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
       ${kpiCard('ti-report-money', '#3E7BFA', '전체 누적 구매액', `$${allTimeTotal.toLocaleString()}`,
-        trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`),
-        miniSparkline(yearBarYears.map(y=>yearTotals[y]||0), '#3E7BFA'))}
+        trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`))}
       ${kpiCard('ti-calendar-stats', '#8E4EC6', `${selectedYear}년 총 구매액`, `$${thisYearTotal.toLocaleString()}`,
-        trendRow(yoyChange, yoyChange!==null?'전년대비':'전년 데이터 없음'),
-        miniSparkline(monthVals, yoyChange!==null&&yoyChange<0?'#E5484D':'#8E4EC6'))}
+        trendRow(yoyChange, yoyChange!==null?'전년대비':'전년 데이터 없음'))}
       ${kpiCard('ti-chart-bar', '#F0883E', `${selectedYear}년 월평균`, `$${avgMonthlyThisYear.toLocaleString()}`,
-        trendRow(null, `데이터 있는 ${selMonthKeysWithData.length}개월`),
-        miniSparkline(monthVals, '#F0883E'))}
+        trendRow(null, `데이터 있는 ${selMonthKeysWithData.length}개월`))}
       ${kpiCard('ti-building-store', '#111114', '벤더당 누적 평균', `$${avgPerVendor.toLocaleString()}`,
         trendRow(null, `활성 벤더 ${activeVendorCount}곳`))}
       ${kpiCard('ti-chart-pie', concentrationPct>=60?'#E5484D':'#30A46C', '상위 3개 벤더 집중도', `${concentrationPct}%`,
@@ -3071,8 +3067,7 @@ function viewVendorAnalytics(){
     <div class="card" style="margin-bottom:16px;background:#fff;border:1px solid var(--bd)">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-          <span style="font-size:14px;font-weight:600;color:var(--text)">월별 구매 현황</span>
+          <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
           ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
         </div>
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -3088,30 +3083,34 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
       <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-            <span style="font-size:14px;font-weight:600;color:var(--text)">AI 트렌드 분석</span>
-            <span style="font-size:10px;color:var(--muted);display:inline-flex;align-items:center;gap:3px">${usingClaudeInsights?'<i class="ti ti-sparkles"></i> Claude AI 분석':'규칙 기반 분석'}</span>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+          <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FDE2E4,#E0C3FC,#8EC5FC);flex-shrink:0"></span>
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text)">AI 트렌드 분석</div>
+            <div style="font-size:11px;color:var(--muted)">${usingClaudeInsights?'Claude AI가 분석한 인사이트예요':'구매 데이터에서 발견한 인사이트예요'}</div>
           </div>
-          <button type="button" id="regenVendorTrendBtn" class="btn" style="font-size:11px;padding:5px 10px"><i class="ti ti-sparkles"></i> ${state.anthropicApiKey ? 'Claude로 정밀 분석' : 'Claude 연동 설정'}</button>
         </div>
-        <div id="vendorTrendInsightsWrap">
+        <div id="vendorTrendInsightsWrap" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
           ${trendInsights.map(it=>`
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 2px;border-bottom:0.5px solid var(--bd)">
-              <div style="font-size:12.5px;color:var(--text);line-height:1.5;flex:1">${it.text}</div>
-              <span style="display:flex;align-items:center;gap:6px;flex-shrink:0;white-space:nowrap">
-                <span style="width:7px;height:7px;border-radius:50%;background:${it.tagColor};flex-shrink:0"></span>
-                <span style="font-size:11px;font-weight:600;color:${it.tagColor}">${it.tag}</span>
+            <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--sf);border-radius:16px">
+              <span style="width:26px;height:26px;border-radius:50%;background:${it.tagColor}1a;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <span style="width:7px;height:7px;border-radius:50%;background:${it.tagColor}"></span>
               </span>
+              <div style="font-size:12.5px;color:var(--text);line-height:1.5;flex:1">${it.text}</div>
+              <span style="font-size:10px;font-weight:600;color:${it.tagColor};flex-shrink:0;white-space:nowrap">${it.tag}</span>
             </div>
           `).join('')}
         </div>
+        <button type="button" id="regenVendorTrendBtn" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:6px 6px 6px 16px;background:var(--sf);border:none;border-radius:24px;cursor:pointer;font-size:12.5px;color:var(--muted)">
+          <span>${state.anthropicApiKey ? 'Claude로 정밀 분석하기' : 'Claude 연동해서 더 똑똑하게 분석하기'}</span>
+          <span style="width:32px;height:32px;border-radius:50%;background:#111114;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <i class="ti ti-sparkles" style="font-size:14px;color:#fff"></i>
+          </span>
+        </button>
       </div>
       <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-          <span style="font-size:14px;font-weight:600;color:var(--text)">연도별 구매 추이</span>
+        <div style="margin-bottom:14px">
+          <span style="font-size:15px;font-weight:700;color:var(--text)">연도별 구매 추이</span>
         </div>
         ${yearBarYears.length===0 ? `<div class="empty-state" style="padding:30px 0">데이터가 없습니다.</div>` :
           yearBarYears.map(y=>{
@@ -3134,14 +3133,14 @@ function viewVendorAnalytics(){
 
     <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px">
       <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px">
-          <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-          <span style="font-size:14px;font-weight:600;color:var(--text)">구매 비중 (${selectedYear}년)</span>
+        <div style="margin-bottom:18px">
+          <span style="font-size:15px;font-weight:700;color:var(--text)">구매 비중 (${selectedYear}년)</span>
         </div>
         ${donutSegments.length===0 ? `<div class="empty-state" style="padding:20px 0">데이터가 없습니다.</div>` :
-          donutSegments.map(s=>{
+          donutSegments.map((s,i)=>{
             const pct = Math.round((s.value/donutTotal)*100);
-            return `<div style="margin-bottom:13px">
+            const vid = donutTop[i] ? donutTop[i].v.id : null;
+            return `<div class="${vid?'vendor-link':''}" ${vid?`data-vid="${vid}"`:''} style="margin-bottom:13px;${vid?'cursor:pointer':''}">
               <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;margin-bottom:5px">
                 <span style="display:flex;align-items:center;gap:6px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.label}</span>
                 <span style="color:var(--muted);font-weight:600;flex-shrink:0;margin-left:8px">${pct}% · $${s.value.toLocaleString()}</span>
@@ -3156,13 +3155,10 @@ function viewVendorAnalytics(){
 
       <div class="card" style="margin-bottom:0;background:#fff;border:1px solid var(--bd)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
-            <span style="font-size:14px;font-weight:600;color:var(--text)">구매액 상위 벤더 (${selectedYear}년)</span>
-          </div>
-          ${rankedVendors.length>8?`<button type="button" id="toggleTopVendorsBtn" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:2px">${showAllTop?'접기':`전체 ${rankedVendors.length}곳 보기`} <i class="ti ti-chevron-${showAllTop?'up':'down'}" style="font-size:11px"></i></button>`:''}
+          <span style="font-size:15px;font-weight:700;color:var(--text)">구매액 상위 벤더 (${selectedYear}년)</span>
+          <span style="font-size:11px;color:var(--muted)">총 ${rankedVendors.length}곳</span>
         </div>
-        <div style="${showAllTop?'max-height:440px;overflow-y:auto':''}">
+        <div style="max-height:520px;overflow-y:auto">
         ${topVendors.length===0 ? `<div class="empty-state" style="padding:20px 0">구매 데이터가 있는 벤더가 없습니다.</div>` :
           topVendors.map((x,i)=>{
             const badgeColors = ['#3E7BFA','#30A46C','#F0883E','#8E4EC6','#E5484D'];
@@ -7365,7 +7361,7 @@ async function callClaudeVendorTrend(ctx){
     },
     body: JSON.stringify({
       model: 'claude-sonnet-5',
-      max_tokens: 500,
+      max_tokens: 1024,
       messages: [{ role: 'user', content: prompt }],
     }),
   });
@@ -7636,17 +7632,6 @@ function bindViewEvents(){
     }
   });
 
-  const toggleTopVendorsBtn = document.getElementById('toggleTopVendorsBtn');
-  if(toggleTopVendorsBtn) toggleTopVendorsBtn.addEventListener('click', ()=>{
-    state.vendorAnalyticsShowAllTop = !state.vendorAnalyticsShowAllTop;
-    render();
-  });
-  document.querySelectorAll('.rank-scope-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      state.vendorAnalyticsRankScope = btn.dataset.scope;
-      render();
-    });
-  });
 
   const editVendorBtn = document.getElementById('editVendorBtn');
   if(editVendorBtn) editVendorBtn.addEventListener('click', ()=>{
