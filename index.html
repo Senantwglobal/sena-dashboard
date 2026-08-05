@@ -2877,6 +2877,31 @@ function parseDiscountRate(str){
   return null;
 }
 
+// 선택 연도의 월별 "실 지불액" vs "할인 적용 전 정가"를 계산 (할인율 있는 벤더/독립브랜드만 역산, 없으면 실지불액=정가)
+function computeMonthlyDiscountSavings(selectedYear, monthCount){
+  const actualByMonth = Array(monthCount).fill(0);
+  const originalByMonth = Array(monthCount).fill(0);
+  function processEntity(purchaseData, discountStr){
+    const rate = parseDiscountRate(discountStr);
+    const multiplier = (rate!==null && rate>0 && rate<100) ? 1/(1-rate/100) : 1;
+    const pd = (purchaseData && purchaseData[selectedYear]) || {};
+    for(let m=1; m<=monthCount; m++){
+      const amt = Number(pd[m])||0;
+      actualByMonth[m-1] += amt;
+      originalByMonth[m-1] += amt*multiplier;
+    }
+  }
+  (state.data.vendors||[]).filter(v=>(v.companyType||'벤더')==='벤더').forEach(v=>{
+    processEntity(v.purchaseData, v.notes?.discount);
+    (v.brands||[]).forEach(b=>{
+      if(b.inherit===false && b.purchaseData){
+        processEntity(b.purchaseData, (b.vendorTerms && b.vendorTerms.discount) || '');
+      }
+    });
+  });
+  return { actualByMonth, originalByMonth };
+}
+
 function computeVendorAnalyticsData(){
   const vendors = (state.data.vendors||[]).filter(v => (v.companyType||'벤더')==='벤더');
   const yearTotals = {};        // {year: amount}
@@ -3003,6 +3028,14 @@ function viewVendorAnalytics(){
   const maxMonthVal = Math.max(1, ...monthVals, ...(hasCompare?compareVals.filter(v=>v!==null):[]));
   const monthChart = buildAreaChartSvg(monthVals, maxMonthVal, monthVals.map((_,i)=>`${i+1}월`), hasCompare?compareVals:null, anomalyIdx);
 
+  // 월별 할인 절감 현황 (실 지불액 vs 할인 전 정가)
+  const { actualByMonth: discActualByMonth, originalByMonth: discOriginalByMonth } = computeMonthlyDiscountSavings(selectedYear, monthCount);
+  const totalActualForDiscount = discActualByMonth.reduce((a,b)=>a+b,0);
+  const totalOriginalForDiscount = discOriginalByMonth.reduce((a,b)=>a+b,0);
+  const totalSaved = totalOriginalForDiscount - totalActualForDiscount;
+  const maxDiscountVal = Math.max(1, ...discActualByMonth, ...discOriginalByMonth);
+  const discountChart = buildAreaChartSvg(discActualByMonth, maxDiscountVal, discActualByMonth.map((_,i)=>`${i+1}월`), discOriginalByMonth);
+
   const yearBarYears = yearsWithData.slice(0,7).reverse();
   const yearBarMax = Math.max(1, ...yearBarYears.map(y=>yearTotals[y]||0));
 
@@ -3060,7 +3093,7 @@ function viewVendorAnalytics(){
   };
 
   const kpiCard = (icon, iconColor, label, value, trendHtml, sideVisual) => `
-    <div class="card" style="padding:16px 18px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
+    <div class="card" style="margin-bottom:0;padding:16px 18px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <span style="width:26px;height:26px;border-radius:8px;background:${iconColor}1f;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="ti ${icon}" style="font-size:13px;color:${iconColor}"></i>
@@ -3106,18 +3139,34 @@ function viewVendorAnalytics(){
         trendRow(null, '전체 누적 중 비중'), miniRing(concentrationPct, concentrationPct>=60?'#E5484D':'#30A46C'))}
     </div>
 
-    <div class="card" style="margin-bottom:16px;border:1px solid var(--bd)">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
-          ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
+            ${anomalyIdx.length>0?`<span style="font-size:10px;color:#E5484D;background:#E5484D1a;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:3px"><i class="ti ti-alert-circle" style="font-size:11px"></i>급변동 ${anomalyIdx.length}건</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;font-size:11px">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">${selectedYear}년</span><span style="font-weight:700;color:var(--text)">$${thisYearTotal.toLocaleString()}</span></span>
+            ${hasCompare?`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">${selectedYear-1}년</span><span style="font-weight:700;color:var(--text)">$${prevYearTotal.toLocaleString()}</span></span>`:''}
+          </div>
         </div>
-        <div style="display:flex;align-items:center;gap:14px;font-size:11px">
-          <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">${selectedYear}년</span><span style="font-weight:700;color:var(--text)">$${thisYearTotal.toLocaleString()}</span></span>
-          ${hasCompare?`<span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">${selectedYear-1}년</span><span style="font-weight:700;color:var(--text)">$${prevYearTotal.toLocaleString()}</span></span>`:''}
-        </div>
+        ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
-      ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
+
+      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+          <span style="font-size:15px;font-weight:700;color:var(--text)">월별 할인 절감 현황</span>
+          <div style="display:flex;align-items:center;gap:14px;font-size:11px">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--o)"></span><span style="color:var(--muted)">실 지불액</span></span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid #B0B4BB"></span><span style="color:var(--muted)">할인 전 정가</span></span>
+          </div>
+        </div>
+        ${totalActualForDiscount===0 ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : discountChart}
+        ${totalSaved>0?`<div style="margin-top:10px;padding:10px 12px;background:var(--sf);border-radius:10px;font-size:11.5px;color:var(--text)">
+          ${selectedYear}년 할인으로 총 <b style="color:#30A46C">$${Math.round(totalSaved).toLocaleString()}</b> 절감 (정가 대비 ${totalOriginalForDiscount>0?Math.round((totalSaved/totalOriginalForDiscount)*100):0}%)
+        </div>`:''}
+      </div>
     </div>
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
