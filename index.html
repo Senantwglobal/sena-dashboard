@@ -160,7 +160,7 @@ select.inp{cursor:pointer}
 .cdd-trigger:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
 .cdd-trigger .cdd-caret{font-size:9px;opacity:.65;transition:transform .16s var(--ease);margin-left:1px}
 .cdd-trigger.cdd-open .cdd-caret{transform:rotate(180deg)}
-.cdd-menu-portal{position:fixed;border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
+.cdd-menu-portal{position:fixed;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
 @keyframes cddIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .cdd-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
 .cdd-item:hover{background:#181A20;color:#fff}
@@ -2862,14 +2862,32 @@ function viewVendorList(){
 /* ============================================================
    벤더 통합 (전체 벤더 구매 분석)
    ============================================================ */
+function parseDiscountRate(str){
+  if(!str) return null;
+  const s = String(str).trim();
+  if(s==='' ) return null;
+  if(s==='-' || s==='0' || s==='0%') return 0;
+  const rangeMatch = s.match(/([\d.]+)\s*[~\-]\s*([\d.]+)/);
+  if(rangeMatch){
+    const a = parseFloat(rangeMatch[1]), b = parseFloat(rangeMatch[2]);
+    if(!isNaN(a) && !isNaN(b)) return (a+b)/2;
+  }
+  const single = s.match(/[\d.]+/);
+  if(single) return parseFloat(single[0]);
+  return null;
+}
+
 function computeVendorAnalyticsData(){
   const vendors = (state.data.vendors||[]).filter(v => (v.companyType||'벤더')==='벤더');
   const yearTotals = {};        // {year: amount}
-  const vendorTotals = {};      // {vendorId: amount} (전체 누적)
-  const vendorYearTotals = {};  // {year: {vendorId: amount}}
+  const vendorTotals = {};      // {entityId: amount} (전체 누적)
+  const vendorYearTotals = {};  // {year: {entityId: amount}}
   const monthlyByYear = {};     // {year: {month: amount}}
-  vendors.forEach(v=>{
-    const pd = v.purchaseData || {};
+  const entities = [];          // 벤더 + 독립 브랜드(별도 엔티티)
+
+  function addEntity(entity, purchaseData){
+    entities.push(entity);
+    const pd = purchaseData || {};
     let vTotal = 0;
     Object.keys(pd).forEach(year=>{
       const months = pd[year] || {};
@@ -2885,12 +2903,31 @@ function computeVendorAnalyticsData(){
       });
       if(vYearTotal>0){
         if(!vendorYearTotals[year]) vendorYearTotals[year] = {};
-        vendorYearTotals[year][v.id] = vYearTotal;
+        vendorYearTotals[year][entity.id] = vYearTotal;
       }
     });
-    if(vTotal>0) vendorTotals[v.id] = vTotal;
+    if(vTotal>0) vendorTotals[entity.id] = vTotal;
+  }
+
+  vendors.forEach(v=>{
+    addEntity({
+      id: v.id, name: v.name, logoUrl: v.logoUrl, isBrand: false,
+      vendorId: v.id, brandId: null, brands: v.brands,
+      discountStr: v.notes?.discount || ''
+    }, v.purchaseData);
+
+    (v.brands||[]).forEach(b=>{
+      if(b.inherit===false && b.purchaseData){
+        addEntity({
+          id: `brand:${b.id}`, name: `${v.name} - ${b.name}`, logoUrl: b.logoUrl, isBrand: true,
+          vendorId: v.id, brandId: b.id, brands: null,
+          discountStr: (b.vendorTerms && b.vendorTerms.discount) || ''
+        }, b.purchaseData);
+      }
+    });
   });
-  return { vendors, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear };
+
+  return { vendors, entities, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear };
 }
 
 function buildDonutChart(segments, size=132, thickness=20, centerLabel=null){
@@ -2922,7 +2959,7 @@ function buildDonutChart(segments, size=132, thickness=20, centerLabel=null){
 }
 
 function viewVendorAnalytics(){
-  const { vendors, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear } = computeVendorAnalyticsData();
+  const { vendors, entities, yearTotals, vendorTotals, vendorYearTotals, monthlyByYear } = computeVendorAnalyticsData();
   const currentYearNum = Number(dayjs().format('YYYY'));
   const currentMonthNum = Number(dayjs().format('M'));
   const yearsWithData = Object.keys(yearTotals).map(Number).sort((a,b)=>b-a);
@@ -2945,7 +2982,7 @@ function viewVendorAnalytics(){
   const top3Total = allRanked.slice(0,3).reduce((a,[,t])=>a+t,0);
   const concentrationPct = allTimeTotal>0 ? Math.round((top3Total/allTimeTotal)*1000)/10 : 0;
   const topVendorEntry = allRanked[0];
-  const topVendorName = topVendorEntry ? (vendors.find(x=>x.id===topVendorEntry[0])||{}).name : null;
+  const topVendorName = topVendorEntry ? (entities.find(x=>x.id===topVendorEntry[0])||{}).name : null;
   const topVendorTotal = topVendorEntry ? topVendorEntry[1] : 0;
 
   const selMonths = monthlyByYear[selectedYear] || {};
@@ -2973,19 +3010,19 @@ function viewVendorAnalytics(){
   const rankSourceTotals = vendorYearTotals[selectedYear] || {};
   const rankedVendors = Object.entries(rankSourceTotals)
     .sort((a,b)=>b[1]-a[1])
-    .map(([vid,total])=>({ v: vendors.find(x=>x.id===vid), total }))
-    .filter(x=>x.v);
+    .map(([eid,total])=>({ e: entities.find(x=>x.id===eid), total }))
+    .filter(x=>x.e);
   const searchQuery = (state.vendorAnalyticsSearch||'').trim().toLowerCase();
   const topVendors = !searchQuery ? rankedVendors : rankedVendors.filter(x=>{
-    if(x.v.name.toLowerCase().includes(searchQuery)) return true;
-    return (x.v.brands||[]).some(b=>(b.name||'').toLowerCase().includes(searchQuery));
+    if(x.e.name.toLowerCase().includes(searchQuery)) return true;
+    return (x.e.brands||[]).some(b=>(b.name||'').toLowerCase().includes(searchQuery));
   });
   const topMax = Math.max(1, ...rankedVendors.map(x=>x.total));
 
   const donutPalette = ['#111114','#3E7BFA','#30A46C','#F0883E','#8E4EC6'];
   const donutTop = rankedVendors.slice(0,5);
   const donutOthersTotal = rankedVendors.slice(5).reduce((a,x)=>a+x.total,0);
-  const donutSegments = donutTop.map((x,i)=>({ label:x.v.name, value:x.total, color:donutPalette[i] }));
+  const donutSegments = donutTop.map((x,i)=>({ label:x.e.name, value:x.total, color:donutPalette[i] }));
   if(donutOthersTotal>0) donutSegments.push({ label:'기타', value:donutOthersTotal, color:'#D7D9DE' });
   const donutTotal = donutSegments.reduce((a,s)=>a+s.value,0) || 1;
   const formatCompact = (n) => {
@@ -3053,7 +3090,7 @@ function viewVendorAnalytics(){
   return `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:18px;font-weight:700;margin:0">Vendor Analytics</h2>
-      <button type="button" class="cdd-trigger" data-cdd-type="vendor-analytics-year" style="font-size:12.5px;font-weight:600;padding:8px 14px;margin:0;width:auto;justify-content:space-between;gap:8px;background:var(--o);color:#fff;border-radius:9px"><i class="ti ti-calendar" style="font-size:13px"></i>${selectedYear}년<i class="ti ti-chevron-down cdd-caret" style="color:#fff"></i></button>
+      <button type="button" class="cdd-trigger btn btn-o" data-cdd-type="vendor-analytics-year" style="font-size:13px;padding:7px 14px;margin:0;width:auto"><i class="ti ti-calendar"></i>${selectedYear}년<i class="ti ti-chevron-down cdd-caret" style="color:#fff"></i></button>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
@@ -3141,8 +3178,10 @@ function viewVendorAnalytics(){
         ${donutSegments.length===0 ? `<div class="empty-state" style="padding:20px 0">데이터가 없습니다.</div>` :
           donutSegments.map((s,i)=>{
             const pct = Math.round((s.value/donutTotal)*100);
-            const vid = donutTop[i] ? donutTop[i].v.id : null;
-            return `<div class="${vid?'vendor-link':''}" ${vid?`data-vid="${vid}"`:''} style="margin-bottom:13px;${vid?'cursor:pointer':''}">
+            const ent = donutTop[i] ? donutTop[i].e : null;
+            const vid = ent ? ent.vendorId : null;
+            const bidAttr = ent && ent.brandId ? ` data-bid="${ent.brandId}"` : '';
+            return `<div class="${vid?'vendor-link':''}" ${vid?`data-vid="${vid}"${bidAttr}`:''} style="margin-bottom:13px;${vid?'cursor:pointer':''}">
               <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;margin-bottom:5px">
                 <span style="display:flex;align-items:center;gap:6px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:${s.color};flex-shrink:0"></span>${s.label}</span>
                 <span style="color:var(--muted);font-weight:600;flex-shrink:0;margin-left:8px">${pct}% · $${s.value.toLocaleString()}</span>
@@ -3171,25 +3210,30 @@ function viewVendorAnalytics(){
         ${topVendors.length===0 ? `<div class="empty-state" style="padding:20px 0">${state.vendorAnalyticsSearch?'검색 결과가 없습니다.':'구매 데이터가 있는 벤더가 없습니다.'}</div>` :
           topVendors.map((x)=>{
             const i = rankedVendors.indexOf(x);
+            const ent = x.e;
             const badgeColors = ['#3E7BFA','#30A46C','#F0883E','#8E4EC6','#E5484D'];
             const bc = badgeColors[i%badgeColors.length];
-            const prevYearAmt = (vendorYearTotals[selectedYear-1]||{})[x.v.id] || 0;
+            const prevYearAmt = (vendorYearTotals[selectedYear-1]||{})[ent.id] || 0;
             const vYoy = prevYearAmt>0 ? Math.round(((x.total-prevYearAmt)/prevYearAmt)*1000)/10 : null;
-            const brandNames = (x.v.brands||[]).map(b=>b.name).filter(Boolean);
+            const brandNames = (ent.brands||[]).map(b=>b.name).filter(Boolean);
             const brandLabel = brandNames.length===0 ? '' : brandNames.length<=2 ? brandNames.join(', ') : `${brandNames.slice(0,2).join(', ')} 외 ${brandNames.length-2}개`;
-            const discountStr = (x.v.notes && x.v.notes.discount) || '';
-            const discountNumMatch = discountStr.match(/[\d.]+/);
-            const discountNum = discountNumMatch ? parseFloat(discountNumMatch[0]) : NaN;
-            const hasDiscount = !isNaN(discountNum) && discountNum>0 && discountNum<100;
-            const originalAmt = hasDiscount ? Math.round(x.total/(1-discountNum/100)) : null;
+            const discountRate = parseDiscountRate(ent.discountStr);
+            const noDiscountExplicit = discountRate===0;
+            const hasDiscount = discountRate!==null && discountRate>0 && discountRate<100;
+            const originalAmt = hasDiscount ? Math.round(x.total/(1-discountRate/100)) : null;
             const savedAmt = hasDiscount ? originalAmt - x.total : null;
-            return `<div class="vendor-link" data-vid="${x.v.id}" style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-radius:8px;transition:background .12s" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+            const bidAttr = ent.brandId ? ` data-bid="${ent.brandId}"` : '';
+            return `<div class="vendor-link" data-vid="${ent.vendorId}"${bidAttr} style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-radius:8px;transition:background .12s" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span style="font-size:10.5px;font-weight:700;color:${bc};background:${bc}1a;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</span>
-              ${av(x.v.name, 30, x.v.logoUrl)}
+              ${av(ent.name, 30, ent.logoUrl)}
               <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${x.v.name}</div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px">
+                  <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ent.name}</span>
+                  ${ent.isBrand?`<span style="font-size:9px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:1.5px 7px;border-radius:20px;flex-shrink:0">독립 브랜드</span>`:''}
+                </div>
                 ${brandLabel?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-tag" style="font-size:9px"></i> ${brandLabel}</div>`:''}
-                ${hasDiscount?`<div style="font-size:10px;color:#30A46C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-discount-2" style="font-size:9px"></i> ${discountNum}% 할인 · $${savedAmt.toLocaleString()} 절감 (정가 $${originalAmt.toLocaleString()})</div>`:''}
+                ${hasDiscount?`<div style="font-size:10px;color:#30A46C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-discount-2" style="font-size:9px"></i> 평균 ${discountRate}% 할인 · $${savedAmt.toLocaleString()} 절감 (정가 $${originalAmt.toLocaleString()})</div>`:''}
+                ${noDiscountExplicit?`<div style="font-size:10px;color:var(--muted);margin-top:1px">할인율 없음</div>`:''}
               </div>
               ${vYoy!==null?`<span style="font-size:10.5px;font-weight:600;color:${vYoy>=0?'#30A46C':'#E5484D'};display:flex;align-items:center;gap:2px;flex-shrink:0"><i class="ti ${vYoy>=0?'ti-arrow-up-right':'ti-arrow-down-right'}" style="font-size:11px"></i>${Math.abs(vYoy)}%</span>`:''}
               <span style="font-size:11.5px;font-weight:700;color:var(--text);background:var(--sf);padding:5px 11px;border-radius:20px;flex-shrink:0">$${x.total.toLocaleString()}</span>
@@ -7528,6 +7572,7 @@ function bindViewEvents(){
   document.querySelectorAll('.vendor-link, .vendor-row').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.selectedVendorId = el.dataset.vid;
+      state.activeBrandId = el.dataset.bid || null;
       state.view = 'vendors';
       state.vendorProjectPage = 0;
       state.vendorPastEventPage = 0;
