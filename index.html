@@ -56,9 +56,9 @@ a{color:inherit}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
 .nav{display:flex;gap:4px;padding:0 22px;background:#fff;border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
-.nb{padding:12px 14px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:0;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:300;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s var(--ease),border-color .18s var(--ease)}
-.nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
-.nb:hover:not(.active){color:var(--text)}
+.nb{padding:8px 14px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:500;margin:8px 0;transition:color .18s var(--ease),background .18s var(--ease)}
+.nb.active{color:#fff;background:var(--text);font-weight:600}
+.nb:hover:not(.active){color:var(--text);background:var(--sf)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
 .card{background:#fff;border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.03),0 8px 20px -12px rgba(15,23,42,.08)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
@@ -3592,8 +3592,8 @@ function viewVendorDetail(){
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
-              <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='month'?'var(--shadow-sm)':'none'}">월별 추이</button>
-              <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--card)':'transparent'};box-shadow:${purchaseViewMode==='year'?'var(--shadow-sm)':'none'}">연도별 추이</button>
+              <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--text)':'transparent'};color:${purchaseViewMode==='month'?'#fff':'var(--muted)'}">월별 추이</button>
+              <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--text)':'transparent'};color:${purchaseViewMode==='year'?'#fff':'var(--muted)'}">연도별 추이</button>
             </div>
             ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
               ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
@@ -4546,16 +4546,16 @@ function viewProjectDetail(){
 
       ${activeVendor ? `
         <!-- ② 서브탭: 기록 | 회의록 -->
-        <div style="display:flex;align-items:center;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:0 16px">
+        <div style="display:flex;align-items:center;gap:4px;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:8px 16px">
           <button class="vendor-sub-tab ${activeSubTab==='log'?'active':''}" data-sub="log"
-            style="display:flex;align-items:center;gap:5px;padding:8px 14px 8px 0;border:none;background:none;cursor:pointer;font-size:12px;border-bottom:2px solid ${activeSubTab==='log'?'var(--o)':'transparent'};color:${activeSubTab==='log'?'var(--o)':'var(--muted)'};font-weight:${activeSubTab==='log'?'700':'300'};margin-bottom:-0.5px;font-family:inherit">
+            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='log'?'var(--text)':'transparent'};color:${activeSubTab==='log'?'#fff':'var(--muted)'};font-weight:${activeSubTab==='log'?'600':'500'};font-family:inherit">
             <i class="ti ti-list" style="font-size:13px"></i>기록
-            <span style="font-size:10px;background:${activeSubTab==='log'?'var(--ol)':'var(--sf)'};color:${activeSubTab==='log'?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${activeVendorLogs.length}</span>
+            <span style="font-size:10px;background:${activeSubTab==='log'?'rgba(255,255,255,.2)':'var(--sf)'};color:${activeSubTab==='log'?'#fff':'var(--muted)'};padding:1px 6px;border-radius:10px">${activeVendorLogs.length}</span>
           </button>
           <button class="vendor-sub-tab ${activeSubTab==='meeting'?'active':''}" data-sub="meeting"
-            style="display:flex;align-items:center;gap:5px;padding:8px 14px 8px 14px;border:none;background:none;cursor:pointer;font-size:12px;border-bottom:2px solid ${activeSubTab==='meeting'?'var(--o)':'transparent'};color:${activeSubTab==='meeting'?'var(--o)':'var(--muted)'};font-weight:${activeSubTab==='meeting'?'700':'300'};margin-bottom:-0.5px;font-family:inherit">
+            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='meeting'?'var(--text)':'transparent'};color:${activeSubTab==='meeting'?'#fff':'var(--muted)'};font-weight:${activeSubTab==='meeting'?'600':'500'};font-family:inherit">
             <i class="ti ti-notes" style="font-size:13px"></i>회의록
-            <span style="font-size:10px;background:${activeSubTab==='meeting'?'var(--ol)':'var(--sf)'};color:${activeSubTab==='meeting'?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${activeVendorMeetings.length}</span>
+            <span style="font-size:10px;background:${activeSubTab==='meeting'?'rgba(255,255,255,.2)':'var(--sf)'};color:${activeSubTab==='meeting'?'#fff':'var(--muted)'};padding:1px 6px;border-radius:10px">${activeVendorMeetings.length}</span>
           </button>
           <div style="margin-left:auto">
             ${!isReadOnly() && activeSubTab==='log' ?
@@ -4823,8 +4823,8 @@ function viewCalendarYear(){
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
-          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:transparent">월간</button>
-          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:var(--card);box-shadow:var(--shadow-sm)">연간</button>
+          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">월간</button>
+          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:var(--text);color:#fff">연간</button>
         </div>
       </div>
     </div>
@@ -4883,8 +4883,8 @@ function viewCalendar(){
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
-          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:var(--card);box-shadow:var(--shadow-sm)">월간</button>
-          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent">연간</button>
+          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:var(--text);color:#fff">월간</button>
+          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">연간</button>
         </div>
         <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
         ${!isReadOnly()?`<button class="btn" id="manageEventTypesBtn"><i class="ti ti-settings"></i> 일정 유형 관리</button>`:''}
