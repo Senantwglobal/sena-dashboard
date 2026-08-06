@@ -2535,6 +2535,63 @@ window.addEventListener('scroll', ()=>{ if(Date.now() - _dropdownOpenedAt > 250)
 window.addEventListener('resize', ()=>closeDropdown());
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
 
+/* ── 네이티브 <select> 자동 커스텀 드롭다운 변환 ── */
+const _enhancedSelects = new WeakSet();
+function enhanceSelect(sel){
+  if(_enhancedSelects.has(sel) || sel.multiple) return;
+  _enhancedSelects.add(sel);
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  const extraStyle = sel.getAttribute('style') || '';
+  trigger.className = 'inp cdd-trigger select-shell-trigger';
+  trigger.setAttribute('style', extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px');
+  const labelSpan = document.createElement('span');
+  labelSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0';
+  trigger.appendChild(labelSpan);
+  const caret = document.createElement('i');
+  caret.className = 'ti ti-chevron-down cdd-caret';
+  caret.style.cssText = 'flex-shrink:0;font-size:11px;opacity:.6';
+  trigger.appendChild(caret);
+  function syncLabel(){
+    const opt = sel.options[sel.selectedIndex];
+    labelSpan.textContent = opt ? opt.textContent : '';
+  }
+  syncLabel();
+  sel.style.display = 'none';
+  sel.insertAdjacentElement('afterend', trigger);
+  if(sel.disabled){
+    trigger.disabled = true;
+    trigger.style.opacity = '.55';
+    trigger.style.cursor = 'not-allowed';
+    return;
+  }
+  trigger.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(_activeDropdown && _activeDropdown.trigger === trigger){ closeDropdown(); return; }
+    closeDropdown();
+    const opts = Array.from(sel.options).map((o,i)=>({
+      label: o.textContent, active: i===sel.selectedIndex,
+      onSelect: ()=>{
+        if(sel.selectedIndex !== i){
+          sel.selectedIndex = i;
+          sel.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+        syncLabel();
+      }
+    }));
+    openDropdown(trigger, opts);
+  });
+  sel.addEventListener('change', syncLabel);
+}
+function enhanceSelectsIn(node){
+  if(!(node instanceof Element)) return;
+  if(node.tagName === 'SELECT') enhanceSelect(node);
+  if(node.querySelectorAll) node.querySelectorAll('select').forEach(enhanceSelect);
+}
+new MutationObserver(muts=>{
+  muts.forEach(m=>{ m.addedNodes.forEach(n=>enhanceSelectsIn(n)); });
+}).observe(document.documentElement, {childList:true, subtree:true});
+
 // 표(row) 안에 있는 트리거는 onclick="event.stopPropagation()"으로 행 클릭 내비게이션을 막기 때문에
 // document까지 버블링되지 않는다 → 인라인에서 직접 호출 가능한 전역 함수로 노출
 window.toggleCdd = function(trigger){
@@ -6931,7 +6988,8 @@ function htmlFirstLine(html){
 }
 
 function modalChecklistDetail(item){
-  const internalNames = ['천세나','Jenna Kwon','Justin Kim'];
+  const internalCompany = (state.data.companies||[]).find(c=>c.name==='OPLE') || {people:[]};
+  const internalNames = (internalCompany.people||[]).map(p=>p.name);
   const people = allPeopleFlat();
   return `
     <div class="modal" style="width:560px">
