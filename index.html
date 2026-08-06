@@ -2016,7 +2016,7 @@ function viewHome(){
 
     <div class="two">
       <div class="dash-left-col" style="display:flex;flex-direction:column">
-        <div class="card" style="margin-bottom:14px;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
+        <div class="card" style="margin-bottom:14px;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
           <div class="sh" style="margin-bottom:10px">
             <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
             <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
@@ -2251,7 +2251,7 @@ function viewHome(){
             .sort((a,b)=>a.date.localeCompare(b.date));
           const typeLabel = t=>({'연차':'종일','반차':'반차','반반차':'반반차','오전 반차':'오전','오후 반차':'오후'}[t]||t);
           const typeColor = t=>({'연차':'#3B6D11','반차':'#15803D','반반차':'#22C55E','오전 반차':'#0891B2','오후 반차':'#0369A1'}[t]||'#5F5E5A');
-          return `<div class="card" style="background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
+          return `<div class="card" style="background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
             <div class="sh">
               <div class="st"><i class="ti ti-calendar-heart oi"></i>연차 현황</div>
               <span style="font-size:11px;color:var(--muted)">잔여 <strong style="color:${remaining<3?'#A32D2D':'var(--o)'}">${remaining}일</strong></span>
@@ -2702,7 +2702,7 @@ function viewVendorList(){
       <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
     </div>
 
-    <div class="card" style="padding:0;overflow:hidden;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
+    <div class="card" style="padding:0;overflow:hidden;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
       <table class="tbl">
         <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:12%"></colgroup>
         <thead><tr>
@@ -3163,7 +3163,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px">
-      <div class="card" style="margin-bottom:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
+      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
@@ -4202,13 +4202,13 @@ function viewProjects(){
     const logCount = vendorIds.reduce((sum,vid)=>sum + ((p.vendorLogs||{})[vid]||[]).length, 0);
     const doneCk = (p.checklist||[]).filter(c=>c.done).length;
     const totalCk = (p.checklist||[]).length;
-    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${isDone?'background:transparent;box-shadow:none':''}">
+    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${isDone?'background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)':''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px">
         <div style="font-size:12.5px;font-weight:700;line-height:1.3;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${p.title}</div>
         <span style="font-size:9px;font-weight:600;padding:2px 9px;border-radius:20px;background:${statusColor}1f;color:${statusColor};flex-shrink:0">${p.status||'진행중'}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
-        <span style="font-size:8.5px;color:var(--muted);border:1px solid var(--bd);border-radius:20px;padding:1.5px 8px;background:${isDone?'transparent':'#fff'}">${p.category}</span>
+        <span style="font-size:8.5px;color:var(--muted);border:1px solid var(--bd);border-radius:20px;padding:1.5px 8px;background:${isDone?'rgba(255,255,255,.5)':'#fff'}">${p.category}</span>
         <span style="font-size:9.5px;color:var(--muted);display:inline-flex;align-items:center;gap:2px"><i class="ti ti-user" style="font-size:9.5px"></i>${p.owner}</span>
         <div class="proj-card-menu" data-pid="${p.id}" onclick="event.stopPropagation()" style="cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px;line-height:1;margin-left:auto"><i class="ti ti-dots"></i></div>
       </div>
@@ -4983,7 +4983,7 @@ function viewCalendar(){
     })()}
 
     ${todayEvs.length>0 ? `
-    <div class="card" style="margin-bottom:14px;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0">
+    <div class="card" style="margin-bottom:14px;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:0">
       <div class="sh" style="padding:0 2px"><div class="st"><i class="ti ti-sun oi"></i>오늘 일정 (${todayStr})</div></div>
       <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
       ${todayEvs.map(e=>{
