@@ -33,7 +33,7 @@
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --o:#1C85E8;--ol:#E8F2FE;--od:#0B4E9E;--ob:#A9D2F8;
-  --bg:#F8F8F8;--card:#fff;--bd:#EDEDEF;--text:#0B1B2E;--muted:#8A8F98;--sf:#F5F5F6;
+  --bg:#EAF2FB;--card:rgba(255,255,255,.6);--bd:#EDEDEF;--text:#0B1B2E;--muted:#8A8F98;--sf:#F5F5F6;
   --sans:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;
   --shadow-xs:none;
   --shadow-sm:0 1px 2px rgba(11,27,46,.04);
@@ -42,7 +42,7 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:var(--sans);background:linear-gradient(160deg,#DCEBFB 0%,#E7F0FA 45%,#EEF4FA 100%) fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}
 ::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -50,17 +50,17 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14
 ::-webkit-scrollbar-thumb:hover{background:#C1C7CF}
 a{color:inherit}
 .editorial{font-weight:800;letter-spacing:-.02em}
-.hdr{background:#fff;border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.hdr{background:rgba(255,255,255,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
 .logo{background:var(--text);color:#fff;font-size:14px;font-weight:300;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
-.nav{display:flex;gap:2px;padding:8px 22px;background:var(--sf);border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
-.nb{padding:7px 14px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:500;transition:color .18s var(--ease),background .18s var(--ease),box-shadow .18s var(--ease)}
-.nb.active{color:var(--text);background:#fff;font-weight:600;box-shadow:0 1px 3px rgba(15,23,42,.08)}
+.nav{display:flex;gap:2px;padding:6px 22px;background:rgba(255,255,255,.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);overflow-x:auto;position:sticky;top:53px;z-index:49}
+.nb{padding:5px 11px;font-size:13px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease),box-shadow .18s var(--ease)}
+.nb.active{color:var(--text);background:#fff;font-weight:400;box-shadow:0 1px 3px rgba(15,23,42,.08)}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:#fff;border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.03),0 8px 20px -12px rgba(15,23,42,.08)}
+.card{background:rgba(255,255,255,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 8px 28px rgba(31,41,55,.09)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
@@ -79,8 +79,8 @@ a{color:inherit}
 .bg{background:#E4F7F1;color:#1C9873}
 .bgr{background:#F0F1F3;color:#5F6672}
 .bw{background:#FFF6E0;color:#B8790A}
-.inp{width:100%;padding:8px 13px;border:1px solid transparent;border-radius:12px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
-.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:#fff}
+.inp{width:100%;padding:8px 13px;border:1px solid rgba(255,255,255,.6);border-radius:12px;font-size:13px;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
+.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:rgba(255,255,255,.65)}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -2106,7 +2106,7 @@ function viewHome(){
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
             </div>`;
           }).join('')}
-          ${paTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+          ${paTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn dash-action-page-btn" data-page="${Math.max(0,paPage-1)}" style="padding:3px 8px;font-size:11px" ${paPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:paTotalPages}).map((_,i)=>`<button class="btn dash-action-page-btn ${i===paPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -2119,7 +2119,7 @@ function viewHome(){
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
             <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
           </div>`).join('')}
-          ${ipTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+          ${ipTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn home-incomplete-page-btn" data-page="${Math.max(0,ipPage-1)}" style="padding:3px 8px;font-size:11px" ${ipPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:ipTotalPages}).map((_,i)=>`<button class="btn home-incomplete-page-btn ${i===ipPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn home-incomplete-page-btn" data-page="${Math.min(ipTotalPages-1,ipPage+1)}" style="padding:3px 8px;font-size:11px" ${ipPage>=ipTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -2172,7 +2172,7 @@ function viewHome(){
               <option value="전체" ${catFilter==='전체'?'selected':''}>전체 카테고리</option>
               ${state.data.categories.map(c=>`<option value="${c}" ${catFilter===c?'selected':''}>${c}</option>`).join('')}
             </select>`;
-            const navHtml = totalPages>1 ? `<div style="display:flex;gap:2px;align-items:center;background:var(--sf);border-radius:999px;padding:3px 5px">
+            const navHtml = totalPages>1 ? `<div style="display:flex;gap:2px;align-items:center;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:3px 5px">
               <button class="btn dash-proj-prev" style="padding:3px 8px;font-size:12px" ${page===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
               <span style="font-size:11px;color:var(--muted);padding:0 2px">${page+1}/${totalPages}</span>
               <button class="btn dash-proj-next" style="padding:3px 8px;font-size:12px" ${page>=totalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -3591,7 +3591,7 @@ function viewVendorDetail(){
             <span style="font-size:14px;font-weight:600;color:var(--text)">Purchase Summary</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
-            <div style="display:flex;background:var(--sf);border-radius:8px;padding:2px">
+            <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:8px;padding:2px">
               <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'#fff':'transparent'};color:${purchaseViewMode==='month'?'var(--text)':'var(--muted)'};box-shadow:${purchaseViewMode==='month'?'0 1px 3px rgba(15,23,42,.08)':'none'}">월별 추이</button>
               <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'#fff':'transparent'};color:${purchaseViewMode==='year'?'var(--text)':'var(--muted)'};box-shadow:${purchaseViewMode==='year'?'0 1px 3px rgba(15,23,42,.08)':'none'}">연도별 추이</button>
             </div>
@@ -3921,7 +3921,7 @@ function viewVendorDetail(){
               <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
             </div>`).join('');
-            const pager = vpTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:8px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+            const pager = vpTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:8px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
               <button class="btn vendor-project-page-btn" data-page="${Math.max(0,vpPage-1)}" style="padding:3px 8px;font-size:11px" ${vpPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
               ${Array.from({length:vpTotalPages}).map((_,i)=>`<button class="btn vendor-project-page-btn ${i===vpPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
               <button class="btn vendor-project-page-btn" data-page="${Math.min(vpTotalPages-1,vpPage+1)}" style="padding:3px 8px;font-size:11px" ${vpPage>=vpTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -3961,7 +3961,7 @@ function viewVendorDetail(){
                     </div>`;
                   }).join('')}
                 </div>
-                ${mnTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+                ${mnTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
                   <button class="btn vendor-meeting-note-page-btn" data-page="${Math.max(0,mnPage-1)}" style="padding:3px 8px;font-size:11px" ${mnPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
                   ${Array.from({length:mnTotalPages}).map((_,i)=>`<button class="btn vendor-meeting-note-page-btn ${i===mnPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
                   <button class="btn vendor-meeting-note-page-btn" data-page="${Math.min(mnTotalPages-1,mnPage+1)}" style="padding:3px 8px;font-size:11px" ${mnPage>=mnTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4024,7 +4024,7 @@ function viewVendorDetail(){
             </div>`;
           }).join('');
 
-          const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+          const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn vendor-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn vendor-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn vendor-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4547,7 +4547,7 @@ function viewProjectDetail(){
 
       ${activeVendor ? `
         <!-- ② 서브탭: 기록 | 회의록 -->
-        <div style="display:flex;align-items:center;gap:2px;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:8px 16px;background:var(--sf)">
+        <div style="display:flex;align-items:center;gap:2px;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:8px 16px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
           <button class="vendor-sub-tab ${activeSubTab==='log'?'active':''}" data-sub="log"
             style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='log'?'#fff':'transparent'};color:${activeSubTab==='log'?'var(--text)':'var(--muted)'};font-weight:${activeSubTab==='log'?'600':'500'};box-shadow:${activeSubTab==='log'?'0 1px 3px rgba(15,23,42,.08)':'none'};font-family:inherit">
             <i class="ti ti-list" style="font-size:13px"></i>기록
@@ -4700,7 +4700,7 @@ function viewProjectDetail(){
         </div>`;
       }).join('');
 
-      const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+      const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
         <button class="btn proj-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
         ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn proj-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
         <button class="btn proj-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4818,7 +4818,7 @@ function viewCalendarYear(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="display:flex;align-items:center;gap:2px;background:var(--sf);border-radius:999px;padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px 6px">
           <button class="btn" id="prevYear" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-left"></i></button>
           <span style="font-size:14px;font-weight:600;padding:0 4px;white-space:nowrap">${year}년</span>
           <button class="btn" id="nextYear" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-right"></i></button>
@@ -4826,7 +4826,7 @@ function viewCalendarYear(){
         <button class="btn" id="goTodayBtnYear" style="font-size:11.5px;padding:5px 12px;background:var(--ol);color:var(--od);border:1px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
+        <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
           <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">월간</button>
           <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(15,23,42,.08)">연간</button>
         </div>
@@ -4877,7 +4877,7 @@ function viewCalendar(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:2px;background:var(--sf);border-radius:999px;padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px 6px">
           <button class="btn" id="prevMonth" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-left"></i></button>
           <span style="font-size:14px;font-weight:600;padding:0 4px;white-space:nowrap">${month.format('YYYY년 M월')}</span>
           <button class="btn" id="nextMonth" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-right"></i></button>
@@ -4886,7 +4886,7 @@ function viewCalendar(){
         <span style="font-size:12px;color:var(--muted);padding:4px 8px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
+        <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
           <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(15,23,42,.08)">월간</button>
           <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">연간</button>
         </div>
@@ -5590,7 +5590,7 @@ function viewLeave(){
           const lvTotalPages = Math.ceil(filtered.length / LV_PER_PAGE);
           const pageItems = filtered.slice(lvPage*LV_PER_PAGE, lvPage*LV_PER_PAGE+LV_PER_PAGE);
 
-          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:var(--sf);border-radius:999px">
+          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn leave-record-page-btn" data-page="${Math.max(0,lvPage-1)}" style="padding:3px 8px;font-size:11px" ${lvPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:lvTotalPages}).map((_,i)=>`<button class="btn leave-record-page-btn ${i===lvPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn leave-record-page-btn" data-page="${Math.min(lvTotalPages-1,lvPage+1)}" style="padding:3px 8px;font-size:11px" ${lvPage>=lvTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
