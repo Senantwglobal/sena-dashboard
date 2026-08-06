@@ -91,7 +91,9 @@ select.inp{cursor:pointer}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
 .proj-card:hover{box-shadow:var(--shadow-md)}
-.ki{width:32px;height:32px;border-radius:50%;background:color-mix(in srgb, var(--ac,var(--o)) 16%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
+.ki{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--ac,var(--o)) 55%, white) 0%, color-mix(in srgb, var(--ac,var(--o)) 14%, white) 72%);color:color-mix(in srgb, var(--ac,var(--o)) 78%, black 10%);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1;box-shadow:0 3px 10px -3px color-mix(in srgb, var(--ac,var(--o)) 55%, transparent),inset 0 1px 1px rgba(255,255,255,.6)}
+.kpi{position:relative}
+.kpi::before{content:"";position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--ac,var(--o)) 22%, transparent) 0%, transparent 70%);filter:blur(6px);pointer-events:none;z-index:0}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
@@ -202,8 +204,10 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
 .tbl tr.clickable:hover td{background:var(--sf)}
-.prog-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:12px}
+.prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
 .prog-row:last-child{border-bottom:none}
+.prog-row:hover{background:var(--sf)}
+.prog-row:hover span[style*="border-radius:50%"]{box-shadow:0 0 0 4px color-mix(in srgb, currentColor 18%, transparent)}
 @media(max-width:640px){.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.cnt{padding:12px}.cat-sidebar{display:none}}
 </style>
 
@@ -1962,7 +1966,7 @@ function viewHome(){
   const thisMonthMeetings = allCalendarEvents().filter(e=>e.date.startsWith(thisMonthStr) && e.type==='미팅').length;
 
   // 프로젝트별 진행률
-  const projColors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
+  const projColors = ['#3E8ED9','#9B6FD1','#E0709B','#D9A23E','#4FAE8E','#D9645A','#4FB8C4','#8FB562'];
 
   // 미완료 다음액션 (nextStep이 있고, 완료 아닌 로그들)
   const paFilter = state.dashActionFilter || '전체';
@@ -1997,11 +2001,11 @@ function viewHome(){
         </button>
       </div>`:''}
       <div class="krow">
-        <div class="kpi" style="--ac:#1C85E8"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#1C85E8">${inProgProjects}</div></div>
-        <div class="kpi" style="--ac:${undoneItems>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#A32D2D':'color:#65A30D'}">${undoneItems}</div></div>
-        <div class="kpi" style="--ac:#7C3AED"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#7C3AED">${todayEvs.length}</div></div>
-        <div class="kpi" style="--ac:${deadlines.length>0?'#A32D2D':'#65A30D'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#A32D2D':'color:#65A30D'}">${deadlines.length}</div></div>
-        <div class="kpi" style="--ac:#D97706"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn" style="color:#D97706">${thisMonthMeetings}</div></div>
+        <div class="kpi" style="--ac:#3E8ED9"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#3E8ED9">${inProgProjects}</div></div>
+        <div class="kpi" style="--ac:${undoneItems>0?'#D9645A':'#5FA777'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#D9645A':'color:#5FA777'}">${undoneItems}</div></div>
+        <div class="kpi" style="--ac:#9B6FD1"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">오늘 일정</div><div class="ki"><i class="ti ti-calendar-event"></i></div></div><div class="kn" style="color:#9B6FD1">${todayEvs.length}</div></div>
+        <div class="kpi" style="--ac:${deadlines.length>0?'#D9645A':'#5FA777'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">마감 임박 프로젝트</div><div class="ki"><i class="ti ti-flag"></i></div></div><div class="kn" style="${deadlines.length>0?'color:#D9645A':'color:#5FA777'}">${deadlines.length}</div></div>
+        <div class="kpi" style="--ac:#D9A23E"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">이번달 미팅</div><div class="ki"><i class="ti ti-users"></i></div></div><div class="kn" style="color:#D9A23E">${thisMonthMeetings}</div></div>
       </div>
     </div>
 
@@ -2187,7 +2191,7 @@ function viewHome(){
                 const dday = p.deadline ? dayjs(p.deadline).diff(dayjs().startOf('day'),'day') : null;
                 const ddayBadge = dday!==null ? '<span class="dlc '+(dday<=2?'dl-c':dday<=5?'dl-w':'dl-ok')+'" style="font-size:9px;display:inline-block;min-width:40px;text-align:center;flex-shrink:0">'+(dday>=0?'D-'+dday:'D+'+Math.abs(dday))+'</span>' : '<span style="display:inline-block;min-width:40px;flex-shrink:0"></span>';
                 return '<div class="prog-row proj-link" data-pid="'+p.id+'" style="cursor:pointer">'
-                  +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';flex-shrink:0"></span>'
+                  +'<span style="width:8px;height:8px;border-radius:50%;background:'+col+';color:'+col+';flex-shrink:0;transition:box-shadow .15s var(--ease)"></span>'
                   +'<span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+p.title+'</span>'
                   +'<div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:'+prog+'%;background:'+col+'"></div></div>'
                   +'<span style="font-size:11px;color:var(--muted);width:30px;text-align:right">'+prog+'%</span>'
@@ -4987,15 +4991,15 @@ function viewCalendar(){
     ${todayEvs.length>0 ? `
     <div class="card" style="margin-bottom:14px;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:0">
       <div class="sh" style="padding:0 2px"><div class="st"><i class="ti ti-sun oi"></i>오늘 일정 (${todayStr})</div></div>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;width:100%">
       ${todayEvs.map(e=>{
         const c=eventColor(e.type);
         const isEditable = state.data.calendar.some(x=>x.id===e.id);
-        return `<div class="dash-row" style="gap:10px;background:${c.bg};border-radius:14px;padding:10px 14px;margin:0">
+        return `<div class="dash-row" style="gap:10px;background:${c.bg};border-radius:14px;padding:10px 14px;margin:0;width:100%;box-sizing:border-box">
         <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-        <span style="font-size:13px;font-weight:600;color:${c.text}">${e.title}</span>
-        ${e.time?`<span style="font-size:12px;color:${c.text};opacity:.75;margin-left:auto">${e.time}</span>`:''}
-        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:rgba(255,255,255,.6);color:${c.text}">${e.type}</span>
+        <span style="font-size:13px;font-weight:600;color:${c.text};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</span>
+        ${e.time?`<span style="font-size:12px;color:${c.text};opacity:.75;flex-shrink:0">${e.time}</span>`:''}
+        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:rgba(255,255,255,.6);color:${c.text};flex-shrink:0">${e.type}</span>
         ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0;background:rgba(255,255,255,.6)"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
       </div>`;}).join('')}
       </div>
