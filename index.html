@@ -202,6 +202,8 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
 .tbl tr.clickable:hover td{background:rgba(255,255,255,.85)}
+.pill-bar{display:flex;gap:2px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px}
+.pill-bar .btn{border-radius:999px}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
 .prog-row:last-child{border-bottom:none}
 .prog-row:hover{background:var(--sf)}
@@ -2686,7 +2688,7 @@ function viewVendorList(){
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
-      ${companyTypes.map(t=>`<button class="btn ${activeType===t?'btn-o':''}" data-vendor-type="${t}">${t}${t!=='전체'?` (${state.data.vendors.filter(v=>(v.companyType||'벤더')===t).length})`:` (${state.data.vendors.length})`}</button>`).join('')}
+      <div class="pill-bar">${companyTypes.map(t=>`<button class="btn ${activeType===t?'btn-o':''}" data-vendor-type="${t}">${t}${t!=='전체'?` (${state.data.vendors.filter(v=>(v.companyType||'벤더')===t).length})`:` (${state.data.vendors.length})`}</button>`).join('')}</div>
       <div style="margin-left:auto;display:flex;gap:6px">
         <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-status-filter" style="font-size:11px;padding:5px 12px;margin:0;width:auto;justify-content:space-between;border-radius:999px;gap:6px">${{'전체':'거래상태 전체',Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[statusFilter]}<i class="ti ti-chevron-down cdd-caret"></i></button>
         <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-priority-filter" style="font-size:11px;padding:5px 12px;margin:0;width:auto;justify-content:space-between;border-radius:999px;gap:6px">${priorityFilter==='전체'?'우선순위 전체':priorityFilter}<i class="ti ti-chevron-down cdd-caret"></i></button>
@@ -2700,10 +2702,10 @@ function viewVendorList(){
       <div class="kpi"><div class="kn" style="color:#B45309">${staleCount}</div><div class="kl">90일 이상 정체</div></div>
     </div>
 
-    <div style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;margin-top:14px;margin-bottom:14px;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px">
-      <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px;border-radius:999px">전체</button>
-      ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px;border-radius:999px">${c}</button>`).join('')}
-      <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px;border-radius:999px">한글</button>
+    <div class="pill-bar" style="margin-top:14px;margin-bottom:14px">
+      <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px">전체</button>
+      ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px">${c}</button>`).join('')}
+      <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
@@ -4296,7 +4298,7 @@ function viewProjects(){
       </div>
     </div>
 
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+    <div class="pill-bar" style="margin-bottom:14px">
       <button class="btn ${state.projectFilter==='전체'?'btn-o':''}" data-cat="전체">전체</button>
       ${state.data.categories.map(c=>`<button class="btn ${state.projectFilter===c?'btn-o':''}" data-cat="${c}">${c}</button>`).join('')}
     </div>
@@ -4986,61 +4988,64 @@ function viewCalendar(){
       </div>`;
     })()}
 
-    ${todayEvs.length>0 ? `
-    <div class="card" style="margin-bottom:14px;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:18px">
-      <div class="sh" style="padding:0 2px;margin-bottom:12px"><div class="st"><i class="ti ti-sun oi"></i>오늘 일정 (${todayStr})</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px;width:100%">
-      ${todayEvs.map(e=>{
-        const c=eventColor(e.type);
-        const isEditable = state.data.calendar.some(x=>x.id===e.id);
-        return `<div class="dash-row" style="gap:10px;background:${c.bg};border-radius:14px;padding:14px 16px;margin:0;width:100%;box-sizing:border-box">
-        <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-        <span style="font-size:13px;font-weight:600;color:${c.text};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</span>
-        ${e.time?`<span style="font-size:12px;color:${c.text};opacity:.75;flex-shrink:0">${e.time}</span>`:''}
-        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:rgba(255,255,255,.6);color:${c.text};flex-shrink:0">${e.type}</span>
-        ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0;background:rgba(255,255,255,.6)"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
-      </div>`;}).join('')}
-      </div>
-    </div>` : `
-    <div class="card" style="margin-bottom:14px;background:var(--sf)">
-      <div style="padding:10px;font-size:13px;color:var(--muted);text-align:center"><i class="ti ti-calendar-off" style="font-size:16px"></i> 오늘은 등록된 일정이 없습니다</div>
-    </div>`}
-
-    ${monthEvs.length>0 ? `
-    <div class="card">
-      <div class="sh"><div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
-      <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span></div>
-      ${(() => {
-        const specialEvs = monthEvs.filter(e=>e.isHoliday||e.isLeave);
-        const realEvs = monthEvs.filter(e=>!e.isHoliday && !e.isLeave);
-        const specialHtml = specialEvs.length>0 ? `
-          <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--bd)">
-            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">공휴일 · 연차/반차</div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              ${specialEvs.map(e=>{
-                const isToday = e.date===todayStr;
-                return `<div style="display:flex;align-items:center;gap:8px">
-                  <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-                  <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>` : '';
-        const realHtml = realEvs.map(e=>{
+    <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:14px">
+      <div style="flex:0 0 30%;min-width:0">
+      ${todayEvs.length>0 ? `
+      <div class="card" style="height:100%;margin-bottom:0;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:16px">
+        <div class="sh" style="padding:0 2px;margin-bottom:10px"><div class="st" style="font-size:12.5px"><i class="ti ti-sun oi"></i>오늘 일정</div></div>
+        <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+        ${todayEvs.map(e=>{
           const c=eventColor(e.type);
-          const isToday=e.date===todayStr;
           const isEditable = state.data.calendar.some(x=>x.id===e.id);
-          return `<div class="dash-row" style="gap:8px">
-          <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'700':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-          <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-          <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
-          <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
-          ${isEditable?`<button class="btn calendar-event-link" data-eid="${e.id}" style="font-size:10px;padding:3px 9px;flex-shrink:0"><i class="ti ti-eye" style="font-size:11px"></i> 상세보기</button>`:''}
-        </div>`;
-        }).join('');
-        return specialHtml + realHtml;
-      })()}
-    </div>` : ''}
+          return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="gap:8px;background:${c.bg};border-radius:12px;padding:10px 12px;margin:0;width:100%;box-sizing:border-box;${isEditable?'cursor:pointer':''}">
+          <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+          <span style="font-size:12px;font-weight:600;color:${c.text};flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}</span>
+          ${e.time?`<span style="font-size:10.5px;color:${c.text};opacity:.75;flex-shrink:0">${e.time.split('~')[0]}</span>`:''}
+        </div>`;}).join('')}
+        </div>
+      </div>` : `
+      <div class="card" style="height:100%;margin-bottom:0;background:var(--sf)">
+        <div style="padding:10px;font-size:12px;color:var(--muted);text-align:center"><i class="ti ti-calendar-off" style="font-size:15px"></i> 오늘 일정 없음</div>
+      </div>`}
+      </div>
+
+      <div style="flex:1;min-width:0">
+      ${monthEvs.length>0 ? `
+      <div class="card" style="margin-bottom:0">
+        <div class="sh"><div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
+        <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span></div>
+        ${(() => {
+          const specialEvs = monthEvs.filter(e=>e.isHoliday||e.isLeave);
+          const realEvs = monthEvs.filter(e=>!e.isHoliday && !e.isLeave);
+          const specialHtml = specialEvs.length>0 ? `
+            <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--bd)">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">공휴일 · 연차/반차</div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                ${specialEvs.map(e=>{
+                  const isToday = e.date===todayStr;
+                  return `<div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
+                    <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>` : '';
+          const realHtml = realEvs.map(e=>{
+            const c=eventColor(e.type);
+            const isToday=e.date===todayStr;
+            const isEditable = state.data.calendar.some(x=>x.id===e.id);
+            return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="gap:8px;${isEditable?'cursor:pointer':''}">
+            <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'700':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
+            <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+            <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
+            <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
+          </div>`;
+          }).join('');
+          return specialHtml + realHtml;
+        })()}
+      </div>` : ''}
+      </div>
+    </div>
   `;
 }
 
@@ -5717,7 +5722,7 @@ function viewCompanyList(){
       ${!isReadOnly()?`<button class="btn btn-o" id="addCompanyBtn"><i class="ti ti-plus"></i> 회사 추가</button>`:''}
     </div>
 
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px">${alphaButtons}</div>
+    <div class="pill-bar" style="margin-bottom:12px">${alphaButtons}</div>
 
     <div class="krow" style="grid-template-columns:repeat(2,1fr);max-width:320px;margin-bottom:14px">
       <div class="kpi"><div class="kn">${companies.length}</div><div class="kl">표시 중</div></div>
