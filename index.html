@@ -137,13 +137,13 @@ select.inp{cursor:pointer}
 .cal-cell.drag-over{border-color:var(--o);border-width:1.5px;background:var(--ol)}
 .cal-ev-title{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
 .cal-ev-time{font-size:9px;opacity:.7;flex-shrink:0}
-.ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:12px;border:none;margin-bottom:6px;background:var(--card);box-shadow:0 2px 8px rgba(31,41,55,.05);cursor:pointer;transition:box-shadow .15s var(--ease)}
-.ck-item:hover{border-color:var(--ob);box-shadow:var(--shadow-xs)}
-.ck-cb{accent-color:var(--o);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer}
-.ck-body{flex:1;min-width:0}
-.ck-title{font-size:13px;font-weight:300;margin-bottom:4px;line-height:1.4}
+.ck-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;border:none;margin-bottom:6px;background:var(--card);box-shadow:0 2px 8px rgba(31,41,55,.05);cursor:pointer;transition:box-shadow .15s var(--ease)}
+.ck-item:hover{box-shadow:var(--shadow-md)}
+.ck-cb{accent-color:var(--o);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.ck-body{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
+.ck-title{font-size:13px;font-weight:400;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 .ck-title.done{text-decoration:line-through;color:var(--muted)}
-.ck-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--muted)}
+.ck-meta{display:flex;gap:6px;flex-wrap:nowrap;align-items:center;font-size:11px;color:var(--muted);flex-shrink:0}
 .ck-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.22);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto;animation:overlayIn .15s var(--ease)}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
@@ -4543,7 +4543,8 @@ function viewProjectDetail(){
     })()}
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;align-items:start;margin-bottom:14px">
+    <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px">
+    <div style="flex:1;min-width:380px;display:flex;flex-direction:column;gap:14px">
     <!-- 체크리스트 -->
     <div class="card" style="margin-bottom:0">
       ${(()=>{
@@ -4564,10 +4565,10 @@ function viewProjectDetail(){
               <div class="ck-body">
                 <div class="ck-title ${c.done?'done':''}">${c.text}</div>
                 <div class="ck-meta">
-                  ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
                   ${c.priority?`<span class="badge ${priorityBadge(c.priority)}">${c.priority}</span>`:''}
-                  ${c.dueDate?`<span><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
-                  ${assignee?`<span><i class="ti ti-user" style="font-size:10px"></i> ${assignee}</span>`:''}
+                  ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
+                  ${c.dueDate?`<span class="badge bgr"><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
+                  ${assignee?`<span style="display:flex;align-items:center">${av(assignee,20)}</span>`:''}
                 </div>
               </div>
               ${!isReadOnly()?`<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px;color:var(--muted);cursor:pointer;flex-shrink:0"></i>`:''}
@@ -4584,109 +4585,6 @@ function viewProjectDetail(){
         })()}
     </div>
 
-    <!-- 거래처별 로그 카드 (전체 활동 로그와 명확히 구분) -->
-    ${linkedVendors.length > 0 ? `
-    <div class="card" style="margin-bottom:0;padding:0;overflow:hidden">
-
-      <!-- 헤더 + ① 벤더 선택 탭 (브랜드탭과 동일한 세그먼트 스타일, 거래 상태 점 표시) -->
-      <div style="padding:14px 16px 12px 16px">
-        ${secHeader({icon:'ti-building-store', title:'거래처별 로그', caption:'거래처마다 따로 쌓이는 기록입니다', tint:'var(--ol)', color:'var(--o)'})}
-        <div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
-          ${linkedVendors.map(v=>{
-            const vLogCnt = (vendorLogs[v.id]||[]).length;
-            const vMeetCnt = (vendorMeetings[v.id]||[]).length;
-            const total = vLogCnt + vMeetCnt;
-            const isActive = v.id === activeVendorId;
-            const statusLabel = {Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[v.companyStatus||'Active'];
-            return `<button class="proj-vendor-tab" data-vid="${v.id}"
-              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};cursor:pointer;font-size:12.5px;white-space:nowrap;color:${isActive?'var(--text)':'var(--muted)'};font-weight:${isActive?'600':'500'};font-family:inherit;flex-shrink:0;transition:color .12s var(--ease)">
-              ${av(v.name,18)}${v.name}
-              <span class="badge" style="${vendorStatusStyle(v.companyStatus||'Active')};font-size:9px;padding:1.5px 6px;flex-shrink:0">${statusLabel}</span>
-              <span style="font-size:10px;background:${isActive?'var(--ol)':'var(--bd)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${total}</span>
-            </button>`;
-          }).join('')}
-        </div>
-      </div>
-
-      ${activeVendor ? `
-        <!-- ② 서브탭: 기록 | 회의록 -->
-        <div style="display:flex;align-items:center;gap:2px;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:8px 16px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
-          <button class="vendor-sub-tab ${activeSubTab==='log'?'active':''}" data-sub="log"
-            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='log'?'#fff':'transparent'};color:${activeSubTab==='log'?'var(--text)':'var(--muted)'};font-weight:${activeSubTab==='log'?'600':'500'};box-shadow:${activeSubTab==='log'?'0 1px 3px rgba(15,23,42,.08)':'none'};font-family:inherit">
-            <i class="ti ti-list" style="font-size:13px"></i>기록
-            <span style="font-size:10px;background:${activeSubTab==='log'?'var(--sf)':'#fff'};color:var(--muted);padding:1px 6px;border-radius:10px">${activeVendorLogs.length}</span>
-          </button>
-          <button class="vendor-sub-tab ${activeSubTab==='meeting'?'active':''}" data-sub="meeting"
-            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='meeting'?'#fff':'transparent'};color:${activeSubTab==='meeting'?'var(--text)':'var(--muted)'};font-weight:${activeSubTab==='meeting'?'600':'500'};box-shadow:${activeSubTab==='meeting'?'0 1px 3px rgba(15,23,42,.08)':'none'};font-family:inherit">
-            <i class="ti ti-notes" style="font-size:13px"></i>회의록
-            <span style="font-size:10px;background:${activeSubTab==='meeting'?'var(--sf)':'#fff'};color:var(--muted);padding:1px 6px;border-radius:10px">${activeVendorMeetings.length}</span>
-          </button>
-          <div style="margin-left:auto">
-            ${!isReadOnly() && activeSubTab==='log' ?
-              `<button class="btn btn-o" id="addVendorProjectLogBtn" data-vid="${activeVendorId}" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 기록 추가</button>` : ''}
-            ${!isReadOnly() && activeSubTab==='meeting' ?
-              `<button class="btn btn-o" id="addVendorMeetingBtn" data-vid="${activeVendorId}" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 회의록 작성</button>` : ''}
-          </div>
-        </div>
-
-        <!-- ③ 서브탭 컨텐츠 -->
-        ${activeSubTab==='log' ? `
-          ${activeVendorLogs.length===0
-            ? `<div class="empty-state" style="padding:28px">아직 기록이 없습니다. 기록 추가 버튼으로 시작하세요.</div>`
-            : (() => {
-                const sorted = sortLogsDesc(activeVendorLogs);
-                const LOG_PAGE = 5;
-                const showAll = !!state.projLogShowAll;
-                const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
-                const rowsHtml = visible.map(l=>`
-                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd);display:flex;gap:10px">
-                    <div style="flex:1;min-width:0">
-                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                        <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
-                        <span class="badge bgr" style="font-size:10px">${l.status}</span>
-                      </div>
-                      <div style="font-size:13px;font-weight:300;line-height:1.5">${l.summary}</div>
-                      ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
-                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
-                      ${renderLogLinks(l.links)}
-                    </div>
-                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
-                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
-                    </div>`:''}
-                  </div>`).join('');
-                const moreBtn = sorted.length > LOG_PAGE
-                  ? `<div style="text-align:center;padding:10px 16px">
-                      <button class="btn" id="toggleProjLogShowAllBtn" style="font-size:11px;padding:5px 14px">
-                        ${showAll ? `<i class="ti ti-chevron-up"></i> 접기` : `<i class="ti ti-chevron-down"></i> 더보기 (${sorted.length - LOG_PAGE}건 더)`}
-                      </button>
-                    </div>`
-                  : '';
-                return rowsHtml + moreBtn;
-              })()}
-        ` : ''}
-
-        ${activeSubTab==='meeting' ? `
-          ${activeVendorMeetings.length===0
-            ? `<div class="empty-state" style="padding:28px">이 벤더의 회의록이 없습니다. 회의록 작성 버튼으로 시작하세요.</div>`
-            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px 16px">
-                ${activeVendorMeetings.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
-                  <div class="meeting-card-btn" data-vid="${activeVendorId}" data-mid="${m.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:10px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:5px;min-height:88px">
-                    <div style="font-size:12.5px;font-weight:500;color:var(--text);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
-                    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-wrap:wrap">
-                      ${m.personName?`<span style="display:flex;align-items:center;gap:2px">${av(m.personName,13)}${m.personName}</span><span>·</span>`:''}
-                      <span>${fmtDate(m.date)}</span>
-                    </div>
-                    <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlFirstLine(m.summary||m.text||'') || '내용 없음'}</div>
-                  </div>`).join('')}
-              </div>`}
-        ` : ''}
-      ` : `<div class="empty-state" style="padding:24px">벤더를 선택하세요.</div>`}
-
-    </div>` : ''}
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px;align-items:start">
     <!-- 파일 & 링크 -->
     ${(() => {
       const pLinks = p.links || [];
@@ -4803,6 +4701,109 @@ function viewProjectDetail(){
         ${pager}`}
       </div>`;
     })()}
+    </div>
+
+    <div style="flex:1;min-width:380px;display:flex;flex-direction:column;gap:14px">
+    <!-- 거래처별 로그 카드 (전체 활동 로그와 명확히 구분) -->
+    ${linkedVendors.length > 0 ? `
+    <div class="card" style="margin-bottom:0;padding:0;overflow:hidden">
+
+      <!-- 헤더 + ① 벤더 선택 탭 (브랜드탭과 동일한 세그먼트 스타일, 거래 상태 점 표시) -->
+      <div style="padding:14px 16px 12px 16px">
+        ${secHeader({icon:'ti-building-store', title:'거래처별 로그', caption:'거래처마다 따로 쌓이는 기록입니다', tint:'var(--ol)', color:'var(--o)'})}
+        <div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
+          ${linkedVendors.map(v=>{
+            const vLogCnt = (vendorLogs[v.id]||[]).length;
+            const vMeetCnt = (vendorMeetings[v.id]||[]).length;
+            const total = vLogCnt + vMeetCnt;
+            const isActive = v.id === activeVendorId;
+            const statusLabel = {Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[v.companyStatus||'Active'];
+            return `<button class="proj-vendor-tab" data-vid="${v.id}"
+              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};cursor:pointer;font-size:12.5px;white-space:nowrap;color:${isActive?'var(--text)':'var(--muted)'};font-weight:${isActive?'600':'500'};font-family:inherit;flex-shrink:0;transition:color .12s var(--ease)">
+              ${av(v.name,18)}${v.name}
+              <span class="badge" style="${vendorStatusStyle(v.companyStatus||'Active')};font-size:9px;padding:1.5px 6px;flex-shrink:0">${statusLabel}</span>
+              <span style="font-size:10px;background:${isActive?'var(--ol)':'var(--bd)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${total}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>
+
+      ${activeVendor ? `
+        <!-- ② 서브탭: 기록 | 회의록 -->
+        <div style="display:flex;align-items:center;gap:2px;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:8px 16px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
+          <button class="vendor-sub-tab ${activeSubTab==='log'?'active':''}" data-sub="log"
+            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='log'?'#fff':'transparent'};color:${activeSubTab==='log'?'var(--text)':'var(--muted)'};font-weight:${activeSubTab==='log'?'600':'500'};box-shadow:${activeSubTab==='log'?'0 1px 3px rgba(15,23,42,.08)':'none'};font-family:inherit">
+            <i class="ti ti-list" style="font-size:13px"></i>기록
+            <span style="font-size:10px;background:${activeSubTab==='log'?'var(--sf)':'#fff'};color:var(--muted);padding:1px 6px;border-radius:10px">${activeVendorLogs.length}</span>
+          </button>
+          <button class="vendor-sub-tab ${activeSubTab==='meeting'?'active':''}" data-sub="meeting"
+            style="display:flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:999px;cursor:pointer;font-size:12px;background:${activeSubTab==='meeting'?'#fff':'transparent'};color:${activeSubTab==='meeting'?'var(--text)':'var(--muted)'};font-weight:${activeSubTab==='meeting'?'600':'500'};box-shadow:${activeSubTab==='meeting'?'0 1px 3px rgba(15,23,42,.08)':'none'};font-family:inherit">
+            <i class="ti ti-notes" style="font-size:13px"></i>회의록
+            <span style="font-size:10px;background:${activeSubTab==='meeting'?'var(--sf)':'#fff'};color:var(--muted);padding:1px 6px;border-radius:10px">${activeVendorMeetings.length}</span>
+          </button>
+          <div style="margin-left:auto">
+            ${!isReadOnly() && activeSubTab==='log' ?
+              `<button class="btn btn-o" id="addVendorProjectLogBtn" data-vid="${activeVendorId}" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 기록 추가</button>` : ''}
+            ${!isReadOnly() && activeSubTab==='meeting' ?
+              `<button class="btn btn-o" id="addVendorMeetingBtn" data-vid="${activeVendorId}" style="font-size:11px;padding:4px 10px"><i class="ti ti-plus"></i> 회의록 작성</button>` : ''}
+          </div>
+        </div>
+
+        <!-- ③ 서브탭 컨텐츠 -->
+        ${activeSubTab==='log' ? `
+          ${activeVendorLogs.length===0
+            ? `<div class="empty-state" style="padding:28px">아직 기록이 없습니다. 기록 추가 버튼으로 시작하세요.</div>`
+            : (() => {
+                const sorted = sortLogsDesc(activeVendorLogs);
+                const LOG_PAGE = 5;
+                const showAll = !!state.projLogShowAll;
+                const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
+                const rowsHtml = visible.map(l=>`
+                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd);display:flex;gap:10px">
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                        <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
+                        <span class="badge bgr" style="font-size:10px">${l.status}</span>
+                      </div>
+                      <div style="font-size:13px;font-weight:300;line-height:1.5">${l.summary}</div>
+                      ${l.nextStep?`<div style="font-size:12px;color:var(--muted);margin-top:4px">→ ${l.nextStep}</div>`:''}
+                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
+                      ${renderLogLinks(l.links)}
+                    </div>
+                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
+                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
+                    </div>`:''}
+                  </div>`).join('');
+                const moreBtn = sorted.length > LOG_PAGE
+                  ? `<div style="text-align:center;padding:10px 16px">
+                      <button class="btn" id="toggleProjLogShowAllBtn" style="font-size:11px;padding:5px 14px">
+                        ${showAll ? `<i class="ti ti-chevron-up"></i> 접기` : `<i class="ti ti-chevron-down"></i> 더보기 (${sorted.length - LOG_PAGE}건 더)`}
+                      </button>
+                    </div>`
+                  : '';
+                return rowsHtml + moreBtn;
+              })()}
+        ` : ''}
+
+        ${activeSubTab==='meeting' ? `
+          ${activeVendorMeetings.length===0
+            ? `<div class="empty-state" style="padding:28px">이 벤더의 회의록이 없습니다. 회의록 작성 버튼으로 시작하세요.</div>`
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;padding:14px 16px">
+                ${activeVendorMeetings.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(m=>`
+                  <div class="meeting-card-btn" data-vid="${activeVendorId}" data-mid="${m.id}" style="border:0.5px solid var(--bd);border-radius:10px;padding:10px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:5px;min-height:88px">
+                    <div style="font-size:12.5px;font-weight:500;color:var(--text);line-height:1.35;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical">${(m.title||'제목 없음').replace(/</g,'&lt;')}</div>
+                    <div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);flex-wrap:wrap">
+                      ${m.personName?`<span style="display:flex;align-items:center;gap:2px">${av(m.personName,13)}${m.personName}</span><span>·</span>`:''}
+                      <span>${fmtDate(m.date)}</span>
+                    </div>
+                    <div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${htmlFirstLine(m.summary||m.text||'') || '내용 없음'}</div>
+                  </div>`).join('')}
+              </div>`}
+        ` : ''}
+      ` : `<div class="empty-state" style="padding:24px">벤더를 선택하세요.</div>`}
+
+    </div>` : ''}
 
     <!-- 전체 활동 로그 (거래처별 로그와 구분되는 프로젝트 공용 타임라인) -->
     <div class="card" style="margin-bottom:0">
@@ -4813,6 +4814,7 @@ function viewProjectDetail(){
             <div style="font-size:11px;color:var(--muted);margin-bottom:4px">${fmtDateDow(l.date)}</div>
             <div style="font-size:13px;line-height:1.5">${l.text}</div>
           </div>`).join('')}
+    </div>
     </div>
     </div>
   `;
@@ -6832,7 +6834,7 @@ function modalVendorMeetingNoteForm(vid, editCtx){
   const presetProjectId = editCtx ? editCtx.projectId : '';
   const projectOptions = relProjects.map(p=>`<option value="${p.id}" ${p.id===presetProjectId?'selected':''}>${p.title}</option>`).join('');
   const people = (v && v.people) || [];
-  const personOptions = people.map(p=>`<option value="${p.id}" ${note && note.personId===p.id?'selected':''}>${p.name}${p.title?' ('+p.title+')':''}</option>`).join('');
+  const initialPersonIds = note ? (note.personIds || (note.personId ? [note.personId] : [])) : [];
   return `
     <div class="modal" style="width:560px">
       <div class="mh">
@@ -6853,9 +6855,10 @@ function modalVendorMeetingNoteForm(vid, editCtx){
           ${isEdit?`<div style="font-size:10.5px;color:var(--muted);margin-top:4px">연관 프로젝트는 수정할 수 없습니다. 다른 프로젝트로 옮기려면 삭제 후 다시 작성해주세요.</div>`:''}
         </div>
         <div class="field" style="margin-top:8px"><label class="field-label">담당자</label>
-          <select class="inp" id="vmPersonSel" style="margin:0">
-            <option value="">선택 안함</option>${personOptions}
-          </select>
+          <button type="button" id="vmPersonTrigger" class="inp" style="margin:0;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;cursor:pointer">
+            <span id="vmPersonLabel" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;color:var(--muted)">담당자 선택</span>
+            <i class="ti ti-chevron-down" style="font-size:11px;opacity:.6;flex-shrink:0"></i>
+          </button>
         </div>
         <div class="field" style="margin-top:8px"><label class="field-label">제목 <span style="color:#DC2626">*</span></label>
           <input class="inp" type="text" id="vmTitle" value="${(note?.title||'').replace(/"/g,'&quot;')}" placeholder="예: 8월 정기 미팅" style="margin:0"/>
@@ -6875,12 +6878,63 @@ function modalVendorMeetingNoteForm(vid, editCtx){
 
 function bindVendorMeetingNoteForm(vid, editCtx){
   bindRichEditor('vmText');
+  const v = state.data.vendors.find(x=>x.id===vid);
+  const people = (v && v.people) || [];
+  const note = editCtx ? editCtx.note : null;
+  let selectedPersonIds = note ? (note.personIds || (note.personId ? [note.personId] : [])) : [];
+
+  const personTrigger = document.getElementById('vmPersonTrigger');
+  const personLabel = document.getElementById('vmPersonLabel');
+  function syncPersonLabel(){
+    if(selectedPersonIds.length===0){ personLabel.textContent = '담당자 선택'; personLabel.style.color = 'var(--muted)'; }
+    else {
+      const names = people.filter(p=>selectedPersonIds.includes(p.id)).map(p=>p.name);
+      personLabel.textContent = names.join(', ');
+      personLabel.style.color = 'var(--text)';
+    }
+  }
+  syncPersonLabel();
+  if(personTrigger) personTrigger.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(_activeDropdown && _activeDropdown.trigger === personTrigger){ closeDropdown(); return; }
+    closeDropdown();
+    const rect = personTrigger.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.className = 'cdd-menu-portal';
+    menu.innerHTML = people.length ? people.map(p=>{
+      const active = selectedPersonIds.includes(p.id);
+      return `<div class="cdd-item ${active?'active':''}" data-pid="${p.id}"><i class="ti ${active?'ti-square-check':'ti-square'} cdd-icon" style="color:${active?'var(--o)':'var(--muted)'}"></i><span>${p.name}${p.title?' ('+p.title+')':''}</span></div>`;
+    }).join('') : '<div class="empty-state" style="padding:16px;font-size:12px">등록된 담당자가 없습니다.</div>';
+    document.body.appendChild(menu);
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    let top = rect.bottom + 6, left = rect.left;
+    if(left + mw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - mw - 8);
+    if(top + mh > window.innerHeight - 8) top = Math.max(8, rect.top - mh - 6);
+    menu.style.top = top+'px'; menu.style.left = left+'px'; menu.style.minWidth = Math.max(rect.width, 200)+'px';
+    personTrigger.classList.add('cdd-open');
+    _dropdownOpenedAt = Date.now();
+    menu.querySelectorAll('.cdd-item[data-pid]').forEach(item=>{
+      item.addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const pid = item.dataset.pid;
+        if(selectedPersonIds.includes(pid)) selectedPersonIds = selectedPersonIds.filter(id=>id!==pid);
+        else selectedPersonIds = [...selectedPersonIds, pid];
+        const isActive = selectedPersonIds.includes(pid);
+        item.classList.toggle('active', isActive);
+        const icon = item.querySelector('.cdd-icon');
+        icon.className = 'ti '+(isActive?'ti-square-check':'ti-square')+' cdd-icon';
+        icon.style.color = isActive?'var(--o)':'var(--muted)';
+        syncPersonLabel();
+      });
+    });
+    _activeDropdown = {trigger:personTrigger, menu};
+  });
+
   const saveBtn = document.getElementById('vmSaveBtn');
   if(!saveBtn) return;
   saveBtn.addEventListener('click', ()=>{
     const isEdit = !!editCtx;
     const projectId = isEdit ? editCtx.projectId : document.getElementById('vmProjectSel').value;
-    const personId = document.getElementById('vmPersonSel').value;
     const title = document.getElementById('vmTitle').value.trim();
     const date = document.getElementById('vmDate').value;
     const textHtml = document.getElementById('vmText').innerHTML;
@@ -6890,20 +6944,20 @@ function bindVendorMeetingNoteForm(vid, editCtx){
     if(!plainText){ showToast('회의 내용을 입력해주세요.'); return; }
     const p = state.data.projects.find(x=>x.id===projectId);
     if(!p) return;
-    const v = state.data.vendors.find(x=>x.id===vid);
-    const person = personId ? (v && v.people || []).find(pp=>pp.id===personId) : null;
+    const selectedPeople = people.filter(pp=>selectedPersonIds.includes(pp.id));
+    const personName = selectedPeople.map(pp=>pp.name).join(', ');
     if(!p.vendorMeetings) p.vendorMeetings = {};
     if(!p.vendorMeetings[vid]) p.vendorMeetings[vid] = [];
     if(isEdit){
       const n = p.vendorMeetings[vid].find(x=>x.id===editCtx.note.id);
       if(n){
         n.title = title; n.date = date; n.text = textHtml; n.summary = generateOneLineSummary(plainText);
-        n.personId = personId || ''; n.personName = person ? person.name : '';
+        n.personIds = selectedPersonIds; n.personId = selectedPersonIds[0] || ''; n.personName = personName;
       }
     } else {
       p.vendorMeetings[vid].unshift({
         id: uid('vm'), title, date, text: textHtml, summary: generateOneLineSummary(plainText),
-        personId: personId || '', personName: person ? person.name : ''
+        personIds: selectedPersonIds, personId: selectedPersonIds[0] || '', personName
       });
     }
     closeModal(); persist(false); render();
