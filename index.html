@@ -2688,8 +2688,8 @@ function viewVendorList(){
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center">
       ${companyTypes.map(t=>`<button class="btn ${activeType===t?'btn-o':''}" data-vendor-type="${t}">${t}${t!=='전체'?` (${state.data.vendors.filter(v=>(v.companyType||'벤더')===t).length})`:` (${state.data.vendors.length})`}</button>`).join('')}
       <div style="margin-left:auto;display:flex;gap:6px">
-        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-status-filter" style="font-size:11px;padding:3px 8px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${{'전체':'거래상태 전체',Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[statusFilter]}<i class="ti ti-chevron-down cdd-caret"></i></button>
-        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-priority-filter" style="font-size:11px;padding:3px 8px;margin:0;width:auto;justify-content:space-between;background:var(--sf)">${priorityFilter==='전체'?'우선순위 전체':priorityFilter}<i class="ti ti-chevron-down cdd-caret"></i></button>
+        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-status-filter" style="font-size:11px;padding:5px 12px;margin:0;width:auto;justify-content:space-between;border-radius:999px;gap:6px">${{'전체':'거래상태 전체',Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[statusFilter]}<i class="ti ti-chevron-down cdd-caret"></i></button>
+        <button type="button" class="cdd-trigger inp" data-cdd-type="vendor-priority-filter" style="font-size:11px;padding:5px 12px;margin:0;width:auto;justify-content:space-between;border-radius:999px;gap:6px">${priorityFilter==='전체'?'우선순위 전체':priorityFilter}<i class="ti ti-chevron-down cdd-caret"></i></button>
       </div>
     </div>
 
@@ -2700,10 +2700,10 @@ function viewVendorList(){
       <div class="kpi"><div class="kn" style="color:#B45309">${staleCount}</div><div class="kl">90일 이상 정체</div></div>
     </div>
 
-    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:14px;margin-bottom:14px">
-      <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px">전체</button>
-      ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px">${c}</button>`).join('')}
-      <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
+    <div style="display:flex;gap:2px;flex-wrap:wrap;align-items:center;margin-top:14px;margin-bottom:14px;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px">
+      <button class="btn vendor-alpha-btn ${alphaFilter==='전체'?'btn-o':''}" data-alpha="전체" style="font-size:11px;padding:4px 9px;min-width:32px;border-radius:999px">전체</button>
+      ${'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(c=>`<button class="btn vendor-alpha-btn ${alphaFilter===c?'btn-o':''}" data-alpha="${c}" style="font-size:11px;padding:4px 9px;min-width:28px;border-radius:999px">${c}</button>`).join('')}
+      <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px;border-radius:999px">한글</button>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
