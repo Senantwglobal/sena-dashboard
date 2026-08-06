@@ -60,11 +60,11 @@ a{color:inherit}
 .nb.active{color:var(--text);border-bottom-color:var(--text);font-weight:300}
 .nb:hover:not(.active){color:var(--text)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
-.card{background:rgba(255,255,255,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.7);border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 8px 28px rgba(31,41,55,.09)}
+.card{background:rgba(255,255,255,.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 8px 28px rgba(31,41,55,.09)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
-.btn{font-size:12px;padding:6.5px 13px;border-radius:8px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
+.btn{font-size:12px;padding:7px 14px;border-radius:999px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:none}
 .btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
@@ -72,14 +72,14 @@ a{color:inherit}
 .btn-o:hover{background:#000;color:#fff}
 .btn-red{color:#C0392B;background:#FDEAEA}
 .btn-red:hover{background:#FBDADA}
-.badge{font-size:10px;padding:2.5px 8px;border-radius:6px;font-weight:300;white-space:nowrap;letter-spacing:.02em}
+.badge{font-size:10px;padding:2.5px 9px;border-radius:999px;font-weight:300;white-space:nowrap;letter-spacing:.02em}
 .bo{background:var(--ol);color:var(--od)}
 .bb{background:#E1F3FE;color:#1F6C9F}
 .br{background:#FDEAEA;color:#C0392B}
 .bg{background:#E4F7F1;color:#1C9873}
 .bgr{background:#F0F1F3;color:#5F6672}
 .bw{background:#FFF6E0;color:#B8790A}
-.inp{width:100%;padding:8px 12px;border:1px solid var(--bd);border-radius:8px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
+.inp{width:100%;padding:8px 13px;border:1px solid transparent;border-radius:12px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
 .inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:#fff}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
@@ -87,7 +87,7 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);border-radius:12px;border:1px solid transparent;padding:16px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease)}
+.kpi{background:var(--card);border-radius:16px;border:none;padding:16px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(31,41,55,.08);transition:box-shadow .2s var(--ease)}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
 .proj-card:hover{box-shadow:var(--shadow-md)}
@@ -137,7 +137,7 @@ select.inp{cursor:pointer}
 .cal-cell.drag-over{border-color:var(--o);border-width:1.5px;background:var(--ol)}
 .cal-ev-title{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
 .cal-ev-time{font-size:9px;opacity:.7;flex-shrink:0}
-.ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:var(--card);cursor:pointer;transition:border-color .15s var(--ease),box-shadow .15s var(--ease)}
+.ck-item{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:12px;border:none;margin-bottom:6px;background:var(--card);box-shadow:0 2px 8px rgba(31,41,55,.05);cursor:pointer;transition:box-shadow .15s var(--ease)}
 .ck-item:hover{border-color:var(--ob);box-shadow:var(--shadow-xs)}
 .ck-cb{accent-color:var(--o);width:16px;height:16px;margin-top:2px;flex-shrink:0;cursor:pointer}
 .ck-body{flex:1;min-width:0}
@@ -148,7 +148,7 @@ select.inp{cursor:pointer}
 .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,15,20,.5);backdrop-filter:blur(1px);z-index:200;display:flex;align-items:flex-start;justify-content:center;padding-top:28px;overflow-y:auto;animation:overlayIn .15s var(--ease)}
 @keyframes overlayIn{from{opacity:0}to{opacity:1}}
 @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal{background:#fff;border-radius:12px;border:1px solid var(--bd);width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .18s var(--ease)}
+.modal{background:#fff;border-radius:20px;border:none;width:540px;max-width:95%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(15,23,42,.20);animation:modalIn .18s var(--ease)}
 .mh{padding:14px 18px;border-bottom:0.5px solid var(--bd);display:flex;justify-content:space-between;align-items:center;gap:8px}
 .mh h3{font-weight:600;font-size:15px;letter-spacing:-.01em}
 .mb{padding:16px 18px}
@@ -3665,6 +3665,7 @@ function viewVendorDetail(){
       아직 활동 로그가 없습니다. 로그를 추가해주세요.
     </div>`}
 
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px">
     ${(() => {
       const today = dayjs().format('YYYY-MM-DD');
       const upcoming = (state.data.calendar||[])
@@ -3675,7 +3676,7 @@ function viewVendorDetail(){
         .sort((a,b)=>a.date.localeCompare(b.date))
         .slice(0,4);
       if(upcoming.length===0) return '';
-      return `<div class="card" style="margin-bottom:14px;padding:14px">
+      return `<div class="card" style="margin-bottom:0;padding:14px">
         ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'#E1F3FE', color:'#1F6C9F'})}
         <div style="display:flex;flex-direction:column;gap:8px">
           ${upcoming.map(e=>{
@@ -3710,7 +3711,7 @@ function viewVendorDetail(){
       const pePage = state.vendorPastEventPage || 0;
       const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
       const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
-      return `<div class="card" style="margin-bottom:14px;padding:12px 14px">
+      return `<div class="card" style="margin-bottom:0;padding:12px 14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:5px;min-width:0">
             <i class="ti ti-history" style="color:var(--muted);font-size:13px;flex-shrink:0"></i>
@@ -3743,6 +3744,7 @@ function viewVendorDetail(){
         </div>
       </div>`;
     })()}
+    </div>
 
 
     <!-- ── 사이드바 + 메인 2단 레이아웃 ── -->
@@ -3860,7 +3862,7 @@ function viewVendorDetail(){
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
-              <div class="person-row" style="padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px">
+              <div class="person-row" style="padding:9px 10px;border:none;border-radius:12px;margin-bottom:6px;box-shadow:0 2px 8px rgba(31,41,55,.05)">
                 <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
                   ${av(p.name, 26)}
                   <div style="flex:1;min-width:0;display:flex;align-items:center;gap:5px">
@@ -4393,6 +4395,7 @@ function viewProjectDetail(){
       <div class="pgf" style="width:${prog}%;background:var(--o)"></div>
     </div>
 
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px;margin-bottom:14px">
     ${(() => {
       const today = dayjs().format('YYYY-MM-DD');
       const upcoming = (state.data.calendar||[])
@@ -4400,7 +4403,7 @@ function viewProjectDetail(){
         .sort((a,b)=>a.date.localeCompare(b.date))
         .slice(0,4);
       if(upcoming.length===0) return '';
-      return `<div class="card" style="margin-bottom:14px;padding:14px">
+      return `<div class="card" style="margin-bottom:0;padding:14px">
         ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'#E1F3FE', color:'#1F6C9F'})}
         <div style="display:flex;flex-direction:column;gap:8px">
           ${upcoming.map(e=>{
@@ -4435,7 +4438,7 @@ function viewProjectDetail(){
       const pePage = state.projPastEventPage || 0;
       const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
       const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
-      return `<div class="card" style="margin-bottom:14px;padding:12px 14px">
+      return `<div class="card" style="margin-bottom:0;padding:12px 14px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
           <div style="display:flex;align-items:center;gap:5px;min-width:0">
             <i class="ti ti-history" style="color:var(--muted);font-size:13px;flex-shrink:0"></i>
@@ -4471,6 +4474,7 @@ function viewProjectDetail(){
         </div>
       </div>`;
     })()}
+    </div>
 
     <!-- 체크리스트 -->
     <div class="card" style="margin-bottom:14px">
