@@ -91,9 +91,7 @@ select.inp{cursor:pointer}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
 .proj-card:hover{box-shadow:var(--shadow-md)}
-.ki{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--ac,var(--o)) 55%, white) 0%, color-mix(in srgb, var(--ac,var(--o)) 14%, white) 72%);color:color-mix(in srgb, var(--ac,var(--o)) 78%, black 10%);display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1;box-shadow:0 3px 10px -3px color-mix(in srgb, var(--ac,var(--o)) 55%, transparent),inset 0 1px 1px rgba(255,255,255,.6)}
-.kpi{position:relative}
-.kpi::before{content:"";position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle, color-mix(in srgb, var(--ac,var(--o)) 22%, transparent) 0%, transparent 70%);filter:blur(6px);pointer-events:none;z-index:0}
+.ki{width:32px;height:32px;border-radius:50%;background:color-mix(in srgb, var(--ac,var(--o)) 16%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
