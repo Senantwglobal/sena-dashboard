@@ -55,21 +55,21 @@ a{color:inherit}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
-.nav{display:flex;gap:22px;padding:0 22px;background:rgba(255,255,255,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);overflow-x:auto;position:sticky;top:53px;z-index:49}
-.nb{padding:14px 0;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:0;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:400;transition:color .18s var(--ease)}
-.nb.active{color:var(--text);background:none;font-weight:600;box-shadow:none}
-.nb:hover:not(.active){color:var(--text)}
+.nav{display:flex;align-items:center;gap:6px;padding:8px 22px;background:rgba(255,255,255,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);overflow-x:auto;position:sticky;top:53px;z-index:49}
+.nb{padding:7px 14px;font-size:12.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease)}
+.nb.active{color:#fff;background:var(--text);font-weight:500;box-shadow:none}
+.nb:hover:not(.active){color:var(--text);background:rgba(255,255,255,.5)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
 .card{background:#fff;border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.03),0 8px 20px -12px rgba(15,23,42,.08)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
-.btn{font-size:12px;padding:7px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.5);background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.28));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease),box-shadow .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 4px 12px rgba(31,41,55,.07)}
-.btn:hover{background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(255,255,255,.4));box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 6px 16px rgba(31,41,55,.1)}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:999px;border:1px solid transparent;background:var(--sf);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:400;box-shadow:none}
+.btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
-.btn-o{background:linear-gradient(180deg,#2A2C31,var(--text));color:#fff;border-color:rgba(255,255,255,.15);box-shadow:inset 0 1px 1px rgba(255,255,255,.25),0 4px 12px rgba(15,23,42,.2)}
-.btn-o:hover{background:linear-gradient(180deg,#000,#000);color:#fff}
+.btn-o{background:var(--text);color:#fff;border-color:transparent;box-shadow:none}
+.btn-o:hover{background:#000;color:#fff}
 .btn-red{color:#C0392B;background:#FDEAEA}
 .btn-red:hover{background:#FBDADA}
 .badge{font-size:10px;padding:2.5px 9px;border-radius:999px;font-weight:300;white-space:nowrap;letter-spacing:.02em}
@@ -87,7 +87,7 @@ select.inp{cursor:pointer}
 .dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.kpi{background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;border:1px solid rgba(255,255,255,.6);padding:16px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(31,41,55,.08);transition:box-shadow .2s var(--ease)}
+.kpi{background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:16px;border:1px solid rgba(255,255,255,.6);padding:16px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.03),0 6px 16px -8px rgba(15,23,42,.08);transition:box-shadow .2s var(--ease)}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
 .proj-card:hover{box-shadow:var(--shadow-md)}
@@ -163,14 +163,14 @@ select.inp{cursor:pointer}
 .cdd-trigger.cdd-open .cdd-caret{transform:rotate(180deg)}
 .cdd-menu-portal{position:fixed;background:rgba(255,255,255,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.8);border-radius:14px;box-shadow:0 14px 34px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);padding:6px;z-index:1000;max-height:320px;overflow-y:auto;animation:cddIn .13s var(--ease)}
 @keyframes cddIn{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.cdd-item{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
-.cdd-item:hover{background:#181A20;color:#fff}
+.cdd-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;white-space:nowrap;transition:background .1s,color .1s}
+.cdd-item:hover{background:var(--sf);color:var(--text)}
 .cdd-item.active{background:var(--sf)}
-.cdd-item.active:hover{background:#181A20}
+.cdd-item.active:hover{background:#ECEDEF}
 .cdd-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .cdd-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0}
 .cdd-check{margin-left:auto;font-size:13px;color:var(--o)}
-.cdd-item:hover .cdd-check{color:#fff}
+.cdd-item:hover .cdd-check{color:var(--text)}
 .cdd-divider{height:1px;background:var(--bd);margin:5px 3px}
 .brand-tab-item:hover .brand-tab-actions{opacity:1!important}
 .brand-tab-btn:hover{color:#111114!important}
@@ -3144,12 +3144,12 @@ function viewVendorAnalytics(){
   const trendInsights = usingClaudeInsights ? state.vendorTrendInsightsClaude : generateVendorTrendInsightsRuleBased(trendCtx);
 
   return `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <h2 style="font-size:18px;font-weight:700;margin:0">Vendor Analytics</h2>
       <button type="button" class="cdd-trigger btn btn-o" data-cdd-type="vendor-analytics-year" style="font-size:13px;padding:7px 14px;margin:0;width:auto"><i class="ti ti-calendar"></i>${selectedYear}년<i class="ti ti-chevron-down cdd-caret" style="color:#fff"></i></button>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:14px">
       ${kpiCard('ti-report-money', '#3E7BFA', '전체 누적 구매액', `$${allTimeTotal.toLocaleString()}`,
         trendRow(null, `${vendors.length}개 벤더 · 활성 ${activeVendorCount}곳`))}
       ${kpiCard('ti-calendar-stats', '#8E4EC6', `${selectedYear}년 총 구매액`, `$${thisYearTotal.toLocaleString()}`,
@@ -3162,8 +3162,8 @@ function viewVendorAnalytics(){
         trendRow(null, '전체 누적 중 비중'), miniRing(concentrationPct, concentrationPct>=60?'#E5484D':'#30A46C'))}
     </div>
 
-    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card" style="margin-bottom:0">
+    <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px">
+      <div class="card" style="margin-bottom:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
@@ -3177,7 +3177,7 @@ function viewVendorAnalytics(){
         ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
 
-      <div class="card" style="margin-bottom:0">
+      <div class="card" style="margin-bottom:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">월별 할인 절감 현황</span>
           <div style="display:flex;align-items:center;gap:14px;font-size:11px">
@@ -3192,9 +3192,9 @@ function viewVendorAnalytics(){
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:14px;margin-bottom:14px">
       <div class="card" style="margin-bottom:0">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
           <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FDE2E4,#E0C3FC,#8EC5FC);flex-shrink:0"></span>
           <div>
             <div style="font-size:15px;font-weight:700;color:var(--text)">AI 트렌드 분석</div>
@@ -3242,7 +3242,7 @@ function viewVendorAnalytics(){
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
+    <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:14px;align-items:start">
       <div class="card" style="margin-bottom:0">
         <div style="margin-bottom:18px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매 비중 (${selectedYear}년)</span>
@@ -3528,7 +3528,7 @@ function viewVendorDetail(){
 
     <!-- 구매 현황 (벤더 유형에서만 표시) -->
     ${(v.companyType||'벤더')==='벤더' ? `
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px">
       <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">YTD 구매액 합계</span>
@@ -3583,7 +3583,7 @@ function viewVendorDetail(){
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:16px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:14px;margin-bottom:14px">
       <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
@@ -3592,8 +3592,8 @@ function viewVendorDetail(){
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:8px;padding:2px">
-              <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'#fff':'transparent'};color:${purchaseViewMode==='month'?'var(--text)':'var(--muted)'};box-shadow:${purchaseViewMode==='month'?'0 1px 3px rgba(15,23,42,.08)':'none'}">월별 추이</button>
-              <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'#fff':'transparent'};color:${purchaseViewMode==='year'?'var(--text)':'var(--muted)'};box-shadow:${purchaseViewMode==='year'?'0 1px 3px rgba(15,23,42,.08)':'none'}">연도별 추이</button>
+              <button class="btn purchase-view-toggle" data-view="month" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='month'?'var(--text)':'transparent'};color:${purchaseViewMode==='month'?'#fff':'var(--muted)'};box-shadow:${purchaseViewMode==='month'?'0 2px 8px rgba(15,23,42,.15)':'none'}">월별 추이</button>
+              <button class="btn purchase-view-toggle" data-view="year" style="font-size:10.5px;padding:4px 10px;background:${purchaseViewMode==='year'?'var(--text)':'transparent'};color:${purchaseViewMode==='year'?'#fff':'var(--muted)'};box-shadow:${purchaseViewMode==='year'?'0 2px 8px rgba(15,23,42,.15)':'none'}">연도별 추이</button>
             </div>
             ${purchaseViewMode==='month'?`<select id="vendorPurchaseYearSel" class="inp" style="margin:0;width:auto;padding:4px 10px;font-size:11px">
               ${purchaseYears.map(y=>`<option value="${y}" ${y===selectedPYear?'selected':''}>${y}년</option>`).join('')}
@@ -3681,7 +3681,7 @@ function viewVendorDetail(){
         .slice(0,4);
       if(upcoming.length===0) return '';
       return `<div class="card" style="margin-bottom:0;padding:14px">
-        ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'#E1F3FE', color:'#1F6C9F'})}
+        ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'var(--ol)', color:'var(--o)'})}
         <div style="display:flex;flex-direction:column;gap:8px">
           ${upcoming.map(e=>{
             const dday = dayjs(e.date).diff(dayjs().startOf('day'),'day');
@@ -3809,7 +3809,7 @@ function viewVendorDetail(){
 
         <!-- 거래 메모 -->
         <div class="card" style="padding:14px">
-          ${secHeader({icon:'ti-note', title:'거래 메모', caption:'거래 조건과 참고사항을 기록합니다', tint:'#FFF6E0', color:'#B8790A'})}
+          ${secHeader({icon:'ti-note', title:'거래 메모', caption:'거래 조건과 참고사항을 기록합니다', tint:'var(--ol)', color:'var(--o)'})}
 
           ${(v.companyType==='벤더'||!v.companyType)?`
           <!-- 벤더 필수 필드 -->
@@ -3862,7 +3862,7 @@ function viewVendorDetail(){
 
         <!-- 담당자 -->
         <div class="card" style="padding:14px">
-          ${secHeader({icon:'ti-users', title:'담당자', caption:'이 거래처의 컨택 포인트입니다', tint:'#8E4EC61a', color:'#8E4EC6', right: (!isReadOnly()&&(!hasBrands||!isInherit))?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''})}
+          ${secHeader({icon:'ti-users', title:'담당자', caption:'이 거래처의 컨택 포인트입니다', tint:'var(--ol)', color:'var(--o)', right: (!isReadOnly()&&(!hasBrands||!isInherit))?`<button class="btn btn-o" id="addPersonBtn" style="font-size:10px;padding:3px 8px"><i class="ti ti-plus"></i> 추가</button>`:''})}
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
@@ -3892,7 +3892,7 @@ function viewVendorDetail(){
           const priceListTarget = (hasBrands && activeBrand) ? ((activeBrand.inherit===false) ? activeBrand : v) : v;
           const priceListLink = priceListTarget.priceListLink || null; // {title, url}
           return `<div class="card" style="padding:14px">
-            ${secHeader({icon:'ti-folder', title:'Price list folder', caption:'가격표 링크를 한 곳에서 관리합니다', tint:'#E4F7F1', color:'#1C9873', right: !isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''})}
+            ${secHeader({icon:'ti-folder', title:'Price list folder', caption:'가격표 링크를 한 곳에서 관리합니다', tint:'var(--ol)', color:'var(--o)', right: !isReadOnly()?`<button class="btn btn-o" id="addPriceListLinkBtn" data-vid="${v.id}" style="font-size:10px;padding:3px 8px"><i class="ti ti-link"></i> ${priceListLink?'수정':'링크 추가'}</button>`:''})}
             ${priceListLink ? `
               <div class="price-list-year-btn" data-url="${priceListLink.url}" style="position:relative;display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;border-radius:6px;transition:background .12s var(--ease)">
                 <i class="ti ti-folder" style="font-size:16px;color:var(--muted)"></i>
@@ -4248,7 +4248,7 @@ function viewProjects(){
       ${!isReadOnly()?`<div style="display:flex;gap:8px"><button class="btn" id="manageCategoriesBtn"><i class="ti ti-settings"></i> 카테고리 관리</button><button class="btn btn-o" id="addProjectBtn"><i class="ti ti-plus"></i> 새 프로젝트</button></div>`:''}
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px">
       <div class="card" style="padding:16px 18px">
         <div style="font-size:11px;font-weight:500;color:var(--muted);margin-bottom:14px">프로젝트 현황</div>
         <div style="display:flex;align-items:center;gap:14px">
@@ -4408,7 +4408,7 @@ function viewProjectDetail(){
         .slice(0,4);
       if(upcoming.length===0) return '';
       return `<div class="card" style="margin-bottom:0;padding:14px">
-        ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'#E1F3FE', color:'#1F6C9F'})}
+        ${secHeader({icon:'ti-calendar-event', title:'예정된 미팅', caption:`${upcoming.length}건 예정되어 있습니다`, tint:'var(--ol)', color:'var(--o)'})}
         <div style="display:flex;flex-direction:column;gap:8px">
           ${upcoming.map(e=>{
             const dday = dayjs(e.date).diff(dayjs().startOf('day'),'day');
@@ -4486,7 +4486,7 @@ function viewProjectDetail(){
       ${(()=>{
         const doneCnt = p.checklist.filter(c=>c.done).length;
         const rightHtml = `${p.checklist.length?`<span style="font-size:11px;color:var(--muted)">${doneCnt}/${p.checklist.length} 완료</span>`:''}${!isReadOnly()?`<button class="btn" id="addChecklistItemBtn"><i class="ti ti-plus"></i> 항목 추가</button>`:''}`;
-        return secHeader({icon:'ti-checklist', title:'체크리스트', caption:'이 프로젝트에서 완료해야 할 작업 목록입니다', tint:'#8E4EC61a', color:'#8E4EC6', right:rightHtml});
+        return secHeader({icon:'ti-checklist', title:'체크리스트', caption:'이 프로젝트에서 완료해야 할 작업 목록입니다', tint:'var(--ol)', color:'var(--o)', right:rightHtml});
       })()}
       ${p.checklist.length===0?'<div class="empty-state">체크리스트 항목이 없습니다.</div>':
         (() => {
@@ -4828,7 +4828,7 @@ function viewCalendarYear(){
       <div style="display:flex;gap:8px;align-items:center">
         <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
           <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">월간</button>
-          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(15,23,42,.08)">연간</button>
+          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:var(--text);color:#fff;box-shadow:0 2px 8px rgba(15,23,42,.15)">연간</button>
         </div>
       </div>
     </div>
@@ -4887,7 +4887,7 @@ function viewCalendar(){
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
-          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(15,23,42,.08)">월간</button>
+          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:var(--text);color:#fff;box-shadow:0 2px 8px rgba(15,23,42,.15)">월간</button>
           <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">연간</button>
         </div>
         <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
