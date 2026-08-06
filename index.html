@@ -203,7 +203,7 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .tbl tr.clickable{cursor:pointer}
 .tbl tr.clickable:hover td{background:rgba(255,255,255,.75)}
 .pill-bar{display:inline-flex;gap:2px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px;max-width:100%}
-.pill-bar .btn{border-radius:999px;background:transparent;border-color:transparent;box-shadow:none}
+.pill-bar .btn{border-radius:999px;background:transparent;background-color:transparent;border-color:transparent;box-shadow:none;-webkit-appearance:none;appearance:none}
 .pill-bar .btn:hover{background:rgba(255,255,255,.5)}
 .pill-bar .btn-o, .pill-bar .btn-o:hover{background:rgba(15,23,42,.82);border-color:rgba(255,255,255,.1);color:#fff}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
@@ -2164,7 +2164,7 @@ function viewHome(){
           <div style="display:grid;grid-template-columns:repeat(${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length},1fr);gap:8px">
             ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
               const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
-              return `<div class="tz-card" style="background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;position:relative">
+              return `<div class="tz-card" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:12px;position:relative">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:6px">
                   <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:300;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto;flex-shrink:1;min-width:0" ${isReadOnly()?'disabled':''}>
                     ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
