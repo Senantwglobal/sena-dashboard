@@ -2586,7 +2586,8 @@ function bindMultiPersonSelect(triggerEl, people, initialIds, onChange){
 }
 
 window.addEventListener('scroll', (e)=>{
-  if(_activeDropdown && e.target && e.target.nodeType===1 && e.target.closest && e.target.closest('.cdd-menu-portal')) return;
+  const isPageScroll = (e.target === document || e.target === document.documentElement || e.target === document.body);
+  if(!isPageScroll) return; // 메뉴, 모달, 테이블 등 내부 스크롤은 드롭다운을 닫지 않음
   if(Date.now() - _dropdownOpenedAt > 250) closeDropdown();
 }, true);
 window.addEventListener('resize', ()=>closeDropdown());
