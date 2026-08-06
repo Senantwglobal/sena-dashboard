@@ -68,8 +68,8 @@ a{color:inherit}
 .btn:hover{background:#ECEDEF}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
-.btn-o{background:var(--o);color:#fff}
-.btn-o:hover{background:var(--od);color:#fff}
+.btn-o{background:var(--text);color:#fff}
+.btn-o:hover{background:#000;color:#fff}
 .btn-red{color:#C0392B;background:#FDEAEA}
 .btn-red:hover{background:#FBDADA}
 .badge{font-size:10px;padding:2.5px 9px;border-radius:999px;font-weight:300;white-space:nowrap;letter-spacing:.02em}
@@ -2106,7 +2106,7 @@ function viewHome(){
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
             </div>`;
           }).join('')}
-          ${paTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+          ${paTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn dash-action-page-btn" data-page="${Math.max(0,paPage-1)}" style="padding:3px 8px;font-size:11px" ${paPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:paTotalPages}).map((_,i)=>`<button class="btn dash-action-page-btn ${i===paPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -2119,7 +2119,7 @@ function viewHome(){
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
             <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
           </div>`).join('')}
-          ${ipTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+          ${ipTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn home-incomplete-page-btn" data-page="${Math.max(0,ipPage-1)}" style="padding:3px 8px;font-size:11px" ${ipPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:ipTotalPages}).map((_,i)=>`<button class="btn home-incomplete-page-btn ${i===ipPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn home-incomplete-page-btn" data-page="${Math.min(ipTotalPages-1,ipPage+1)}" style="padding:3px 8px;font-size:11px" ${ipPage>=ipTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -2172,9 +2172,9 @@ function viewHome(){
               <option value="전체" ${catFilter==='전체'?'selected':''}>전체 카테고리</option>
               ${state.data.categories.map(c=>`<option value="${c}" ${catFilter===c?'selected':''}>${c}</option>`).join('')}
             </select>`;
-            const navHtml = totalPages>1 ? `<div style="display:flex;gap:4px;align-items:center">
+            const navHtml = totalPages>1 ? `<div style="display:flex;gap:2px;align-items:center;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:3px 5px">
               <button class="btn dash-proj-prev" style="padding:3px 8px;font-size:12px" ${page===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:11px;color:var(--muted)">${page+1}/${totalPages}</span>
+              <span style="font-size:11px;color:var(--muted);padding:0 2px">${page+1}/${totalPages}</span>
               <button class="btn dash-proj-next" style="padding:3px 8px;font-size:12px" ${page>=totalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
             </div>` : '';
             const rowsHtml = total===0 ? `<div class="empty-state" style="padding:16px">${catFilter==='전체'?'진행중인 프로젝트가 없습니다.':`'${catFilter}' 카테고리에 진행중인 프로젝트가 없습니다.`}</div>` :
@@ -2463,9 +2463,9 @@ function secHeader(opts){
   const {icon, title, caption, tint, color, right} = opts;
   return `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px">
     <div style="display:flex;align-items:center;gap:10px;min-width:0">
-      <div style="width:30px;height:30px;border-radius:9px;background:${tint};color:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${icon}" style="font-size:15px"></i></div>
+      <div style="width:28px;height:28px;border-radius:9px;background:var(--sf);color:${color};display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ${icon}" style="font-size:14px"></i></div>
       <div style="min-width:0">
-        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.3">${title}</div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.3">${title}</div>
         ${caption?`<div style="font-size:11px;color:var(--muted);margin-top:1px">${caption}</div>`:''}
       </div>
     </div>
@@ -3917,7 +3917,7 @@ function viewVendorDetail(){
               <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
             </div>`).join('');
-            const pager = vpTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:8px">
+            const pager = vpTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:8px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
               <button class="btn vendor-project-page-btn" data-page="${Math.max(0,vpPage-1)}" style="padding:3px 8px;font-size:11px" ${vpPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
               ${Array.from({length:vpTotalPages}).map((_,i)=>`<button class="btn vendor-project-page-btn ${i===vpPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
               <button class="btn vendor-project-page-btn" data-page="${Math.min(vpTotalPages-1,vpPage+1)}" style="padding:3px 8px;font-size:11px" ${vpPage>=vpTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -3957,7 +3957,7 @@ function viewVendorDetail(){
                     </div>`;
                   }).join('')}
                 </div>
-                ${mnTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+                ${mnTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
                   <button class="btn vendor-meeting-note-page-btn" data-page="${Math.max(0,mnPage-1)}" style="padding:3px 8px;font-size:11px" ${mnPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
                   ${Array.from({length:mnTotalPages}).map((_,i)=>`<button class="btn vendor-meeting-note-page-btn ${i===mnPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
                   <button class="btn vendor-meeting-note-page-btn" data-page="${Math.min(mnTotalPages-1,mnPage+1)}" style="padding:3px 8px;font-size:11px" ${mnPage>=mnTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4020,7 +4020,7 @@ function viewVendorDetail(){
             </div>`;
           }).join('');
 
-          const pager = flTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+          const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn vendor-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn vendor-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn vendor-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4693,7 +4693,7 @@ function viewProjectDetail(){
         </div>`;
       }).join('');
 
-      const pager = flTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
+      const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
         <button class="btn proj-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
         ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn proj-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
         <button class="btn proj-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
@@ -4810,7 +4810,7 @@ function viewCalendarYear(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:8px">
-        <div style="display:flex;align-items:center;gap:2px;background:var(--sf);border-radius:999px;padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px 6px">
           <button class="btn" id="prevYear" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-left"></i></button>
           <span style="font-size:14px;font-weight:600;padding:0 4px;white-space:nowrap">${year}년</span>
           <button class="btn" id="nextYear" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-right"></i></button>
@@ -4818,7 +4818,7 @@ function viewCalendarYear(){
         <button class="btn" id="goTodayBtnYear" style="font-size:11.5px;padding:5px 12px;background:var(--ol);color:var(--od);border:1px solid var(--o)"><i class="ti ti-calendar-event"></i> 오늘</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
+        <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
           <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:transparent">월간</button>
           <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:var(--card);box-shadow:var(--shadow-sm)">연간</button>
         </div>
@@ -4869,7 +4869,7 @@ function viewCalendar(){
   return `
     <div class="sh">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:2px;background:var(--sf);border-radius:999px;padding:4px 6px">
+        <div style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px 6px">
           <button class="btn" id="prevMonth" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-left"></i></button>
           <span style="font-size:14px;font-weight:600;padding:0 4px;white-space:nowrap">${month.format('YYYY년 M월')}</span>
           <button class="btn" id="nextMonth" style="padding:5px 8px;background:transparent"><i class="ti ti-chevron-right"></i></button>
@@ -4878,7 +4878,7 @@ function viewCalendar(){
         <span style="font-size:12px;color:var(--muted);padding:4px 8px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="display:flex;background:var(--sf);border-radius:999px;padding:2px">
+        <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
           <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:var(--card);box-shadow:var(--shadow-sm)">월간</button>
           <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent">연간</button>
         </div>
@@ -5582,7 +5582,7 @@ function viewLeave(){
           const lvTotalPages = Math.ceil(filtered.length / LV_PER_PAGE);
           const pageItems = filtered.slice(lvPage*LV_PER_PAGE, lvPage*LV_PER_PAGE+LV_PER_PAGE);
 
-          const pager = lvTotalPages>1 ? `<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding:10px 14px">
+          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn leave-record-page-btn" data-page="${Math.max(0,lvPage-1)}" style="padding:3px 8px;font-size:11px" ${lvPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:lvTotalPages}).map((_,i)=>`<button class="btn leave-record-page-btn ${i===lvPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn leave-record-page-btn" data-page="${Math.min(lvTotalPages-1,lvPage+1)}" style="padding:3px 8px;font-size:11px" ${lvPage>=lvTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
