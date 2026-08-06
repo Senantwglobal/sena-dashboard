@@ -3696,38 +3696,41 @@ function viewVendorDetail(){
         })
         .sort((a,b)=>b.date.localeCompare(a.date));
       if(pastAll.length===0) return '';
-      const PE_PER_PAGE = 3;
+      const PE_PER_PAGE = 6;
       const pePage = state.vendorPastEventPage || 0;
       const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
       const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
-      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-          <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
-          <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
+      return `<div class="card" style="margin-bottom:14px;padding:12px 14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0">
+            <i class="ti ti-history" style="color:var(--muted);font-size:13px;flex-shrink:0"></i>
+            <span style="font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em;flex-shrink:0">지난 일정</span>
+            <span style="font-size:10.5px;color:var(--muted);flex-shrink:0">${pastAll.length}건</span>
+          </div>
+          ${peTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+            <button class="btn vendor-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:2px 5px;font-size:10px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            <span style="font-size:10.5px;color:var(--muted);padding:0 2px;white-space:nowrap">${pePage+1} / ${peTotalPages}</span>
+            <button class="btn vendor-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:2px 5px;font-size:10px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${past.map(e=>{
+        <div>
+          ${past.map((e,ei)=>{
             const pids = e.attendeePersonIds && e.attendeePersonIds.length ? e.attendeePersonIds : (e.attendeePersonId ? [e.attendeePersonId] : []);
             const personNames = pids.map(pid=>(v.people||[]).find(p=>p.id===pid)?.name).filter(Boolean).join(', ');
             const proj = e.projectId ? state.data.projects.find(p=>p.id===e.projectId) : null;
             const hasNote = eventMeetingNotes(e).length>0;
             const latestNote = latestMeetingNote(e);
-            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
-              <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--text)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
-                <div style="font-size:11px;color:var(--muted)">${e.time?e.time+' · ':''}${personNames?personNames+' · ':''}${hasNote?(latestNote.summary||latestNote.title||'회의록 있음'):(e.location||'')}</div>
+            const md = dayjs(e.date).format('M.D');
+            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 4px;border-top:${ei===0?'none':'0.5px solid var(--bd)'};border-radius:6px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+              <span style="font-size:10.5px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:32px;text-align:center;background:var(--sf);border-radius:5px;padding:2px 0">${md}</span>
+              <div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px">
+                <span style="font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:1">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:10px;color:var(--o)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</span>
+                <span style="font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:2">${e.time?e.time+' · ':''}${personNames?personNames+' · ':''}${hasNote?(latestNote.summary||latestNote.title||'회의록 있음'):(e.location||'')}</span>
               </div>
-              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+              <i class="ti ti-chevron-right" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
           }).join('')}
         </div>
-        ${peTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
-          <button class="btn vendor-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:3px 8px;font-size:11px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-          ${Array.from({length:peTotalPages}).map((_,i)=>`<button class="btn vendor-past-event-page-btn ${i===pePage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-          <button class="btn vendor-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:3px 8px;font-size:11px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-        </div>`:''}
       </div>`;
     })()}
 
@@ -3852,22 +3855,24 @@ function viewVendorDetail(){
           ${(() => {
             if(people.length === 0) return `<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">담당자 없음</div>`;
             return people.map((p,i) => `
-              <div class="person-row" style="padding:12px;border:1px solid var(--bd);border-radius:12px;margin-bottom:8px">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
-                  ${av(p.name, 30)}
+              <div class="person-row" style="padding:9px 10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px">
+                <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
+                  ${av(p.name, 26)}
                   <div style="flex:1;min-width:0;display:flex;align-items:center;gap:5px">
-                    <span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
-                    ${p.isMain?`<span style="font-size:9px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:2px 7px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:3px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
+                    <span style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name||'-'}</span>
+                    ${p.isMain?`<span style="font-size:8.5px;font-weight:600;color:#30A46C;background:#30A46C1a;padding:1.5px 6px;border-radius:20px;flex-shrink:0;display:inline-flex;align-items:center;gap:3px"><span style="width:4px;height:4px;border-radius:50%;background:#30A46C"></span>메인</span>`:''}
                   </div>
-                  ${!isReadOnly()?`<div style="display:flex;gap:2px;flex-shrink:0">
-                    <button class="btn person-edit-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:12px"></i></button>
-                    <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:3px 5px;font-size:10px;background:none;border:none"><i class="ti ti-trash" style="font-size:12px"></i></button>
+                  ${!isReadOnly()?`<div style="display:flex;gap:1px;flex-shrink:0">
+                    <button class="btn person-edit-btn" data-idx="${i}" style="padding:2px 4px;font-size:10px;background:none;border:none;color:var(--muted)"><i class="ti ti-pencil" style="font-size:11px"></i></button>
+                    <button class="btn btn-red person-del-btn" data-idx="${i}" style="padding:2px 4px;font-size:10px;background:none;border:none"><i class="ti ti-trash" style="font-size:11px"></i></button>
                   </div>`:''}
                 </div>
-                ${p.title?`<span style="display:inline-block;font-size:10.5px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:3px 10px;border-radius:20px;margin-bottom:10px">${p.title}</span>`:''}
-                ${p.email?`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:6px"><i class="ti ti-mail" style="font-size:13px;flex-shrink:0"></i><a href="mailto:${p.email}" style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</a></div>`:''}
-                ${p.phone?`<div style="display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted)"><i class="ti ti-phone" style="font-size:13px;flex-shrink:0"></i><a href="tel:${p.phone}" style="color:var(--muted)">${p.phone}</a></div>`:''}
-                ${!p.email&&!p.phone?`<div style="font-size:11px;color:var(--muted)">연락처 정보 없음</div>`:''}
+                ${p.title?`<span style="display:inline-block;font-size:10px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:2px 8px;border-radius:20px;margin-bottom:6px">${p.title}</span>`:''}
+                <div style="display:flex;flex-direction:column;gap:3px">
+                  ${p.email?`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><i class="ti ti-mail" style="font-size:12px;flex-shrink:0"></i><a href="mailto:${p.email}" style="color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.email}</a></div>`:''}
+                  ${p.phone?`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)"><i class="ti ti-phone" style="font-size:12px;flex-shrink:0"></i><a href="tel:${p.phone}" style="color:var(--muted)">${p.phone}</a></div>`:''}
+                  ${!p.email&&!p.phone?`<div style="font-size:11px;color:var(--muted)">연락처 정보 없음</div>`:''}
+                </div>
               </div>`).join('');
           })()}
         </div>
@@ -4431,41 +4436,44 @@ function viewProjectDetail(){
         .filter(e=>e.projectId===p.id && e.date<today)
         .sort((a,b)=>b.date.localeCompare(a.date));
       if(pastAll.length===0) return '';
-      const PE_PER_PAGE = 3;
+      const PE_PER_PAGE = 6;
       const pePage = state.projPastEventPage || 0;
       const peTotalPages = Math.ceil(pastAll.length / PE_PER_PAGE);
       const past = pastAll.slice(pePage*PE_PER_PAGE, pePage*PE_PER_PAGE+PE_PER_PAGE);
-      return `<div class="card" style="margin-bottom:14px;padding:14px;border-left:3px solid var(--muted)">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-          <i class="ti ti-history" style="color:var(--muted);font-size:14px"></i>
-          <span style="font-size:12px;font-weight:300;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">지난 일정</span>
-          <span style="font-size:11px;color:var(--muted)">${pastAll.length}건</span>
+      return `<div class="card" style="margin-bottom:14px;padding:12px 14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px">
+          <div style="display:flex;align-items:center;gap:5px;min-width:0">
+            <i class="ti ti-history" style="color:var(--muted);font-size:13px;flex-shrink:0"></i>
+            <span style="font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em;flex-shrink:0">지난 일정</span>
+            <span style="font-size:10.5px;color:var(--muted);flex-shrink:0">${pastAll.length}건</span>
+          </div>
+          ${peTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
+            <button class="btn proj-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:2px 5px;font-size:10px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
+            <span style="font-size:10.5px;color:var(--muted);padding:0 2px;white-space:nowrap">${pePage+1} / ${peTotalPages}</span>
+            <button class="btn proj-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:2px 5px;font-size:10px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
+          </div>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${past.map(e=>{
+        <div>
+          ${past.map((e,ei)=>{
             const vids = e.vendorIds && e.vendorIds.length ? e.vendorIds : (e.vendorId ? [e.vendorId] : []);
             const evVendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
             const hasNote = eventMeetingNotes(e).length>0;
             const latestNote = latestMeetingNote(e);
-            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 8px;border-radius:8px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
-              <span style="font-size:10px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:52px">${fmtDate(e.date)}</span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:11px;color:var(--text)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</div>
-                <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            const md = dayjs(e.date).format('M.D');
+            return `<div class="calendar-event-link" data-eid="${e.id}" style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:6px 4px;border-top:${ei===0?'none':'0.5px solid var(--bd)'};border-radius:6px" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
+              <span style="font-size:10.5px;color:var(--muted);flex-shrink:0;white-space:nowrap;width:32px;text-align:center;background:var(--sf);border-radius:5px;padding:2px 0">${md}</span>
+              <div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                <span style="font-size:12.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%">${e.title}${hasNote?` <i class="ti ti-notes" style="font-size:10px;color:var(--o)" title="회의록 ${eventMeetingNotes(e).length}건"></i>`:''}</span>
+                <span style="font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap">
                   ${e.time?`<span>${e.time}</span>`:''}
-                  ${evVendors.map(v=>`<span style="display:flex;align-items:center;gap:3px">${av(v.name,14)}${v.name}</span>`).join('')}
+                  ${evVendors.map(v=>`<span style="display:flex;align-items:center;gap:3px">${av(v.name,13)}${v.name}</span>`).join('')}
                   ${hasNote?`<span>${latestNote.summary||latestNote.title||'회의록 있음'}</span>`:(e.location?`<span>${e.location}</span>`:'')}
-                </div>
+                </span>
               </div>
-              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+              <i class="ti ti-chevron-right" style="font-size:11px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
           }).join('')}
         </div>
-        ${peTotalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding-top:10px">
-          <button class="btn proj-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:3px 8px;font-size:11px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-          ${Array.from({length:peTotalPages}).map((_,i)=>`<button class="btn proj-past-event-page-btn ${i===pePage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-          <button class="btn proj-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:3px 8px;font-size:11px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-        </div>`:''}
       </div>`;
     })()}
 
@@ -4508,28 +4516,35 @@ function viewProjectDetail(){
         })()}
     </div>
 
-    <!-- 벤더별 탭 카드 -->
+    <!-- 거래처별 로그 카드 (전체 활동 로그와 명확히 구분) -->
     ${linkedVendors.length > 0 ? `
-    <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+    <div class="card" style="margin-bottom:14px;padding:0;overflow:hidden;border-top:2.5px solid var(--o)">
 
-      <!-- ① 벤더 선택 탭 (상단) -->
-      <div style="display:flex;overflow-x:auto;border-bottom:0.5px solid var(--bd);background:var(--sf)">
-        ${linkedVendors.map(v=>{
-          const vLogCnt = (vendorLogs[v.id]||[]).length;
-          const vMeetCnt = (vendorMeetings[v.id]||[]).length;
-          const total = vLogCnt + vMeetCnt;
-          const isActive = v.id === activeVendorId;
-          return `<button class="proj-vendor-tab ${isActive?'active':''}" data-vid="${v.id}"
-            style="display:flex;align-items:center;gap:6px;padding:10px 16px;border:none;background:none;cursor:pointer;font-size:13px;white-space:nowrap;border-bottom:2.5px solid ${isActive?'var(--o)':'transparent'};color:${isActive?'var(--o)':'var(--muted)'};font-weight:${isActive?'700':'300'};margin-bottom:-0.5px;font-family:inherit;flex-shrink:0">
-            ${av(v.name,18)}${v.name}
-            <span style="font-size:10px;background:${isActive?'var(--ol)':'var(--bd)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${total}</span>
-          </button>`;
-        }).join('')}
+      <!-- 헤더 + ① 벤더 선택 탭 (브랜드탭과 동일한 세그먼트 스타일) -->
+      <div style="padding:12px 16px 12px 16px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <i class="ti ti-building-store" style="font-size:14px;color:var(--o)"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--text)">거래처별 로그</span>
+          <span style="font-size:11px;color:var(--muted)">거래처마다 따로 쌓이는 기록입니다</span>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
+          ${linkedVendors.map(v=>{
+            const vLogCnt = (vendorLogs[v.id]||[]).length;
+            const vMeetCnt = (vendorMeetings[v.id]||[]).length;
+            const total = vLogCnt + vMeetCnt;
+            const isActive = v.id === activeVendorId;
+            return `<button class="proj-vendor-tab" data-vid="${v.id}"
+              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};cursor:pointer;font-size:12.5px;white-space:nowrap;color:${isActive?'var(--text)':'var(--muted)'};font-weight:${isActive?'600':'500'};font-family:inherit;flex-shrink:0;transition:color .12s var(--ease)">
+              ${av(v.name,18)}${v.name}
+              <span style="font-size:10px;background:${isActive?'var(--ol)':'var(--bd)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${total}</span>
+            </button>`;
+          }).join('')}
+        </div>
       </div>
 
       ${activeVendor ? `
         <!-- ② 서브탭: 기록 | 회의록 -->
-        <div style="display:flex;align-items:center;border-bottom:0.5px solid var(--bd);padding:0 16px">
+        <div style="display:flex;align-items:center;border-top:0.5px solid var(--bd);border-bottom:0.5px solid var(--bd);padding:0 16px">
           <button class="vendor-sub-tab ${activeSubTab==='log'?'active':''}" data-sub="log"
             style="display:flex;align-items:center;gap:5px;padding:8px 14px 8px 0;border:none;background:none;cursor:pointer;font-size:12px;border-bottom:2px solid ${activeSubTab==='log'?'var(--o)':'transparent'};color:${activeSubTab==='log'?'var(--o)':'var(--muted)'};font-weight:${activeSubTab==='log'?'700':'300'};margin-bottom:-0.5px;font-family:inherit">
             <i class="ti ti-list" style="font-size:13px"></i>기록
@@ -4721,12 +4736,13 @@ function viewProjectDetail(){
       </div>`;
     })()}
 
-    <!-- 전체 활동 로그 (맨 아래) -->
-    <div class="card">
-      <div class="sh">
+    <!-- 전체 활동 로그 (맨 아래, 거래처별 로그와 구분되는 프로젝트 공용 타임라인) -->
+    <div class="card" style="border-top:2.5px solid var(--muted)">
+      <div class="sh" style="margin-bottom:2px">
         <div class="st"><i class="ti ti-history oi"></i>전체 활동 로그</div>
         ${!isReadOnly()?`<button class="btn" id="addProjectLogBtn"><i class="ti ti-plus"></i> 로그 추가</button>`:''}
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">특정 거래처에 속하지 않는, 프로젝트 전체의 공용 타임라인입니다</div>
       ${(!p.logs||p.logs.length===0)?'<div class="empty-state">기록된 활동이 없습니다.</div>':
         p.logs.slice().sort((a,b)=>dayjs(b.date).diff(dayjs(a.date))).map(l=>`
           <div style="border-top:0.5px solid var(--bd);padding:10px 0">
