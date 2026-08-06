@@ -2013,12 +2013,13 @@ function viewHome(){
   const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
 
   return `
+    <div class="sh" style="margin-bottom:16px">
+      <span style="font-size:16px;font-weight:300">Dashboard</span>
+      ${!isReadOnly()?`<button class="btn btn-o" id="quickAddLogBtn" style="font-size:13px;padding:7px 14px">
+        <i class="ti ti-plus"></i> 빠른 로그 추가
+      </button>`:''}
+    </div>
     <div style="margin-bottom:16px">
-      ${!isReadOnly()?`<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-        <button class="btn btn-o" id="quickAddLogBtn" style="font-size:13px;padding:7px 14px">
-          <i class="ti ti-plus"></i> 빠른 로그 추가
-        </button>
-      </div>`:''}
       <div class="krow">
         <div class="kpi" style="--ac:#3E8ED9"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">진행중인 프로젝트</div><div class="ki"><i class="ti ti-briefcase"></i></div></div><div class="kn" style="color:#3E8ED9">${inProgProjects}</div></div>
         <div class="kpi" style="--ac:${undoneItems>0?'#D9645A':'#5FA777'}"><div style="display:flex;align-items:flex-start;justify-content:space-between"><div class="kl">미완료 항목</div><div class="ki"><i class="ti ti-list-check"></i></div></div><div class="kn" style="${undoneItems>0?'color:#D9645A':'color:#5FA777'}">${undoneItems}</div></div>
