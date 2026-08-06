@@ -55,8 +55,8 @@ a{color:inherit}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
-.nav{display:flex;align-items:center;gap:4px;padding:5px 22px;background:rgba(255,255,255,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);overflow-x:auto;position:sticky;top:48px;z-index:49}
-.nb{padding:5px 12px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease)}
+.nav{display:flex;align-items:center;gap:4px;padding:10px 22px;background:transparent;overflow-x:auto}
+.nb{padding:6px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease)}
 .nb.active{color:#fff;background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:500;box-shadow:none}
 .nb:hover:not(.active){color:var(--text);background:rgba(255,255,255,.5)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
@@ -1815,7 +1815,7 @@ function render(){
         <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
       </div>
     </div>
-    <div class="nav">
+    <div class="nav pill-bar" style="margin:0 22px 14px">
       ${tabs.map(t=>`<button class="nb ${state.view===t.view?'active':''}" data-view="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
     </div>
     <div class="cnt" id="viewRoot"></div>
