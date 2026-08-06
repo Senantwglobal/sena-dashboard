@@ -197,11 +197,11 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 .search-wrap .inp{padding-left:32px;margin-bottom:0}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:rgba(255,255,255,.85);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
-.tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px;background:rgba(255,255,255,.65)}
+.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:rgba(255,255,255,.7);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
+.tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px;background:rgba(255,255,255,.5)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
-.tbl tr.clickable:hover td{background:rgba(255,255,255,.85)}
+.tbl tr.clickable:hover td{background:rgba(255,255,255,.75)}
 .pill-bar{display:inline-flex;gap:2px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px;max-width:100%}
 .pill-bar .btn{border-radius:999px}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
@@ -5717,11 +5717,11 @@ function viewLeave(){
           const lvTotalPages = Math.ceil(filtered.length / LV_PER_PAGE);
           const pageItems = filtered.slice(lvPage*LV_PER_PAGE, lvPage*LV_PER_PAGE+LV_PER_PAGE);
 
-          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
+          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:14px auto;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
             <button class="btn leave-record-page-btn" data-page="${Math.max(0,lvPage-1)}" style="padding:3px 8px;font-size:11px" ${lvPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
             ${Array.from({length:lvTotalPages}).map((_,i)=>`<button class="btn leave-record-page-btn ${i===lvPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
             <button class="btn leave-record-page-btn" data-page="${Math.min(lvTotalPages-1,lvPage+1)}" style="padding:3px 8px;font-size:11px" ${lvPage>=lvTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>` : '';
+          </div>` : '<div style="height:14px"></div>';
 
           return yearTabs + `
           <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeYear==='all'?'전체 기간':activeYear+'년'} · 합계 <span style="color:var(--o);font-weight:300">${filteredTotal}일</span> (${filtered.length}건)</div>
