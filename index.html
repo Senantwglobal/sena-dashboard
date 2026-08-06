@@ -53,7 +53,7 @@ a{color:inherit}
 .hdr{background:rgba(255,255,255,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.7);padding:9px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
 .logo{background:var(--text);color:#fff;font-size:14px;font-weight:300;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
-.uinfo{display:flex;align-items:center;gap:8px;position:relative}
+.uinfo{display:flex;align-items:center;gap:8px;position:relative;flex-shrink:0;flex-wrap:nowrap}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
 .nav{display:flex;align-items:center;gap:4px;padding:10px 22px;background:transparent;overflow-x:auto}
 .nb{padding:6px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease)}
@@ -1807,12 +1807,12 @@ function render(){
           </button>`:''}
         </div>
         <button id="profileAvatarBtn" title="프로필 사진 변경" style="background:none;border:none;padding:0;cursor:pointer;border-radius:50%;display:flex;flex-shrink:0">${state.data.profilePhotoUrl ? `<img src="${state.data.profilePhotoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:0.5px solid var(--bd)"/>` : av('천세나', 30)}</button>
-        <span style="font-size:13px;color:var(--muted)">천세나</span>
-        <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;">
+        <span style="font-size:13px;color:var(--muted);flex-shrink:0;white-space:nowrap">천세나</span>
+        <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;flex-shrink:0">
           <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
           <option value="ceo" ${state.data.role==='ceo'?'selected':''}>읽기 전용</option>
         </select>
-        <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
+        <span id="syncStatus" class="sync-row" style="flex-shrink:0;white-space:nowrap"><span class="sync-dot"></span>저장됨</span>
       </div>
     </div>
     <div class="nav pill-bar" style="margin:14px 22px">
@@ -2531,7 +2531,62 @@ function cddVendorStatusOptions(cur, onPick){
 function cddProjStatusOptions(cur, onPick){
   return CDD_PROJ_STATUS_LIST.map(s=>({label:s.v, dot:s.c, active:(cur||'진행중')===s.v, onSelect:()=>onPick(s.v)}));
 }
-window.addEventListener('scroll', ()=>{ if(Date.now() - _dropdownOpenedAt > 250) closeDropdown(); }, true);
+// 범용: 사람 다중 선택 드롭다운 (트리거 버튼 + 체크박스 메뉴)
+function bindMultiPersonSelect(triggerEl, people, initialIds, onChange){
+  let selected = (initialIds||[]).slice();
+  const labelSpan = triggerEl.querySelector('span');
+  function syncLabel(){
+    if(selected.length===0){ labelSpan.textContent = '담당자 선택'; labelSpan.style.color = 'var(--muted)'; }
+    else {
+      const names = people.filter(p=>selected.includes(p.id)).map(p=>p.name);
+      labelSpan.textContent = names.join(', ');
+      labelSpan.style.color = 'var(--text)';
+    }
+    if(onChange) onChange(selected.slice());
+  }
+  syncLabel();
+  triggerEl.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(_activeDropdown && _activeDropdown.trigger === triggerEl){ closeDropdown(); return; }
+    closeDropdown();
+    const rect = triggerEl.getBoundingClientRect();
+    const menu = document.createElement('div');
+    menu.className = 'cdd-menu-portal';
+    menu.innerHTML = people.length ? people.map(p=>{
+      const active = selected.includes(p.id);
+      return `<div class="cdd-item ${active?'active':''}" data-pid="${p.id}"><i class="ti ${active?'ti-square-check':'ti-square'} cdd-icon" style="color:${active?'var(--o)':'var(--muted)'}"></i><span>${p.name}${p.title?' ('+p.title+')':''}</span></div>`;
+    }).join('') : '<div class="empty-state" style="padding:16px;font-size:12px">등록된 담당자가 없습니다.</div>';
+    document.body.appendChild(menu);
+    const mw = menu.offsetWidth, mh = menu.offsetHeight;
+    let top = rect.bottom + 6, left = rect.left;
+    if(left + mw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - mw - 8);
+    if(top + mh > window.innerHeight - 8) top = Math.max(8, rect.top - mh - 6);
+    menu.style.top = top+'px'; menu.style.left = left+'px'; menu.style.minWidth = Math.max(rect.width, 200)+'px';
+    triggerEl.classList.add('cdd-open');
+    _dropdownOpenedAt = Date.now();
+    menu.querySelectorAll('.cdd-item[data-pid]').forEach(item=>{
+      item.addEventListener('click', ev=>{
+        ev.stopPropagation();
+        const pid = item.dataset.pid;
+        if(selected.includes(pid)) selected = selected.filter(id=>id!==pid);
+        else selected = [...selected, pid];
+        const isActive = selected.includes(pid);
+        item.classList.toggle('active', isActive);
+        const icon = item.querySelector('.cdd-icon');
+        icon.className = 'ti '+(isActive?'ti-square-check':'ti-square')+' cdd-icon';
+        icon.style.color = isActive?'var(--o)':'var(--muted)';
+        syncLabel();
+      });
+    });
+    _activeDropdown = {trigger:triggerEl, menu};
+  });
+  return { getSelected: ()=>selected.slice() };
+}
+
+window.addEventListener('scroll', (e)=>{
+  if(_activeDropdown && e.target && e.target.nodeType===1 && e.target.closest && e.target.closest('.cdd-menu-portal')) return;
+  if(Date.now() - _dropdownOpenedAt > 250) closeDropdown();
+}, true);
 window.addEventListener('resize', ()=>closeDropdown());
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
 
@@ -2543,8 +2598,10 @@ function enhanceSelect(sel){
   const trigger = document.createElement('button');
   trigger.type = 'button';
   const extraStyle = sel.getAttribute('style') || '';
-  trigger.className = 'inp cdd-trigger select-shell-trigger';
-  trigger.setAttribute('style', extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px');
+  const hasInpClass = sel.classList.contains('inp');
+  trigger.className = hasInpClass ? 'inp cdd-trigger select-shell-trigger' : 'cdd-trigger select-shell-trigger';
+  const baseStyle = hasInpClass ? '' : 'width:auto;flex-shrink:0;';
+  trigger.setAttribute('style', baseStyle + extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px');
   const labelSpan = document.createElement('span');
   labelSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0';
   trigger.appendChild(labelSpan);
@@ -6161,7 +6218,12 @@ function modalProjectForm(project){
           </select></div>
           <div class="field" id="newCatField" style="display:none;"><label class="field-label">새 카테고리명</label><input class="inp" name="newCategory"/></div>
           <div class="two">
-            <div class="field"><label class="field-label">담당자</label><input class="inp" name="owner" value="${p.owner}"/></div>
+            <div class="field"><label class="field-label">담당자</label>
+              <button type="button" id="projOwnerTrigger" class="inp" style="margin:0;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;cursor:pointer">
+                <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;color:var(--muted)">담당자 선택</span>
+                <i class="ti ti-chevron-down" style="font-size:11px;opacity:.6;flex-shrink:0"></i>
+              </button>
+            </div>
             <div class="field"><label class="field-label">마감일</label><input class="inp" type="date" name="deadline" value="${p.deadline||''}"/></div>
           </div>
           <div class="field">
@@ -9917,6 +9979,15 @@ function bindVendorFormSubmit(existingVendor){
 }
 
 function bindProjectFormSubmit(existingProject){
+  const p = existingProject || {owner:'천세나'};
+  const internalCompany = (state.data.companies||[]).find(c=>c.name==='OPLE') || {people:[]};
+  const internalPeople = internalCompany.people||[];
+  const ownerNames = (p.owner||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const initialOwnerIds = internalPeople.filter(pp=>ownerNames.includes(pp.name)).map(pp=>pp.id);
+  const ownerTrigger = document.getElementById('projOwnerTrigger');
+  let ownerSelectAPI = null;
+  if(ownerTrigger) ownerSelectAPI = bindMultiPersonSelect(ownerTrigger, internalPeople, initialOwnerIds);
+
   // 벤더 검색 필터
   const searchInput = document.getElementById('vendorSearchModal');
   if(searchInput) searchInput.addEventListener('input', e=>{
@@ -9945,9 +10016,11 @@ function bindProjectFormSubmit(existingProject){
       if(nc && !state.data.categories.includes(nc)) state.data.categories.push(nc);
     }
     const vendorIds = Array.from(document.querySelectorAll('input[name="vendorIds"]:checked')).map(cb=>cb.value);
+    const selectedOwnerIds = ownerSelectAPI ? ownerSelectAPI.getSelected() : [];
+    const ownerName = internalPeople.filter(pp=>selectedOwnerIds.includes(pp.id)).map(pp=>pp.name).join(', ') || '천세나';
     const obj = {
       id: existingProject ? existingProject.id : uid('p'),
-      title: fd.get('title'), category, owner: fd.get('owner')||'천세나',
+      title: fd.get('title'), category, owner: ownerName, ownerIds: selectedOwnerIds,
       deadline: fd.get('deadline')||'',
       vendorIds,
       vendorId: vendorIds[0]||'', // 하위 호환성 유지
