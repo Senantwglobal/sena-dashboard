@@ -55,7 +55,7 @@ a{color:inherit}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:300;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative;flex-shrink:0;flex-wrap:nowrap}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
-.nav{display:flex;align-items:center;gap:4px;padding:10px 22px;background:rgba(240,244,250,.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);overflow-x:auto;position:sticky;top:48px;z-index:49}
+.nav{padding:14px 22px;position:sticky;top:48px;z-index:49;background:transparent}
 .nb{padding:6px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:400;transition:color .18s var(--ease),background .18s var(--ease)}
 .nb.active{color:#fff;background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:500;box-shadow:none}
 .nb:hover:not(.active){color:var(--text);background:rgba(255,255,255,.5)}
@@ -64,8 +64,8 @@ a{color:inherit}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
 .oi{color:var(--text)}
-.btn{font-size:12px;padding:6.5px 13px;border-radius:999px;border:1px solid transparent;background:transparent;color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:400;box-shadow:none}
-.btn:hover{background:rgba(255,255,255,.4)}
+.btn{font-size:12px;padding:6.5px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.9);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:400;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.btn:hover{background:#fff}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
 .btn-o{background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border-color:rgba(255,255,255,.1);box-shadow:none}
@@ -1817,8 +1817,10 @@ function render(){
         </div>
       </div>
     </div>
-    <div class="nav pill-bar" style="margin:14px 22px">
+    <div class="nav">
+      <div class="pill-bar">
       ${tabs.map(t=>`<button class="nb ${state.view===t.view?'active':''}" data-view="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
+      </div>
     </div>
     <div class="cnt" id="viewRoot"></div>
   `;
