@@ -79,8 +79,8 @@ a{color:inherit}
 .bg{background:#E4F7F1;color:#1C9873}
 .bgr{background:#F0F1F3;color:#5F6672}
 .bw{background:#FFF6E0;color:#B8790A}
-.inp{width:100%;padding:8px 13px;border:1px solid transparent;border-radius:12px;font-size:13px;background:var(--sf);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
-.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:#fff}
+.inp{width:100%;padding:8px 13px;border:1px solid rgba(255,255,255,.6);border-radius:12px;font-size:13px;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:var(--text);margin-bottom:8px;outline:none;transition:border-color .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);font-family:inherit}
+.inp:focus{border-color:var(--o);box-shadow:0 0 0 3px rgba(28,133,232,.12);background:rgba(255,255,255,.65)}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -3116,7 +3116,7 @@ function viewVendorAnalytics(){
   };
 
   const kpiCard = (icon, iconColor, label, value, trendHtml, sideVisual) => `
-    <div class="card" style="margin-bottom:0;padding:16px 18px;border:1px solid var(--bd);box-shadow:0 1px 2px rgba(15,23,42,.03)">
+    <div class="card" style="margin-bottom:0;padding:16px 18px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
         <span style="width:26px;height:26px;border-radius:8px;background:${iconColor}1f;display:flex;align-items:center;justify-content:center;flex-shrink:0">
           <i class="ti ${icon}" style="font-size:13px;color:${iconColor}"></i>
@@ -3163,7 +3163,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:700;color:var(--text)">월별 구매 현황</span>
@@ -3177,7 +3177,7 @@ function viewVendorAnalytics(){
         ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
 
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">월별 할인 절감 현황</span>
           <div style="display:flex;align-items:center;gap:14px;font-size:11px">
@@ -3193,7 +3193,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1.8fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#FDE2E4,#E0C3FC,#8EC5FC);flex-shrink:0"></span>
           <div>
@@ -3219,7 +3219,7 @@ function viewVendorAnalytics(){
           </span>
         </button>
       </div>
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="margin-bottom:14px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">연도별 구매 추이</span>
         </div>
@@ -3243,7 +3243,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start">
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="margin-bottom:18px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매 비중 (${selectedYear}년)</span>
         </div>
@@ -3272,7 +3272,7 @@ function viewVendorAnalytics(){
         </div>` : ''}
       </div>
 
-      <div class="card" style="margin-bottom:0;border:1px solid var(--bd)">
+      <div class="card" style="margin-bottom:0">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
           <span style="font-size:15px;font-weight:700;color:var(--text)">구매액 상위 벤더 (${selectedYear}년)</span>
           <span style="font-size:11px;color:var(--muted)">총 ${rankedVendors.length}곳</span>
@@ -3295,6 +3295,9 @@ function viewVendorAnalytics(){
             const originalAmt = hasDiscount ? Math.round(x.total/(1-discountRate/100)) : null;
             const savedAmt = hasDiscount ? originalAmt - x.total : null;
             const bidAttr = ent.brandId ? ` data-bid="${ent.brandId}"` : '';
+            const linkedV = state.data.vendors.find(vv=>vv.id===ent.vendorId);
+            const vStatus = linkedV ? (linkedV.companyStatus||'Active') : 'Active';
+            const vStatusLabel = {Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[vStatus];
             return `<div class="vendor-link" data-vid="${ent.vendorId}"${bidAttr} style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer;border-radius:8px;transition:background .12s" onmouseover="this.style.background='var(--sf)'" onmouseout="this.style.background='transparent'">
               <span style="font-size:10.5px;font-weight:700;color:${bc};background:${bc}1a;width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${i+1}</span>
               ${av(ent.name, 30, ent.logoUrl)}
@@ -3302,6 +3305,7 @@ function viewVendorAnalytics(){
                 <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px">
                   <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ent.name}</span>
                   ${ent.isBrand?`<span style="font-size:9px;font-weight:600;color:#8E4EC6;background:#8E4EC61a;padding:1.5px 7px;border-radius:20px;flex-shrink:0">독립 브랜드</span>`:''}
+                  ${vStatus!=='Active'?`<span class="badge" style="${vendorStatusStyle(vStatus)};font-size:9px;padding:1.5px 7px;flex-shrink:0">${vStatusLabel}</span>`:''}
                 </div>
                 ${brandLabel?`<div style="font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-tag" style="font-size:9px"></i> ${brandLabel}</div>`:''}
                 ${hasDiscount?`<div style="font-size:10px;color:#30A46C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px"><i class="ti ti-discount-2" style="font-size:9px"></i> 평균 ${discountRate}% 할인 · $${savedAmt.toLocaleString()} 절감 (정가 $${originalAmt.toLocaleString()})</div>`:''}
