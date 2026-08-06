@@ -1815,7 +1815,7 @@ function render(){
         <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
       </div>
     </div>
-    <div class="nav pill-bar" style="margin:0 22px 14px">
+    <div class="nav pill-bar" style="margin:14px 22px">
       ${tabs.map(t=>`<button class="nb ${state.view===t.view?'active':''}" data-view="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
     </div>
     <div class="cnt" id="viewRoot"></div>
