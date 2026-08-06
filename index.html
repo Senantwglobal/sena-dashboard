@@ -1674,6 +1674,19 @@ function allPeopleFlat(){
   return result;
 }
 
+// "Ople Internal" 거래처(vendor)에 등록된 담당자 목록 — 내부 담당자 선택 시 이 명단을 사용
+function getInternalPeople(){
+  const matches = (state.data.vendors||[]).filter(v=>(v.name||'').trim().toLowerCase()==='ople internal');
+  const seen = new Set();
+  const result = [];
+  matches.forEach(v=>{
+    (v.people||[]).forEach(p=>{
+      if(!seen.has(p.id)){ seen.add(p.id); result.push(p); }
+    });
+  });
+  return result;
+}
+
 /* ---------- 렌더 루트 ---------- */
 function avatarColor(name){
   const colors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
@@ -7109,8 +7122,8 @@ function htmlFirstLine(html){
 }
 
 function modalChecklistDetail(item){
-  const internalCompany = (state.data.companies||[]).find(c=>c.name==='OPLE') || {people:[]};
-  const internalNames = (internalCompany.people||[]).map(p=>p.name);
+  const internalPeople = getInternalPeople();
+  const internalNames = internalPeople.map(p=>p.name);
   const people = allPeopleFlat();
   return `
     <div class="modal" style="width:560px">
@@ -9985,8 +9998,7 @@ function bindVendorFormSubmit(existingVendor){
 
 function bindProjectFormSubmit(existingProject){
   const p = existingProject || {owner:'천세나'};
-  const internalCompany = (state.data.companies||[]).find(c=>c.name==='OPLE') || {people:[]};
-  const internalPeople = internalCompany.people||[];
+  const internalPeople = getInternalPeople();
   const ownerNames = (p.owner||'').split(',').map(s=>s.trim()).filter(Boolean);
   const initialOwnerIds = internalPeople.filter(pp=>ownerNames.includes(pp.name)).map(pp=>pp.id);
   const ownerTrigger = document.getElementById('projOwnerTrigger');
