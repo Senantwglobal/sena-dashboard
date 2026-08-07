@@ -2182,15 +2182,15 @@ function viewHome(){
           </div>
 
           <div style="flex:1;min-width:0">
-            <div class="card" style="margin-bottom:0;height:100%;border-radius:20px">
+            <div class="card" style="margin-bottom:0;height:100%;border-radius:20px;display:flex;flex-direction:column">
               <div class="sh" style="margin-bottom:10px">
                 <div class="st"><i class="ti ti-world oi"></i>현재 시각</div>
                 ${!isReadOnly() && (state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length<3 ? `<button class="btn" id="addTzSlotBtn" style="font-size:11px;padding:3px 9px"><i class="ti ti-plus"></i> 추가</button>` : ''}
               </div>
-              <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="display:flex;flex-direction:column;gap:8px;flex:1">
                 ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
                   const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
-                  return `<div class="tz-card" style="background:rgba(255,255,255,.28);border:none;border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  return `<div class="tz-card" data-tz="${tz}" style="background:rgba(255,255,255,.28);border:none;border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1;transition:background .3s var(--ease)">
                     <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
                       <i class="ti ti-world" style="font-size:15px;color:var(--muted);flex-shrink:0"></i>
                       <select class="inp tz-select" data-idx="${idx}" style="font-size:12px;font-weight:600;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--text);width:auto;flex-shrink:1;min-width:0;-webkit-appearance:none;appearance:none" ${isReadOnly()?'disabled':''}>
@@ -2200,7 +2200,7 @@ function viewHome(){
                       ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:0;display:flex;align-items:center;flex-shrink:0"><i class="ti ti-x"></i></button>` : ''}
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                      <div class="tz-time" data-tz="${tz}" style="font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.2">--:--</div>
+                      <div class="tz-time" data-tz="${tz}" style="font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.2">--:--</div>
                       <div style="font-size:9px;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;gap:4px">
                         <span class="tz-date" data-tz="${tz}"></span>
                         <span class="tz-daynight" data-tz="${tz}" style="display:flex;align-items:center;gap:2px;font-weight:300"></span>
@@ -2288,8 +2288,9 @@ function viewHome(){
             const dueColor = dueDday===null ? '' : dueDday<0 ? '#A32D2D' : dueDday<=2 ? '#A32D2D' : dueDday<=5 ? '#92400E' : '#15803D';
             const dueBg = dueDday===null ? '' : dueDday<0 ? '#FCEBEB' : dueDday<=2 ? '#FCEBEB' : dueDday<=5 ? '#FEF3C7' : '#E6F4EA';
             const dueLabel = dueDday===null ? '기한 없음' : dueDday<0 ? `마감 ${Math.abs(dueDday)}일 지남` : dueDday===0 ? '오늘 마감' : `마감 D-${dueDday}`;
-            return `<div class="dash-row checklist-action-link" data-pid="${c.projectId}" style="align-items:center;gap:10px;padding:11px 14px;margin-bottom:6px;background:var(--sf);border-radius:14px;cursor:pointer">
-              <div style="flex:1;min-width:0">
+            return `<div class="dash-row" style="align-items:center;gap:10px;padding:11px 14px;margin-bottom:6px;background:var(--sf);border-radius:14px">
+              <input type="checkbox" class="dash-checklist-done pill-check" data-cid="${c.id}" data-pid="${c.projectId}"/>
+              <div style="flex:1;min-width:0;cursor:pointer" class="checklist-action-link" data-pid="${c.projectId}">
                 <div style="font-size:12.5px;font-weight:300;color:var(--text);line-height:1.4;margin-bottom:5px">${c.text}</div>
                 <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
                   <span style="display:flex;align-items:center;gap:3px;font-size:10px;background:var(--card);color:var(--muted);padding:1px 7px;border-radius:20px"><i class="ti ti-checklist" style="font-size:9px"></i>${c.projectTitle}</span>
@@ -2298,7 +2299,7 @@ function viewHome(){
                   <span style="font-size:10px;font-weight:300;background:${dueBg};color:${dueColor};padding:1px 7px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:9px"></i> ${dueLabel}</span>
                 </div>
               </div>
-              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+              <i class="ti ti-chevron-right checklist-action-link" data-pid="${c.projectId}" style="font-size:12px;color:var(--muted);flex-shrink:0;cursor:pointer"></i>
             </div>`;
           }).join('')}
           ${pcTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(pcPage, pcTotalPages, 'dash-checklist-action-page-btn')}</div>`:''}
@@ -2477,6 +2478,8 @@ function startClock(){
       if(offEl) offEl.textContent = offset;
       const dnEl = document.querySelector(`.tz-daynight[data-tz="${CSS.escape(tz)}"]`);
       if(dnEl) dnEl.innerHTML = isDay ? '<i class="ti ti-sun" style="font-size:10px;color:#D97706"></i> Day' : '<i class="ti ti-moon" style="font-size:10px;color:#6366F1"></i> Night';
+      const rowEl = document.querySelector(`.tz-card[data-tz="${CSS.escape(tz)}"]`);
+      if(rowEl) rowEl.style.background = isDay ? 'rgba(255,255,255,.28)' : 'rgba(30,41,59,.12)';
     });
   }
   if(clockInterval) clearInterval(clockInterval);
@@ -8698,6 +8701,22 @@ function bindViewEvents(){
       state.selectedProjectId = el.dataset.pid;
       state.view = 'projects';
       render();
+    });
+  });
+  document.querySelectorAll('.dash-checklist-done').forEach(el=>{
+    el.addEventListener('click', e=> e.stopPropagation());
+    el.addEventListener('change', ()=>{
+      const p = state.data.projects.find(x=>x.id===el.dataset.pid);
+      if(!p) return;
+      const item = (p.checklist||[]).find(c=>c.id===el.dataset.cid);
+      if(!item) return;
+      item.done = el.checked;
+      item.status = el.checked ? '완료' : (item.status==='완료' ? '진행중' : item.status);
+      if(el.checked){
+        if(!p.logs) p.logs = [];
+        p.logs.push({id:uid('plog'), date:dayjs().format('YYYY-MM-DD'), createdAt:Date.now(), text:`체크리스트 항목 완료: ${item.text}`});
+      }
+      persist(true);
     });
   });
 
