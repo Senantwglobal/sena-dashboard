@@ -2077,15 +2077,12 @@ function viewHome(){
     const monthEndStr = dayjs().endOf('month').format('YYYY-MM-DD');
     pendingActionsAll = pendingActionsAll.filter(l=>l.nextStepDue && l.nextStepDue<=monthEndStr);
   }
-  if(paFilter==='전체'){
-    pendingActionsAll = pendingActionsAll.sort((a,b)=>dayjs(b.date).diff(dayjs(a.date)));
-  } else {
-    pendingActionsAll = pendingActionsAll.sort((a,b)=>{
-      const ad = a.nextStepDue ? dayjs(a.nextStepDue).valueOf() : Infinity;
-      const bd = b.nextStepDue ? dayjs(b.nextStepDue).valueOf() : Infinity;
-      return ad - bd;
-    });
-  }
+  pendingActionsAll = pendingActionsAll.sort((a,b)=>{
+    const FAR = 8640000000000000;
+    const ad = a.nextStepDue ? dayjs(a.nextStepDue).valueOf() : FAR;
+    const bd = b.nextStepDue ? dayjs(b.nextStepDue).valueOf() : FAR;
+    return ad - bd;
+  });
   const PA_PER_PAGE = 8;
   const paPage = state.dashActionPage || 0;
   const paTotalPages = Math.ceil(pendingActionsAll.length / PA_PER_PAGE);
