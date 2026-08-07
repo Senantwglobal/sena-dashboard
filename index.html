@@ -72,10 +72,10 @@ a{color:inherit}
 .pill-check{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--bd);background:#fff;cursor:pointer;flex-shrink:0;position:relative;transition:all .15s var(--ease)}
 .pill-check:checked{background:#F97316;border-color:#F97316}
 .pill-check:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
-.scroll-top-btn{position:fixed;right:24px;bottom:28px;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.8);background:radial-gradient(circle at 35% 30%, #7FCBFA 0%, #1C85E8 70%, #0B66C2 100%);box-shadow:0 0 0 1px rgba(255,255,255,.3),0 4px 16px rgba(28,133,232,.4),0 0 24px 4px rgba(28,133,232,.3),inset 0 1px 2px rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:80;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s var(--ease),transform .2s var(--ease),box-shadow .15s var(--ease)}
+.scroll-top-btn{position:fixed;right:24px;bottom:28px;width:40px;height:40px;border-radius:50%;border:none;background:#1E88E5;box-shadow:0 2px 8px rgba(30,136,229,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:80;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s var(--ease),transform .2s var(--ease),box-shadow .15s var(--ease)}
 .scroll-top-btn.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
-.scroll-top-btn:hover{box-shadow:0 0 0 1px rgba(255,255,255,.4),0 6px 20px rgba(28,133,232,.5),0 0 32px 6px rgba(28,133,232,.4),inset 0 1px 2px rgba(255,255,255,.9)}
-.scroll-top-btn i{font-size:20px;color:#fff}
+.scroll-top-btn:hover{box-shadow:0 3px 12px rgba(30,136,229,.5);background:#1976D2}
+.scroll-top-btn i{font-size:18px;color:#fff}
 input[type="color"]{-webkit-appearance:none;appearance:none;width:18px!important;height:18px!important;border-radius:50%!important;border:none!important;padding:0!important;cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--bd);background:none}
 input[type="color"]::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
 input[type="color"]::-webkit-color-swatch{border:none;border-radius:50%}
@@ -2251,9 +2251,9 @@ function viewHome(){
           })()}
         </div>
 
-        <div style="display:flex;gap:14px">
+        <div style="display:flex;gap:14px;margin-bottom:14px">
           <div style="flex:1;min-width:0">
-        ${incompleteProjects.length>0 ? `<div class="card" style="height:100%">
+        ${incompleteProjects.length>0 ? `<div class="card" style="height:100%;margin-bottom:0">
           <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>미완료 프로젝트</div><span style="font-size:11px;color:var(--muted)">${incompleteProjects.length}건</span></div>
           ${ipPageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
@@ -2265,7 +2265,7 @@ function viewHome(){
 
           <div style="flex:1;min-width:0">
         <!-- 대표님 승인 대기 (항상 표시) -->
-        <div class="card" style="height:100%">
+        <div class="card" style="height:100%;margin-bottom:0">
           <div class="sh">
             <div class="st"><i class="ti ti-user-check" style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--muted)'}"></i>
               <span style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--text)'}">대표님 승인 대기</span>
