@@ -151,9 +151,9 @@ select.inp{cursor:pointer}
 .cal-cell.drag-over{border-color:var(--o);border-width:1.5px;background:var(--ol)}
 .cal-ev-title{font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
 .cal-ev-time{font-size:9px;opacity:.7;flex-shrink:0}
-.ck-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;border:none;margin-bottom:6px;background:var(--card);box-shadow:0 2px 8px rgba(31,41,55,.05);cursor:pointer;transition:box-shadow .15s var(--ease)}
-.ck-item:hover{box-shadow:var(--shadow-md)}
-.ck-cb{accent-color:var(--o);width:16px;height:16px;flex-shrink:0;cursor:pointer}
+.ck-item{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;border:none;margin-bottom:6px;background:var(--sf);box-shadow:none;cursor:pointer;transition:background .15s var(--ease)}
+.ck-item:hover{background:rgba(255,255,255,.7)}
+.ck-cb{width:24px;height:24px;flex-shrink:0;cursor:pointer}
 .ck-body{flex:1;min-width:0;display:flex;align-items:center;gap:10px}
 .ck-title{font-size:13px;font-weight:300;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 .ck-title.done{text-decoration:line-through;color:var(--muted)}
@@ -4683,7 +4683,7 @@ function viewProjectDetail(){
             const sc=checklistStatusColor(c.status);
             const assignee=checklistAssigneeName(c);
             return `<div class="checklist-card ck-item" data-cid="${c.id}">
-              <input type="checkbox" class="checklist-toggle ck-cb" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
+              <input type="checkbox" class="checklist-toggle ck-cb pill-check" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
               <div class="ck-body">
                 <div class="ck-title ${c.done?'done':''}">${c.text}</div>
                 <div class="ck-meta">
