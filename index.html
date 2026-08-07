@@ -2670,14 +2670,6 @@ window.addEventListener('scroll', (e)=>{
 }, true);
 window.addEventListener('resize', ()=>closeDropdown());
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
-// 페이지네이션 클릭 시 스크롤 위치 유지 (재렌더링으로 화면이 위로 튀는 것 방지)
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest && e.target.closest('.pager-btn');
-  if(btn){
-    const savedY = window.scrollY;
-    requestAnimationFrame(()=>{ window.scrollTo(0, savedY); });
-  }
-}, true);
 document.addEventListener('input', e=>{
   if(e.target && e.target.type==='color') e.target.style.color = e.target.value;
 });
