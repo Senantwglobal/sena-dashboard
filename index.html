@@ -72,6 +72,10 @@ a{color:inherit}
 .pill-check{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--bd);background:#fff;cursor:pointer;flex-shrink:0;position:relative;transition:all .15s var(--ease)}
 .pill-check:checked{background:#F97316;border-color:#F97316}
 .pill-check:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.scroll-top-btn{position:fixed;right:24px;bottom:28px;width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.8);background:radial-gradient(circle at 35% 30%, #7FCBFA 0%, #1C85E8 70%, #0B66C2 100%);box-shadow:0 0 0 1px rgba(255,255,255,.3),0 4px 16px rgba(28,133,232,.4),0 0 24px 4px rgba(28,133,232,.3),inset 0 1px 2px rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:80;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s var(--ease),transform .2s var(--ease),box-shadow .15s var(--ease)}
+.scroll-top-btn.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+.scroll-top-btn:hover{box-shadow:0 0 0 1px rgba(255,255,255,.4),0 6px 20px rgba(28,133,232,.5),0 0 32px 6px rgba(28,133,232,.4),inset 0 1px 2px rgba(255,255,255,.9)}
+.scroll-top-btn i{font-size:20px;color:#fff}
 input[type="color"]{-webkit-appearance:none;appearance:none;width:18px!important;height:18px!important;border-radius:50%!important;border:none!important;padding:0!important;cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--bd);background:none}
 input[type="color"]::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
 input[type="color"]::-webkit-color-swatch{border:none;border-radius:50%}
@@ -10792,6 +10796,23 @@ if(sessionStorage.getItem('opl_unlocked') === 'true'){
 } else {
   showLockScreen();
 }
+
+// 맨 위로 가기 버튼 (스크롤 시 표시)
+(function(){
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'scroll-top-btn';
+  btn.setAttribute('aria-label', '맨 위로');
+  btn.innerHTML = '<i class="ti ti-arrow-up"></i>';
+  document.body.appendChild(btn);
+  btn.addEventListener('click', ()=>{
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+  window.addEventListener('scroll', ()=>{
+    if(window.scrollY > 300) btn.classList.add('visible');
+    else btn.classList.remove('visible');
+  }, {passive:true});
+})();
 </script>
 </body>
 </html>
