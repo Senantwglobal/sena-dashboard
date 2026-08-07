@@ -71,7 +71,7 @@ a{color:inherit}
 .close-x:hover{transform:scale(1.06);box-shadow:0 3px 10px rgba(229,57,53,.45);background:#D32F2F}
 .pill-check{appearance:none;-webkit-appearance:none;width:24px;height:24px;border-radius:50%;border:2.5px solid #D1D5DB;background:#fff;cursor:pointer;flex-shrink:0;position:relative;transition:all .15s var(--ease)}
 .pill-check:checked{background:#4285F4;border-color:#4285F4}
-.pill-check:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+.pill-check:checked::after{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 12.5 9.5 18 20 6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:60%}
 .scroll-top-btn{position:fixed;right:24px;bottom:28px;width:40px;height:40px;border-radius:50%;border:none;background:#1E88E5;box-shadow:0 2px 8px rgba(30,136,229,.4);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:80;opacity:0;pointer-events:none;transform:translateY(8px);transition:opacity .2s var(--ease),transform .2s var(--ease),box-shadow .15s var(--ease)}
 .scroll-top-btn.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
 .scroll-top-btn:hover{box-shadow:0 3px 12px rgba(30,136,229,.5);background:#1976D2}
@@ -3683,7 +3683,7 @@ function viewVendorDetail(){
       ${brands.map(b=>{
         const isActive = b.id===activeBrandId;
         const bDotColor = vendorStatusDotColor(b.companyStatus||'Active');
-        return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;gap:2px;padding:5px 10px 5px 5px;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};${!isReadOnly()?'cursor:grab':''}">
+        return `<div class="brand-tab-item" data-bid="${b.id}" ${!isReadOnly()?'draggable="true"':''} style="display:flex;align-items:center;gap:2px;padding:5px 10px 5px 5px;border-radius:9px;background:${isActive?'rgba(255,255,255,.65)':'transparent'};backdrop-filter:${isActive?'blur(8px)':'none'};-webkit-backdrop-filter:${isActive?'blur(8px)':'none'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};${!isReadOnly()?'cursor:grab':''}">
           <button class="brand-tab-btn" data-bid="${b.id}" style="padding:0;font-size:13px;font-weight:${isActive?'600':'300'};color:${isActive?'var(--text)':'var(--muted)'};background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap;transition:color .12s var(--ease)">
             ${av(b.name||b.id, 28, b.logoUrl)}
             <span>${b.name||b.id}</span>
