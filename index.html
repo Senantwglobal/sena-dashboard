@@ -3043,7 +3043,7 @@ function viewVendorList(){
     const hitZones = points.map((p,i)=>{
       const prevMid = i===0 ? padLeft-4 : (points[i-1][0]+p[0])/2;
       const nextMid = i===points.length-1 ? W-padX+4 : (points[i+1][0]+p[0])/2;
-      return `<rect class="chart-hit-zone" data-idx="${i}" x="${prevMid.toFixed(1)}" y="0" width="${(nextMid-prevMid).toFixed(1)}" height="${H}" fill="transparent" style="cursor:crosshair"/>`;
+      return `<rect class="chart-hit-zone" data-idx="${i}" x="${prevMid.toFixed(1)}" y="0" width="${(nextMid-prevMid).toFixed(1)}" height="${H}" fill="transparent" style="cursor:pointer"/>`;
     }).join('');
 
     return `<div class="purchase-chart-wrap" style="position:relative">
