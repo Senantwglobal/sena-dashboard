@@ -212,7 +212,7 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .search-wrap .inp{padding-left:32px;margin-bottom:0}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:var(--card);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
-.tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px;background:rgba(255,255,255,.5)}
+.tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px;background:rgba(255,255,255,.25)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
 .tbl tr.clickable:hover td{background:rgba(255,255,255,.75)}
@@ -2043,7 +2043,7 @@ function viewHome(){
   const IP_PER_PAGE = 5;
   const ipTotalPages = Math.ceil(incompleteProjects.length / IP_PER_PAGE);
   const ipPageItems = incompleteProjects.slice(ipPage*IP_PER_PAGE, ipPage*IP_PER_PAGE+IP_PER_PAGE);
-  const ACT_PER_PAGE = 8;
+  const ACT_PER_PAGE = 12;
   const actPage = state.dashActivityPage || 0;
   const oneMonthAgo = dayjs().subtract(1,'month');
   const recentLogsAll = collectAllRecentActivity().filter(l=>dayjs(l.date).diff(oneMonthAgo) >= 0);
@@ -2194,7 +2194,7 @@ function viewHome(){
         <div class="card">
           <div class="sh">
             <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
-            <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:3px"></span>최근 1개월</span>
+            <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#05c846;margin-right:3px"></span>최근 1개월</span>
           </div>
           ${recentLogs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
             recentLogs.map(l=>{
@@ -2215,7 +2215,7 @@ function viewHome(){
                 </div>
               </div>`;
             }).join('')}
-          ${actTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(actPage, actTotalPages, 'dash-activity-page-btn')}</div>`:''}
+          ${actTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px auto;margin-top:auto;padding-top:10px">${pagerHTML(actPage, actTotalPages, 'dash-activity-page-btn')}</div>`:''}
         </div>
 
       </div>
@@ -2670,6 +2670,14 @@ window.addEventListener('scroll', (e)=>{
 }, true);
 window.addEventListener('resize', ()=>closeDropdown());
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
+// 페이지네이션 클릭 시 스크롤 위치 유지 (재렌더링으로 화면이 위로 튀는 것 방지)
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest && e.target.closest('.pager-btn');
+  if(btn){
+    const savedY = window.scrollY;
+    requestAnimationFrame(()=>{ window.scrollTo(0, savedY); });
+  }
+}, true);
 document.addEventListener('input', e=>{
   if(e.target && e.target.type==='color') e.target.style.color = e.target.value;
 });
