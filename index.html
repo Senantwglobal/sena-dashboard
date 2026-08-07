@@ -205,6 +205,14 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .pill-bar{display:inline-flex;gap:2px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px;max-width:100%}
 .pill-bar .btn{border-radius:999px;background:transparent;background-color:transparent;border-color:transparent;box-shadow:none;-webkit-appearance:none;appearance:none}
 .tz-select{background:transparent!important;background-color:transparent!important;border:none!important;box-shadow:none!important}
+.pager-bar{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px;flex-wrap:nowrap}
+.pager-btn{border:none;background:transparent;font-size:11px;padding:5px 10px;border-radius:999px;cursor:pointer;color:var(--text);min-width:26px;text-align:center;font-family:inherit;transition:background .15s var(--ease)}
+.pager-btn:hover:not(:disabled):not(.pager-active){background:rgba(255,255,255,.5)}
+.pager-btn.pager-prev{background:rgba(255,255,255,.65);font-weight:300}
+.pager-btn.pager-next{background:rgba(15,23,42,.85);color:#fff;font-weight:300}
+.pager-btn.pager-active{background:rgba(255,255,255,.9);font-weight:600}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.pager-ellipsis{font-size:11px;color:var(--muted);padding:0 3px}
 .pill-bar .btn:hover{background:rgba(255,255,255,.5)}
 .pill-bar .btn-o, .pill-bar .btn-o:hover{background:rgba(15,23,42,.82);border-color:rgba(255,255,255,.1);color:#fff}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
@@ -1669,6 +1677,29 @@ function allCalendarEvents(){
   return evs;
 }
 
+// 공용 페이지네이션 렌더러 — "이전 1 2 ... N 다음" 스타일, btnClass로 클릭 위임
+function pagerHTML(page, totalPages, btnClass){
+  if(totalPages<=1) return '';
+  let range;
+  if(totalPages<=7){
+    range = Array.from({length:totalPages}, (_,i)=>i);
+  } else {
+    const set = new Set([0, totalPages-1, page, Math.max(0,page-1), Math.min(totalPages-1,page+1)]);
+    range = Array.from(set).filter(p=>p>=0 && p<totalPages).sort((a,b)=>a-b);
+  }
+  let html = `<div class="pager-bar">`;
+  html += `<button class="${btnClass} pager-btn pager-prev" data-page="${Math.max(0,page-1)}" ${page===0?'disabled':''}>이전</button>`;
+  let prev = null;
+  range.forEach(p=>{
+    if(prev!==null && p-prev>1) html += `<span class="pager-ellipsis">···</span>`;
+    html += `<button class="${btnClass} pager-btn ${p===page?'pager-active':''}" data-page="${p}">${p+1}</button>`;
+    prev = p;
+  });
+  html += `<button class="${btnClass} pager-btn pager-next" data-page="${Math.min(totalPages-1,page+1)}" ${page>=totalPages-1?'disabled':''}>다음</button>`;
+  html += `</div>`;
+  return html;
+}
+
 function allPeopleFlat(){
   const result = [];
   (state.data.companies||[]).forEach(c=>{
@@ -2133,11 +2164,7 @@ function viewHome(){
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);margin-top:4px;flex-shrink:0"></i>
             </div>`;
           }).join('')}
-          ${paTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-            <button class="btn dash-action-page-btn" data-page="${Math.max(0,paPage-1)}" style="padding:3px 8px;font-size:11px" ${paPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            ${Array.from({length:paTotalPages}).map((_,i)=>`<button class="btn dash-action-page-btn ${i===paPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-            <button class="btn dash-action-page-btn" data-page="${Math.min(paTotalPages-1,paPage+1)}" style="padding:3px 8px;font-size:11px" ${paPage>=paTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>`:''}
+          ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
         </div>` : ''}
 
         ${incompleteProjects.length>0 ? `<div class="card">
@@ -2146,11 +2173,7 @@ function viewHome(){
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
             <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
           </div>`).join('')}
-          ${ipTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-            <button class="btn home-incomplete-page-btn" data-page="${Math.max(0,ipPage-1)}" style="padding:3px 8px;font-size:11px" ${ipPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            ${Array.from({length:ipTotalPages}).map((_,i)=>`<button class="btn home-incomplete-page-btn ${i===ipPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-            <button class="btn home-incomplete-page-btn" data-page="${Math.min(ipTotalPages-1,ipPage+1)}" style="padding:3px 8px;font-size:11px" ${ipPage>=ipTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>`:''}
+          ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
         </div>` : ''}
 
       </div>
@@ -2195,15 +2218,11 @@ function viewHome(){
             const total = activeProjs.length;
             const totalPages = Math.ceil(total/PER_PAGE);
             const slice = activeProjs.slice(page*PER_PAGE, page*PER_PAGE+PER_PAGE);
-            const catSelect = `<select id="dashProjCatFilter" class="inp" style="font-size:11px;padding:2px 8px;margin:0;width:auto">
+            const catSelect = `<select id="dashProjCatFilter" class="inp" style="font-size:11px;padding:0 10px;margin:0;width:auto;height:28px;box-sizing:border-box;display:flex;align-items:center">
               <option value="전체" ${catFilter==='전체'?'selected':''}>전체 카테고리</option>
               ${state.data.categories.map(c=>`<option value="${c}" ${catFilter===c?'selected':''}>${c}</option>`).join('')}
             </select>`;
-            const navHtml = totalPages>1 ? `<div style="display:flex;gap:2px;align-items:center;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:3px 5px">
-              <button class="btn dash-proj-prev" style="padding:3px 8px;font-size:12px" ${page===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-              <span style="font-size:11px;color:var(--muted);padding:0 2px">${page+1}/${totalPages}</span>
-              <button class="btn dash-proj-next" style="padding:3px 8px;font-size:12px" ${page>=totalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-            </div>` : '';
+            const navHtml = pagerHTML(page, totalPages, 'dash-proj-page-btn');
             const rowsHtml = total===0 ? `<div class="empty-state" style="padding:16px">${catFilter==='전체'?'진행중인 프로젝트가 없습니다.':`'${catFilter}' 카테고리에 진행중인 프로젝트가 없습니다.`}</div>` :
               slice.map(p=>{
                 const idx = state.data.projects.indexOf(p);
@@ -3864,11 +3883,7 @@ function viewVendorDetail(){
             <span style="font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em;flex-shrink:0">지난 일정</span>
             <span style="font-size:10.5px;color:var(--muted);flex-shrink:0">${pastAll.length}건</span>
           </div>
-          ${peTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
-            <button class="btn vendor-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:2px 5px;font-size:10px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            <span style="font-size:10.5px;color:var(--muted);padding:0 2px;white-space:nowrap">${pePage+1} / ${peTotalPages}</span>
-            <button class="btn vendor-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:2px 5px;font-size:10px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>`:''}
+          ${peTotalPages>1?`<div style="flex-shrink:0">${pagerHTML(pePage, peTotalPages, 'vendor-past-event-page-btn')}</div>`:''}
         </div>
         <div>
           ${past.map((e,ei)=>{
@@ -4063,11 +4078,7 @@ function viewVendorDetail(){
               <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
             </div>`).join('');
-            const pager = vpTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:8px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-              <button class="btn vendor-project-page-btn" data-page="${Math.max(0,vpPage-1)}" style="padding:3px 8px;font-size:11px" ${vpPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-              ${Array.from({length:vpTotalPages}).map((_,i)=>`<button class="btn vendor-project-page-btn ${i===vpPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-              <button class="btn vendor-project-page-btn" data-page="${Math.min(vpTotalPages-1,vpPage+1)}" style="padding:3px 8px;font-size:11px" ${vpPage>=vpTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-            </div>` : '';
+            const pager = vpTotalPages>1 ? `<div style="width:fit-content;margin:8px auto 0">${pagerHTML(vpPage, vpTotalPages, 'vendor-project-page-btn')}</div>` : '';
             return rows + pager;
           })()}
         </div>`:''}
@@ -4103,11 +4114,7 @@ function viewVendorDetail(){
                     </div>`;
                   }).join('')}
                 </div>
-                ${mnTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-                  <button class="btn vendor-meeting-note-page-btn" data-page="${Math.max(0,mnPage-1)}" style="padding:3px 8px;font-size:11px" ${mnPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-                  ${Array.from({length:mnTotalPages}).map((_,i)=>`<button class="btn vendor-meeting-note-page-btn ${i===mnPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-                  <button class="btn vendor-meeting-note-page-btn" data-page="${Math.min(mnTotalPages-1,mnPage+1)}" style="padding:3px 8px;font-size:11px" ${mnPage>=mnTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-                </div>`:''}`}
+                ${mnTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(mnPage, mnTotalPages, 'vendor-meeting-note-page-btn')}</div>`:''}`}
           </div>`;
         })()}
 
@@ -4166,11 +4173,7 @@ function viewVendorDetail(){
             </div>`;
           }).join('');
 
-          const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-            <button class="btn vendor-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn vendor-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-            <button class="btn vendor-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>` : '';
+          const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 0">${pagerHTML(flPage, flTotalPages, 'vendor-filelink-page-btn')}</div>` : '';
 
           const isCollapsed = state.vendorFileLinkCollapsed !== false; // 기본값: 접힘
 
@@ -4591,11 +4594,7 @@ function viewProjectDetail(){
             <span style="font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em;flex-shrink:0">지난 일정</span>
             <span style="font-size:10.5px;color:var(--muted);flex-shrink:0">${pastAll.length}건</span>
           </div>
-          ${peTotalPages>1?`<div style="display:flex;align-items:center;gap:2px;flex-shrink:0">
-            <button class="btn proj-past-event-page-btn" data-page="${Math.max(0,pePage-1)}" style="padding:2px 5px;font-size:10px" ${pePage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            <span style="font-size:10.5px;color:var(--muted);padding:0 2px;white-space:nowrap">${pePage+1} / ${peTotalPages}</span>
-            <button class="btn proj-past-event-page-btn" data-page="${Math.min(peTotalPages-1,pePage+1)}" style="padding:2px 5px;font-size:10px" ${pePage>=peTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>`:''}
+          ${peTotalPages>1?`<div style="flex-shrink:0">${pagerHTML(pePage, peTotalPages, 'proj-past-event-page-btn')}</div>`:''}
         </div>
         <div>
           ${past.map((e,ei)=>{
@@ -4740,11 +4739,7 @@ function viewProjectDetail(){
         </div>`;
       }).join('');
 
-      const pager = flTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:10px auto 0;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-        <button class="btn proj-filelink-page-btn" data-page="${Math.max(0,flPage-1)}" style="padding:3px 8px;font-size:11px" ${flPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-        ${Array.from({length:flTotalPages}).map((_,i)=>`<button class="btn proj-filelink-page-btn ${i===flPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-        <button class="btn proj-filelink-page-btn" data-page="${Math.min(flTotalPages-1,flPage+1)}" style="padding:3px 8px;font-size:11px" ${flPage>=flTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-      </div>` : '';
+      const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 0">${pagerHTML(flPage, flTotalPages, 'proj-filelink-page-btn')}</div>` : '';
 
       const isProjCollapsed = state.projFileLinkCollapsed !== false; // 기본값: 접힘
 
@@ -5739,11 +5734,7 @@ function viewLeave(){
           const lvTotalPages = Math.ceil(filtered.length / LV_PER_PAGE);
           const pageItems = filtered.slice(lvPage*LV_PER_PAGE, lvPage*LV_PER_PAGE+LV_PER_PAGE);
 
-          const pager = lvTotalPages>1 ? `<div style="display:flex;align-items:center;gap:2px;width:fit-content;margin:14px auto;padding:4px 6px;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px">
-            <button class="btn leave-record-page-btn" data-page="${Math.max(0,lvPage-1)}" style="padding:3px 8px;font-size:11px" ${lvPage===0?'disabled':''}><i class="ti ti-chevron-left"></i></button>
-            ${Array.from({length:lvTotalPages}).map((_,i)=>`<button class="btn leave-record-page-btn ${i===lvPage?'btn-o':''}" data-page="${i}" style="padding:3px 9px;font-size:11px;min-width:26px">${i+1}</button>`).join('')}
-            <button class="btn leave-record-page-btn" data-page="${Math.min(lvTotalPages-1,lvPage+1)}" style="padding:3px 8px;font-size:11px" ${lvPage>=lvTotalPages-1?'disabled':''}><i class="ti ti-chevron-right"></i></button>
-          </div>` : '<div style="height:14px"></div>';
+          const pager = lvTotalPages>1 ? `<div style="width:fit-content;margin:14px auto">${pagerHTML(lvPage, lvTotalPages, 'leave-record-page-btn')}</div>` : '<div style="height:14px"></div>';
 
           return yearTabs + `
           <div style="padding:8px 14px;font-size:11px;color:var(--muted);background:var(--sf)">${activeYear==='all'?'전체 기간':activeYear+'년'} · 합계 <span style="color:var(--o);font-weight:300">${filteredTotal}일</span> (${filtered.length}건)</div>
@@ -8431,10 +8422,12 @@ function bindViewEvents(){
   });
 
   // 대시보드 프로젝트 페이지네이션
-  const prevBtn = document.querySelector('.dash-proj-prev');
-  const nextBtn = document.querySelector('.dash-proj-next');
-  if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.dashProjPage = Math.max(0,(state.dashProjPage||0)-1); render(); });
-  if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.dashProjPage = (state.dashProjPage||0)+1; render(); });
+  document.querySelectorAll('.dash-proj-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashProjPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
   const saveMemoBtn = document.getElementById('saveMemoBtn');
   if(saveMemoBtn) saveMemoBtn.addEventListener('click', ()=>{
     const memoEl = document.getElementById('dashMemo');
