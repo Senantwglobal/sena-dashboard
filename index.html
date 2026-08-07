@@ -109,7 +109,7 @@ select.inp{cursor:pointer}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
-.kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
+.kn{font-size:27px;font-weight:500;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
 .kl{font-size:11px;color:var(--muted);font-weight:300}
 .pgb{height:5px;border-radius:3px;background:rgba(15,23,42,.1);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
@@ -2413,15 +2413,15 @@ function viewHome(){
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:300;color:var(--o)">${totalGranted+compTotal}</div>
+                <div style="font-size:16px;font-weight:500;color:var(--o)">${totalGranted+compTotal}</div>
                 <div style="font-size:10px;color:var(--muted)">총 발생</div>
               </div>
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:300">${used}</div>
+                <div style="font-size:16px;font-weight:500">${used}</div>
                 <div style="font-size:10px;color:var(--muted)">사용</div>
               </div>
               <div style="text-align:center;padding:8px;background:var(--sf);border-radius:8px">
-                <div style="font-size:16px;font-weight:300;color:${remaining<3?'#A32D2D':'#3B6D11'}">${remaining}</div>
+                <div style="font-size:16px;font-weight:500;color:${remaining<3?'#A32D2D':'#3B6D11'}">${remaining}</div>
                 <div style="font-size:10px;color:var(--muted)">잔여</div>
               </div>
             </div>
@@ -4538,7 +4538,7 @@ function viewProjects(){
               ${donutSegments}
             </svg>
             <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-              <div style="font-size:16px;font-weight:600;color:var(--text);line-height:1">${totalAll}</div>
+              <div style="font-size:16px;font-weight:500;color:var(--text);line-height:1">${totalAll}</div>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
@@ -4553,21 +4553,21 @@ function viewProjects(){
 
       <div class="card" style="padding:16px 18px">
         <div style="font-size:11px;font-weight:300;color:var(--muted);margin-bottom:10px">진행중 평균 진행률</div>
-        <div style="font-size:21px;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${avgProgress}%</div>
+        <div style="font-size:21px;font-weight:500;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${avgProgress}%</div>
         <div style="height:3px;border-radius:2px;background:var(--sf);margin-bottom:10px;overflow:hidden"><div style="height:100%;width:${avgProgress}%;background:var(--o);opacity:.55;border-radius:2px"></div></div>
         <div style="font-size:10px;color:var(--muted);line-height:1.5">진행중인 프로젝트 ${activeProjects.length}건의 평균 진행 상황입니다.</div>
       </div>
 
       <div class="card" style="padding:16px 18px">
         <div style="font-size:11px;font-weight:300;color:var(--muted);margin-bottom:10px">전체 체크리스트</div>
-        <div style="font-size:21px;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%</div>
+        <div style="font-size:21px;font-weight:500;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%</div>
         <div style="height:3px;border-radius:2px;background:var(--sf);margin-bottom:10px;overflow:hidden"><div style="height:100%;width:${ckTotals.total>0?Math.round(ckTotals.done/ckTotals.total*100):0}%;background:#2DC76D;opacity:.55;border-radius:2px"></div></div>
         <div style="font-size:10px;color:var(--muted);line-height:1.5">전체 ${ckTotals.total}건 중 ${ckTotals.done}건을 완료했습니다.</div>
       </div>
 
       <div class="card" style="padding:16px 18px">
         <div style="font-size:11px;font-weight:300;color:var(--muted);margin-bottom:14px">7일 이내 마감</div>
-        <div style="font-size:21px;font-weight:600;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${dueSoonCount}건</div>
+        <div style="font-size:21px;font-weight:500;color:var(--text);margin-bottom:10px;letter-spacing:-.02em">${dueSoonCount}건</div>
         <div style="font-size:10px;color:var(--muted);line-height:1.5">${dueSoonCount>0?'마감이 임박한 프로젝트가 있습니다.':'임박한 마감 건이 없습니다.'}</div>
       </div>
     </div>
