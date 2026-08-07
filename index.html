@@ -72,6 +72,10 @@ a{color:inherit}
 .pill-check{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--bd);background:#fff;cursor:pointer;flex-shrink:0;position:relative;transition:all .15s var(--ease)}
 .pill-check:checked{background:#F97316;border-color:#F97316}
 .pill-check:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
+input[type="color"]{-webkit-appearance:none;appearance:none;border-radius:50%!important;border:none!important;padding:0!important;cursor:pointer;box-shadow:0 0 0 3px #fff,0 0 14px 3px color-mix(in srgb, currentColor 55%, transparent);background:none}
+input[type="color"]::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
+input[type="color"]::-webkit-color-swatch{border:none;border-radius:50%}
+input[type="color"]::-moz-color-swatch{border:none;border-radius:50%}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
 .btn-o{background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border-color:rgba(255,255,255,.1);box-shadow:none}
@@ -2641,6 +2645,9 @@ window.addEventListener('scroll', (e)=>{
 }, true);
 window.addEventListener('resize', ()=>closeDropdown());
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDropdown(); });
+document.addEventListener('input', e=>{
+  if(e.target && e.target.type==='color') e.target.style.color = e.target.value;
+});
 
 /* ── 네이티브 <select> 자동 커스텀 드롭다운 변환 ── */
 const _enhancedSelects = new WeakSet();
@@ -7405,13 +7412,13 @@ function modalEventTypesManager(){
         <div id="eventTypeList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
           ${types.map((t,i)=>`
             <div class="event-type-row" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--sf);border-radius:8px">
-              <input type="color" value="${t.color}" class="event-type-color" data-idx="${i}" style="width:32px;height:28px;border:none;border-radius:6px;cursor:pointer;padding:2px"/>
+              <input type="color" value="${t.color}" class="event-type-color" data-idx="${i}" style="width:28px;height:28px;color:${t.color};cursor:pointer"/>
               <input type="text" value="${t.name}" class="inp event-type-name" data-idx="${i}" style="flex:1;margin:0"/>
               <button class="btn btn-red event-type-delete" data-idx="${i}" style="padding:5px 8px;font-size:12px"><i class="ti ti-x"></i></button>
             </div>`).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <input type="color" id="newEventTypeColor" value="#1C85E8" style="width:40px;height:36px;border:none;border-radius:8px;cursor:pointer;padding:2px"/>
+          <input type="color" id="newEventTypeColor" value="#1C85E8" style="width:32px;height:32px;color:#1C85E8;cursor:pointer"/>
           <input type="text" id="newEventTypeName" class="inp" placeholder="새 유형 이름 (예: 전시회)" style="flex:1;margin:0"/>
           <button class="btn btn-o" id="addEventTypeBtn"><i class="ti ti-plus"></i> 추가</button>
         </div>
@@ -7432,7 +7439,7 @@ function bindEventTypesManager(){
     row.className = 'event-type-row';
     row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--sf);border-radius:8px';
     row.innerHTML = `
-      <input type="color" value="${color}" class="event-type-color" data-idx="${idx}" style="width:32px;height:28px;border:none;border-radius:6px;cursor:pointer;padding:2px"/>
+      <input type="color" value="${color}" class="event-type-color" data-idx="${idx}" style="width:28px;height:28px;color:${color};cursor:pointer"/>
       <input type="text" value="${name}" class="inp event-type-name" data-idx="${idx}" style="flex:1;margin:0"/>
       <button class="btn btn-red event-type-delete" data-idx="${idx}" style="padding:5px 8px;font-size:12px"><i class="ti ti-x"></i></button>
     `;
@@ -7511,13 +7518,13 @@ function modalCompanyTypesManager(){
             const c = typeColorFor(t);
             return `
             <div class="ctype-row" data-old-name="${t.replace(/"/g,'&quot;')}" style="display:flex;align-items:center;gap:8px">
-              <input type="color" class="ctype-color" value="${c.color}" title="색상 선택" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/>
+              <input type="color" class="ctype-color" value="${c.color}" title="색상 선택" style="width:32px;height:32px;color:${c.color};cursor:pointer;flex-shrink:0"/>
               <input type="text" value="${t}" class="inp ctype-input" style="flex:1;margin:0"/>
               <button class="btn btn-red ctype-delete" data-idx="${i}" style="padding:5px 8px"><i class="ti ti-x"></i></button>
             </div>`;}).join('')}
         </div>
         <div style="display:flex;gap:8px">
-          <input type="color" id="newCompanyTypeColor" value="#5F5E5A" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/>
+          <input type="color" id="newCompanyTypeColor" value="#5F5E5A" style="width:32px;height:32px;color:#5F5E5A;cursor:pointer;flex-shrink:0"/>
           <input type="text" id="newCompanyType" class="inp" placeholder="새 유형 (예: IT파트너)" style="flex:1;margin:0"/>
           <button class="btn btn-o" id="addCompanyTypeBtn"><i class="ti ti-plus"></i> 추가</button>
         </div>
@@ -7537,7 +7544,7 @@ function bindCompanyTypesManager(){
     row.className = 'ctype-row';
     row.dataset.oldName = ''; // 신규 항목 (이름 변경 추적 대상 아님)
     row.style.cssText = 'display:flex;align-items:center;gap:8px';
-    row.innerHTML = `<input type="color" class="ctype-color" value="${color}" title="색상 선택" style="width:32px;height:32px;padding:0;border:1px solid var(--bd);border-radius:6px;cursor:pointer;flex-shrink:0"/><input type="text" value="${name}" class="inp ctype-input" style="flex:1;margin:0"/><button class="btn btn-red ctype-delete" style="padding:5px 8px"><i class="ti ti-x"></i></button>`;
+    row.innerHTML = `<input type="color" class="ctype-color" value="${color}" title="색상 선택" style="width:32px;height:32px;color:${color};cursor:pointer;flex-shrink:0"/><input type="text" value="${name}" class="inp ctype-input" style="flex:1;margin:0"/><button class="btn btn-red ctype-delete" style="padding:5px 8px"><i class="ti ti-x"></i></button>`;
     list.appendChild(row);
     row.querySelector('.ctype-delete').addEventListener('click', ()=>row.remove());
     document.getElementById('newCompanyType').value = '';
