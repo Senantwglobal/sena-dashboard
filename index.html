@@ -2090,6 +2090,28 @@ function viewHome(){
   const paTotalPages = Math.ceil(pendingActionsAll.length / PA_PER_PAGE);
   const pendingActions = pendingActionsAll.slice(paPage*PA_PER_PAGE, paPage*PA_PER_PAGE+PA_PER_PAGE);
 
+  // 미완료 프로젝트 체크리스트 항목 (전체 프로젝트 대상)
+  const actionTab = state.dashActionTab || 'vendor';
+  let pendingChecklistAll = state.data.projects.flatMap(p=>
+    (p.checklist||[]).filter(c=>!c.done).map(c=>({...c, projectId:p.id, projectTitle:p.title}))
+  );
+  if(paFilter==='이번주'){
+    const weekEndStr = dayjs().endOf('week').format('YYYY-MM-DD');
+    pendingChecklistAll = pendingChecklistAll.filter(c=>c.dueDate && c.dueDate<=weekEndStr);
+  } else if(paFilter==='이번달'){
+    const monthEndStr = dayjs().endOf('month').format('YYYY-MM-DD');
+    pendingChecklistAll = pendingChecklistAll.filter(c=>c.dueDate && c.dueDate<=monthEndStr);
+  }
+  pendingChecklistAll = pendingChecklistAll.sort((a,b)=>{
+    const ad = a.dueDate ? dayjs(a.dueDate).valueOf() : Infinity;
+    const bd = b.dueDate ? dayjs(b.dueDate).valueOf() : Infinity;
+    return ad - bd;
+  });
+  const PC_PER_PAGE = 8;
+  const pcPage = state.dashChecklistActionPage || 0;
+  const pcTotalPages = Math.ceil(pendingChecklistAll.length / PC_PER_PAGE);
+  const pendingChecklistItems = pendingChecklistAll.slice(pcPage*PC_PER_PAGE, pcPage*PC_PER_PAGE+PC_PER_PAGE);
+
   return `
     <div class="sh" style="margin-bottom:16px">
       <span style="font-size:16px;font-weight:300">Dashboard</span>
@@ -2221,11 +2243,16 @@ function viewHome(){
       </div>
 
       <div>
-        ${pendingActionsAll.length>0 || paFilter!=='전체' ? `<div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div><span style="font-size:10px;color:var(--muted)">${pendingActionsAll.length}건</span></div>
+        ${(pendingActionsAll.length>0 || pendingChecklistAll.length>0 || paFilter!=='전체') ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div><span style="font-size:10px;color:var(--muted)">${actionTab==='vendor'?pendingActionsAll.length:pendingChecklistAll.length}건</span></div>
+          <div class="pill-bar" style="margin-bottom:10px">
+            <button class="btn dash-action-tab-btn ${actionTab==='vendor'?'btn-o':''}" data-tab="vendor" style="font-size:11px;padding:4px 11px"><i class="ti ti-building-store" style="font-size:11px"></i> 거래처 액션</button>
+            <button class="btn dash-action-tab-btn ${actionTab==='checklist'?'btn-o':''}" data-tab="checklist" style="font-size:11px;padding:4px 11px"><i class="ti ti-checklist" style="font-size:11px"></i> 프로젝트 체크리스트</button>
+          </div>
           <div style="display:flex;gap:5px;margin-bottom:10px">
             ${['전체','이번주','이번달'].map(f=>`<button class="btn dash-action-filter-btn ${paFilter===f?'btn-o':''}" data-filter="${f}" style="font-size:10.5px;padding:3px 10px">${f}</button>`).join('')}
           </div>
+          ${actionTab==='vendor' ? `
           ${pendingActionsAll.length===0 ? `<div class="empty-state" style="padding:16px 0">해당 기간에 마감 예정인 액션이 없습니다.</div>` : ''}
           ${pendingActions.map(l=>{
             const v = state.data.vendors.find(x=>x.id===l.vendorId);
@@ -2252,6 +2279,30 @@ function viewHome(){
             </div>`;
           }).join('')}
           ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
+          ` : `
+          ${pendingChecklistAll.length===0 ? `<div class="empty-state" style="padding:16px 0">해당 기간에 마감 예정인 체크리스트 항목이 없습니다.</div>` : ''}
+          ${pendingChecklistItems.map(c=>{
+            const assignee = checklistAssigneeName(c);
+            const elapsed = c.startDate ? daysAgo(c.startDate) : null;
+            const dueDday = c.dueDate ? dayjs(c.dueDate).diff(dayjs().startOf('day'),'day') : null;
+            const dueColor = dueDday===null ? '' : dueDday<0 ? '#A32D2D' : dueDday<=2 ? '#A32D2D' : dueDday<=5 ? '#92400E' : '#15803D';
+            const dueBg = dueDday===null ? '' : dueDday<0 ? '#FCEBEB' : dueDday<=2 ? '#FCEBEB' : dueDday<=5 ? '#FEF3C7' : '#E6F4EA';
+            const dueLabel = dueDday===null ? '기한 없음' : dueDday<0 ? `마감 ${Math.abs(dueDday)}일 지남` : dueDday===0 ? '오늘 마감' : `마감 D-${dueDday}`;
+            return `<div class="dash-row checklist-action-link" data-pid="${c.projectId}" style="align-items:center;gap:10px;padding:11px 14px;margin-bottom:6px;background:var(--sf);border-radius:14px;cursor:pointer">
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12.5px;font-weight:300;color:var(--text);line-height:1.4;margin-bottom:5px">${c.text}</div>
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+                  <span style="display:flex;align-items:center;gap:3px;font-size:10px;background:var(--card);color:var(--muted);padding:1px 7px;border-radius:20px"><i class="ti ti-checklist" style="font-size:9px"></i>${c.projectTitle}</span>
+                  ${assignee?`<span style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:600;background:var(--ol);color:var(--od);padding:1px 7px;border-radius:20px"><i class="ti ti-user" style="font-size:9px"></i>${assignee}</span>`:''}
+                  ${elapsed!==null?`<span style="font-size:10px;font-weight:300;background:var(--sf);color:var(--muted);padding:1px 7px;border-radius:20px">${elapsed}일 경과</span>`:''}
+                  <span style="font-size:10px;font-weight:300;background:${dueBg};color:${dueColor};padding:1px 7px;border-radius:20px"><i class="ti ti-flag-3" style="font-size:9px"></i> ${dueLabel}</span>
+                </div>
+              </div>
+              <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
+            </div>`;
+          }).join('')}
+          ${pcTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(pcPage, pcTotalPages, 'dash-checklist-action-page-btn')}</div>`:''}
+          `}
         </div>` : ''}
 
         <div class="card">
@@ -4678,7 +4729,8 @@ function viewProjectDetail(){
         (() => {
           const CK_PAGE = 4;
           const showAllCk = !!state.projChecklistShowAll;
-          const ckList = showAllCk ? p.checklist : p.checklist.slice(0, CK_PAGE);
+          const sortedChecklist = p.checklist.slice().sort((a,b)=> (a.done?1:0) - (b.done?1:0));
+          const ckList = showAllCk ? sortedChecklist : sortedChecklist.slice(0, CK_PAGE);
           const rowsHtml = ckList.map(c=>{
             const sc=checklistStatusColor(c.status);
             const assignee=checklistAssigneeName(c);
@@ -4939,8 +4991,14 @@ function viewProjectDetail(){
 }
 
 function checklistAssigneeName(c){
+  if(c.assigneeType==='internal'){
+    if(c.assigneeIds && c.assigneeIds.length){
+      const internalPeople = getInternalPeople();
+      return internalPeople.filter(p=>c.assigneeIds.includes(p.id)).map(p=>p.name).join(', ');
+    }
+    return c.assigneeId || '';
+  }
   if(!c.assigneeId) return '';
-  if(c.assigneeType==='internal') return c.assigneeId;
   const people=allPeopleFlat();
   const person=people.find(p=>p.id===c.assigneeId);
   return person?`${person.companyName} · ${person.name}`:'';
@@ -7162,8 +7220,10 @@ function htmlFirstLine(html){
 
 function modalChecklistDetail(item){
   const internalPeople = getInternalPeople();
-  const internalNames = internalPeople.map(p=>p.name);
   const people = allPeopleFlat();
+  const initialInternalIds = item.assigneeType==='internal'
+    ? (item.assigneeIds && item.assigneeIds.length ? item.assigneeIds : (item.assigneeId ? internalPeople.filter(p=>p.name===item.assigneeId).map(p=>p.id) : []))
+    : [];
   return `
     <div class="modal" style="width:560px">
       <div class="mh"><h3>체크리스트 상세</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
@@ -7189,11 +7249,11 @@ function modalChecklistDetail(item){
             </select>
           </div>
           <div class="field" id="assigneeInternalField" style="display:${item.assigneeType==='internal'?'block':'none'}">
-            <label class="field-label">내부 담당자</label>
-            <select class="inp" name="assigneeInternal">
-              <option value="">선택하세요</option>
-              ${internalNames.map(n=>`<option value="${n}" ${item.assigneeType==='internal'&&item.assigneeId===n?'selected':''}>${n}</option>`).join('')}
-            </select>
+            <label class="field-label">내부 담당자 (복수 선택 가능)</label>
+            <button type="button" id="ckInternalAssigneeTrigger" class="inp" style="margin:0;display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;cursor:pointer">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;color:var(--muted)">담당자 선택</span>
+              <i class="ti ti-chevron-down" style="font-size:11px;opacity:.6;flex-shrink:0"></i>
+            </button>
           </div>
           <div class="field" id="assigneeExternalField" style="display:${item.assigneeType==='external'?'block':'none'}">
             <label class="field-label">외부 컨택 담당자</label>
@@ -8558,6 +8618,26 @@ function bindViewEvents(){
     btn.addEventListener('click', ()=>{
       state.dashActionFilter = btn.dataset.filter;
       state.dashActionPage = 0;
+      state.dashChecklistActionPage = 0;
+      render();
+    });
+  });
+  document.querySelectorAll('.dash-action-tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashActionTab = btn.dataset.tab;
+      render();
+    });
+  });
+  document.querySelectorAll('.dash-checklist-action-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashChecklistActionPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.checklist-action-link').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.selectedProjectId = el.dataset.pid;
+      state.view = 'projects';
       render();
     });
   });
@@ -8654,7 +8734,7 @@ function bindViewEvents(){
       const item = p.checklist.find(c=>c.id===el.dataset.cid);
       item.done = el.checked;
       item.status = el.checked ? '완료' : (item.status==='완료' ? '진행중' : item.status);
-      persist(false);
+      persist(true);
     });
   });
   document.querySelectorAll('.checklist-delete').forEach(el=>{
@@ -8662,7 +8742,7 @@ function bindViewEvents(){
       e.stopPropagation();
       const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
       p.checklist = p.checklist.filter(c=>c.id!==el.dataset.cid);
-      persist(false);
+      persist(true);
     });
   });
   document.querySelectorAll('.checklist-card').forEach(el=>{
@@ -8677,9 +8757,9 @@ function bindViewEvents(){
   const addChecklistItemBtn = document.getElementById('addChecklistItemBtn');
   if(addChecklistItemBtn) addChecklistItemBtn.addEventListener('click', ()=>{
     const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
-    const newItem = {id:uid('c'), text:'새 항목', done:false, status:'대기', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', attachments:[]};
+    const newItem = {id:uid('c'), text:'새 항목', done:false, status:'대기', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', assigneeIds:[], attachments:[]};
     p.checklist.push(newItem);
-    saveStore();
+    persist(true);
     openModal(modalChecklistDetail(newItem));
     bindModalCommon();
     bindChecklistDetailForm(newItem);
@@ -9889,6 +9969,14 @@ function bindChecklistDetailForm(item){
     document.getElementById('assigneeExternalField').style.display = typeSel.value==='external' ? 'block' : 'none';
   });
 
+  const internalPeople = getInternalPeople();
+  const initialInternalIds = item.assigneeType==='internal'
+    ? (item.assigneeIds && item.assigneeIds.length ? item.assigneeIds : (item.assigneeId ? internalPeople.filter(p=>p.name===item.assigneeId).map(p=>p.id) : []))
+    : [];
+  const internalTrigger = document.getElementById('ckInternalAssigneeTrigger');
+  let internalAssigneeAPI = null;
+  if(internalTrigger) internalAssigneeAPI = bindMultiPersonSelect(internalTrigger, internalPeople, initialInternalIds);
+
   let attachments = (item.attachments||[]).slice();
   document.getElementById('addAttachmentBtn').addEventListener('click', ()=>{
     const list = document.getElementById('attachmentList');
@@ -9917,18 +10005,26 @@ function bindChecklistDetailForm(item){
     target.done = fd.get('status')==='완료';
     const aType = fd.get('assigneeType');
     target.assigneeType = aType;
-    if(aType==='internal') target.assigneeId = fd.get('assigneeInternal')||'';
-    else if(aType==='external') target.assigneeId = fd.get('assigneeExternal')||'';
-    else target.assigneeId = '';
+    if(aType==='internal'){
+      const selectedIds = internalAssigneeAPI ? internalAssigneeAPI.getSelected() : [];
+      target.assigneeIds = selectedIds;
+      target.assigneeId = internalPeople.filter(pp=>selectedIds.includes(pp.id)).map(pp=>pp.name).join(', ');
+    } else if(aType==='external'){
+      target.assigneeIds = [];
+      target.assigneeId = fd.get('assigneeExternal')||'';
+    } else {
+      target.assigneeIds = [];
+      target.assigneeId = '';
+    }
     target.attachments = Array.from(document.querySelectorAll('.attachment-input')).map(i=>i.value.trim()).filter(Boolean);
-    closeModal(); persist(false); showToast('체크리스트 항목이 저장되었습니다.');
+    closeModal(); persist(true); showToast('체크리스트 항목이 저장되었습니다.');
   });
   const deleteBtn = document.getElementById('deleteChecklistBtn');
   if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
     if(confirm('이 항목을 삭제하시겠습니까?')){
       const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
       p.checklist = p.checklist.filter(c=>c.id!==item.id);
-      closeModal(); persist(false); showToast('항목이 삭제되었습니다.');
+      closeModal(); persist(true); showToast('항목이 삭제되었습니다.');
     }
   });
 }
