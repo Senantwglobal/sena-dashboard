@@ -66,9 +66,9 @@ a{color:inherit}
 .oi{color:var(--text)}
 .btn{font-size:12px;padding:6.5px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.55);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .15s var(--ease),opacity .15s var(--ease);font-family:inherit;font-weight:300;box-shadow:0 1px 3px rgba(15,23,42,.05);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .btn:hover{background:#fff}
-.close-x{width:26px;height:26px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.95) 0%, rgba(255,120,120,.5) 55%, rgba(220,38,38,.35) 100%);border:1px solid rgba(255,255,255,.6);color:#B91C1C;box-shadow:0 2px 6px rgba(185,28,28,.22),inset 0 1px 1px rgba(255,255,255,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:transform .12s var(--ease),box-shadow .12s var(--ease)}
-.close-x i{font-size:11px}
-.close-x:hover{transform:scale(1.08);box-shadow:0 3px 10px rgba(185,28,28,.32),inset 0 1px 1px rgba(255,255,255,.8);background:radial-gradient(circle at 35% 30%, rgba(255,255,255,1) 0%, rgba(255,120,120,.6) 55%, rgba(220,38,38,.45) 100%)}
+.close-x{width:34px;height:34px;padding:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:radial-gradient(circle at 50% 45%, rgba(255,235,235,.95) 0%, rgba(255,180,180,.55) 45%, rgba(239,68,68,.3) 100%);border:1px solid rgba(255,255,255,.8);color:#DC2626;box-shadow:0 0 0 1px rgba(255,255,255,.4),0 0 16px 4px rgba(239,68,68,.45),0 0 32px 8px rgba(239,68,68,.25),inset 0 1px 2px rgba(255,255,255,.9),inset 0 -2px 4px rgba(220,38,38,.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .12s var(--ease),box-shadow .12s var(--ease)}
+.close-x i{font-size:13px}
+.close-x:hover{transform:scale(1.08);box-shadow:0 0 0 1px rgba(255,255,255,.5),0 0 20px 6px rgba(239,68,68,.55),0 0 40px 10px rgba(239,68,68,.3),inset 0 1px 2px rgba(255,255,255,1),inset 0 -2px 4px rgba(220,38,38,.2)}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
 .btn-o{background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border-color:rgba(255,255,255,.1);box-shadow:none}
@@ -2077,41 +2077,75 @@ function viewHome(){
 
     <div class="two">
       <div class="dash-left-col" style="display:flex;flex-direction:column">
-        <div class="card" style="margin-bottom:14px;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
-          <div class="sh" style="margin-bottom:10px">
-            <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
-            <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
+        <div style="display:flex;gap:14px;margin-bottom:14px">
+          <div style="flex:1;min-width:0">
+            <div class="card" style="margin-bottom:0;height:100%;border-radius:20px;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+              <div style="margin-bottom:10px">
+                <div style="font-size:15px;font-weight:600;color:#E4432D;letter-spacing:.02em">${dayjs().format('M월').toUpperCase()}</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+                ${(() => {
+                  const dowLabels = ['일','월','화','수','목','금','토'];
+                  const weekStart = dayjs().startOf('week');
+                  const evAll = allCalendarEvents();
+                  return Array.from({length:7}).map((_,i)=>{
+                    const d = weekStart.add(i,'day');
+                    const dateStr = d.format('YYYY-MM-DD');
+                    const isToday = dateStr===dayjs().format('YYYY-MM-DD');
+                    const hasEvents = evAll.some(e=> e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
+                    return `<div class="week-day-cell" data-date="${dateStr}" style="cursor:pointer;padding:4px 0;border-radius:8px">
+                      <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${dowLabels[i]}</div>
+                      <div style="width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;font-weight:${isToday?'600':'300'};background:${isToday?'#E4432D':'transparent'};color:${isToday?'#fff':'var(--text)'}">${d.date()}</div>
+                      <div style="height:5px;margin-top:3px">${hasEvents?`<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:${isToday?'#E4432D':'var(--o)'}"></span>`:''}</div>
+                    </div>`;
+                  }).join('');
+                })()}
+              </div>
+              ${todayEvs.length>0 ? `
+              <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--bd)">
+                <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">오늘 일정</div>
+                ${todayEvs.map(e=>{
+                  const c=eventColor(e.type);
+                  const isEditable = state.data.calendar.some(x=>x.id===e.id);
+                  return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
+                    <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+                    <span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span>
+                  </div>`;
+                }).join('')}
+              </div>` : ''}
+            </div>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
-            ${(() => {
-              const dowLabels = ['일','월','화','수','목','금','토'];
-              const weekStart = dayjs().startOf('week');
-              const evAll = allCalendarEvents();
-              return Array.from({length:7}).map((_,i)=>{
-                const d = weekStart.add(i,'day');
-                const dateStr = d.format('YYYY-MM-DD');
-                const isToday = dateStr===dayjs().format('YYYY-MM-DD');
-                const hasEvents = evAll.some(e=> e.date===dateStr || (e.endDate && dateStr>=e.date && dateStr<=e.endDate));
-                return `<div class="week-day-cell" data-date="${dateStr}" style="cursor:pointer;padding:4px 0;border-radius:8px">
-                  <div style="font-size:10px;color:var(--muted);margin-bottom:5px">${dowLabels[i]}</div>
-                  <div style="width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:12px;font-weight:${isToday?'600':'300'};background:${isToday?'#EF4444':'transparent'};color:${isToday?'#fff':'var(--text)'}">${d.date()}</div>
-                  <div style="height:5px;margin-top:3px">${hasEvents?`<span style="display:inline-block;width:4px;height:4px;border-radius:50%;background:${isToday?'#EF4444':'var(--o)'}"></span>`:''}</div>
-                </div>`;
-              }).join('');
-            })()}
+
+          <div style="flex:1;min-width:0">
+            <div class="card" style="margin-bottom:0;height:100%;border-radius:20px">
+              <div class="sh" style="margin-bottom:10px">
+                <div class="st"><i class="ti ti-world oi"></i>현재 시각</div>
+                ${!isReadOnly() && (state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length<3 ? `<button class="btn" id="addTzSlotBtn" style="font-size:11px;padding:3px 9px"><i class="ti ti-plus"></i> 추가</button>` : ''}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
+                  const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
+                  return `<div class="tz-card" style="background:rgba(255,255,255,.28);border:none;border-radius:14px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+                      <i class="ti ti-world" style="font-size:15px;color:var(--muted);flex-shrink:0"></i>
+                      <select class="inp tz-select" data-idx="${idx}" style="font-size:12px;font-weight:600;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--text);width:auto;flex-shrink:1;min-width:0;-webkit-appearance:none;appearance:none" ${isReadOnly()?'disabled':''}>
+                        ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
+                      </select>
+                      <span class="tz-offset" data-tz="${tz}" style="font-size:9px;color:var(--muted);flex-shrink:0"></span>
+                      ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:0;display:flex;align-items:center;flex-shrink:0"><i class="ti ti-x"></i></button>` : ''}
+                    </div>
+                    <div style="text-align:right;flex-shrink:0">
+                      <div class="tz-time" data-tz="${tz}" style="font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.2">--:--</div>
+                      <div style="font-size:9px;color:var(--muted);display:flex;align-items:center;justify-content:flex-end;gap:4px">
+                        <span class="tz-date" data-tz="${tz}"></span>
+                        <span class="tz-daynight" data-tz="${tz}" style="display:flex;align-items:center;gap:2px;font-weight:300"></span>
+                      </div>
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
           </div>
-          ${todayEvs.length>0 ? `
-          <div style="margin-top:12px;padding-top:10px;border-top:0.5px solid var(--bd)">
-            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">오늘 일정</div>
-            ${todayEvs.map(e=>{
-              const c=eventColor(e.type);
-              const isEditable = state.data.calendar.some(x=>x.id===e.id);
-              return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="${isEditable?'cursor:pointer':''}">
-                <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-                <span style="font-size:13px">${e.title}${e.time?' · '+e.time:''}</span>
-              </div>`;
-            }).join('')}
-          </div>` : ''}
         </div>
 
         <div class="card">
@@ -2182,35 +2216,6 @@ function viewHome(){
       </div>
 
       <div>
-        <!-- 시간 위젯 -->
-        <div class="card" style="margin-bottom:14px">
-          <div class="sh" style="margin-bottom:10px">
-            <div class="st"><i class="ti ti-world oi"></i>현재 시각</div>
-            ${!isReadOnly() && (state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length<3 ? `<button class="btn" id="addTzSlotBtn" style="font-size:11px;padding:3px 9px"><i class="ti ti-plus"></i> 시간대 추가</button>` : ''}
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).length},1fr);gap:8px">
-            ${(state.data.timezoneSlots||['Asia/Seoul','America/Los_Angeles']).map((tz,idx,arr)=>{
-              const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
-              return `<div class="tz-card" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;padding:12px;position:relative">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:6px">
-                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:300;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto;flex-shrink:1;min-width:0;-webkit-appearance:none;appearance:none" ${isReadOnly()?'disabled':''}>
-                    ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
-                  </select>
-                  <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
-                    <span class="tz-offset" data-tz="${tz}" style="font-size:9px;color:var(--muted)"></span>
-                    ${arr.length>1 && !isReadOnly() ? `<button class="tz-remove-btn" data-idx="${idx}" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:0;display:flex;align-items:center"><i class="ti ti-x"></i></button>` : ''}
-                  </div>
-                </div>
-                <div class="tz-time" data-tz="${tz}" style="font-size:19px;font-weight:300;font-variant-numeric:tabular-nums;margin-bottom:8px;color:var(--text)">--:--</div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <span class="tz-date" data-tz="${tz}" style="font-size:9px;color:var(--muted)"></span>
-                  <span class="tz-daynight" data-tz="${tz}" style="font-size:9px;color:var(--muted);display:flex;align-items:center;gap:2px;font-weight:300"></span>
-                </div>
-              </div>`;
-            }).join('')}
-          </div>
-        </div>
-
         <div class="card">
           ${(()=>{
             const PER_PAGE = 6;
