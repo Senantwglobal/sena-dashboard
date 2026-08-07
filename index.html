@@ -2046,7 +2046,7 @@ function viewHome(){
   const ACT_PER_PAGE = 8;
   const actPage = state.dashActivityPage || 0;
   const oneMonthAgo = dayjs().subtract(1,'month');
-  const recentLogsAll = collectAllRecentActivity().filter(l=>dayjs(l.date).isAfter(oneMonthAgo));
+  const recentLogsAll = collectAllRecentActivity().filter(l=>dayjs(l.date).diff(oneMonthAgo) >= 0);
   const actTotalPages = Math.ceil(recentLogsAll.length / ACT_PER_PAGE);
   const recentLogs = recentLogsAll.slice(actPage*ACT_PER_PAGE, actPage*ACT_PER_PAGE+ACT_PER_PAGE);
   const allCL = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c,pid:p.id,ptitle:p.title})));
