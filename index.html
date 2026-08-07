@@ -1471,6 +1471,30 @@ function sortLogsDesc(logs){
   });
 }
 
+// 대시보드 "최근 활동" — 벤더 로그 + 프로젝트 전체 로그 + 프로젝트-거래처 로그 + 회의록을 한 타임라인으로 통합
+function collectAllRecentActivity(){
+  const items = [];
+  (state.data.vendorLogs||[]).forEach(l=>{
+    items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:l.summary||'', vendorId:l.vendorId, projectTitle:null, kind:'vendor'});
+  });
+  (state.data.projects||[]).forEach(p=>{
+    (p.logs||[]).forEach(l=>{
+      items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:'프로젝트 기록', summary:stripHtml(l.text||''), vendorId:null, projectTitle:p.title, projectId:p.id, kind:'projectLog'});
+    });
+    Object.entries(p.vendorLogs||{}).forEach(([vid, logs])=>{
+      (logs||[]).forEach(l=>{
+        items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:l.summary||'', vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'projectVendorLog'});
+      });
+    });
+    Object.entries(p.vendorMeetings||{}).forEach(([vid, notes])=>{
+      (notes||[]).forEach(n=>{
+        items.push({id:n.id, date:n.date, createdAt:n.createdAt, type:'회의록', summary:n.title||stripHtml(n.summary||n.text||''), vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'meeting'});
+      });
+    });
+  });
+  return sortLogsDesc(items);
+}
+
 function daysAgo(dateStr){
   if(!dateStr) return null;
   return dayjs().startOf('day').diff(dayjs(dateStr).startOf('day'), 'day');
@@ -2019,7 +2043,12 @@ function viewHome(){
   const IP_PER_PAGE = 5;
   const ipTotalPages = Math.ceil(incompleteProjects.length / IP_PER_PAGE);
   const ipPageItems = incompleteProjects.slice(ipPage*IP_PER_PAGE, ipPage*IP_PER_PAGE+IP_PER_PAGE);
-  const recentLogs = sortLogsDesc(state.data.vendorLogs).slice(0,8);
+  const ACT_PER_PAGE = 8;
+  const actPage = state.dashActivityPage || 0;
+  const oneMonthAgo = dayjs().subtract(1,'month');
+  const recentLogsAll = collectAllRecentActivity().filter(l=>dayjs(l.date).isAfter(oneMonthAgo));
+  const actTotalPages = Math.ceil(recentLogsAll.length / ACT_PER_PAGE);
+  const recentLogs = recentLogsAll.slice(actPage*ACT_PER_PAGE, actPage*ACT_PER_PAGE+ACT_PER_PAGE);
   const allCL = state.data.projects.flatMap(p=>p.checklist.map(c=>({...c,pid:p.id,ptitle:p.title})));
   const inProgProjects = state.data.projects.filter(p=> progressOf(p) > 0 && progressOf(p) < 100).length;
   const undoneItems = allCL.filter(c=>!c.done).length;
@@ -2165,24 +2194,28 @@ function viewHome(){
         <div class="card">
           <div class="sh">
             <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
-            <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:3px"></span>실시간</span>
+            <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#639922;margin-right:3px"></span>최근 1개월</span>
           </div>
           ${recentLogs.length===0 ? '<div class="empty-state">기록된 활동이 없습니다.</div>' :
             recentLogs.map(l=>{
-              const v = state.data.vendors.find(x=>x.id===l.vendorId);
+              const v = l.vendorId ? state.data.vendors.find(x=>x.id===l.vendorId) : null;
               const tb = logTypeBadge(l.type);
-              return `<div class="dash-row vendor-link" data-vid="${l.vendorId}" style="cursor:pointer">
-                ${av(v?v.name:'?', 26)}
+              const name = v ? v.name : (l.projectTitle || '기록');
+              const clickAttrs = v ? `class="dash-row vendor-link" data-vid="${l.vendorId}" style="cursor:pointer"` : l.projectId ? `class="dash-row proj-link" data-pid="${l.projectId}" style="cursor:pointer"` : `class="dash-row"`;
+              return `<div ${clickAttrs}>
+                ${av(name, 26)}
                 <div style="flex:1;min-width:0">
                   <div style="font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                    <span style="font-weight:600">${v?v.name:''}</span>
+                    <span style="font-weight:600">${name}</span>
                     <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:300">${l.type}</span>
+                    ${v && l.projectTitle ? `<span style="font-size:9.5px;color:var(--muted)"><i class="ti ti-checklist" style="font-size:9px"></i> ${l.projectTitle}</span>` : ''}
                   </div>
                   <div style="font-size:12px;color:var(--text);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.summary}</div>
                   <div style="font-size:11px;color:var(--muted);margin-top:1px">${fmtDate(l.date)}</div>
                 </div>
               </div>`;
             }).join('')}
+          ${actTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(actPage, actTotalPages, 'dash-activity-page-btn')}</div>`:''}
         </div>
 
       </div>
@@ -8512,6 +8545,12 @@ function bindViewEvents(){
   document.querySelectorAll('.home-incomplete-page-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       state.homeIncompleteProjectPage = parseInt(btn.dataset.page);
+      render();
+    });
+  });
+  document.querySelectorAll('.dash-activity-page-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.dashActivityPage = parseInt(btn.dataset.page);
       render();
     });
   });
