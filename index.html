@@ -204,6 +204,7 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .tbl tr.clickable:hover td{background:rgba(255,255,255,.75)}
 .pill-bar{display:inline-flex;gap:2px;flex-wrap:wrap;align-items:center;background:rgba(255,255,255,.4);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.6);border-radius:999px;padding:5px 8px;max-width:100%}
 .pill-bar .btn{border-radius:999px;background:transparent;background-color:transparent;border-color:transparent;box-shadow:none;-webkit-appearance:none;appearance:none}
+.tz-select{background:transparent!important;background-color:transparent!important;border:none!important;box-shadow:none!important}
 .pill-bar .btn:hover{background:rgba(255,255,255,.5)}
 .pill-bar .btn-o, .pill-bar .btn-o:hover{background:rgba(15,23,42,.82);border-color:rgba(255,255,255,.1);color:#fff}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
@@ -2620,7 +2621,7 @@ function enhanceSelect(sel){
   trigger.type = 'button';
   const extraStyle = sel.getAttribute('style') || '';
   const hasInpClass = sel.classList.contains('inp');
-  trigger.className = hasInpClass ? 'inp cdd-trigger select-shell-trigger' : 'cdd-trigger select-shell-trigger';
+  trigger.className = (hasInpClass ? 'inp cdd-trigger select-shell-trigger ' : 'cdd-trigger select-shell-trigger ') + sel.className;
   const baseStyle = hasInpClass ? '' : 'width:auto;flex-shrink:0;';
   trigger.setAttribute('style', baseStyle + extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;-webkit-appearance:none;appearance:none');
   const labelSpan = document.createElement('span');
