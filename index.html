@@ -72,7 +72,7 @@ a{color:inherit}
 .pill-check{appearance:none;-webkit-appearance:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--bd);background:#fff;cursor:pointer;flex-shrink:0;position:relative;transition:all .15s var(--ease)}
 .pill-check:checked{background:#F97316;border-color:#F97316}
 .pill-check:checked::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700}
-input[type="color"]{-webkit-appearance:none;appearance:none;border-radius:50%!important;border:none!important;padding:0!important;cursor:pointer;box-shadow:0 0 0 3px #fff,0 0 14px 3px color-mix(in srgb, currentColor 55%, transparent);background:none}
+input[type="color"]{-webkit-appearance:none;appearance:none;width:18px!important;height:18px!important;border-radius:50%!important;border:none!important;padding:0!important;cursor:pointer;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--bd);background:none}
 input[type="color"]::-webkit-color-swatch-wrapper{padding:0;border-radius:50%}
 input[type="color"]::-webkit-color-swatch{border:none;border-radius:50%}
 input[type="color"]::-moz-color-swatch{border:none;border-radius:50%}
@@ -2178,6 +2178,9 @@ function viewHome(){
             }).join('')}
         </div>
 
+      </div>
+
+      <div>
         ${pendingActionsAll.length>0 || paFilter!=='전체' ? `<div class="card">
           <div class="sh"><div class="st"><i class="ti ti-checkbox oi"></i>미완료 다음 액션</div><span style="font-size:10px;color:var(--muted)">${pendingActionsAll.length}건</span></div>
           <div style="display:flex;gap:5px;margin-bottom:10px">
@@ -2211,9 +2214,6 @@ function viewHome(){
           ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
         </div>` : ''}
 
-      </div>
-
-      <div>
         <div class="card">
           ${(()=>{
             const PER_PAGE = 6;
@@ -2247,7 +2247,9 @@ function viewHome(){
           })()}
         </div>
 
-        ${incompleteProjects.length>0 ? `<div class="card">
+        <div style="display:flex;gap:14px">
+          <div style="flex:1;min-width:0">
+        ${incompleteProjects.length>0 ? `<div class="card" style="height:100%">
           <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>미완료 프로젝트</div><span style="font-size:11px;color:var(--muted)">${incompleteProjects.length}건</span></div>
           ${ipPageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
@@ -2255,9 +2257,11 @@ function viewHome(){
           </div>`).join('')}
           ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
         </div>` : ''}
+          </div>
 
+          <div style="flex:1;min-width:0">
         <!-- 대표님 승인 대기 (항상 표시) -->
-        <div class="card">
+        <div class="card" style="height:100%">
           <div class="sh">
             <div class="st"><i class="ti ti-user-check" style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--muted)'}"></i>
               <span style="color:${(state.data.approvalItems||[]).filter(a=>!a.approved).length>0?'#ef4444':'var(--text)'}">대표님 승인 대기</span>
@@ -2280,6 +2284,8 @@ function viewHome(){
                   ${!isReadOnly()?`<button class="approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="width:26px;height:26px;border-radius:50%;border:none;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;padding:0"><i class="ti ti-check"></i></button>`:''}
                 </div>`;
               }).join('')}
+        </div>
+          </div>
         </div>
 
         <!-- 이번달 연차 현황 -->
