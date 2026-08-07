@@ -57,7 +57,7 @@ a{color:inherit}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0}
 .nav{padding:14px 22px;position:sticky;top:48px;z-index:49;background:transparent;display:flex;justify-content:center}
 .nb{padding:6px 14px;font-size:12px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:999px;white-space:nowrap;display:flex;align-items:center;gap:4px;font-weight:300;transition:color .18s var(--ease),background .18s var(--ease)}
-.nb.active{color:#fff;background:rgba(7,113,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:300;box-shadow:none}
+.nb.active{color:#fff;background:rgba(7,113,255,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-weight:300;box-shadow:none}
 .nb:hover:not(.active){color:var(--text);background:rgba(255,255,255,.5)}
 .cnt{padding:24px;max-width:1500px;margin:0 auto}
 .card{background:linear-gradient(160deg, rgba(255,255,255,.6) 0%, var(--card) 40%);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:none;border-radius:16px;padding:17px;margin-bottom:14px;box-shadow:0 1px 2px rgba(15,23,42,.02),0 6px 14px -10px rgba(15,23,42,.08),inset 0 1px 1px rgba(255,255,255,.6)}
@@ -82,7 +82,7 @@ input[type="color"]::-webkit-color-swatch{border:none;border-radius:50%}
 input[type="color"]::-moz-color-swatch{border:none;border-radius:50%}
 .btn:active{opacity:.7}
 .btn:focus-visible{outline:2px solid var(--ob);outline-offset:1px}
-.btn-o{background:rgba(7,113,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border-color:rgba(255,255,255,.15);box-shadow:none}
+.btn-o{background:rgba(7,113,255,.6);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border-color:rgba(255,255,255,.15);box-shadow:none}
 .btn-o:hover{background:rgba(0,0,0,.9);color:#fff}
 .btn-red{color:#C0392B;background:#FDEAEA}
 .btn-red:hover{background:#FBDADA}
@@ -225,12 +225,12 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .pager-btn{border:none;background:transparent;font-size:11px;padding:5px 10px;border-radius:999px;cursor:pointer;color:var(--text);min-width:26px;text-align:center;font-family:inherit;transition:background .15s var(--ease)}
 .pager-btn:hover:not(:disabled):not(.pager-active){background:rgba(255,255,255,.5)}
 .pager-btn.pager-prev{background:rgba(255,255,255,.65);font-weight:300}
-.pager-btn.pager-next{background:rgba(7,113,255,.85);color:#fff;font-weight:300}
+.pager-btn.pager-next{background:rgba(7,113,255,.6);color:#fff;font-weight:300}
 .pager-btn.pager-active{background:rgba(255,255,255,.9);font-weight:600}
 .pager-btn:disabled{opacity:.35;cursor:not-allowed}
 .pager-ellipsis{font-size:11px;color:var(--muted);padding:0 3px}
 .pill-bar .btn:hover{background:rgba(255,255,255,.5)}
-.pill-bar .btn-o, .pill-bar .btn-o:hover{background:rgba(7,113,255,.85);border-color:rgba(255,255,255,.15);color:#fff}
+.pill-bar .btn-o, .pill-bar .btn-o:hover{background:rgba(7,113,255,.6);border-color:rgba(255,255,255,.15);color:#fff}
 .prog-row{display:flex;align-items:center;gap:10px;padding:7px 8px;margin:0 -8px;border-radius:9px;border-bottom:0.5px solid var(--bd);font-size:12px;transition:background .15s var(--ease)}
 .prog-row:last-child{border-bottom:none}
 .prog-row:hover{background:var(--sf)}
@@ -1553,7 +1553,16 @@ function latestMeetingNote(ev){
 function eventColor(type){
   // 사용자 커스텀 이벤트 타입 먼저 확인
   const custom = (state.data.calendarEventTypes||[]).find(t=>t.name===type);
-  if(custom) return {bg:custom.color+'22', text:custom.color, dot:custom.color};
+  if(custom){
+    const hex = (custom.color||'#888780').replace('#','');
+    const r = parseInt(hex.substr(0,2),16)||0, g = parseInt(hex.substr(2,2),16)||0, b = parseInt(hex.substr(4,2),16)||0;
+    const luminance = (0.299*r + 0.587*g + 0.114*b)/255;
+    if(luminance > 0.85){
+      // 너무 밝은 색(흰색 등)을 선택하면 텍스트가 안 보이므로, 대비되는 진한 회색 텍스트 + 연회색 배경으로 대체
+      return {bg:'#EEF0F3', text:'#4B5563', dot:custom.color};
+    }
+    return {bg:custom.color+'22', text:custom.color, dot:custom.color};
+  }
   // 기본 타입
   const defaults = {
     '미팅':     {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
@@ -1766,6 +1775,11 @@ function avatarColor(name){
   const colors = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D'];
   let h = 0; for(let c of (name||'?')) h = (h*31 + c.charCodeAt(0)) & 0xFFFFFF;
   return colors[Math.abs(h) % colors.length];
+}
+function isColorTooLight(hex){
+  const h = (hex||'#888780').replace('#','');
+  const r = parseInt(h.substr(0,2),16)||0, g = parseInt(h.substr(2,2),16)||0, b = parseInt(h.substr(4,2),16)||0;
+  return (0.299*r + 0.587*g + 0.114*b)/255 > 0.85;
 }
 function typeColorFor(t){
   const custom = state.data.companyTypeColors?.[t];
@@ -7687,7 +7701,7 @@ function bindCompanyTypesManager(){
       const colorHex = row.querySelector('.ctype-color').value;
       const oldName = row.dataset.oldName || '';
       newTypes.push(newName);
-      newColors[newName] = {bg: colorHex+'1a', color: colorHex};
+      newColors[newName] = isColorTooLight(colorHex) ? {bg:'#EEF0F3', color:'#4B5563'} : {bg: colorHex+'1a', color: colorHex};
       if(oldName && oldName !== newName) renameMap[oldName] = newName;
     });
 
