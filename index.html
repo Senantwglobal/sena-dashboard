@@ -1860,8 +1860,11 @@ function render(){
         <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
       </div>
       <div class="uinfo">
+        <button id="globalSearchBtn" title="검색" style="display:flex;align-items:center;gap:8px;background:rgba(28,28,32,.92);border:none;border-radius:999px;padding:0 8px 0 16px;height:34px;width:180px;cursor:pointer;color:rgba(255,255,255,.55);font-size:12.5px;text-align:left;font-family:inherit">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Search...</span>
+          <span style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="ti ti-search" style="font-size:12px;color:#fff"></i></span>
+        </button>
         <div style="display:flex;align-items:center;gap:4px;background:rgba(232,242,254,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:999px;padding:4px;margin-right:2px">
-          <button id="globalSearchBtn" title="검색" style="background:#fff;border:none;cursor:pointer;color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(15,23,42,.08)"><i class="ti ti-search" style="font-size:14px"></i></button>
           ${!isReadOnly()?`<button id="trashBinBtn" title="휴지통" style="background:#fff;border:none;cursor:pointer;color:var(--muted);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:0 1px 3px rgba(15,23,42,.08)">
             <i class="ti ti-trash" style="font-size:14px"></i>
             ${(state.data.deletedLogs||[]).length>0?`<span style="position:absolute;top:2px;right:2px;width:7px;height:7px;border-radius:50%;background:#DC2626;border:1.5px solid #fff"></span>`:''}
