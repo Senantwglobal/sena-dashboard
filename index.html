@@ -4760,7 +4760,7 @@ function viewProjectDetail(){
           const ckList = showAllCk ? sortedChecklist : sortedChecklist.slice(0, CK_PAGE);
           const rowsHtml = ckList.map(c=>{
             const sc=checklistStatusColor(c.status);
-            const assignee=checklistAssigneeName(c);
+            const assigneeNames = checklistAssigneeNames(c);
             return `<div class="checklist-card ck-item" data-cid="${c.id}" style="${c.done?'background:rgba(15,23,42,.06)':''}">
               <input type="checkbox" class="checklist-toggle ck-cb pill-check" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
               <div class="ck-body">
@@ -4769,7 +4769,7 @@ function viewProjectDetail(){
                   ${c.priority?`<span class="badge ${priorityBadge(c.priority)}">${c.priority}</span>`:''}
                   ${c.status?`<span class="badge" style="background:${sc.bg};color:${sc.text}">${c.status}</span>`:''}
                   ${c.dueDate?`<span class="badge bgr"><i class="ti ti-calendar" style="font-size:10px"></i> ${fmtDate(c.dueDate)}</span>`:''}
-                  ${assignee?`<span style="display:flex;align-items:center">${av(assignee,20)}</span>`:''}
+                  ${assigneeNames.length>0?`<span style="display:flex;align-items:center">${assigneeNames.map((n,i)=>`<span style="display:flex;margin-left:${i>0?'-6px':'0'};position:relative;z-index:${assigneeNames.length-i}" title="${n}">${av(n,20)}</span>`).join('')}</span>`:''}
                 </div>
               </div>
               ${!isReadOnly()?`<i class="ti ti-trash checklist-delete" data-cid="${c.id}" style="font-size:14px;color:var(--muted);cursor:pointer;flex-shrink:0"></i>`:''}
@@ -5017,6 +5017,19 @@ function viewProjectDetail(){
   `;
 }
 
+function checklistAssigneeNames(c){
+  if(c.assigneeType==='internal'){
+    if(c.assigneeIds && c.assigneeIds.length){
+      const internalPeople = getInternalPeople();
+      return internalPeople.filter(p=>c.assigneeIds.includes(p.id)).map(p=>p.name);
+    }
+    return c.assigneeId ? [c.assigneeId] : [];
+  }
+  if(!c.assigneeId) return [];
+  const people=allPeopleFlat();
+  const person=people.find(p=>p.id===c.assigneeId);
+  return person?[`${person.companyName} · ${person.name}`]:[];
+}
 function checklistAssigneeName(c){
   if(c.assigneeType==='internal'){
     if(c.assigneeIds && c.assigneeIds.length){
