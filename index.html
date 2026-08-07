@@ -111,7 +111,7 @@ select.inp{cursor:pointer}
 .ti-fallback .ki i[class*="ti-"]{font-family:initial;font-style:normal}
 .kn{font-size:27px;font-weight:300;margin-top:10px;margin-bottom:2px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;position:relative;z-index:1}
 .kl{font-size:11px;color:var(--muted);font-weight:300}
-.pgb{height:5px;border-radius:3px;background:var(--sf);overflow:hidden;margin-top:4px}
+.pgb{height:5px;border-radius:3px;background:rgba(15,23,42,.1);overflow:hidden;margin-top:4px}
 .pgf{height:100%;border-radius:3px;transition:width .3s var(--ease)}
 .dlc{font-size:10px;font-weight:300;padding:2.5px 8px;border-radius:6px;white-space:nowrap}
 .dl-ok{background:#E4F7F1;color:#1C9873}
@@ -4430,6 +4430,7 @@ function viewProjects(){
 
   function renderCard(p, statusColor){
     const isDone = (p.status||'진행중')==='완료';
+    const isHold = (p.status||'진행중')==='보류';
     const dday=p.deadline?dayjs(p.deadline).diff(dayjs().startOf('day'),'day'):null;
     const prog=progressOf(p);
     const ddayLabel = isDone
@@ -4441,7 +4442,8 @@ function viewProjects(){
     const logCount = vendorIds.reduce((sum,vid)=>sum + ((p.vendorLogs||{})[vid]||[]).length, 0);
     const doneCk = (p.checklist||[]).filter(c=>c.done).length;
     const totalCk = (p.checklist||[]).length;
-    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${isDone?'background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)':''}">
+    const cardBg = (isDone||isHold) ? 'background:rgba(255,255,255,.25);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)' : '';
+    return `<div class="card proj-card" draggable="${!isReadOnly()}" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${cardBg}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px">
         <div style="font-size:12.5px;font-weight:600;line-height:1.3;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${p.title}</div>
         <span style="font-size:9px;font-weight:600;padding:2px 9px;border-radius:20px;background:${statusColor}1f;color:${statusColor};flex-shrink:0">${p.status||'진행중'}</span>
@@ -4451,6 +4453,10 @@ function viewProjects(){
         <span style="font-size:9.5px;color:var(--muted);display:inline-flex;align-items:center;gap:2px"><i class="ti ti-user" style="font-size:9.5px"></i>${p.owner}</span>
         <div class="proj-card-menu" data-pid="${p.id}" onclick="event.stopPropagation()" style="cursor:pointer;color:var(--muted);flex-shrink:0;padding:2px;line-height:1;margin-left:auto"><i class="ti ti-dots"></i></div>
       </div>
+      ${isDone ? `
+      <div style="display:flex;align-items:center;justify-content:center;padding:6px 0 8px;border-top:0.5px solid var(--bd);margin-bottom:8px">
+        <div style="font-size:11px;color:var(--muted)">${ddayLabel}</div>
+      </div>` : `
       <div class="pgb" style="margin-bottom:10px"><div class="pgf" style="width:${prog}%;background:${catColor}"></div></div>
       <div style="display:flex;align-items:center;padding-top:8px;border-top:0.5px solid var(--bd);margin-bottom:8px">
         <div style="flex:1;text-align:center">
@@ -4467,7 +4473,7 @@ function viewProjects(){
           <div style="font-size:12px;font-weight:600;color:var(--text)">${ddayLabel}</div>
           <div style="font-size:8px;color:var(--muted);margin-top:1px">마감</div>
         </div>
-      </div>
+      </div>`}
       <div style="display:flex;align-items:center;justify-content:space-between">
         ${linkedVendors.length>0 ? `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--sf);border-radius:999px;padding:3px 10px 3px 3px;height:24px;box-sizing:border-box">
           <div style="display:flex;align-items:center">
@@ -4543,14 +4549,14 @@ function viewProjects(){
         const colProjects = projects.filter(p=>(p.status||'진행중')===col.key);
         const COL_MAX = 10;
         const visibleProjects = colProjects.slice(0, COL_MAX);
-        return `<div style="min-width:0">
+        return `<div style="min-width:0" class="proj-col-dropzone" data-status="${col.key}">
           <div style="margin-bottom:14px">
             <div style="display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:20px;background:${col.color}1f">
               <span style="font-size:12px;font-weight:600;color:${col.color}">${col.label}</span>
               <span style="font-size:12px;font-weight:600;color:${col.color};opacity:.65">${colProjects.length}</span>
             </div>
           </div>
-          <div>
+          <div class="proj-col-list" data-status="${col.key}">
             ${colProjects.length===0
               ? `<div style="font-size:11px;color:var(--muted);text-align:center;padding:20px 0;border:1.5px dashed var(--bd);border-radius:10px">항목 없음</div>`
               : visibleProjects.map(p=>renderCard(p, col.color)).join('')}
@@ -8023,6 +8029,59 @@ function bindViewEvents(){
     });
   });
 
+  // 프로젝트 카드 드래그 앤 드롭 (상태 변경 + 순서 변경)
+  if(!isReadOnly()){
+    let dragPid = null;
+    document.querySelectorAll('.proj-card[draggable="true"]').forEach(card=>{
+      card.addEventListener('dragstart', e=>{
+        dragPid = card.dataset.pid;
+        card.style.opacity = '.4';
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      card.addEventListener('dragend', ()=>{
+        card.style.opacity = '';
+        document.querySelectorAll('.proj-card').forEach(c=>c.style.borderTop='');
+      });
+      card.addEventListener('dragover', e=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        card.style.borderTop = '2px solid var(--o)';
+      });
+      card.addEventListener('dragleave', ()=>{ card.style.borderTop=''; });
+      card.addEventListener('drop', e=>{
+        e.preventDefault();
+        card.style.borderTop = '';
+        if(!dragPid || dragPid===card.dataset.pid) return;
+        const targetPid = card.dataset.pid;
+        const targetStatus = card.closest('.proj-col-list').dataset.status;
+        const list = state.data.projects;
+        const dragIdx = list.findIndex(p=>p.id===dragPid);
+        if(dragIdx<0) return;
+        const [dragged] = list.splice(dragIdx,1);
+        dragged.status = targetStatus;
+        const targetIdx = list.findIndex(p=>p.id===targetPid);
+        list.splice(targetIdx<0?list.length:targetIdx, 0, dragged);
+        persist(true);
+      });
+    });
+    document.querySelectorAll('.proj-col-list').forEach(zone=>{
+      zone.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; });
+      zone.addEventListener('drop', e=>{
+        e.preventDefault();
+        if(e.target !== zone) return; // 카드 위 드롭은 카드 핸들러가 처리
+        if(!dragPid) return;
+        const targetStatus = zone.dataset.status;
+        const list = state.data.projects;
+        const dragIdx = list.findIndex(p=>p.id===dragPid);
+        if(dragIdx<0) return;
+        const [dragged] = list.splice(dragIdx,1);
+        dragged.status = targetStatus;
+        list.push(dragged);
+        persist(true);
+      });
+    });
+  }
+
   // 벤더 검색
   const vSearch = document.getElementById('vendorSearchInput');
   if(vSearch){
@@ -8734,6 +8793,10 @@ function bindViewEvents(){
       const item = p.checklist.find(c=>c.id===el.dataset.cid);
       item.done = el.checked;
       item.status = el.checked ? '완료' : (item.status==='완료' ? '진행중' : item.status);
+      if(el.checked){
+        if(!p.logs) p.logs = [];
+        p.logs.push({id:uid('plog'), date:dayjs().format('YYYY-MM-DD'), createdAt:Date.now(), text:`체크리스트 항목 완료: ${item.text}`});
+      }
       persist(true);
     });
   });
@@ -8759,6 +8822,8 @@ function bindViewEvents(){
     const p = state.data.projects.find(x=>x.id===state.selectedProjectId);
     const newItem = {id:uid('c'), text:'새 항목', done:false, status:'대기', priority:'보통', startDate:'', dueDate:'', requester:'', assigneeType:'', assigneeId:'', assigneeIds:[], attachments:[]};
     p.checklist.push(newItem);
+    if(!p.logs) p.logs = [];
+    p.logs.push({id:uid('plog'), date:dayjs().format('YYYY-MM-DD'), createdAt:Date.now(), text:`체크리스트 항목 추가: ${newItem.text}`});
     persist(true);
     openModal(modalChecklistDetail(newItem));
     bindModalCommon();
