@@ -4383,11 +4383,12 @@ function viewProjects(){
         </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="display:flex;align-items:center;height:18px">
-          ${linkedVendors.slice(0,3).map((v,i)=>`<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:${i>0?'-6px':'0'};border:2px solid #fff;border-radius:50%;position:relative;z-index:${3-i};flex-shrink:0;overflow:hidden;box-sizing:content-box">${av(v.name,18)}</span>`).join('')}
-          ${linkedVendors.length>3?`<span style="display:flex;align-items:center;justify-content:center;margin-left:-6px;width:18px;height:18px;border-radius:50%;background:var(--sf);border:2px solid #fff;font-size:8px;color:var(--muted);font-weight:600;flex-shrink:0">+${linkedVendors.length-3}</span>`:''}
-          ${linkedVendors.length===0?`<span style="font-size:9.5px;color:var(--muted)">거래처 없음</span>`:''}
-        </div>
+        ${linkedVendors.length>0 ? `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--sf);border-radius:999px;padding:3px 10px 3px 3px;height:24px;box-sizing:border-box">
+          <div style="display:flex;align-items:center">
+            ${linkedVendors.slice(0,3).map((v,i)=>`<span style="display:flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:${i>0?'-7px':'0'};border:2px solid #fff;border-radius:50%;position:relative;z-index:${3-i};flex-shrink:0;overflow:hidden;box-sizing:content-box">${av(v.name,18)}</span>`).join('')}
+          </div>
+          <span style="font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap">${linkedVendors.length}개 거래처</span>
+        </div>` : `<span style="font-size:9.5px;color:var(--muted)">거래처 없음</span>`}
         <div style="display:flex;align-items:center;gap:7px;color:var(--muted);font-size:9.5px">
           ${logCount>0?`<span style="display:flex;align-items:center;gap:2px"><i class="ti ti-message-circle" style="font-size:10.5px"></i>${logCount}</span>`:''}
         </div>
