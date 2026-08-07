@@ -190,7 +190,7 @@ select.inp{cursor:pointer}
 .brand-tab-btn:hover{color:#111114!important}
 .brand-del-btn:hover{color:#DC2626!important}
 .brand-edit-btn:hover{color:#111114!important}
-.dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease)}
+.dash-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--bd);font-size:13px;transition:background .15s var(--ease);min-width:0}
 .dash-row:last-child{border-bottom:none}
 .feed-av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:300;color:#fff;flex-shrink:0;font-size:11px}
 .cat-sidebar{width:180px;flex-shrink:0}
@@ -1475,20 +1475,20 @@ function sortLogsDesc(logs){
 function collectAllRecentActivity(){
   const items = [];
   (state.data.vendorLogs||[]).forEach(l=>{
-    items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:l.summary||'', vendorId:l.vendorId, projectTitle:null, kind:'vendor'});
+    items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:(l.summary||'').slice(0,120), vendorId:l.vendorId, projectTitle:null, kind:'vendor'});
   });
   (state.data.projects||[]).forEach(p=>{
     (p.logs||[]).forEach(l=>{
-      items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:'프로젝트 기록', summary:stripHtml(l.text||''), vendorId:null, projectTitle:p.title, projectId:p.id, kind:'projectLog'});
+      items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:'프로젝트 기록', summary:stripHtml(l.text||'').slice(0,120), vendorId:null, projectTitle:p.title, projectId:p.id, kind:'projectLog'});
     });
     Object.entries(p.vendorLogs||{}).forEach(([vid, logs])=>{
       (logs||[]).forEach(l=>{
-        items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:l.summary||'', vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'projectVendorLog'});
+        items.push({id:l.id, date:l.date, createdAt:l.createdAt, type:l.type||'기록', summary:(l.summary||'').slice(0,120), vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'projectVendorLog'});
       });
     });
     Object.entries(p.vendorMeetings||{}).forEach(([vid, notes])=>{
       (notes||[]).forEach(n=>{
-        items.push({id:n.id, date:n.date, createdAt:n.createdAt, type:'회의록', summary:n.title||stripHtml(n.summary||n.text||''), vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'meeting'});
+        items.push({id:n.id, date:n.date, createdAt:n.createdAt, type:'회의록', summary:(n.title||stripHtml(n.summary||n.text||'')).slice(0,120), vendorId:vid, projectTitle:p.title, projectId:p.id, kind:'meeting'});
       });
     });
   });
@@ -2191,7 +2191,7 @@ function viewHome(){
           </div>
         </div>
 
-        <div class="card">
+        <div class="card" style="overflow:hidden">
           <div class="sh">
             <div class="st"><i class="ti ti-activity oi"></i>최근 활동</div>
             <span style="font-size:11px;color:var(--muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#05c846;margin-right:3px"></span>최근 1개월</span>
