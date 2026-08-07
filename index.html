@@ -223,9 +223,11 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .tz-select{background:transparent!important;background-color:transparent!important;border:none!important;box-shadow:none!important}
 .pager-bar{display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,.3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:4px;flex-wrap:nowrap}
 .pager-btn{border:none;background:transparent;font-size:11px;padding:5px 10px;border-radius:999px;cursor:pointer;color:var(--text);min-width:26px;text-align:center;font-family:inherit;transition:background .15s var(--ease)}
-.pager-btn:hover:not(:disabled):not(.pager-active){background:rgba(255,255,255,.5)}
+.pager-btn:hover:not(:disabled):not(.pager-active):not(.pager-prev):not(.pager-next){background:rgba(255,255,255,.5)}
 .pager-btn.pager-prev{background:rgba(255,255,255,.65);font-weight:300}
+.pager-btn.pager-prev:hover:not(:disabled){background:rgba(255,255,255,.9)}
 .pager-btn.pager-next{background:rgba(15,23,42,.8);color:#fff;font-weight:300}
+.pager-btn.pager-next:hover:not(:disabled){background:rgba(15,23,42,.95)}
 .pager-btn.pager-active{background:rgba(255,255,255,.9);font-weight:600}
 .pager-btn:disabled{opacity:.35;cursor:not-allowed}
 .pager-ellipsis{font-size:11px;color:var(--muted);padding:0 3px}
