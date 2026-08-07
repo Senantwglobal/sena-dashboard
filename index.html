@@ -2078,10 +2078,11 @@ function viewHome(){
     pendingActionsAll = pendingActionsAll.filter(l=>l.nextStepDue && l.nextStepDue<=monthEndStr);
   }
   pendingActionsAll = pendingActionsAll.sort((a,b)=>{
-    const FAR = 8640000000000000;
-    const ad = a.nextStepDue ? dayjs(a.nextStepDue).valueOf() : FAR;
-    const bd = b.nextStepDue ? dayjs(b.nextStepDue).valueOf() : FAR;
-    return ad - bd;
+    const ad = a.nextStepDue || '9999-12-31';
+    const bd = b.nextStepDue || '9999-12-31';
+    if(ad<bd) return -1;
+    if(ad>bd) return 1;
+    return 0;
   });
   const PA_PER_PAGE = 8;
   const paPage = state.dashActionPage || 0;
@@ -2101,10 +2102,11 @@ function viewHome(){
     pendingChecklistAll = pendingChecklistAll.filter(c=>c.dueDate && c.dueDate<=monthEndStr);
   }
   pendingChecklistAll = pendingChecklistAll.sort((a,b)=>{
-    const FAR = 8640000000000000;
-    const ad = a.dueDate ? dayjs(a.dueDate).valueOf() : FAR;
-    const bd = b.dueDate ? dayjs(b.dueDate).valueOf() : FAR;
-    return ad - bd;
+    const ad = a.dueDate || '9999-12-31';
+    const bd = b.dueDate || '9999-12-31';
+    if(ad<bd) return -1;
+    if(ad>bd) return 1;
+    return 0;
   });
   const PC_PER_PAGE = 8;
   const pcPage = state.dashChecklistActionPage || 0;
