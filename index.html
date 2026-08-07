@@ -98,7 +98,7 @@ input[type="color"]::-moz-color-swatch{border:none;border-radius:50%}
 textarea.inp{resize:vertical;min-height:64px;line-height:1.5}
 select.inp{cursor:pointer}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.dash-left-col > .card:last-child{flex:1;display:flex;flex-direction:column}
+.dash-left-col > .card:last-child{margin-bottom:0}
 .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .krow{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 .kpi{background:linear-gradient(160deg, rgba(255,255,255,.6) 0%, var(--card) 40%);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-radius:16px;border:none;padding:16px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.02),0 5px 12px -8px rgba(15,23,42,.08),inset 0 1px 1px rgba(255,255,255,.6);transition:box-shadow .2s var(--ease)}
@@ -2215,7 +2215,7 @@ function viewHome(){
                 </div>
               </div>`;
             }).join('')}
-          ${actTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px auto;margin-top:auto;padding-top:10px">${pagerHTML(actPage, actTotalPages, 'dash-activity-page-btn')}</div>`:''}
+          ${actTotalPages>1?`<div style="width:fit-content;margin:14px auto 4px">${pagerHTML(actPage, actTotalPages, 'dash-activity-page-btn')}</div>`:''}
         </div>
 
       </div>
