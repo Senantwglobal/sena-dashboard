@@ -2211,15 +2211,6 @@ function viewHome(){
           ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
         </div>` : ''}
 
-        ${incompleteProjects.length>0 ? `<div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>미완료 프로젝트</div><span style="font-size:11px;color:var(--muted)">${incompleteProjects.length}건</span></div>
-          ${ipPageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
-            <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
-            <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
-          </div>`).join('')}
-          ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
-        </div>` : ''}
-
       </div>
 
       <div>
@@ -2256,26 +2247,14 @@ function viewHome(){
           })()}
         </div>
 
-        <div class="card">
-          <div class="sh"><div class="st"><i class="ti ti-building-store oi"></i>Company 현황</div></div>
-          ${state.data.vendors.slice(0,6).map(v=>{
-            const latest=latestLogForVendor(v.id);
-            const pc=priorityBadge(v.priority);
-            const brandNames = (v.brands||[]).map(b=>b.name).filter(Boolean);
-            return `<div class="dash-row vendor-link" data-vid="${v.id}" style="cursor:pointer">
-              ${av(v.name,26)}
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                  <span style="font-weight:600">${v.name}</span>
-                  <span class="badge ${pc}">${v.priority}</span>
-                </div>
-                ${brandNames.length>0
-                  ? `<div style="font-size:10px;color:var(--o);font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><i class="ti ti-brand-abstract" style="font-size:9px"></i> ${brandNames.join(' · ')}</div>`
-                  : `<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest?latest.summary.slice(0,35)+'…':'기록 없음'}</div>`}
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
+        ${incompleteProjects.length>0 ? `<div class="card">
+          <div class="sh"><div class="st"><i class="ti ti-flag oi"></i>미완료 프로젝트</div><span style="font-size:11px;color:var(--muted)">${incompleteProjects.length}건</span></div>
+          ${ipPageItems.map(p=>`<div class="dash-row proj-link" data-pid="${p.id}" style="cursor:pointer">
+            <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
+            <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
+          </div>`).join('')}
+          ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
+        </div>` : ''}
 
         <!-- 대표님 승인 대기 (항상 표시) -->
         <div class="card">
@@ -2345,7 +2324,7 @@ function viewHome(){
         <div class="card">
           <div class="sh"><div class="st"><i class="ti ti-note oi"></i>메모</div>
           <button class="btn" id="saveMemoBtn" style="font-size:11px;padding:4px 10px">저장</button></div>
-          <textarea id="dashMemo" class="inp" rows="4" placeholder="자유롭게 메모하세요..." style="margin:0;border:none;background:var(--sf);border-radius:0;resize:none;padding:12px" oninput="state.data.memo=this.value">${state.data.memo||''}</textarea>
+          <textarea id="dashMemo" class="inp" rows="4" placeholder="자유롭게 메모하세요..." style="margin:0;border:none;background:var(--sf);border-radius:12px;resize:none;padding:12px" oninput="state.data.memo=this.value">${state.data.memo||''}</textarea>
         </div>
 
       </div>
