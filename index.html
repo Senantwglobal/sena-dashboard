@@ -2211,7 +2211,7 @@ function viewHome(){
               <i class="ti ti-chevron-right" style="font-size:12px;color:var(--muted);flex-shrink:0"></i>
             </div>`;
           }).join('')}
-          ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
+          ${paTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(paPage, paTotalPages, 'dash-action-page-btn')}</div>`:''}
         </div>` : ''}
 
         <div class="card">
@@ -2255,7 +2255,7 @@ function viewHome(){
             <span class="dlc ${ddayBadgeClass(p.dday)}">D-${p.dday}</span>
             <div style="flex:1"><div style="font-size:13px;font-weight:300">${p.title}</div><div style="font-size:11px;color:var(--muted)">${p.category}</div></div>
           </div>`).join('')}
-          ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
+          ${ipTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(ipPage, ipTotalPages, 'home-incomplete-page-btn')}</div>`:''}
         </div>` : ''}
           </div>
 
@@ -4081,7 +4081,7 @@ function viewVendorDetail(){
               <div class="pgb" style="width:70px;flex-shrink:0"><div class="pgf" style="width:${progressOf(p)}%;background:var(--o)"></div></div>
               <span style="font-size:11px;color:var(--muted);width:28px;text-align:right">${progressOf(p)}%</span>
             </div>`).join('');
-            const pager = vpTotalPages>1 ? `<div style="width:fit-content;margin:8px auto 0">${pagerHTML(vpPage, vpTotalPages, 'vendor-project-page-btn')}</div>` : '';
+            const pager = vpTotalPages>1 ? `<div style="width:fit-content;margin:8px auto 4px">${pagerHTML(vpPage, vpTotalPages, 'vendor-project-page-btn')}</div>` : '';
             return rows + pager;
           })()}
         </div>`:''}
@@ -4117,7 +4117,7 @@ function viewVendorDetail(){
                     </div>`;
                   }).join('')}
                 </div>
-                ${mnTotalPages>1?`<div style="width:fit-content;margin:10px auto 0">${pagerHTML(mnPage, mnTotalPages, 'vendor-meeting-note-page-btn')}</div>`:''}`}
+                ${mnTotalPages>1?`<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(mnPage, mnTotalPages, 'vendor-meeting-note-page-btn')}</div>`:''}`}
           </div>`;
         })()}
 
@@ -4176,7 +4176,7 @@ function viewVendorDetail(){
             </div>`;
           }).join('');
 
-          const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 0">${pagerHTML(flPage, flTotalPages, 'vendor-filelink-page-btn')}</div>` : '';
+          const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(flPage, flTotalPages, 'vendor-filelink-page-btn')}</div>` : '';
 
           const isCollapsed = state.vendorFileLinkCollapsed !== false; // 기본값: 접힘
 
@@ -4743,7 +4743,7 @@ function viewProjectDetail(){
         </div>`;
       }).join('');
 
-      const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 0">${pagerHTML(flPage, flTotalPages, 'proj-filelink-page-btn')}</div>` : '';
+      const pager = flTotalPages>1 ? `<div style="width:fit-content;margin:10px auto 4px">${pagerHTML(flPage, flTotalPages, 'proj-filelink-page-btn')}</div>` : '';
 
       const isProjCollapsed = state.projFileLinkCollapsed !== false; // 기본값: 접힘
 
