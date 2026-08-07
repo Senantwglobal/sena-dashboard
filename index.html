@@ -4743,7 +4743,7 @@ function viewProjectDetail(){
           const rowsHtml = ckList.map(c=>{
             const sc=checklistStatusColor(c.status);
             const assignee=checklistAssigneeName(c);
-            return `<div class="checklist-card ck-item" data-cid="${c.id}">
+            return `<div class="checklist-card ck-item" data-cid="${c.id}" style="${c.done?'background:rgba(15,23,42,.06)':''}">
               <input type="checkbox" class="checklist-toggle ck-cb pill-check" data-cid="${c.id}" ${c.done?'checked':''} ${isReadOnly()?'disabled':''}/>
               <div class="ck-body">
                 <div class="ck-title ${c.done?'done':''}">${c.text}</div>
