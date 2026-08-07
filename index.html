@@ -42,7 +42,7 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background-image:radial-gradient(ellipse 60% 55% at 15% 15%, rgba(186,168,235,.55) 0%, transparent 60%),radial-gradient(ellipse 55% 50% at 50% 5%, rgba(255,200,170,.6) 0%, transparent 55%),radial-gradient(ellipse 60% 55% at 85% 20%, rgba(255,180,200,.45) 0%, transparent 60%),radial-gradient(ellipse 65% 60% at 90% 85%, rgba(150,190,245,.55) 0%, transparent 62%),radial-gradient(ellipse 60% 55% at 10% 90%, rgba(200,210,250,.5) 0%, transparent 60%),linear-gradient(165deg,#F5F0FA 0%,#F3EDF6 50%,#E8EEFA 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}
+body{font-family:var(--sans);background-image:radial-gradient(ellipse 60% 55% at 15% 15%, rgba(186,168,235,.5) 0%, transparent 60%),radial-gradient(ellipse 55% 50% at 50% 5%, rgba(255,205,175,.5) 0%, transparent 55%),radial-gradient(ellipse 60% 55% at 85% 20%, rgba(160,195,245,.55) 0%, transparent 60%),radial-gradient(ellipse 70% 65% at 90% 85%, rgba(120,165,240,.65) 0%, transparent 62%),radial-gradient(ellipse 60% 55% at 10% 90%, rgba(180,200,250,.55) 0%, transparent 60%),linear-gradient(165deg,#F0F3FB 0%,#EAF0FA 50%,#DEE8FA 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}
 ::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
@@ -1897,10 +1897,6 @@ function render(){
         <button id="profileAvatarBtn" title="프로필 사진 변경" style="background:none;border:none;padding:0;cursor:pointer;border-radius:50%;display:flex;flex-shrink:0">${state.data.profilePhotoUrl ? `<img src="${state.data.profilePhotoUrl}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:0.5px solid var(--bd)"/>` : av('천세나', 30)}</button>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:nowrap;white-space:nowrap">
           <span style="font-size:13px;color:var(--muted);flex-shrink:0;white-space:nowrap">천세나</span>
-          <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;flex-shrink:0">
-            <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
-            <option value="ceo" ${state.data.role==='ceo'?'selected':''}>읽기 전용</option>
-          </select>
           <span id="syncStatus" class="sync-row" style="flex-shrink:0;white-space:nowrap"><span class="sync-dot"></span>저장됨</span>
         </div>
       </div>
@@ -1913,7 +1909,8 @@ function render(){
     <div class="cnt" id="viewRoot"></div>
   `;
 
-  document.getElementById('roleSelect').addEventListener('change', e=>{
+  const roleSelectEl = document.getElementById('roleSelect');
+  if(roleSelectEl) roleSelectEl.addEventListener('change', e=>{
     state.data.role = e.target.value; persist(false);
   });
 
