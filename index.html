@@ -123,7 +123,7 @@ select.inp{cursor:pointer}
 .dl-d{background:#F0F1F3;color:#5F6672}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
-.cal-cell{min-height:80px;border-radius:10px;padding:5px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);position:relative;cursor:pointer;transition:background .15s var(--ease);overflow:hidden}
+.cal-cell{min-height:80px;border-radius:10px;padding:5px;border:1px solid rgba(255,255,255,.5);background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);position:relative;cursor:pointer;transition:background .15s var(--ease);overflow:hidden}
 .cal-cell:hover{background:var(--sf)}
 .cal-year-month:hover{background:var(--sf)}
 .price-list-year-btn:hover{background:var(--sf)}
@@ -197,7 +197,7 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
 .search-wrap .inp{padding-left:32px;margin-bottom:0}
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
-.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:rgba(255,255,255,.7);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
+.tbl th{padding:10px 14px;text-align:left;font-size:11px;font-weight:300;color:var(--muted);background:var(--card);border-bottom:0.5px solid var(--bd);letter-spacing:.03em;text-transform:uppercase}
 .tbl td{padding:11px 14px;border-bottom:0.5px solid var(--bd);vertical-align:middle;font-size:13px;background:rgba(255,255,255,.5)}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.clickable{cursor:pointer}
@@ -2042,7 +2042,7 @@ function viewHome(){
 
     <div class="two">
       <div class="dash-left-col" style="display:flex;flex-direction:column">
-        <div class="card" style="margin-bottom:14px;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+        <div class="card" style="margin-bottom:14px;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
           <div class="sh" style="margin-bottom:10px">
             <div class="st"><i class="ti ti-calendar oi"></i>이번주</div>
             <span style="font-size:11px;color:var(--muted)">${dayjs().format('YYYY년 M월')}</span>
@@ -2166,7 +2166,7 @@ function viewHome(){
               const preset = TZ_PRESETS.find(p=>p.tz===tz) || {tz, label:tz.split('/').pop().replace(/_/g,' ')};
               return `<div class="tz-card" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:12px;position:relative">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:6px">
-                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:300;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto;flex-shrink:1;min-width:0" ${isReadOnly()?'disabled':''}>
+                  <select class="inp tz-select" data-idx="${idx}" style="font-size:11px;font-weight:300;border:none;background:none;padding:0;margin:0;cursor:pointer;color:var(--muted);width:auto;flex-shrink:1;min-width:0;-webkit-appearance:none;appearance:none" ${isReadOnly()?'disabled':''}>
                     ${TZ_PRESETS.map(p=>`<option value="${p.tz}" ${p.tz===tz?'selected':''}>${p.label}</option>`).join('')}
                   </select>
                   <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
@@ -2277,7 +2277,7 @@ function viewHome(){
             .sort((a,b)=>a.date.localeCompare(b.date));
           const typeLabel = t=>({'연차':'종일','반차':'반차','반반차':'반반차','오전 반차':'오전','오후 반차':'오후'}[t]||t);
           const typeColor = t=>({'연차':'#3B6D11','반차':'#15803D','반반차':'#22C55E','오전 반차':'#0891B2','오후 반차':'#0369A1'}[t]||'#5F5E5A');
-          return `<div class="card" style="background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+          return `<div class="card" style="background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
             <div class="sh">
               <div class="st"><i class="ti ti-calendar-heart oi"></i>연차 현황</div>
               <span style="font-size:11px;color:var(--muted)">잔여 <strong style="color:${remaining<3?'#A32D2D':'var(--o)'}">${remaining}일</strong></span>
@@ -2622,7 +2622,7 @@ function enhanceSelect(sel){
   const hasInpClass = sel.classList.contains('inp');
   trigger.className = hasInpClass ? 'inp cdd-trigger select-shell-trigger' : 'cdd-trigger select-shell-trigger';
   const baseStyle = hasInpClass ? '' : 'width:auto;flex-shrink:0;';
-  trigger.setAttribute('style', baseStyle + extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px');
+  trigger.setAttribute('style', baseStyle + extraStyle + ';display:flex;align-items:center;justify-content:space-between;text-align:left;gap:6px;-webkit-appearance:none;appearance:none');
   const labelSpan = document.createElement('span');
   labelSpan.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0';
   trigger.appendChild(labelSpan);
@@ -2843,7 +2843,7 @@ function viewVendorList(){
       <button class="btn vendor-alpha-btn ${alphaFilter==='한글'?'btn-o':''}" data-alpha="한글" style="font-size:11px;padding:4px 9px;min-width:32px">한글</button>
     </div>
 
-    <div class="card" style="padding:0;overflow:hidden;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+    <div class="card" style="padding:0;overflow:hidden;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
       <table class="tbl">
         <colgroup><col style="width:18%"><col style="width:8%"><col style="width:9%"><col style="width:21%"><col style="width:13%"><col style="width:8%"><col style="width:11%"><col style="width:12%"></colgroup>
         <thead><tr>
@@ -3304,7 +3304,7 @@ function viewVendorAnalytics(){
     </div>
 
     <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-bottom:14px">
-      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
+      <div class="card" style="margin-bottom:0;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="font-size:15px;font-weight:600;color:var(--text)">월별 구매 현황</span>
@@ -3318,7 +3318,7 @@ function viewVendorAnalytics(){
         ${monthVals.every(v=>v===0) ? `<div class="empty-state" style="padding:30px 0">등록된 구매 데이터가 없습니다.</div>` : monthChart}
       </div>
 
-      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
+      <div class="card" style="margin-bottom:0;background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
           <span style="font-size:15px;font-weight:600;color:var(--text)">월별 할인 절감 현황</span>
           <div style="display:flex;align-items:center;gap:14px;font-size:11px">
@@ -3670,7 +3670,7 @@ function viewVendorDetail(){
     <!-- 구매 현황 (벤더 유형에서만 표시) -->
     ${(v.companyType||'벤더')==='벤더' ? `
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px">
-      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+      <div class="card" style="padding:16px 18px;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">YTD 구매액 합계</span>
           ${ytdPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${ytdPctChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
@@ -3684,7 +3684,7 @@ function viewVendorDetail(){
           ${ytdPctChange!==null?`<span style="font-size:12px;font-weight:600;color:${ytdPctChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(ytdPctChange)}% <i class="ti ${ytdPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
-      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+      <div class="card" style="padding:16px 18px;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">월간 평균</span>
           ${monthlyAvgPctChange!==null?`<span style="width:8px;height:8px;border-radius:50%;background:${monthlyAvgPctChange>=0?'#30A46C':'#E5484D'};flex-shrink:0"></span>`:''}
@@ -3698,7 +3698,7 @@ function viewVendorDetail(){
           ${monthlyAvgPctChange!==null?`<span style="font-size:12px;font-weight:600;color:${monthlyAvgPctChange>=0?'#30A46C':'#E5484D'};display:inline-flex;align-items:center;gap:2px">${Math.abs(monthlyAvgPctChange)}% <i class="ti ${monthlyAvgPctChange>=0?'ti-trending-up':'ti-trending-down'}" style="font-size:14px"></i></span>`:`<span style="font-size:10.5px;color:var(--muted)">전년 데이터 없음</span>`}
         </div>
       </div>
-      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+      <div class="card" style="padding:16px 18px;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">총 구매액</span>
         </div>
@@ -3710,7 +3710,7 @@ function viewVendorDetail(){
           <span style="font-size:11px;color:var(--muted)">누적 합계 · ${yearsSortedAsc[0]||currentYearNum} ~ YTD</span>
         </div>
       </div>
-      <div class="card" style="padding:16px 18px;background:rgba(255,255,255,.7)">
+      <div class="card" style="padding:16px 18px;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
           <span style="font-size:10.5px;color:var(--muted)">년간 평균</span>
         </div>
@@ -3725,7 +3725,7 @@ function viewVendorDetail(){
     </div>
 
     <div style="display:grid;grid-template-columns:2.2fr 1fr;gap:14px;margin-bottom:14px">
-      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
+      <div class="card" style="margin-bottom:0;background:var(--card)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
           <div style="display:flex;align-items:center;gap:8px">
             <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
@@ -3755,7 +3755,7 @@ function viewVendorDetail(){
         <div>${purchaseChartSvg}</div>`}
       </div>
 
-      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.7)">
+      <div class="card" style="margin-bottom:0;background:var(--card)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <span style="width:3px;height:14px;border-radius:2px;background:#111114;flex-shrink:0"></span>
           <span style="font-size:14px;font-weight:600;color:var(--text)">Yearly Summary</span>
@@ -4343,7 +4343,7 @@ function viewProjects(){
     const logCount = vendorIds.reduce((sum,vid)=>sum + ((p.vendorLogs||{})[vid]||[]).length, 0);
     const doneCk = (p.checklist||[]).filter(c=>c.done).length;
     const totalCk = (p.checklist||[]).length;
-    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${isDone?'background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)':''}">
+    return `<div class="card proj-card" data-pid="${p.id}" style="padding:14px 15px;margin-bottom:9px;cursor:pointer;${isDone?'background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)':''}">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;gap:8px">
         <div style="font-size:12.5px;font-weight:600;line-height:1.3;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0">${p.title}</div>
         <span style="font-size:9px;font-weight:600;padding:2px 9px;border-radius:20px;background:${statusColor}1f;color:${statusColor};flex-shrink:0">${p.status||'진행중'}</span>
@@ -5128,7 +5128,7 @@ function viewCalendar(){
     <div style="display:flex;gap:14px;align-items:stretch;margin-bottom:14px">
       <div style="flex:0 0 30%;min-width:0">
       ${todayEvs.length>0 ? `
-      <div class="card" style="height:100%;margin-bottom:0;background:rgba(255,255,255,.45);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:16px">
+      <div class="card" style="height:100%;margin-bottom:0;background:var(--card);box-shadow:none;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:16px">
         <div class="sh" style="padding:0 2px;margin-bottom:10px"><div class="st" style="font-size:12.5px"><i class="ti ti-sun oi"></i>오늘 일정</div></div>
         <div style="display:flex;flex-direction:column;gap:6px;width:100%">
         ${todayEvs.map(e=>{
