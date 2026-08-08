@@ -238,6 +238,23 @@ label.field-label{display:block;font-size:11px;font-weight:300;color:var(--muted
 .prog-row:hover{background:var(--sf)}
 .prog-row:hover span[style*="border-radius:50%"]{box-shadow:0 0 0 4px color-mix(in srgb, currentColor 18%, transparent)}
 @media(max-width:640px){.two{grid-template-columns:1fr}.three{grid-template-columns:1fr}.cnt{padding:12px}.cat-sidebar{display:none}}
+
+/* ---------- 앱 스위처(업무/물류) 사이드바 ---------- */
+.app-shell{display:flex;min-height:100vh}
+.app-sidebar{width:118px;flex-shrink:0;background:#fff;border-right:1px solid var(--bd);padding:18px 8px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh;align-items:center}
+.app-side-logo{width:30px;height:30px;border-radius:8px;background:var(--text);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.app-side-item{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;padding:13px 4px;border-radius:12px;border:none;background:none;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;transition:background .15s var(--ease),color .15s var(--ease);text-align:center;line-height:1.3;font-family:inherit}
+.app-side-item i{font-size:19px}
+.app-side-item:hover{background:var(--sf);color:var(--text)}
+.app-side-item.active{background:var(--ol);color:var(--od)}
+.app-main{flex:1;min-width:0}
+@media(max-width:640px){.app-shell{flex-direction:column}.app-sidebar{width:100%;height:auto;flex-direction:row;justify-content:center;position:static;border-right:none;border-bottom:1px solid var(--bd);padding:10px}.app-side-logo{display:none}.app-side-item{width:auto;flex-direction:row;padding:8px 12px}}
+
+/* ---------- 물류 대시보드 차트/컴포넌트 ---------- */
+.logi-chart-wrap{overflow-x:auto}
+.logi-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin:10px 0 2px}
+.logi-legend span{display:inline-flex;align-items:center;gap:5px}
+.logi-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
 </style>
 
 
@@ -327,6 +344,363 @@ const SUPABASE_URL = 'https://afdospdphlkcjyvdlukg.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFmZG9zcGRwaGxrY2p5dmRsdWtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4MDAyNTEsImV4cCI6MjA5ODM3NjI1MX0.o9IRhp5dsUark4xD3QnOieLdjA52JAcZMPXx-VmZNfU';
 const SUPABASE_TABLE = 'app_data';
 const SUPABASE_ROW_ID = 'main';
+
+/* ---------- 물류 대시보드 초기 데이터 (엑셀 물류 Dashboard.xlsx 이관) ---------- */
+const SEED_SHIPMENTS = [
+{id:"ship_seed_0",date:"2025-09-02",pickKr:128,pickJp:0,shipKr:137,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_1",date:"2025-09-03",pickKr:410,pickJp:0,shipKr:339,shipJp:0,cutoffKr:527,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:509.38,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_2",date:"2025-09-04",pickKr:226,pickJp:0,shipKr:296,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_3",date:"2025-09-05",pickKr:524,pickJp:0,shipKr:415,shipJp:0,cutoffKr:718,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:559.28,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_4",date:"2025-09-06",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_5",date:"2025-09-07",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_6",date:"2025-09-08",pickKr:411,pickJp:0,shipKr:501,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_7",date:"2025-09-09",pickKr:430,pickJp:20,shipKr:446,shipJp:20,cutoffKr:854,cutoffJp:20,skuKr:0,skuJp:0,cutoffWeightKr:619.61,cutoffWeightJp:22.68,palletKr:3,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_8",date:"2025-09-10",pickKr:156,pickJp:0,shipKr:140,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_9",date:"2025-09-11",pickKr:332,pickJp:17,shipKr:342,shipJp:17,cutoffKr:550,cutoffJp:17,skuKr:0,skuJp:0,cutoffWeightKr:563.36,cutoffWeightJp:15.42,palletKr:3,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_10",date:"2025-09-12",pickKr:371,pickJp:0,shipKr:366,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_11",date:"2025-09-13",pickKr:351,pickJp:0,shipKr:351,shipJp:0,cutoffKr:902,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:817.0,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_12",date:"2025-09-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_13",date:"2025-09-15",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:824,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:681.3,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_14",date:"2025-09-16",pickKr:905,pickJp:0,shipKr:802,shipJp:0,cutoffKr:721,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:539.77,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_15",date:"2025-09-17",pickKr:653,pickJp:0,shipKr:789,shipJp:0,cutoffKr:902,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:557.01,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_16",date:"2025-09-18",pickKr:436,pickJp:0,shipKr:507,shipJp:0,cutoffKr:600,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:394.62,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_17",date:"2025-09-19",pickKr:300,pickJp:0,shipKr:307,shipJp:0,cutoffKr:307,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:342.92,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_18",date:"2025-09-20",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_19",date:"2025-09-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_20",date:"2025-09-22",pickKr:827,pickJp:0,shipKr:799,shipJp:0,cutoffKr:764,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:502.58,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_21",date:"2025-09-23",pickKr:298,pickJp:0,shipKr:243,shipJp:0,cutoffKr:257,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:313.43,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_22",date:"2025-09-24",pickKr:155,pickJp:1174,shipKr:82,shipJp:1160,cutoffKr:0,cutoffJp:1126,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:800.14,palletKr:0,palletJp:4,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_23",date:"2025-09-25",pickKr:345,pickJp:0,shipKr:498,shipJp:0,cutoffKr:601,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:439.99,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_24",date:"2025-09-26",pickKr:34,pickJp:828,shipKr:38,shipJp:800,cutoffKr:0,cutoffJp:834,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:523.9,palletKr:0,palletJp:3,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_25",date:"2025-09-27",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_26",date:"2025-09-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_27",date:"2025-09-29",pickKr:605,pickJp:0,shipKr:583,shipJp:0,cutoffKr:621,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:479.45,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_28",date:"2025-09-30",pickKr:83,pickJp:656,shipKr:105,shipJp:667,cutoffKr:0,cutoffJp:667,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:349.27,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_29",date:"2025-10-01",pickKr:375,pickJp:0,shipKr:375,shipJp:0,cutoffKr:480,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:385.91,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:291,newOrderJp:103},
+{id:"ship_seed_30",date:"2025-10-02",pickKr:19,pickJp:894,shipKr:19,shipJp:892,cutoffKr:0,cutoffJp:892,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:571.36,palletKr:0,palletJp:3,newOrderKr:172,newOrderJp:9},
+{id:"ship_seed_31",date:"2025-10-03",pickKr:397,pickJp:37,shipKr:397,shipJp:37,cutoffKr:410,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:402.27,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:182,newOrderJp:1},
+{id:"ship_seed_32",date:"2025-10-04",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:124,newOrderJp:0},
+{id:"ship_seed_33",date:"2025-10-05",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:137,newOrderJp:2},
+{id:"ship_seed_34",date:"2025-10-06",pickKr:15,pickJp:1031,shipKr:14,shipJp:1004,cutoffKr:0,cutoffJp:1041,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:636.0,palletKr:0,palletJp:3,newOrderKr:148,newOrderJp:0},
+{id:"ship_seed_35",date:"2025-10-07",pickKr:341,pickJp:0,shipKr:325,shipJp:0,cutoffKr:337,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:407.73,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:170,newOrderJp:0},
+{id:"ship_seed_36",date:"2025-10-08",pickKr:448,pickJp:0,shipKr:455,shipJp:0,cutoffKr:450,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:499.09,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:181,newOrderJp:0},
+{id:"ship_seed_37",date:"2025-10-09",pickKr:481,pickJp:0,shipKr:455,shipJp:0,cutoffKr:455,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:502.13,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:251,newOrderJp:0},
+{id:"ship_seed_38",date:"2025-10-10",pickKr:461,pickJp:0,shipKr:438,shipJp:0,cutoffKr:438,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:504.55,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:390,newOrderJp:0},
+{id:"ship_seed_39",date:"2025-10-11",pickKr:4,pickJp:0,shipKr:67,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:231,newOrderJp:0},
+{id:"ship_seed_40",date:"2025-10-12",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:279,newOrderJp:0},
+{id:"ship_seed_41",date:"2025-10-13",pickKr:312,pickJp:0,shipKr:314,shipJp:0,cutoffKr:381,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:475.46,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:369,newOrderJp:0},
+{id:"ship_seed_42",date:"2025-10-14",pickKr:803,pickJp:0,shipKr:803,shipJp:0,cutoffKr:803,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:479.09,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:365,newOrderJp:0},
+{id:"ship_seed_43",date:"2025-10-15",pickKr:516,pickJp:0,shipKr:472,shipJp:0,cutoffKr:472,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:565.46,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:310,newOrderJp:0},
+{id:"ship_seed_44",date:"2025-10-16",pickKr:568,pickJp:0,shipKr:608,shipJp:0,cutoffKr:608,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:403.63,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:218,newOrderJp:0},
+{id:"ship_seed_45",date:"2025-10-17",pickKr:335,pickJp:0,shipKr:334,shipJp:0,cutoffKr:334,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:227.27,cutoffWeightJp:0,palletKr:1,palletJp:0,newOrderKr:289,newOrderJp:0},
+{id:"ship_seed_46",date:"2025-10-18",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:159,newOrderJp:0},
+{id:"ship_seed_47",date:"2025-10-19",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:244,newOrderJp:0},
+{id:"ship_seed_48",date:"2025-10-20",pickKr:391,pickJp:0,shipKr:391,shipJp:0,cutoffKr:391,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:360.91,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:345,newOrderJp:0},
+{id:"ship_seed_49",date:"2025-10-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:252,newOrderJp:0},
+{id:"ship_seed_50",date:"2025-10-22",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:258,newOrderJp:0},
+{id:"ship_seed_51",date:"2025-10-23",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:249,newOrderJp:0},
+{id:"ship_seed_52",date:"2025-10-24",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:271,newOrderJp:0},
+{id:"ship_seed_53",date:"2025-10-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:126,newOrderJp:0},
+{id:"ship_seed_54",date:"2025-10-26",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:167,newOrderJp:0},
+{id:"ship_seed_55",date:"2025-10-27",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:190,newOrderJp:0},
+{id:"ship_seed_56",date:"2025-10-28",pickKr:621,pickJp:0,shipKr:619,shipJp:0,cutoffKr:621,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:341.82,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:190,newOrderJp:0},
+{id:"ship_seed_57",date:"2025-10-29",pickKr:310,pickJp:0,shipKr:312,shipJp:0,cutoffKr:312,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:368.64,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:155,newOrderJp:0},
+{id:"ship_seed_58",date:"2025-10-30",pickKr:344,pickJp:0,shipKr:344,shipJp:0,cutoffKr:344,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:415.0,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:164,newOrderJp:0},
+{id:"ship_seed_59",date:"2025-10-31",pickKr:479,pickJp:0,shipKr:478,shipJp:0,cutoffKr:478,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:523.18,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:200,newOrderJp:0},
+{id:"ship_seed_60",date:"2025-11-01",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:225,newOrderJp:0},
+{id:"ship_seed_61",date:"2025-11-02",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:284,newOrderJp:0},
+{id:"ship_seed_62",date:"2025-11-03",pickKr:644,pickJp:0,shipKr:643,shipJp:0,cutoffKr:643,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:510.46,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:344,newOrderJp:0},
+{id:"ship_seed_63",date:"2025-11-04",pickKr:485,pickJp:0,shipKr:485,shipJp:0,cutoffKr:484,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:413.19,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:275,newOrderJp:1},
+{id:"ship_seed_64",date:"2025-11-05",pickKr:355,pickJp:0,shipKr:359,shipJp:0,cutoffKr:357,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:384.19,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:267,newOrderJp:98},
+{id:"ship_seed_65",date:"2025-11-06",pickKr:791,pickJp:0,shipKr:791,shipJp:0,cutoffKr:794,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:741.81,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:276,newOrderJp:66},
+{id:"ship_seed_66",date:"2025-11-07",pickKr:618,pickJp:0,shipKr:618,shipJp:0,cutoffKr:618,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:560.0,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:373,newOrderJp:82},
+{id:"ship_seed_67",date:"2025-11-08",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:232,newOrderJp:88},
+{id:"ship_seed_68",date:"2025-11-09",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:280,newOrderJp:88},
+{id:"ship_seed_69",date:"2025-11-10",pickKr:810,pickJp:0,shipKr:810,shipJp:0,cutoffKr:754,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:589.09,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:376,newOrderJp:89},
+{id:"ship_seed_70",date:"2025-11-11",pickKr:359,pickJp:401,shipKr:359,shipJp:401,cutoffKr:0,cutoffJp:401,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:362.73,palletKr:0,palletJp:2,newOrderKr:328,newOrderJp:58},
+{id:"ship_seed_71",date:"2025-11-12",pickKr:545,pickJp:0,shipKr:545,shipJp:0,cutoffKr:960,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:825.0,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:279,newOrderJp:41},
+{id:"ship_seed_72",date:"2025-11-13",pickKr:401,pickJp:0,shipKr:401,shipJp:0,cutoffKr:401,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:389.54,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:295,newOrderJp:42},
+{id:"ship_seed_73",date:"2025-11-14",pickKr:548,pickJp:0,shipKr:545,shipJp:0,cutoffKr:545,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:491.37,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:358,newOrderJp:36},
+{id:"ship_seed_74",date:"2025-11-15",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:264,newOrderJp:67},
+{id:"ship_seed_75",date:"2025-11-16",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:290,newOrderJp:39},
+{id:"ship_seed_76",date:"2025-11-17",pickKr:756,pickJp:0,shipKr:759,shipJp:0,cutoffKr:758,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:569.55,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:560,newOrderJp:36},
+{id:"ship_seed_77",date:"2025-11-18",pickKr:409,pickJp:437,shipKr:401,shipJp:437,cutoffKr:0,cutoffJp:437,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:436.82,palletKr:0,palletJp:2,newOrderKr:447,newOrderJp:46},
+{id:"ship_seed_78",date:"2025-11-19",pickKr:636,pickJp:0,shipKr:643,shipJp:0,cutoffKr:1045,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:939.55,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:527,newOrderJp:49},
+{id:"ship_seed_79",date:"2025-11-20",pickKr:577,pickJp:0,shipKr:575,shipJp:0,cutoffKr:575,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:552.02,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:433,newOrderJp:88},
+{id:"ship_seed_80",date:"2025-11-21",pickKr:573,pickJp:0,shipKr:575,shipJp:0,cutoffKr:575,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:602.37,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:381,newOrderJp:38},
+{id:"ship_seed_81",date:"2025-11-22",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:247,newOrderJp:30},
+{id:"ship_seed_82",date:"2025-11-23",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:309,newOrderJp:47},
+{id:"ship_seed_83",date:"2025-11-24",pickKr:594,pickJp:0,shipKr:672,shipJp:0,cutoffKr:672,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:518.46,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:392,newOrderJp:52},
+{id:"ship_seed_84",date:"2025-11-25",pickKr:332,pickJp:351,shipKr:300,shipJp:351,cutoffKr:0,cutoffJp:351,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:364.55,palletKr:0,palletJp:2,newOrderKr:404,newOrderJp:142},
+{id:"ship_seed_85",date:"2025-11-26",pickKr:469,pickJp:0,shipKr:500,shipJp:0,cutoffKr:797,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:777.27,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:315,newOrderJp:126},
+{id:"ship_seed_86",date:"2025-11-27",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:274,newOrderJp:113},
+{id:"ship_seed_87",date:"2025-11-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:336,newOrderJp:82},
+{id:"ship_seed_88",date:"2025-11-29",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:208,newOrderJp:68},
+{id:"ship_seed_89",date:"2025-11-30",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:300,newOrderJp:128},
+{id:"ship_seed_90",date:"2025-12-01",pickKr:932,pickJp:0,shipKr:932,shipJp:0,cutoffKr:932,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:768.84,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:396,newOrderJp:112},
+{id:"ship_seed_91",date:"2025-12-02",pickKr:200,pickJp:736,shipKr:201,shipJp:734,cutoffKr:0,cutoffJp:734,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:538.87,palletKr:0,palletJp:3,newOrderKr:387,newOrderJp:52},
+{id:"ship_seed_92",date:"2025-12-03",pickKr:893,pickJp:0,shipKr:893,shipJp:0,cutoffKr:1094,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:958.44,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:321,newOrderJp:61},
+{id:"ship_seed_93",date:"2025-12-04",pickKr:690,pickJp:0,shipKr:690,shipJp:0,cutoffKr:690,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:650.45,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:308,newOrderJp:49},
+{id:"ship_seed_94",date:"2025-12-05",pickKr:884,pickJp:0,shipKr:884,shipJp:0,cutoffKr:884,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:760.68,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:413,newOrderJp:145},
+{id:"ship_seed_95",date:"2025-12-06",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:333,newOrderJp:54},
+{id:"ship_seed_96",date:"2025-12-07",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:411,newOrderJp:58},
+{id:"ship_seed_97",date:"2025-12-08",pickKr:1159,pickJp:0,shipKr:1158,shipJp:0,cutoffKr:1158,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1011.42,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:465,newOrderJp:56},
+{id:"ship_seed_98",date:"2025-12-09",pickKr:557,pickJp:481,shipKr:558,shipJp:482,cutoffKr:0,cutoffJp:482,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:357.43,palletKr:0,palletJp:2,newOrderKr:503,newOrderJp:47},
+{id:"ship_seed_99",date:"2025-12-10",pickKr:377,pickJp:0,shipKr:376,shipJp:0,cutoffKr:934,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:777.01,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:444,newOrderJp:126},
+{id:"ship_seed_100",date:"2025-12-11",pickKr:427,pickJp:0,shipKr:428,shipJp:0,cutoffKr:428,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:413.68,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:341,newOrderJp:58},
+{id:"ship_seed_101",date:"2025-12-12",pickKr:388,pickJp:0,shipKr:388,shipJp:0,cutoffKr:388,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:380.12,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:416,newOrderJp:38},
+{id:"ship_seed_102",date:"2025-12-13",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:309,newOrderJp:70},
+{id:"ship_seed_103",date:"2025-12-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:365,newOrderJp:58},
+{id:"ship_seed_104",date:"2025-12-15",pickKr:1082,pickJp:0,shipKr:1082,shipJp:0,cutoffKr:1082,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:966.6,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:377,newOrderJp:84},
+{id:"ship_seed_105",date:"2025-12-16",pickKr:380,pickJp:489,shipKr:380,shipJp:489,cutoffKr:0,cutoffJp:489,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:376.36,palletKr:0,palletJp:2,newOrderKr:341,newOrderJp:51},
+{id:"ship_seed_106",date:"2025-12-17",pickKr:350,pickJp:0,shipKr:350,shipJp:0,cutoffKr:730,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:572.44,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:377,newOrderJp:59},
+{id:"ship_seed_107",date:"2025-12-18",pickKr:338,pickJp:0,shipKr:338,shipJp:0,cutoffKr:338,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:281.23,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:332,newOrderJp:59},
+{id:"ship_seed_108",date:"2025-12-19",pickKr:340,pickJp:0,shipKr:340,shipJp:0,cutoffKr:340,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:320.24,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:348,newOrderJp:51},
+{id:"ship_seed_109",date:"2025-12-20",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:281,newOrderJp:82},
+{id:"ship_seed_110",date:"2025-12-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:353,newOrderJp:79},
+{id:"ship_seed_111",date:"2025-12-22",pickKr:1021,pickJp:0,shipKr:1021,shipJp:0,cutoffKr:1021,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:864.99,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:415,newOrderJp:87},
+{id:"ship_seed_112",date:"2025-12-23",pickKr:272,pickJp:416,shipKr:272,shipJp:412,cutoffKr:0,cutoffJp:412,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:429.77,palletKr:0,palletJp:2,newOrderKr:352,newOrderJp:39},
+{id:"ship_seed_113",date:"2025-12-24",pickKr:430,pickJp:0,shipKr:430,shipJp:0,cutoffKr:702,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:620.96,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:329,newOrderJp:36},
+{id:"ship_seed_114",date:"2025-12-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:311,newOrderJp:106},
+{id:"ship_seed_115",date:"2025-12-26",pickKr:633,pickJp:0,shipKr:633,shipJp:0,cutoffKr:633,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:558.52,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:390,newOrderJp:37},
+{id:"ship_seed_116",date:"2025-12-27",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:281,newOrderJp:39},
+{id:"ship_seed_117",date:"2025-12-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:243,newOrderJp:53},
+{id:"ship_seed_118",date:"2025-12-29",pickKr:881,pickJp:0,shipKr:879,shipJp:0,cutoffKr:879,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:724.84,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:411,newOrderJp:38},
+{id:"ship_seed_119",date:"2025-12-30",pickKr:165,pickJp:332,shipKr:166,shipJp:328,cutoffKr:0,cutoffJp:328,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:284.09,palletKr:0,palletJp:2,newOrderKr:336,newOrderJp:58},
+{id:"ship_seed_120",date:"2025-12-31",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:292,newOrderJp:40},
+{id:"ship_seed_121",date:"2026-01-01",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:471,newOrderJp:72},
+{id:"ship_seed_122",date:"2026-01-02",pickKr:870,pickJp:0,shipKr:1357,shipJp:0,cutoffKr:1523,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1168.48,cutoffWeightJp:0,palletKr:6,palletJp:0,newOrderKr:592,newOrderJp:44},
+{id:"ship_seed_123",date:"2026-01-03",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:408,newOrderJp:64},
+{id:"ship_seed_124",date:"2026-01-04",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:386,newOrderJp:68},
+{id:"ship_seed_125",date:"2026-01-05",pickKr:1414,pickJp:0,shipKr:1414,shipJp:0,cutoffKr:1414,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1090.45,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:503,newOrderJp:101},
+{id:"ship_seed_126",date:"2026-01-06",pickKr:385,pickJp:444,shipKr:385,shipJp:449,cutoffKr:0,cutoffJp:449,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:319.09,palletKr:0,palletJp:2,newOrderKr:436,newOrderJp:73},
+{id:"ship_seed_127",date:"2026-01-07",pickKr:401,pickJp:0,shipKr:402,shipJp:0,cutoffKr:787,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:624.54,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:364,newOrderJp:60},
+{id:"ship_seed_128",date:"2026-01-08",pickKr:405,pickJp:0,shipKr:405,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:343,newOrderJp:84},
+{id:"ship_seed_129",date:"2026-01-09",pickKr:314,pickJp:0,shipKr:314,shipJp:0,cutoffKr:714,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:539.78,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:409,newOrderJp:47},
+{id:"ship_seed_130",date:"2026-01-10",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:291,newOrderJp:112},
+{id:"ship_seed_131",date:"2026-01-11",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:310,newOrderJp:63},
+{id:"ship_seed_132",date:"2026-01-12",pickKr:979,pickJp:0,shipKr:978,shipJp:0,cutoffKr:978,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:827.8,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:389,newOrderJp:48},
+{id:"ship_seed_133",date:"2026-01-13",pickKr:0,pickJp:508,shipKr:0,shipJp:507,cutoffKr:0,cutoffJp:507,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:488.89,palletKr:0,palletJp:2,newOrderKr:358,newOrderJp:48},
+{id:"ship_seed_134",date:"2026-01-14",pickKr:711,pickJp:0,shipKr:712,shipJp:0,cutoffKr:712,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:587.41,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:319,newOrderJp:43},
+{id:"ship_seed_135",date:"2026-01-15",pickKr:332,pickJp:0,shipKr:331,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:327,newOrderJp:122},
+{id:"ship_seed_136",date:"2026-01-16",pickKr:303,pickJp:0,shipKr:303,shipJp:0,cutoffKr:634,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:513.92,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:330,newOrderJp:52},
+{id:"ship_seed_137",date:"2026-01-17",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:283,newOrderJp:42},
+{id:"ship_seed_138",date:"2026-01-18",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:297,newOrderJp:87},
+{id:"ship_seed_139",date:"2026-01-19",pickKr:899,pickJp:0,shipKr:899,shipJp:0,cutoffKr:899,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:721.65,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:376,newOrderJp:54},
+{id:"ship_seed_140",date:"2026-01-20",pickKr:379,pickJp:430,shipKr:379,shipJp:429,cutoffKr:0,cutoffJp:429,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:246.3,palletKr:0,palletJp:1,newOrderKr:363,newOrderJp:57},
+{id:"ship_seed_141",date:"2026-01-21",pickKr:376,pickJp:0,shipKr:376,shipJp:0,cutoffKr:755,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:681.33,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:344,newOrderJp:73},
+{id:"ship_seed_142",date:"2026-01-22",pickKr:319,pickJp:0,shipKr:319,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:317,newOrderJp:71},
+{id:"ship_seed_143",date:"2026-01-23",pickKr:312,pickJp:0,shipKr:312,shipJp:0,cutoffKr:631,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:452.59,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:411,newOrderJp:65},
+{id:"ship_seed_144",date:"2026-01-24",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:316,newOrderJp:90},
+{id:"ship_seed_145",date:"2026-01-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:387,newOrderJp:239},
+{id:"ship_seed_146",date:"2026-01-26",pickKr:852,pickJp:595,shipKr:838,shipJp:596,cutoffKr:811,cutoffJp:596,skuKr:0,skuJp:0,cutoffWeightKr:556.1,cutoffWeightJp:337.02,palletKr:3,palletJp:2,newOrderKr:451,newOrderJp:76},
+{id:"ship_seed_147",date:"2026-01-27",pickKr:715,pickJp:0,shipKr:715,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:403,newOrderJp:137},
+{id:"ship_seed_148",date:"2026-01-28",pickKr:416,pickJp:248,shipKr:416,shipJp:248,cutoffKr:1196,cutoffJp:248,skuKr:0,skuJp:0,cutoffWeightKr:1153.49,cutoffWeightJp:256.77,palletKr:5,palletJp:1,newOrderKr:429,newOrderJp:144},
+{id:"ship_seed_149",date:"2026-01-29",pickKr:456,pickJp:0,shipKr:456,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:448,newOrderJp:123},
+{id:"ship_seed_150",date:"2026-01-30",pickKr:382,pickJp:0,shipKr:382,shipJp:0,cutoffKr:838,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:882.79,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:419,newOrderJp:114},
+{id:"ship_seed_151",date:"2026-01-31",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:325,newOrderJp:95},
+{id:"ship_seed_152",date:"2026-02-01",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:451,newOrderJp:177},
+{id:"ship_seed_153",date:"2026-02-02",pickKr:926,pickJp:534,shipKr:926,shipJp:534,cutoffKr:926,cutoffJp:534,skuKr:0,skuJp:0,cutoffWeightKr:728.48,cutoffWeightJp:398.71,palletKr:3,palletJp:2,newOrderKr:520,newOrderJp:135},
+{id:"ship_seed_154",date:"2026-02-03",pickKr:756,pickJp:0,shipKr:756,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:439,newOrderJp:103},
+{id:"ship_seed_155",date:"2026-02-04",pickKr:450,pickJp:278,shipKr:449,shipJp:278,cutoffKr:1205,cutoffJp:278,skuKr:0,skuJp:0,cutoffWeightKr:1164.38,cutoffWeightJp:235.87,palletKr:5,palletJp:1,newOrderKr:454,newOrderJp:119},
+{id:"ship_seed_156",date:"2026-02-05",pickKr:430,pickJp:0,shipKr:430,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:423,newOrderJp:271},
+{id:"ship_seed_157",date:"2026-02-06",pickKr:413,pickJp:0,shipKr:414,shipJp:0,cutoffKr:844,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:808.76,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:447,newOrderJp:98},
+{id:"ship_seed_158",date:"2026-02-07",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:318,newOrderJp:109},
+{id:"ship_seed_159",date:"2026-02-08",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:362,newOrderJp:170},
+{id:"ship_seed_160",date:"2026-02-09",pickKr:528,pickJp:734,shipKr:527,shipJp:734,cutoffKr:512,cutoffJp:734,skuKr:0,skuJp:0,cutoffWeightKr:366.06,cutoffWeightJp:560.64,palletKr:2,palletJp:3,newOrderKr:482,newOrderJp:97},
+{id:"ship_seed_161",date:"2026-02-10",pickKr:941,pickJp:0,shipKr:942,shipJp:0,cutoffKr:957,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:913.09,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:456,newOrderJp:131},
+{id:"ship_seed_162",date:"2026-02-11",pickKr:454,pickJp:0,shipKr:454,shipJp:0,cutoffKr:454,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:480.81,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:324,newOrderJp:157},
+{id:"ship_seed_163",date:"2026-02-12",pickKr:377,pickJp:393,shipKr:377,shipJp:393,cutoffKr:0,cutoffJp:393,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:331.12,palletKr:0,palletJp:2,newOrderKr:345,newOrderJp:101},
+{id:"ship_seed_164",date:"2026-02-13",pickKr:236,pickJp:0,shipKr:236,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:296,newOrderJp:108},
+{id:"ship_seed_165",date:"2026-02-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:295,newOrderJp:115},
+{id:"ship_seed_166",date:"2026-02-15",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:304,newOrderJp:247},
+{id:"ship_seed_167",date:"2026-02-16",pickKr:733,pickJp:570,shipKr:733,shipJp:570,cutoffKr:1346,cutoffJp:570,skuKr:0,skuJp:0,cutoffWeightKr:1132.62,cutoffWeightJp:520.71,palletKr:5,palletJp:2,newOrderKr:268,newOrderJp:121},
+{id:"ship_seed_168",date:"2026-02-17",pickKr:431,pickJp:0,shipKr:431,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:328,newOrderJp:106},
+{id:"ship_seed_169",date:"2026-02-18",pickKr:376,pickJp:0,shipKr:376,shipJp:0,cutoffKr:807,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:708.96,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:402,newOrderJp:90},
+{id:"ship_seed_170",date:"2026-02-19",pickKr:370,pickJp:302,shipKr:367,shipJp:302,cutoffKr:0,cutoffJp:302,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:302.55,palletKr:0,palletJp:2,newOrderKr:469,newOrderJp:131},
+{id:"ship_seed_171",date:"2026-02-20",pickKr:592,pickJp:0,shipKr:592,shipJp:0,cutoffKr:962,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:804.21,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:514,newOrderJp:153},
+{id:"ship_seed_172",date:"2026-02-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:362,newOrderJp:91},
+{id:"ship_seed_173",date:"2026-02-22",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:399,newOrderJp:108},
+{id:"ship_seed_174",date:"2026-02-23",pickKr:993,pickJp:0,shipKr:993,shipJp:0,cutoffKr:993,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:716.68,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:447,newOrderJp:109},
+{id:"ship_seed_175",date:"2026-02-24",pickKr:252,pickJp:549,shipKr:252,shipJp:549,cutoffKr:0,cutoffJp:549,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:410.5,palletKr:0,palletJp:2,newOrderKr:380,newOrderJp:64},
+{id:"ship_seed_176",date:"2026-02-25",pickKr:747,pickJp:0,shipKr:747,shipJp:0,cutoffKr:999,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:917.17,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:404,newOrderJp:140},
+{id:"ship_seed_177",date:"2026-02-26",pickKr:454,pickJp:193,shipKr:454,shipJp:193,cutoffKr:0,cutoffJp:193,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:148.78,palletKr:0,palletJp:1,newOrderKr:427,newOrderJp:63},
+{id:"ship_seed_178",date:"2026-02-27",pickKr:363,pickJp:0,shipKr:363,shipJp:0,cutoffKr:817,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:739.61,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:426,newOrderJp:54},
+{id:"ship_seed_179",date:"2026-02-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:374,newOrderJp:73},
+{id:"ship_seed_180",date:"2026-03-01",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:414,newOrderJp:144},
+{id:"ship_seed_181",date:"2026-03-02",pickKr:710,pickJp:334,shipKr:710,shipJp:334,cutoffKr:710,cutoffJp:334,skuKr:0,skuJp:0,cutoffWeightKr:557.92,cutoffWeightJp:256.78,palletKr:3,palletJp:1,newOrderKr:492,newOrderJp:98},
+{id:"ship_seed_182",date:"2026-03-03",pickKr:631,pickJp:0,shipKr:630,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:392,newOrderJp:84},
+{id:"ship_seed_183",date:"2026-03-04",pickKr:731,pickJp:0,shipKr:731,shipJp:0,cutoffKr:1361,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1322.99,cutoffWeightJp:0,palletKr:6,palletJp:0,newOrderKr:382,newOrderJp:139},
+{id:"ship_seed_184",date:"2026-03-05",pickKr:350,pickJp:366,shipKr:349,shipJp:364,cutoffKr:0,cutoffJp:364,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:360.6,palletKr:0,palletJp:2,newOrderKr:351,newOrderJp:236},
+{id:"ship_seed_185",date:"2026-03-06",pickKr:348,pickJp:0,shipKr:348,shipJp:0,cutoffKr:697,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:641.37,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:392,newOrderJp:92},
+{id:"ship_seed_186",date:"2026-03-07",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:299,newOrderJp:77},
+{id:"ship_seed_187",date:"2026-03-08",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:304,newOrderJp:98},
+{id:"ship_seed_188",date:"2026-03-09",pickKr:713,pickJp:402,shipKr:714,shipJp:401,cutoffKr:714,cutoffJp:401,skuKr:0,skuJp:0,cutoffWeightKr:617.8,cutoffWeightJp:260.82,palletKr:3,palletJp:1,newOrderKr:421,newOrderJp:73},
+{id:"ship_seed_189",date:"2026-03-10",pickKr:700,pickJp:0,shipKr:701,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:412,newOrderJp:94},
+{id:"ship_seed_190",date:"2026-03-11",pickKr:439,pickJp:0,shipKr:438,shipJp:0,cutoffKr:1138,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1049.15,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:438,newOrderJp:70},
+{id:"ship_seed_191",date:"2026-03-12",pickKr:408,pickJp:218,shipKr:409,shipJp:221,cutoffKr:0,cutoffJp:221,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:154.22,palletKr:0,palletJp:1,newOrderKr:367,newOrderJp:46},
+{id:"ship_seed_192",date:"2026-03-13",pickKr:333,pickJp:0,shipKr:333,shipJp:0,cutoffKr:742,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:712.13,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:404,newOrderJp:48},
+{id:"ship_seed_193",date:"2026-03-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:345,newOrderJp:51},
+{id:"ship_seed_194",date:"2026-03-15",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:390,newOrderJp:117},
+{id:"ship_seed_195",date:"2026-03-16",pickKr:875,pickJp:262,shipKr:875,shipJp:262,cutoffKr:875,cutoffJp:262,skuKr:0,skuJp:0,cutoffWeightKr:748.42,cutoffWeightJp:180.08,palletKr:3,palletJp:1,newOrderKr:504,newOrderJp:50},
+{id:"ship_seed_196",date:"2026-03-17",pickKr:804,pickJp:0,shipKr:794,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:457,newOrderJp:58},
+{id:"ship_seed_197",date:"2026-03-18",pickKr:469,pickJp:134,shipKr:479,shipJp:134,cutoffKr:1273,cutoffJp:134,skuKr:0,skuJp:0,cutoffWeightKr:1264.59,cutoffWeightJp:124.74,palletKr:5,palletJp:1,newOrderKr:497,newOrderJp:83},
+{id:"ship_seed_198",date:"2026-03-19",pickKr:456,pickJp:0,shipKr:456,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:458,newOrderJp:56},
+{id:"ship_seed_199",date:"2026-03-20",pickKr:491,pickJp:0,shipKr:491,shipJp:0,cutoffKr:947,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:879.51,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:470,newOrderJp:104},
+{id:"ship_seed_200",date:"2026-03-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:358,newOrderJp:105},
+{id:"ship_seed_201",date:"2026-03-22",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:398,newOrderJp:117},
+{id:"ship_seed_202",date:"2026-03-23",pickKr:722,pickJp:409,shipKr:722,shipJp:409,cutoffKr:722,cutoffJp:409,skuKr:0,skuJp:0,cutoffWeightKr:592.41,cutoffWeightJp:353.8,palletKr:3,palletJp:2,newOrderKr:421,newOrderJp:51},
+{id:"ship_seed_203",date:"2026-03-24",pickKr:727,pickJp:0,shipKr:727,shipJp:0,cutoffKr:727,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:760.67,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:630,newOrderJp:43},
+{id:"ship_seed_204",date:"2026-03-25",pickKr:356,pickJp:0,shipKr:356,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:310,newOrderJp:123},
+{id:"ship_seed_205",date:"2026-03-26",pickKr:320,pickJp:200,shipKr:320,shipJp:200,cutoffKr:676,cutoffJp:200,skuKr:0,skuJp:0,cutoffWeightKr:582.87,cutoffWeightJp:179.17,palletKr:3,palletJp:1,newOrderKr:303,newOrderJp:43},
+{id:"ship_seed_206",date:"2026-03-27",pickKr:293,pickJp:0,shipKr:293,shipJp:0,cutoffKr:293,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:267.62,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:313,newOrderJp:49},
+{id:"ship_seed_207",date:"2026-03-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:255,newOrderJp:49},
+{id:"ship_seed_208",date:"2026-03-29",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:294,newOrderJp:72},
+{id:"ship_seed_209",date:"2026-03-30",pickKr:770,pickJp:205,shipKr:770,shipJp:205,cutoffKr:770,cutoffJp:205,skuKr:0,skuJp:0,cutoffWeightKr:612.35,cutoffWeightJp:156.49,palletKr:3,palletJp:1,newOrderKr:327,newOrderJp:73},
+{id:"ship_seed_210",date:"2026-03-31",pickKr:467,pickJp:0,shipKr:467,shipJp:0,cutoffKr:466,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:397.36,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:323,newOrderJp:79},
+{id:"ship_seed_211",date:"2026-04-01",pickKr:372,pickJp:0,shipKr:372,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:420,newOrderJp:88},
+{id:"ship_seed_212",date:"2026-04-02",pickKr:365,pickJp:237,shipKr:365,shipJp:237,cutoffKr:737,cutoffJp:237,skuKr:0,skuJp:0,cutoffWeightKr:605.09,cutoffWeightJp:166.47,palletKr:3,palletJp:1,newOrderKr:343,newOrderJp:54},
+{id:"ship_seed_213",date:"2026-04-03",pickKr:332,pickJp:0,shipKr:332,shipJp:0,cutoffKr:332,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:278.96,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_214",date:"2026-04-04",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_215",date:"2026-04-05",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_216",date:"2026-04-06",pickKr:642,pickJp:377,shipKr:643,shipJp:377,cutoffKr:642,cutoffJp:377,skuKr:0,skuJp:0,cutoffWeightKr:504.4,cutoffWeightJp:281.23,palletKr:2,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_217",date:"2026-04-07",pickKr:714,pickJp:0,shipKr:714,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_218",date:"2026-04-08",pickKr:364,pickJp:0,shipKr:364,shipJp:0,cutoffKr:1078,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:937.59,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_219",date:"2026-04-09",pickKr:372,pickJp:182,shipKr:372,shipJp:182,cutoffKr:0,cutoffJp:182,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:99.72,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_220",date:"2026-04-10",pickKr:360,pickJp:0,shipKr:360,shipJp:0,cutoffKr:732,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:637.3,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_221",date:"2026-04-11",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_222",date:"2026-04-12",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_223",date:"2026-04-13",pickKr:837,pickJp:304,shipKr:837,shipJp:304,cutoffKr:837,cutoffJp:304,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_224",date:"2026-04-14",pickKr:557,pickJp:0,shipKr:557,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:668.1,cutoffWeightJp:170.0,palletKr:3,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_225",date:"2026-04-15",pickKr:370,pickJp:0,shipKr:370,shipJp:0,cutoffKr:927,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_226",date:"2026-04-16",pickKr:345,pickJp:247,shipKr:345,shipJp:247,cutoffKr:0,cutoffJp:247,skuKr:0,skuJp:0,cutoffWeightKr:865.91,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_227",date:"2026-04-17",pickKr:339,pickJp:0,shipKr:339,shipJp:0,cutoffKr:684,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:138.35,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_228",date:"2026-04-18",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:604.64,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_229",date:"2026-04-19",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_230",date:"2026-04-20",pickKr:643,pickJp:280,shipKr:643,shipJp:280,cutoffKr:643,cutoffJp:280,skuKr:0,skuJp:0,cutoffWeightKr:541.59,cutoffWeightJp:159.67,palletKr:3,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_231",date:"2026-04-21",pickKr:684,pickJp:0,shipKr:684,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_232",date:"2026-04-22",pickKr:393,pickJp:0,shipKr:393,shipJp:0,cutoffKr:1077,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1020.6,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_233",date:"2026-04-23",pickKr:391,pickJp:121,shipKr:391,shipJp:121,cutoffKr:0,cutoffJp:121,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:97.07,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_234",date:"2026-04-24",pickKr:349,pickJp:0,shipKr:349,shipJp:0,cutoffKr:740,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:630.49,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_235",date:"2026-04-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_236",date:"2026-04-26",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_237",date:"2026-04-27",pickKr:868,pickJp:393,shipKr:868,shipJp:392,cutoffKr:868,cutoffJp:392,skuKr:0,skuJp:0,cutoffWeightKr:608.73,cutoffWeightJp:220.0,palletKr:3,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_238",date:"2026-04-28",pickKr:679,pickJp:0,shipKr:679,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_239",date:"2026-04-29",pickKr:352,pickJp:0,shipKr:352,shipJp:0,cutoffKr:1031,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:993.36,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_240",date:"2026-04-30",pickKr:357,pickJp:176,shipKr:357,shipJp:176,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:119.23,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_241",date:"2026-05-01",pickKr:308,pickJp:0,shipKr:308,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:555.66,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_242",date:"2026-05-02",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_243",date:"2026-05-03",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_244",date:"2026-05-04",pickKr:981,pickJp:0,shipKr:979,shipJp:0,cutoffKr:979,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:867.72,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_245",date:"2026-05-05",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_246",date:"2026-05-06",pickKr:756,pickJp:0,shipKr:758,shipJp:0,cutoffKr:758,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:638.22,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_247",date:"2026-05-07",pickKr:294,pickJp:515,shipKr:294,shipJp:515,cutoffKr:0,cutoffJp:515,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:294.84,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_248",date:"2026-05-08",pickKr:381,pickJp:0,shipKr:381,shipJp:0,cutoffKr:675,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:580.6,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_249",date:"2026-05-09",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_250",date:"2026-05-10",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_251",date:"2026-05-11",pickKr:959,pickJp:0,shipKr:959,shipJp:0,cutoffKr:959,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:876.34,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_252",date:"2026-05-12",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_253",date:"2026-05-13",pickKr:732,pickJp:0,shipKr:732,shipJp:0,cutoffKr:732,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:596.94,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_254",date:"2026-05-14",pickKr:380,pickJp:458,shipKr:380,shipJp:459,cutoffKr:0,cutoffJp:459,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:285.76,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_255",date:"2026-05-15",pickKr:358,pickJp:0,shipKr:358,shipJp:0,cutoffKr:738,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:618.23,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_256",date:"2026-05-16",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_257",date:"2026-05-17",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_258",date:"2026-05-18",pickKr:827,pickJp:0,shipKr:827,shipJp:0,cutoffKr:827,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:704.88,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_259",date:"2026-05-19",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_260",date:"2026-05-20",pickKr:735,pickJp:0,shipKr:735,shipJp:0,cutoffKr:735,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:668.13,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_261",date:"2026-05-21",pickKr:306,pickJp:542,shipKr:306,shipJp:542,cutoffKr:0,cutoffJp:542,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:312.98,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_262",date:"2026-05-22",pickKr:376,pickJp:0,shipKr:376,shipJp:0,cutoffKr:682,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:609.17,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_263",date:"2026-05-23",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_264",date:"2026-05-24",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_265",date:"2026-05-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_266",date:"2026-05-26",pickKr:917,pickJp:0,shipKr:917,shipJp:0,cutoffKr:917,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:755.7,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_267",date:"2026-05-27",pickKr:449,pickJp:0,shipKr:449,shipJp:0,cutoffKr:449,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:430.92,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_268",date:"2026-05-28",pickKr:303,pickJp:451,shipKr:303,shipJp:451,cutoffKr:0,cutoffJp:451,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:285.76,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_269",date:"2026-05-29",pickKr:333,pickJp:0,shipKr:333,shipJp:0,cutoffKr:636,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:533.44,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_270",date:"2026-05-30",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_271",date:"2026-05-31",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_272",date:"2026-06-01",pickKr:900,pickJp:0,shipKr:900,shipJp:0,cutoffKr:900,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:755.7,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_273",date:"2026-06-02",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_274",date:"2026-06-03",pickKr:809,pickJp:0,shipKr:809,shipJp:0,cutoffKr:809,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:705.15,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_275",date:"2026-06-04",pickKr:285,pickJp:424,shipKr:285,shipJp:424,cutoffKr:0,cutoffJp:424,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:247.21,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_276",date:"2026-06-05",pickKr:347,pickJp:0,shipKr:347,shipJp:0,cutoffKr:632,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:523.9,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_277",date:"2026-06-06",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_278",date:"2026-06-07",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_279",date:"2026-06-08",pickKr:1025,pickJp:0,shipKr:1025,shipJp:0,cutoffKr:1025,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:862.73,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_280",date:"2026-06-09",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_281",date:"2026-06-10",pickKr:899,pickJp:0,shipKr:899,shipJp:0,cutoffKr:899,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:655.91,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_282",date:"2026-06-11",pickKr:385,pickJp:532,shipKr:385,shipJp:532,cutoffKr:0,cutoffJp:532,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:317.51,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_283",date:"2026-06-12",pickKr:365,pickJp:0,shipKr:365,shipJp:0,cutoffKr:750,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:572.44,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_284",date:"2026-06-13",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_285",date:"2026-06-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_286",date:"2026-06-15",pickKr:1071,pickJp:0,shipKr:1071,shipJp:0,cutoffKr:1071,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:919.08,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_287",date:"2026-06-16",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:714.86,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_288",date:"2026-06-17",pickKr:876,pickJp:0,shipKr:876,shipJp:0,cutoffKr:876,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_289",date:"2026-06-18",pickKr:355,pickJp:392,shipKr:355,shipJp:392,cutoffKr:392,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:188.24,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_290",date:"2026-06-19",pickKr:338,pickJp:0,shipKr:338,shipJp:0,cutoffKr:693,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:530.71,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_291",date:"2026-06-20",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_292",date:"2026-06-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_293",date:"2026-06-22",pickKr:1118,pickJp:0,shipKr:1118,shipJp:0,cutoffKr:1118,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1024.67,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_294",date:"2026-06-23",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_295",date:"2026-06-24",pickKr:877,pickJp:0,shipKr:877,shipJp:0,cutoffKr:877,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:814.2,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_296",date:"2026-06-25",pickKr:403,pickJp:459,shipKr:403,shipJp:459,cutoffKr:0,cutoffJp:459,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:224.53,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_297",date:"2026-06-26",pickKr:387,pickJp:0,shipKr:387,shipJp:0,cutoffKr:790,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:744.8,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_298",date:"2026-06-27",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_299",date:"2026-06-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_300",date:"2026-06-29",pickKr:929,pickJp:0,shipKr:929,shipJp:0,cutoffKr:929,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:786.07,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_301",date:"2026-06-30",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_302",date:"2026-07-01",pickKr:625,pickJp:552,shipKr:623,shipJp:552,cutoffKr:0,cutoffJp:552,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:290.31,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_303",date:"2026-07-02",pickKr:875,pickJp:0,shipKr:875,shipJp:0,cutoffKr:1495,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:1374.39,cutoffWeightJp:0,palletKr:5,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_304",date:"2026-07-03",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_305",date:"2026-07-04",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_306",date:"2026-07-05",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_307",date:"2026-07-06",pickKr:1082,pickJp:0,shipKr:1075,shipJp:0,cutoffKr:1075,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:836.88,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_308",date:"2026-07-07",pickKr:769,pickJp:0,shipKr:781,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_309",date:"2026-07-08",pickKr:363,pickJp:774,shipKr:392,shipJp:773,cutoffKr:1173,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:978.67,cutoffWeightJp:0,palletKr:4,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_310",date:"2026-07-09",pickKr:222,pickJp:105,shipKr:220,shipJp:104,cutoffKr:877,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:471.74,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_311",date:"2026-07-10",pickKr:439,pickJp:0,shipKr:441,shipJp:0,cutoffKr:661,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:571.53,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_312",date:"2026-07-11",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_313",date:"2026-07-12",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_314",date:"2026-07-13",pickKr:839,pickJp:0,shipKr:837,shipJp:0,cutoffKr:837,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:682.65,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_315",date:"2026-07-14",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_316",date:"2026-07-15",pickKr:707,pickJp:465,shipKr:708,shipJp:368,cutoffKr:708,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:553.88,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_317",date:"2026-07-16",pickKr:398,pickJp:433,shipKr:398,shipJp:531,cutoffKr:0,cutoffJp:889,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:439.98,palletKr:0,palletJp:3,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_318",date:"2026-07-17",pickKr:219,pickJp:0,shipKr:217,shipJp:0,cutoffKr:615,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:550.66,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_319",date:"2026-07-18",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_320",date:"2026-07-19",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_321",date:"2026-07-20",pickKr:885,pickJp:0,shipKr:885,shipJp:0,cutoffKr:885,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:669.05,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_322",date:"2026-07-21",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_323",date:"2026-07-22",pickKr:553,pickJp:0,shipKr:553,shipJp:0,cutoffKr:553,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:430.91,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_324",date:"2026-07-23",pickKr:267,pickJp:308,shipKr:268,shipJp:308,cutoffKr:0,cutoffJp:308,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:174.63,palletKr:0,palletJp:1,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_325",date:"2026-07-24",pickKr:155,pickJp:0,shipKr:159,shipJp:0,cutoffKr:427,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:344.73,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_326",date:"2026-07-25",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_327",date:"2026-07-26",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_328",date:"2026-07-27",pickKr:961,pickJp:0,shipKr:961,shipJp:0,cutoffKr:958,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:666.8,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_329",date:"2026-07-28",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_330",date:"2026-07-29",pickKr:761,pickJp:0,shipKr:761,shipJp:0,cutoffKr:760,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:627.76,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_331",date:"2026-07-30",pickKr:216,pickJp:497,shipKr:164,shipJp:497,cutoffKr:0,cutoffJp:497,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:294.84,palletKr:0,palletJp:2,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_332",date:"2026-07-31",pickKr:281,pickJp:0,shipKr:331,shipJp:0,cutoffKr:498,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:464.94,cutoffWeightJp:0,palletKr:2,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_333",date:"2026-08-01",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_334",date:"2026-08-02",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_335",date:"2026-08-03",pickKr:736,pickJp:0,shipKr:732,shipJp:0,cutoffKr:732,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:638.66,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_336",date:"2026-08-04",pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_337",date:"2026-08-05",pickKr:771,pickJp:0,shipKr:777,shipJp:0,cutoffKr:777,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:623.68,cutoffWeightJp:0,palletKr:3,palletJp:0,newOrderKr:0,newOrderJp:0},
+{id:"ship_seed_338",date:"2026-08-06",pickKr:0,pickJp:941,shipKr:1,shipJp:941,cutoffKr:0,cutoffJp:941,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:544.32,palletKr:0,palletJp:3,newOrderKr:0,newOrderJp:0}
+];
+const SEED_COSTS = [
+{id:"cost_seed_0",month:"2025-08",storage:1641.61,trucking:0,orderProcess:1460.04,otherPrep:915,fragilePackaging:0,disposal:0,materials:415.6,airFreight:728.0},
+{id:"cost_seed_1",month:"2025-09",storage:5470.47,trucking:3500,orderProcess:10743.76,otherPrep:1115,fragilePackaging:0,disposal:0,materials:2599.13,airFreight:11496.45},
+{id:"cost_seed_2",month:"2025-10",storage:6428.58,trucking:1600,orderProcess:8410.64,otherPrep:4095,fragilePackaging:0,disposal:0,materials:0,airFreight:13319.7},
+{id:"cost_seed_3",month:"2025-11",storage:7521.27,trucking:1800,orderProcess:10276.4,otherPrep:3780,fragilePackaging:0,disposal:0,materials:2118.99,airFreight:15680.65},
+{id:"cost_seed_4",month:"2025-12",storage:6616.97,trucking:2100,orderProcess:20685.81,otherPrep:3150,fragilePackaging:2706.21,disposal:108.9,materials:144.96,airFreight:20549.85},
+{id:"cost_seed_5",month:"2026-01",storage:6476,trucking:1850,orderProcess:22388.37,otherPrep:0,fragilePackaging:2845.81,disposal:300.51,materials:171.65,airFreight:16505.15},
+{id:"cost_seed_6",month:"2026-02",storage:6780,trucking:1750,orderProcess:22451.6,otherPrep:0,fragilePackaging:1779.85,disposal:302.37,materials:0,airFreight:18066.5},
+{id:"cost_seed_7",month:"2026-03",storage:6628,trucking:1850,orderProcess:22730.43,otherPrep:0,fragilePackaging:6171.52,disposal:127.06,materials:0,airFreight:18926.03},
+{id:"cost_seed_8",month:"2026-04",storage:6286,trucking:1700,orderProcess:20112.9,otherPrep:0,fragilePackaging:3201.9,disposal:768.8,materials:0,airFreight:16752.97},
+{id:"cost_seed_9",month:"2026-05",storage:6400,trucking:1700,orderProcess:17646.65,otherPrep:0,fragilePackaging:2932.02,disposal:115.8,materials:0,airFreight:13002.2},
+{id:"cost_seed_10",month:"2026-06",storage:6666,trucking:1700,orderProcess:20022.3,otherPrep:0,fragilePackaging:3417.18,disposal:364.5,materials:0,airFreight:14807.97},
+{id:"cost_seed_11",month:"2026-07",storage:6780,trucking:1800,orderProcess:20541.09,otherPrep:0,fragilePackaging:3320.07,disposal:555.16,materials:0,airFreight:15507.07}
+];
 const STORAGE_BUCKET = 'dashboard-files';
 
 // 실제 파일을 Supabase Storage에 업로드하고 공개 URL을 반환 (JSON 데이터에는 이 URL만 저장 -> 용량 걱정 없음)
@@ -501,6 +875,13 @@ async function loadStoreRemote(){
       if(missing.length > 0){
         d.calendarEventTypes = [...missing, ...d.calendarEventTypes];
       }
+    }
+        // ── 마이그레이션: 물류 대시보드 데이터가 없는 기존 계정 보완 ──
+    if(!d.logistics){
+      d.logistics = seedData().logistics;
+    } else {
+      if(!Array.isArray(d.logistics.shipments)) d.logistics.shipments = [];
+      if(!Array.isArray(d.logistics.costs)) d.logistics.costs = [];
     }
     return d;
   }
@@ -1405,12 +1786,21 @@ function seedData(){
     approvalItems: [],
     memo: '',
     role: 'me',
+    logistics: {
+      shipments: SEED_SHIPMENTS,
+      costs: SEED_COSTS,
+    },
   };
 }
 
 const state = {
   data: null,
   view: 'home',
+  app: 'work',
+  logiView: 'logi_home',
+  logiShipMonth: 'all',
+  logiShipPage: 0,
+  logiCostPeriod: 'week',
   selectedVendorId: null,
   meetingNotesYearFilter: null,
   selectedProjectId: null,
@@ -1877,6 +2267,29 @@ function bindProfilePhotoModal(){
 
 function render(){
   if(!state.data){ return; }
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="app-shell">
+      <div class="app-sidebar">
+        <div class="app-side-logo">O</div>
+        <button class="app-side-item ${state.app==='work'?'active':''}" data-app="work"><i class="ti ti-layout-dashboard"></i>업무<br/>대시보드</button>
+        <button class="app-side-item ${state.app==='logistics'?'active':''}" data-app="logistics"><i class="ti ti-truck-delivery"></i>물류<br/>대시보드</button>
+      </div>
+      <div class="app-main" id="appMain"></div>
+    </div>
+  `;
+  document.querySelectorAll('.app-side-item').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(state.app === el.dataset.app) return;
+      state.app = el.dataset.app;
+      render();
+    });
+  });
+  if(state.app === 'logistics'){ renderLogisticsApp(); return; }
+  renderWorkApp();
+}
+
+function renderWorkApp(){
   document.title = state.data.dashboardTitle || '천세나 업무 대시보드';
 
   const today = dayjs();
@@ -1893,8 +2306,8 @@ function render(){
     {view:'leave', icon:'ti-beach', label:'연차'},
   ];
 
-  const app = document.getElementById('app');
-  app.innerHTML = `
+  const appMain = document.getElementById('appMain');
+  appMain.innerHTML = `
     <div class="hdr">
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <span class="editorial dashboard-title-text" id="dashboardTitleText" style="font-size:16px;color:#111114;cursor:pointer" title="클릭하여 이름 수정">${state.data.dashboardTitle || '천세나 업무 대시보드'}</span>
@@ -2027,7 +2440,6 @@ function render(){
 
   bindViewEvents();
 }
-
 function navItem(view, icon, label){
   return `<button class="nb ${state.view===view?'active':''}" data-view="${view}"><i class="ti ${icon}"></i>${label}</button>`;
 }
@@ -10975,6 +11387,671 @@ document.addEventListener('click', function(e){
     return;
   }
 });
+
+/* ============================================================
+   물류 대시보드 (1차: 대시보드 / 출고 현황 / 물류비)
+   데이터: state.data.logistics = { shipments:[], costs:[] }
+   비용 계산 로직 (실측 기반 확정값):
+     - 작업비(픽/팩) = 출고건수 * $1.29 + max(0, SKU총량-출고건수) * $0.60
+     - 항공비 = 컷오프 무게(kg) * (무게>=700 ? $1.15 : $1.30)
+     - 트러킹 = 컷오프가 있었던 날 1회 $100 (국가별로 각각 집계)
+   ============================================================ */
+
+const LOGI_LABOR_BASE = 1.29;
+const LOGI_LABOR_EXTRA = 0.60;
+const LOGI_AIR_RATE_HIGH = 1.15;
+const LOGI_AIR_RATE_LOW = 1.30;
+const LOGI_AIR_WEIGHT_THRESHOLD = 700;
+const LOGI_TRUCK_FLAT = 100;
+
+function logiShipments(){ return (state.data.logistics && state.data.logistics.shipments) || []; }
+function logiCosts(){ return (state.data.logistics && state.data.logistics.costs) || []; }
+function costTotal(c){
+  return (c.storage||0)+(c.trucking||0)+(c.orderProcess||0)+(c.otherPrep||0)+(c.fragilePackaging||0)+(c.disposal||0)+(c.materials||0)+(c.airFreight||0);
+}
+
+function logiCalcLabor(shipCount, skuCount){
+  if(!shipCount) return 0;
+  const extra = Math.max(0, (skuCount||0) - shipCount);
+  return shipCount*LOGI_LABOR_BASE + extra*LOGI_LABOR_EXTRA;
+}
+function logiCalcAir(weightKg){
+  if(!weightKg) return 0;
+  return weightKg * (weightKg >= LOGI_AIR_WEIGHT_THRESHOLD ? LOGI_AIR_RATE_HIGH : LOGI_AIR_RATE_LOW);
+}
+function logiCalcTruck(weightKg){ return weightKg>0 ? LOGI_TRUCK_FLAT : 0; }
+
+// 하루치 레코드 s에서 country('Kr'|'Jp') 기준 비용 계산
+function logiDayCost(s, country){
+  const ship = s['ship'+country] || 0;
+  const sku = s['sku'+country] || 0;
+  const weight = s['cutoffWeight'+country] || 0;
+  const labor = logiCalcLabor(ship, sku);
+  const air = logiCalcAir(weight);
+  const truck = logiCalcTruck(weight);
+  const total = labor+air+truck;
+  return { labor, air, truck, total, perOrder: ship>0 ? total/ship : 0 };
+}
+
+function logiWeekKey(dateStr){
+  const d = dayjs(dateStr);
+  const dow = (d.day()+6)%7; // 월요일 시작
+  return d.subtract(dow,'day').format('YYYY-MM-DD');
+}
+function logiMonthKey(dateStr){ return dateStr.slice(0,7); }
+
+// 기간별(주/월) 집계: KR/JP 각각 출고량 · 작업비 · 항공비 · 트러킹 · 합계 · 건당평균
+function logiAggregate(shipments, keyFn){
+  const map = {};
+  shipments.forEach(s=>{
+    const key = keyFn(s.date);
+    if(!map[key]) map[key] = {key, shipKr:0,shipJp:0, laborKr:0,laborJp:0, airKr:0,airJp:0, truckKr:0,truckJp:0};
+    const g = map[key];
+    g.shipKr += s.shipKr||0; g.shipJp += s.shipJp||0;
+    const kr = logiDayCost(s,'Kr'); const jp = logiDayCost(s,'Jp');
+    g.laborKr+=kr.labor; g.airKr+=kr.air; g.truckKr+=kr.truck;
+    g.laborJp+=jp.labor; g.airJp+=jp.air; g.truckJp+=jp.truck;
+  });
+  return Object.values(map).sort((a,b)=>a.key<b.key?-1:1).map(g=>({
+    ...g,
+    totalKr: g.laborKr+g.airKr+g.truckKr,
+    totalJp: g.laborJp+g.airJp+g.truckJp,
+    perOrderKr: g.shipKr>0 ? (g.laborKr+g.airKr+g.truckKr)/g.shipKr : 0,
+    perOrderJp: g.shipJp>0 ? (g.laborJp+g.airJp+g.truckJp)/g.shipJp : 0,
+  }));
+}
+
+function pctChange(cur, prev){
+  if(prev===0 || prev===undefined || prev===null) return null;
+  return ((cur-prev)/prev)*100;
+}
+function fmtPct(p){
+  if(p===null || p===undefined || !isFinite(p)) return '-';
+  const sign = p>0 ? '+' : '';
+  return `${sign}${p.toFixed(1)}%`;
+}
+function pctColor(p, inverse){
+  if(p===null || p===undefined || !isFinite(p)) return 'var(--muted)';
+  const good = inverse ? p<0 : p>0;
+  return good ? '#1C9873' : '#C0392B';
+}
+
+function kpiCard(icon,label,value,sub,color){
+  return `<div class="kpi" style="--ac:${color}">
+    <div class="ki"><i class="ti ${icon}"></i></div>
+    <div class="kn">${value}</div>
+    <div class="kl">${label}</div>
+    <div style="font-size:10px;color:var(--muted);margin-top:2px">${sub}</div>
+  </div>`;
+}
+
+/* ---------- 가벼운 SVG 차트 (외부 라이브러리 의존 없음) ---------- */
+function chartLine(seriesList, xLabels, opts={}){
+  const w = opts.width || 680, h = opts.height || 190, pad = {t:12,r:14,b:24,l:46};
+  const innerW = w-pad.l-pad.r, innerH = h-pad.t-pad.b;
+  const allVals = seriesList.flatMap(s=>s.data);
+  const maxV = Math.max(1, ...allVals);
+  const minV = Math.min(0, ...allVals);
+  const n = xLabels.length;
+  const xAt = i => pad.l + (n<=1?innerW/2:(innerW*i/(n-1)));
+  const yAt = v => pad.t + innerH - ((v-minV)/((maxV-minV)||1))*innerH;
+  const gridLines = [0,0.25,0.5,0.75,1].map(f=>{
+    const y = pad.t+innerH*(1-f);
+    const val = Math.round(minV + (maxV-minV)*f);
+    return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${w-pad.r}" y2="${y.toFixed(1)}" stroke="#EEF0F3" stroke-width="1"/><text x="${pad.l-6}" y="${(y+3).toFixed(1)}" font-size="9" fill="#8A93A3" text-anchor="end">${val.toLocaleString()}</text>`;
+  }).join('');
+  const paths = seriesList.map(s=>{
+    const d = s.data.map((v,i)=> `${i===0?'M':'L'} ${xAt(i).toFixed(1)} ${yAt(v).toFixed(1)}`).join(' ');
+    const dots = n<=20 ? s.data.map((v,i)=>`<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(v).toFixed(1)}" r="2.5" fill="${s.color}"/>`).join('') : '';
+    return `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+  }).join('');
+  const idxToShow = n<=1 ? [0] : (n<=6 ? xLabels.map((_,i)=>i) : [0, Math.floor((n-1)/2), n-1]);
+  const xLabelsSvg = idxToShow.map(i=>{
+    const anchor = i===0 ? 'start' : (i===n-1 ? 'end' : 'middle');
+    return `<text x="${xAt(i).toFixed(1)}" y="${h-6}" font-size="9" fill="#8A93A3" text-anchor="${anchor}">${xLabels[i]}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="xMidYMid meet">${gridLines}${paths}${xLabelsSvg}</svg>`;
+}
+
+function chartStackedBar(seriesList, xLabels, opts={}){
+  const w = opts.width || 680, h = opts.height || 220, pad = {t:12,r:14,b:26,l:50};
+  const innerW = w-pad.l-pad.r, innerH = h-pad.t-pad.b;
+  const n = xLabels.length;
+  const totals = xLabels.map((_,i)=> seriesList.reduce((s,ser)=>s+(ser.data[i]||0),0));
+  const maxV = Math.max(1, ...totals);
+  const gap = innerW/Math.max(n,1);
+  const bw = Math.min(38, gap*0.6);
+  const gridLines = [0,0.25,0.5,0.75,1].map(f=>{
+    const y = pad.t+innerH*(1-f);
+    const val = Math.round(maxV*f);
+    return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${w-pad.r}" y2="${y.toFixed(1)}" stroke="#EEF0F3" stroke-width="1"/><text x="${pad.l-6}" y="${(y+3).toFixed(1)}" font-size="9" fill="#8A93A3" text-anchor="end">${val>=1000?(val/1000).toFixed(0)+'k':val}</text>`;
+  }).join('');
+  let bars = '';
+  xLabels.forEach((lab,i)=>{
+    let yCursor = pad.t+innerH;
+    const x = pad.l + gap*i + (gap-bw)/2;
+    seriesList.forEach(ser=>{
+      const v = ser.data[i]||0;
+      if(v<=0) return;
+      const bh = (v/maxV)*innerH;
+      yCursor -= bh;
+      bars += `<rect x="${x.toFixed(1)}" y="${yCursor.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${ser.color}" rx="2"><title>${ser.name}: ${v.toLocaleString(undefined,{maximumFractionDigits:0})}</title></rect>`;
+    });
+    bars += `<text x="${(x+bw/2).toFixed(1)}" y="${h-6}" font-size="9" fill="#8A93A3" text-anchor="middle">${lab}</text>`;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">${gridLines}${bars}</svg>`;
+}
+
+/* ---------- 물류 대시보드 렌더 ---------- */
+function renderLogisticsApp(){
+  const today = dayjs();
+  const todayLabel = today.format('YYYY년 M월 D일 (ddd)');
+  const logiTabs = [
+    {view:'logi_home', icon:'ti-layout-dashboard', label:'대시보드'},
+    {view:'logi_shipment', icon:'ti-package', label:'출고 현황'},
+    {view:'logi_cost', icon:'ti-receipt-2', label:'물류비'},
+  ];
+  const mainRoot = document.getElementById('appMain');
+  mainRoot.innerHTML = `
+    <div class="hdr">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="logo" style="background:#0B4E9E">물</span>
+        <span class="editorial" style="font-size:16px;font-weight:600;color:#111114">물류 대시보드</span>
+        <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="pill-bar">
+      ${logiTabs.map(t=>`<button class="nb ${state.logiView===t.view?'active':''}" data-logiview="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
+      </div>
+    </div>
+    <div class="cnt" id="logiRoot"></div>
+  `;
+  document.querySelectorAll('[data-logiview]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.logiView = el.dataset.logiview;
+      renderLogisticsApp();
+    });
+  });
+  const root = document.getElementById('logiRoot');
+  if(state.logiView === 'logi_shipment') root.innerHTML = viewLogiShipment();
+  else if(state.logiView === 'logi_cost') root.innerHTML = viewLogiCost();
+  else root.innerHTML = viewLogiHome();
+  bindLogisticsEvents();
+}
+
+/* ---------- 대시보드(요약) ---------- */
+function viewLogiHome(){
+  const ships = logiShipments();
+  const weekly = logiAggregate(ships, logiWeekKey);
+  const monthly = logiAggregate(ships, logiMonthKey);
+  const curWeek = weekly[weekly.length-1];
+  const prevWeek = weekly[weekly.length-2];
+  const curMonth = monthly[monthly.length-1];
+  const prevMonth = monthly[monthly.length-2];
+
+  const shipsAsc = [...ships].sort((a,b)=> a.date<b.date?-1:1);
+  const last30 = shipsAsc.slice(-30);
+  const shipChart = last30.length ? chartLine([
+    {name:'출고 KR', color:'#1C85E8', data: last30.map(s=>s.shipKr||0)},
+    {name:'출고 JP', color:'#D85A30', data: last30.map(s=>s.shipJp||0)},
+  ], last30.map(s=>dayjs(s.date).format('M/D'))) : '<div class="empty-state">아직 데이터가 없습니다</div>';
+
+  const costChart = monthly.length ? chartLine([
+    {name:'물류비 KR', color:'#1C85E8', data: monthly.slice(-6).map(m=>m.totalKr)},
+    {name:'물류비 JP', color:'#D85A30', data: monthly.slice(-6).map(m=>m.totalJp)},
+  ], monthly.slice(-6).map(m=>dayjs(m.key+'-01').format('YY.M'))) : '<div class="empty-state">아직 데이터가 없습니다</div>';
+
+  return `
+    <div class="sh" style="margin-bottom:4px"><div class="st"><i class="ti ti-calendar-week oi"></i>이번주</div></div>
+    <div class="two" style="margin-bottom:14px">
+      ${logiCountryKpiBlock('한국(KR)', curWeek, prevWeek, 'Kr', '#1C85E8')}
+      ${logiCountryKpiBlock('일본(JP)', curWeek, prevWeek, 'Jp', '#D85A30')}
+    </div>
+    <div class="sh" style="margin-bottom:4px"><div class="st"><i class="ti ti-calendar-stats oi"></i>이번달</div></div>
+    <div class="two" style="margin-bottom:14px">
+      ${logiCountryKpiBlock('한국(KR)', curMonth, prevMonth, 'Kr', '#1C85E8')}
+      ${logiCountryKpiBlock('일본(JP)', curMonth, prevMonth, 'Jp', '#D85A30')}
+    </div>
+    <div class="two">
+      <div class="card">
+        <div class="sh"><div class="st"><i class="ti ti-chart-line oi"></i>출고량 추이 (최근 30일)</div></div>
+        <div class="logi-chart-wrap">${shipChart}</div>
+      </div>
+      <div class="card">
+        <div class="sh"><div class="st"><i class="ti ti-chart-line oi"></i>물류비 추이 (최근 6개월)</div></div>
+        <div class="logi-chart-wrap">${costChart}</div>
+      </div>
+    </div>
+    <div class="card" style="background:var(--sf);border-style:dashed">
+      <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px"><i class="ti ti-info-circle"></i>항공 스케줄 입력 · 스케줄 공유 포맷 탭은 다음 업데이트에서 추가됩니다. SKU 총량은 신규 입력 항목이라 과거 이력은 출고건수 기준(추가 SKU 미반영)으로 표시됩니다.</div>
+    </div>
+  `;
+}
+
+function logiCountryKpiBlock(label, cur, prev, country, color){
+  const ship = cur ? cur['ship'+country] : 0;
+  const labor = cur ? cur['labor'+country] : 0;
+  const air = cur ? cur['air'+country] : 0;
+  const truck = cur ? cur['truck'+country] : 0;
+  const total = cur ? cur['total'+country] : 0;
+  const perOrder = cur ? cur['perOrder'+country] : 0;
+  const prevShip = prev ? prev['ship'+country] : 0;
+  const prevTotal = prev ? prev['total'+country] : 0;
+  const prevPerOrder = prev ? prev['perOrder'+country] : 0;
+  const shipPct = pctChange(ship, prevShip);
+  const totalPct = pctChange(total, prevTotal);
+  const perOrderPct = pctChange(perOrder, prevPerOrder);
+  return `
+    <div class="card" style="border-top:3px solid ${color}">
+      <div class="sh" style="margin-bottom:10px"><div class="st">${label}</div></div>
+      <div class="krow">
+        <div class="kpi" style="--ac:${color};padding:12px">
+          <div class="kl">출고량</div>
+          <div class="kn" style="font-size:20px">${ship.toLocaleString()}건</div>
+          <div style="font-size:10px;color:${pctColor(shipPct,false)}">${fmtPct(shipPct)} vs 이전</div>
+        </div>
+        <div class="kpi" style="--ac:${color};padding:12px">
+          <div class="kl">물류비 합계</div>
+          <div class="kn" style="font-size:20px">$${total.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+          <div style="font-size:10px;color:${pctColor(totalPct,true)}">${fmtPct(totalPct)} vs 이전</div>
+        </div>
+        <div class="kpi" style="--ac:${color};padding:12px">
+          <div class="kl">건당 평균</div>
+          <div class="kn" style="font-size:20px">$${perOrder.toFixed(2)}</div>
+          <div style="font-size:10px;color:${pctColor(perOrderPct,true)}">${fmtPct(perOrderPct)} vs 이전</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:14px;font-size:11px;color:var(--muted);margin-top:10px">
+        <span>작업비 $${labor.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+        <span>항공비 $${air.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+        <span>트러킹 $${truck.toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 출고 현황 ---------- */
+function viewLogiShipment(){
+  const shipsDesc = [...logiShipments()].sort((a,b)=> a.date<b.date?1:-1);
+  const months = Array.from(new Set(logiShipments().map(s=>s.date.slice(0,7)))).sort().reverse();
+  const filter = state.logiShipMonth || 'all';
+  const filtered = filter==='all' ? shipsDesc : shipsDesc.filter(s=>s.date.startsWith(filter));
+  const pageSize = 15;
+  const page = state.logiShipPage || 0;
+  const paged = filtered.slice(page*pageSize, (page+1)*pageSize);
+
+  const byMonth = {};
+  logiShipments().forEach(s=>{
+    const m = s.date.slice(0,7);
+    if(!byMonth[m]) byMonth[m] = {pick:0, ship:0};
+    byMonth[m].pick += (s.pickKr||0)+(s.pickJp||0);
+    byMonth[m].ship += (s.shipKr||0)+(s.shipJp||0);
+  });
+  const monthKeys = Object.keys(byMonth).sort();
+
+  const chartAsc = [...logiShipments()].sort((a,b)=>a.date<b.date?-1:1).slice(-45);
+  const chart = chartAsc.length ? chartLine([
+    {name:'출고 KR', color:'#1C85E8', data: chartAsc.map(s=>s.shipKr||0)},
+    {name:'출고 JP', color:'#D85A30', data: chartAsc.map(s=>s.shipJp||0)},
+  ], chartAsc.map(s=>dayjs(s.date).format('M/D'))) : '<div class="empty-state">아직 데이터가 없습니다</div>';
+
+  return `
+    <div class="card">
+      <div class="sh"><div class="st"><i class="ti ti-chart-line oi"></i>출고량 추이 (최근 45일, KR/JP)</div></div>
+      <div class="logi-chart-wrap">${chart}</div>
+      <div class="logi-legend">
+        <span><i style="background:#1C85E8"></i>출고 KR</span>
+        <span><i style="background:#D85A30"></i>출고 JP</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sh"><div class="st"><i class="ti ti-table oi"></i>월별 요약 (최근 6개월)</div></div>
+      <table class="tbl">
+        <thead><tr><th>월</th><th>픽킹 합계</th><th>출고 합계</th></tr></thead>
+        <tbody>
+          ${monthKeys.slice(-6).reverse().map(m=>`<tr><td>${m}</td><td>${byMonth[m].pick.toLocaleString()}</td><td>${byMonth[m].ship.toLocaleString()}</td></tr>`).join('') || '<tr><td colspan="3" class="empty-state">데이터가 없습니다</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="sh">
+        <div class="st"><i class="ti ti-list oi"></i>일별 입력 내역</div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <select class="inp" id="logiShipMonthFilter" style="margin:0;width:auto;padding:6px 10px">
+            <option value="all" ${filter==='all'?'selected':''}>전체</option>
+            ${months.map(m=>`<option value="${m}" ${filter===m?'selected':''}>${m}</option>`).join('')}
+          </select>
+          <button class="btn btn-o" id="addShipmentBtn"><i class="ti ti-plus"></i>입력</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>날짜</th><th>픽킹 KR/JP</th><th>출고 KR/JP</th><th>SKU KR/JP</th><th>컷오프 무게(kg) KR/JP</th><th>팔렛 KR/JP</th><th></th></tr></thead>
+        <tbody>
+          ${paged.map(s=>`
+            <tr class="clickable edit-shipment-row" data-id="${s.id}">
+              <td>${fmtDate(s.date)}</td>
+              <td>${(s.pickKr||0).toLocaleString()} / ${(s.pickJp||0).toLocaleString()}</td>
+              <td>${(s.shipKr||0).toLocaleString()} / ${(s.shipJp||0).toLocaleString()}</td>
+              <td>${(s.skuKr||0).toLocaleString()} / ${(s.skuJp||0).toLocaleString()}</td>
+              <td>${(s.cutoffWeightKr||0).toLocaleString()} / ${(s.cutoffWeightJp||0).toLocaleString()}</td>
+              <td>${(s.palletKr||0)} / ${(s.palletJp||0)}</td>
+              <td style="text-align:right"><i class="ti ti-pencil" style="color:var(--muted)"></i></td>
+            </tr>`).join('') || '<tr><td colspan="7" class="empty-state">데이터가 없습니다</td></tr>'}
+        </tbody>
+      </table>
+      </div>
+      ${filtered.length>pageSize ? `
+      <div style="display:flex;justify-content:center;gap:8px;margin-top:10px;align-items:center">
+        <button class="btn" id="logiShipPrev" ${page===0?'disabled':''}>이전</button>
+        <span style="font-size:12px;color:var(--muted)">${page+1} / ${Math.ceil(filtered.length/pageSize)}</span>
+        <button class="btn" id="logiShipNext" ${(page+1)*pageSize>=filtered.length?'disabled':''}>다음</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+/* ---------- 물류비 ---------- */
+const LOGI_COST_CATS = [
+  {key:'storage', label:'Storage', color:'#1C85E8'},
+  {key:'trucking', label:'Trucking', color:'#D85A30'},
+  {key:'orderProcess', label:'Order Process', color:'#7C3AED'},
+  {key:'otherPrep', label:'Other Prep', color:'#059669'},
+  {key:'fragilePackaging', label:'Fragile Packaging', color:'#F59E0B'},
+  {key:'disposal', label:'Disposal', color:'#5F6672'},
+  {key:'materials', label:'부자재', color:'#0891B2'},
+  {key:'airFreight', label:'항공비', color:'#C0392B'},
+];
+
+function viewLogiCost(){
+  const period = state.logiCostPeriod === 'month' ? 'month' : 'week';
+  const ships = logiShipments();
+  const agg = period==='month' ? logiAggregate(ships, logiMonthKey) : logiAggregate(ships, logiWeekKey);
+  const recent = agg.slice(-12);
+  const fmtKey = k => period==='month' ? dayjs(k+'-01').format('YY.M') : dayjs(k).format('M/D')+'주';
+
+  const chartKr = recent.length ? chartStackedBar([
+    {name:'작업비', color:'#1C85E8', data: recent.map(g=>g.laborKr)},
+    {name:'항공비', color:'#C0392B', data: recent.map(g=>g.airKr)},
+    {name:'트러킹', color:'#F59E0B', data: recent.map(g=>g.truckKr)},
+  ], recent.map(g=>fmtKey(g.key))) : '<div class="empty-state">아직 데이터가 없습니다</div>';
+  const chartJp = recent.length ? chartStackedBar([
+    {name:'작업비', color:'#1C85E8', data: recent.map(g=>g.laborJp)},
+    {name:'항공비', color:'#C0392B', data: recent.map(g=>g.airJp)},
+    {name:'트러킹', color:'#F59E0B', data: recent.map(g=>g.truckJp)},
+  ], recent.map(g=>fmtKey(g.key))) : '<div class="empty-state">아직 데이터가 없습니다</div>';
+
+  const desc = [...agg].reverse();
+
+  // 인보이스 실적 (수동 입력, 참고용)
+  const costsDesc = [...logiCosts()].sort((a,b)=> a.month<b.month?1:-1);
+
+  return `
+    <div class="sh">
+      <div class="st"><i class="ti ti-calculator oi"></i>실시간 물류비 (일별 입력 기반 자동계산)</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn ${period==='week'?'btn-o':''}" id="logiCostPeriodWeek">주별</button>
+        <button class="btn ${period==='month'?'btn-o':''}" id="logiCostPeriodMonth">월별</button>
+      </div>
+    </div>
+    <div class="two" style="margin-bottom:14px">
+      <div class="card">
+        <div class="sh"><div class="st" style="color:#1C85E8">한국(KR)</div></div>
+        <div class="logi-chart-wrap">${chartKr}</div>
+      </div>
+      <div class="card">
+        <div class="sh"><div class="st" style="color:#D85A30">일본(JP)</div></div>
+        <div class="logi-chart-wrap">${chartJp}</div>
+      </div>
+    </div>
+    <div class="logi-legend" style="margin:-6px 0 14px">
+      <span><i style="background:#1C85E8"></i>작업비 (픽/팩)</span>
+      <span><i style="background:#C0392B"></i>항공비</span>
+      <span><i style="background:#F59E0B"></i>트러킹</span>
+    </div>
+    <div class="card">
+      <div class="sh"><div class="st"><i class="ti ti-table oi"></i>${period==='month'?'월별':'주별'} 상세</div></div>
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>${period==='month'?'월':'주 시작일'}</th><th>출고 KR</th><th>물류비 KR</th><th>건당 KR</th><th>출고 JP</th><th>물류비 JP</th><th>건당 JP</th></tr></thead>
+        <tbody>
+          ${desc.map(g=>`
+            <tr>
+              <td>${fmtKey(g.key)}</td>
+              <td>${g.shipKr.toLocaleString()}</td>
+              <td>$${g.totalKr.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+              <td>$${g.perOrderKr.toFixed(2)}</td>
+              <td>${g.shipJp.toLocaleString()}</td>
+              <td>$${g.totalJp.toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+              <td>$${g.perOrderJp.toFixed(2)}</td>
+            </tr>`).join('') || '<tr><td colspan="7" class="empty-state">데이터가 없습니다</td></tr>'}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="sh" style="margin-top:22px">
+      <div class="st"><i class="ti ti-file-invoice oi"></i>인보이스 실적 (월별 수동 입력, 회계 대사용)</div>
+      <button class="btn btn-o" id="addCostBtn"><i class="ti ti-plus"></i>입력</button>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+      <table class="tbl">
+        <thead><tr><th>월</th>${LOGI_COST_CATS.map(c=>`<th>${c.label}</th>`).join('')}<th>합계</th><th></th></tr></thead>
+        <tbody>
+          ${costsDesc.map(c=>`
+            <tr class="clickable edit-cost-row" data-id="${c.id}">
+              <td>${dayjs(c.month+'-01').format('YYYY년 M월')}</td>
+              ${LOGI_COST_CATS.map(cat=>`<td>$${(c[cat.key]||0).toLocaleString(undefined,{maximumFractionDigits:0})}</td>`).join('')}
+              <td style="font-weight:700">$${costTotal(c).toLocaleString(undefined,{maximumFractionDigits:0})}</td>
+              <td style="text-align:right"><i class="ti ti-pencil" style="color:var(--muted)"></i></td>
+            </tr>`).join('') || `<tr><td colspan="${LOGI_COST_CATS.length+3}" class="empty-state">데이터가 없습니다</td></tr>`}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 모달 ---------- */
+function modalShipmentForm(existing){
+  const s = existing || {date: dayjs().format('YYYY-MM-DD'), pickKr:0,pickJp:0,shipKr:0,shipJp:0,cutoffKr:0,cutoffJp:0,skuKr:0,skuJp:0,cutoffWeightKr:0,cutoffWeightJp:0,palletKr:0,palletJp:0,newOrderKr:0,newOrderJp:0};
+  return `
+    <div class="modal">
+      <div class="mh"><h3>${existing?'출고 데이터 편집':'출고 데이터 입력'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="shipmentForm">
+          <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" name="date" value="${s.date}" required/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">픽킹 KR</label><input class="inp" type="number" name="pickKr" value="${s.pickKr||0}" min="0"/></div>
+            <div class="field"><label class="field-label">픽킹 JP</label><input class="inp" type="number" name="pickJp" value="${s.pickJp||0}" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">출고(주문건수) KR</label><input class="inp" type="number" name="shipKr" value="${s.shipKr||0}" min="0"/></div>
+            <div class="field"><label class="field-label">출고(주문건수) JP</label><input class="inp" type="number" name="shipJp" value="${s.shipJp||0}" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">SKU 총량 KR <span style="font-weight:400;text-transform:none;color:var(--muted)">(작업비 계산용)</span></label><input class="inp" type="number" name="skuKr" value="${s.skuKr||0}" min="0"/></div>
+            <div class="field"><label class="field-label">SKU 총량 JP</label><input class="inp" type="number" name="skuJp" value="${s.skuJp||0}" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">컷오프 무게(kg) KR <span style="font-weight:400;text-transform:none;color:var(--muted)">(항공비 계산용)</span></label><input class="inp" type="number" name="cutoffWeightKr" value="${s.cutoffWeightKr||0}" min="0" step="0.01"/></div>
+            <div class="field"><label class="field-label">컷오프 무게(kg) JP</label><input class="inp" type="number" name="cutoffWeightJp" value="${s.cutoffWeightJp||0}" min="0" step="0.01"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">팔렛 수 KR</label><input class="inp" type="number" name="palletKr" value="${s.palletKr||0}" min="0"/></div>
+            <div class="field"><label class="field-label">팔렛 수 JP</label><input class="inp" type="number" name="palletJp" value="${s.palletJp||0}" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">신규주문 KR</label><input class="inp" type="number" name="newOrderKr" value="${s.newOrderKr||0}" min="0"/></div>
+            <div class="field"><label class="field-label">신규주문 JP</label><input class="inp" type="number" name="newOrderJp" value="${s.newOrderJp||0}" min="0"/></div>
+          </div>
+        </form>
+      </div>
+      <div class="mf">
+        ${existing?`<button type="button" id="deleteShipmentBtn" class="btn btn-red" style="margin-right:auto">삭제</button>`:''}
+        <button type="submit" form="shipmentForm" class="btn btn-o">저장</button>
+      </div>
+    </div>
+  `;
+}
+
+function modalCostForm(existing){
+  const c = existing || {month: dayjs().format('YYYY-MM'), storage:0,trucking:0,orderProcess:0,otherPrep:0,fragilePackaging:0,disposal:0,materials:0,airFreight:0};
+  return `
+    <div class="modal">
+      <div class="mh"><h3>${existing?'인보이스 실적 편집':'인보이스 실적 입력'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb">
+        <form id="costForm">
+          <div class="field"><label class="field-label">월</label><input class="inp" type="month" name="month" value="${c.month}" required/></div>
+          <div class="two">
+            <div class="field"><label class="field-label">Storage</label><input class="inp" type="number" name="storage" value="${c.storage||0}" step="0.01" min="0"/></div>
+            <div class="field"><label class="field-label">Trucking</label><input class="inp" type="number" name="trucking" value="${c.trucking||0}" step="0.01" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">Order Process</label><input class="inp" type="number" name="orderProcess" value="${c.orderProcess||0}" step="0.01" min="0"/></div>
+            <div class="field"><label class="field-label">Other Prep</label><input class="inp" type="number" name="otherPrep" value="${c.otherPrep||0}" step="0.01" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">Fragile Packaging</label><input class="inp" type="number" name="fragilePackaging" value="${c.fragilePackaging||0}" step="0.01" min="0"/></div>
+            <div class="field"><label class="field-label">Disposal</label><input class="inp" type="number" name="disposal" value="${c.disposal||0}" step="0.01" min="0"/></div>
+          </div>
+          <div class="two">
+            <div class="field"><label class="field-label">부자재</label><input class="inp" type="number" name="materials" value="${c.materials||0}" step="0.01" min="0"/></div>
+            <div class="field"><label class="field-label">항공비</label><input class="inp" type="number" name="airFreight" value="${c.airFreight||0}" step="0.01" min="0"/></div>
+          </div>
+        </form>
+      </div>
+      <div class="mf">
+        ${existing?`<button type="button" id="deleteCostBtn" class="btn btn-red" style="margin-right:auto">삭제</button>`:''}
+        <button type="submit" form="costForm" class="btn btn-o">저장</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 이벤트 바인딩 ---------- */
+function bindLogisticsEvents(){
+  const monthFilter = document.getElementById('logiShipMonthFilter');
+  if(monthFilter) monthFilter.addEventListener('change', e=>{
+    state.logiShipMonth = e.target.value; state.logiShipPage = 0; renderLogisticsApp();
+  });
+  const prevBtn = document.getElementById('logiShipPrev');
+  if(prevBtn) prevBtn.addEventListener('click', ()=>{ state.logiShipPage = Math.max(0,(state.logiShipPage||0)-1); renderLogisticsApp(); });
+  const nextBtn = document.getElementById('logiShipNext');
+  if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.logiShipPage = (state.logiShipPage||0)+1; renderLogisticsApp(); });
+
+  const addShipBtn = document.getElementById('addShipmentBtn');
+  if(addShipBtn) addShipBtn.addEventListener('click', ()=>{
+    openModal(modalShipmentForm(null)); bindModalCommon(); bindShipmentFormSubmit(null);
+  });
+  document.querySelectorAll('.edit-shipment-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const item = logiShipments().find(x=>x.id===row.dataset.id);
+      openModal(modalShipmentForm(item)); bindModalCommon(); bindShipmentFormSubmit(item);
+    });
+  });
+
+  const periodWeekBtn = document.getElementById('logiCostPeriodWeek');
+  if(periodWeekBtn) periodWeekBtn.addEventListener('click', ()=>{ state.logiCostPeriod='week'; renderLogisticsApp(); });
+  const periodMonthBtn = document.getElementById('logiCostPeriodMonth');
+  if(periodMonthBtn) periodMonthBtn.addEventListener('click', ()=>{ state.logiCostPeriod='month'; renderLogisticsApp(); });
+
+  const addCostBtn = document.getElementById('addCostBtn');
+  if(addCostBtn) addCostBtn.addEventListener('click', ()=>{
+    openModal(modalCostForm(null)); bindModalCommon(); bindCostFormSubmit(null);
+  });
+  document.querySelectorAll('.edit-cost-row').forEach(row=>{
+    row.addEventListener('click', ()=>{
+      const item = logiCosts().find(x=>x.id===row.dataset.id);
+      openModal(modalCostForm(item)); bindModalCommon(); bindCostFormSubmit(item);
+    });
+  });
+}
+
+function bindShipmentFormSubmit(existing){
+  document.getElementById('shipmentForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const date = fd.get('date');
+    if(!date){ showToast('날짜를 입력해주세요'); return; }
+    const num = k => Number(fd.get(k))||0;
+    const payload = {
+      date,
+      pickKr:num('pickKr'), pickJp:num('pickJp'),
+      shipKr:num('shipKr'), shipJp:num('shipJp'),
+      skuKr:num('skuKr'), skuJp:num('skuJp'),
+      cutoffWeightKr:num('cutoffWeightKr'), cutoffWeightJp:num('cutoffWeightJp'),
+      palletKr:num('palletKr'), palletJp:num('palletJp'),
+      newOrderKr:num('newOrderKr'), newOrderJp:num('newOrderJp'),
+    };
+    if(!state.data.logistics) state.data.logistics = {shipments:[],costs:[]};
+    const list = state.data.logistics.shipments;
+    const dupIdx = list.findIndex(x=> x.date===date && (!existing || x.id!==existing.id));
+    if(existing){
+      const idx = list.findIndex(x=>x.id===existing.id);
+      if(idx>-1) list[idx] = {...existing, ...payload};
+    } else if(dupIdx>-1){
+      list[dupIdx] = {...list[dupIdx], ...payload};
+      closeModal(); persist(false); renderLogisticsApp();
+      showToast('같은 날짜의 데이터가 있어 업데이트했습니다');
+      return;
+    } else {
+      list.push({id: uid('ship'), ...payload});
+    }
+    closeModal(); persist(false); renderLogisticsApp();
+    showToast('저장되었습니다');
+  });
+  const deleteBtn = document.getElementById('deleteShipmentBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
+    if(!existing) return;
+    if(!confirm('삭제하시겠습니까?')) return;
+    state.data.logistics.shipments = state.data.logistics.shipments.filter(x=>x.id!==existing.id);
+    closeModal(); persist(false); renderLogisticsApp();
+    showToast('삭제되었습니다');
+  });
+}
+
+function bindCostFormSubmit(existing){
+  document.getElementById('costForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const month = fd.get('month');
+    if(!month){ showToast('월을 입력해주세요'); return; }
+    const num = k => Number(fd.get(k))||0;
+    const payload = {
+      month,
+      storage:num('storage'), trucking:num('trucking'), orderProcess:num('orderProcess'),
+      otherPrep:num('otherPrep'), fragilePackaging:num('fragilePackaging'), disposal:num('disposal'),
+      materials:num('materials'), airFreight:num('airFreight'),
+    };
+    if(!state.data.logistics) state.data.logistics = {shipments:[],costs:[]};
+    const list = state.data.logistics.costs;
+    const dupIdx = list.findIndex(x=> x.month===month && (!existing || x.id!==existing.id));
+    if(existing){
+      const idx = list.findIndex(x=>x.id===existing.id);
+      if(idx>-1) list[idx] = {...existing, ...payload};
+    } else if(dupIdx>-1){
+      list[dupIdx] = {...list[dupIdx], ...payload};
+      closeModal(); persist(false); renderLogisticsApp();
+      showToast('같은 월의 데이터가 있어 업데이트했습니다');
+      return;
+    } else {
+      list.push({id: uid('cost'), ...payload});
+    }
+    closeModal(); persist(false); renderLogisticsApp();
+    showToast('저장되었습니다');
+  });
+  const deleteBtn = document.getElementById('deleteCostBtn');
+  if(deleteBtn) deleteBtn.addEventListener('click', ()=>{
+    if(!existing) return;
+    if(!confirm('삭제하시겠습니까?')) return;
+    state.data.logistics.costs = state.data.logistics.costs.filter(x=>x.id!==existing.id);
+    closeModal(); persist(false); renderLogisticsApp();
+    showToast('삭제되었습니다');
+  });
+}
 
 /* ---------- 앱 초기화 ---------- */
 let usdKrwRate = null;
