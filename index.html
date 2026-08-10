@@ -1448,6 +1448,7 @@ const state = {
   anthropicApiKey: (function(){ try { return localStorage.getItem('anthropic_api_key') || ''; } catch(e){ return ''; } })(),
   filesActiveFolderId: 'all',
   filesPage: 0,
+  filesOpenFolders: {},
 };
 
 function persist(shouldRender=true){
@@ -2054,17 +2055,17 @@ const isReadOnly = () => false; // 항상 편집 모드
    파일 모음 뷰
 ================================================================ */
 function collectAllFileItems(){
-  const items = [];
+  const items=[];
   state.data.vendors.forEach(v=>{
-    const add = (src, name)=>(src.links||[]).forEach(lk=>items.push({...lk,_src:name,_srcType:'vendor'}));
-    add(v, v.name);
+    const add=(src,name)=>(src.links||[]).forEach(lk=>items.push({...lk,_src:name,_srcType:'vendor',_vid:v.id}));
+    add(v,v.name);
     (v.brands||[]).forEach(b=>add(b,`${v.name} / ${b.name}`));
   });
   (state.data.vendorLogs||[]).forEach(log=>{
-    const v = state.data.vendors.find(x=>x.id===log.vendorId);
-    (log.links||[]).forEach(lk=>items.push({...lk,_src:v?v.name:'로그',_srcType:'log',_date:log.date}));
+    const v=state.data.vendors.find(x=>x.id===log.vendorId);
+    (log.links||[]).forEach(lk=>items.push({...lk,_src:v?v.name:'로그',_srcType:'log',_date:log.date,_vid:log.vendorId}));
   });
-  (state.data.projects||[]).forEach(p=>(p.links||[]).forEach(lk=>items.push({...lk,_src:p.title,_srcType:'project'})));
+  (state.data.projects||[]).forEach(p=>(p.links||[]).forEach(lk=>items.push({...lk,_src:p.title,_srcType:'project',_pid:p.id})));
   return items;
 }
 
@@ -2087,20 +2088,20 @@ function findFileItemById(id){
 }
 
 function renderFileItemList(items){
-  if(!items.length) return `<div style="text-align:center;padding:48px 0;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>파일이 없습니다</div>`;
+  if(!items.length) return '<div style="text-align:center;padding:48px 0;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>파일이 없습니다</div>';
   return items.map(lk=>{
-    const isDoc=lk.type==='doc', isFile=!!lk.data&&!isDoc, isUrl=!lk.data&&!isDoc;
+    const isDoc=lk.type==='doc',isFile=!!lk.data&&!isDoc;
     let icon,color;
     if(isDoc){icon='ti-file-text';color='#7C3AED';}
     else if(isFile){const t=lk.type||'';icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':t.includes('sheet')||String(lk.label||'').endsWith('.xlsx')?'ti-file-spreadsheet':'ti-file';color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';}
-    else{const u=lk.url||'';icon=u.includes('drive.google')?'ti-brand-google-drive':u.includes('notion.')?'ti-brand-notion':'ti-link';color='#1C85E8';}
+    else{const u=lk.url||'';icon=u.includes('drive.google')?'ti-brand-google-drive':u.includes('notion.')?'ti-brand-notion':u.includes('sharepoint')?'ti-brand-office':'ti-link';color='#1C85E8';}
     const label=(lk.label||'파일').replace(/</g,'&lt;');
     const date=lk.addedDate||lk._date||'';
     const acts=isDoc
-      ?`<button class="btn files-doc-open" data-id="${lk.id}" style="padding:3px 10px;font-size:11px"><i class="ti ti-edit"></i> 열기</button><button class="btn files-doc-dl" data-id="${lk.id}" style="padding:3px 8px;font-size:11px"><i class="ti ti-download"></i></button>`
+      ?`<button class="btn files-doc-open" data-id="${lk.id}" style="padding:3px 10px;font-size:11px;border-radius:999px"><i class="ti ti-edit"></i> 열기</button><button class="btn files-doc-dl" data-id="${lk.id}" style="padding:3px 8px;font-size:11px;border-radius:999px"><i class="ti ti-download"></i></button>`
       :isFile
-        ?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" style="padding:3px 8px;font-size:11px;text-decoration:none"><i class="ti ti-download"></i></a>`
-        :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" style="padding:3px 8px;font-size:11px;text-decoration:none"><i class="ti ti-external-link"></i></a>`;
+        ?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" style="padding:3px 8px;font-size:11px;border-radius:999px;text-decoration:none"><i class="ti ti-download"></i></a>`
+        :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" style="padding:3px 8px;font-size:11px;border-radius:999px;text-decoration:none"><i class="ti ti-external-link"></i></a>`;
     return `<div class="files-item-row">
       <i class="ti ${icon}" style="font-size:17px;color:${color};flex-shrink:0"></i>
       <div style="flex:1;min-width:0">
@@ -2115,91 +2116,122 @@ function renderFileItemList(items){
   }).join('');
 }
 
+/* ── 자동 분류 ── */
+function getAutoFolders(all){
+  const vm={},pm={};
+  all.forEach(it=>{
+    if(it._srcType==='vendor'||it._srcType==='log'){
+      const v=state.data.vendors.find(x=>x.id===it._vid);
+      if(v){if(!vm[v.id]) vm[v.id]={name:v.name,items:[]};vm[v.id].items.push(it);}
+    } else if(it._srcType==='project'){
+      if(!pm[it._pid]) pm[it._pid]={name:it._src,items:[]};
+      pm[it._pid].items.push(it);
+    }
+  });
+  const r=[];
+  Object.values(vm).forEach(g=>{if(g.items.length) r.push({id:'auto_v_'+g.name,name:g.name,color:'#1C85E8',items:g.items});});
+  Object.values(pm).forEach(g=>{if(g.items.length) r.push({id:'auto_p_'+g.name,name:g.name,color:'#7C3AED',items:g.items});});
+  return r;
+}
+
+/* ── 폴더 유틸 ── */
+function findFolder(folders,id){
+  for(const f of folders){if(f.id===id) return f;if(f.children){const r=findFolder(f.children,id);if(r) return r;}}
+  return null;
+}
+function findFolderName(folders,id){return findFolder(folders,id)?.name||'';}
+function findFolderColor(folders,id){return findFolder(folders,id)?.color||null;}
+function getAllFolderIds(folder){
+  const ids=[...(folder.items||[])];
+  (folder.children||[]).forEach(c=>ids.push(...getAllFolderIds(c)));
+  return ids;
+}
+function getFolderItems(folders,id,all){
+  const f=findFolder(folders,id);
+  if(!f) return [];
+  const ids=new Set(f.items||[]);
+  return all.filter(it=>ids.has(it.id));
+}
+
+/* ── 폴더 트리 렌더링 ── */
+function renderFolderTree(folders,activeId,all,depth){
+  return folders.map(f=>{
+    const isAct=activeId===f.id,c=f.color||'#1C85E8';
+    const cnt=getFolderItems(folders,f.id,all).length;
+    const children=f.children||[];
+    const isOpen=(state.filesOpenFolders||{})[f.id]!==false;
+    const pl=(4+depth*12)+'px';
+    return `<div>
+      <div style="display:flex;align-items:center;border-radius:10px;${isAct?`background:${c}18`:''};margin-bottom:1px">
+        ${children.length?`<button class="files-tree-toggle" data-fid="${f.id}" style="border:none;background:none;cursor:pointer;color:var(--muted);padding:0 2px 0 ${pl};font-size:11px;flex-shrink:0"><i class="ti ti-chevron-${isOpen?'down':'right'}"></i></button>`:`<div style="width:${parseInt(pl)+12}px;flex-shrink:0"></div>`}
+        <button class="files-folder-btn ${isAct?'active':''}" data-fid="${f.id}" style="flex:1;padding-left:4px;${isAct?`color:${c};font-weight:500`:''}">
+          <i class="ti ti-folder-filled" style="color:${c};font-size:14px;flex-shrink:0"></i>
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${f.name}</span>
+          <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 6px;border-radius:20px;flex-shrink:0">${cnt}</span>
+        </button>
+        <div style="display:flex;gap:1px;padding-right:4px;flex-shrink:0">
+          <button class="btn folder-add-child-btn" data-fid="${f.id}" style="padding:2px 5px;font-size:10px;border:none;background:none;color:var(--muted)" title="하위 폴더 추가"><i class="ti ti-folder-plus"></i></button>
+          <button class="btn folder-edit-btn" data-fid="${f.id}" style="padding:2px 5px;font-size:10px;border:none;background:none;color:var(--muted)" title="편집"><i class="ti ti-dots-vertical"></i></button>
+        </div>
+      </div>
+      ${isOpen&&children.length?`<div>${renderFolderTree(children,activeId,all,depth+1)}</div>`:''}</div>`;
+  }).join('');
+}
+
 function viewFiles(){
   if(!state.data.fileFolders) state.data.fileFolders=[];
   const all=collectAllFileItems();
-  const folders=state.data.fileFolders;
-  const assignedIds=new Set(folders.flatMap(f=>f.items||[]));
+  const manualFolders=state.data.fileFolders;
+  const autoFolders=getAutoFolders(all);
+  const assignedIds=new Set(manualFolders.flatMap(f=>getAllFolderIds(f)));
   const unassigned=all.filter(it=>!assignedIds.has(it.id));
   const activeId=state.filesActiveFolderId||'all';
-  const activeFolder=folders.find(f=>f.id===activeId);
-  const viewItems=activeId==='all'?all:activeId==='unassigned'?unassigned:(all.filter(it=>(activeFolder?.items||[]).includes(it.id)));
+  let viewItems=[];
+  if(activeId==='all') viewItems=all;
+  else if(activeId==='unassigned') viewItems=unassigned;
+  else if(activeId.startsWith('auto_')){const af=autoFolders.find(f=>f.id===activeId);viewItems=af?af.items:[];}
+  else{viewItems=getFolderItems(manualFolders,activeId,all);}
 
-  // 페이지네이션
-  const PAGE=15;
-  const filePage=state.filesPage||0;
+  const PAGE=15,filePage=state.filesPage||0;
   const totalPages=Math.ceil(viewItems.length/PAGE);
   const pageItems=viewItems.slice(filePage*PAGE,(filePage+1)*PAGE);
+  const pagerHtml=totalPages>1?`<div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:14px">
+    <button class="btn files-page-btn" data-p="${Math.max(0,filePage-1)}" ${filePage===0?'disabled':''} style="padding:4px 10px;font-size:12px;border-radius:999px"><i class="ti ti-chevron-left"></i></button>
+    ${Array.from({length:totalPages},(_,i)=>`<button class="btn files-page-btn ${i===filePage?'btn-o':''}" data-p="${i}" style="padding:4px 10px;font-size:12px;min-width:32px;border-radius:999px">${i+1}</button>`).join('')}
+    <button class="btn files-page-btn" data-p="${Math.min(totalPages-1,filePage+1)}" ${filePage>=totalPages-1?'disabled':''} style="padding:4px 10px;font-size:12px;border-radius:999px"><i class="ti ti-chevron-right"></i></button>
+  </div>`:'';
 
-  const pagerHtml=totalPages>1?`
-    <div style="display:flex;justify-content:center;align-items:center;gap:4px;margin-top:12px">
-      <button class="btn files-page-btn" data-p="${Math.max(0,filePage-1)}" ${filePage===0?'disabled':''} style="padding:4px 10px;font-size:12px"><i class="ti ti-chevron-left"></i></button>
-      ${Array.from({length:totalPages},(_,i)=>`<button class="btn files-page-btn ${i===filePage?'btn-o':''}" data-p="${i}" style="padding:4px 10px;font-size:12px;min-width:32px">${i+1}</button>`).join('')}
-      <button class="btn files-page-btn" data-p="${Math.min(totalPages-1,filePage+1)}" ${filePage>=totalPages-1?'disabled':''} style="padding:4px 10px;font-size:12px"><i class="ti ti-chevron-right"></i></button>
-    </div>`:'';
+  const activeLabel=activeId==='all'?'전체 파일':activeId==='unassigned'?'미분류':
+    ((activeId.startsWith('auto_')?autoFolders.find(f=>f.id===activeId)?.name:findFolderName(manualFolders,activeId))||'');
+  const activeColor=activeId.startsWith('auto_')?autoFolders.find(f=>f.id===activeId)?.color:findFolderColor(manualFolders,activeId);
+  const isManualFolder=!activeId.startsWith('auto_')&&activeId!=='all'&&activeId!=='unassigned';
 
-  const folderListHtml=folders.map(f=>{
-    const cnt=all.filter(it=>(f.items||[]).includes(it.id)).length;
-    const isAct=activeId===f.id;
-    const c=f.color||'#1C85E8';
-    return `<div style="display:flex;align-items:center;border-radius:10px;${isAct?`background:${c}18`:''};margin-bottom:1px">
-      <button class="files-folder-btn ${isAct?'active':''}" data-fid="${f.id}" style="flex:1;${isAct?`color:${c};font-weight:500`:''}">
-        <i class="ti ti-folder-filled" style="color:${c};font-size:14px;flex-shrink:0"></i>
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${f.name}</span>
-        <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 7px;border-radius:20px;flex-shrink:0">${cnt}</span>
-      </button>
-      ${!isReadOnly()?`<button class="btn folder-edit-btn" data-fid="${f.id}" style="padding:3px 6px;font-size:11px;border:none;background:none;color:var(--muted);flex-shrink:0"><i class="ti ti-dots-vertical"></i></button>`:''}
-    </div>`;
-  }).join('');
-
-  // 뷰 전체 높이 = 화면에서 hdr(~48px) + nav(~62px) 뺀 나머지
   return `<div style="display:flex;min-height:calc(100vh - 120px);gap:0">
-
-    <!-- 왼쪽 폴더 패널 -->
     <div class="files-panel-left" style="position:sticky;top:0;align-self:flex-start;max-height:calc(100vh - 120px);overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px">
         <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">파일 모음</span>
       </div>
-
-      <button class="files-folder-btn ${activeId==='all'?'active':''}" data-fid="all">
-        <i class="ti ti-files" style="color:var(--muted);font-size:14px;flex-shrink:0"></i>
-        <span style="flex:1">전체</span>
-        <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 7px;border-radius:20px">${all.length}</span>
-      </button>
-      <button class="files-folder-btn ${activeId==='unassigned'?'active':''}" data-fid="unassigned">
-        <i class="ti ti-file-unknown" style="color:var(--muted);font-size:14px;flex-shrink:0"></i>
-        <span style="flex:1">미분류</span>
-        <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 7px;border-radius:20px">${unassigned.length}</span>
-      </button>
-
-      <div style="height:1px;background:rgba(255,255,255,.4);margin:10px 4px 8px"></div>
-
-      <!-- 폴더 헤더 + 추가 버튼 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:8px">
-        <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">폴더</span>
-        ${!isReadOnly()?`
-          <button id="addFolderBtn" style="display:flex;align-items:center;gap:4px;border:none;background:rgba(28,133,232,.12);color:var(--o);border-radius:8px;padding:3px 9px;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .13s" onmouseover="this.style.background='rgba(28,133,232,.2)'" onmouseout="this.style.background='rgba(28,133,232,.12)'">
-            <i class="ti ti-plus" style="font-size:12px"></i> 추가
-          </button>
-        `:''}
+      <button class="files-folder-btn ${activeId==='all'?'active':''}" data-fid="all"><i class="ti ti-files" style="color:var(--muted);font-size:14px;flex-shrink:0"></i><span style="flex:1">전체</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 7px;border-radius:20px">${all.length}</span></button>
+      <button class="files-folder-btn ${activeId==='unassigned'?'active':''}" data-fid="unassigned"><i class="ti ti-file-unknown" style="color:var(--muted);font-size:14px;flex-shrink:0"></i><span style="flex:1">미분류</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 7px;border-radius:20px">${unassigned.length}</span></button>
+      ${autoFolders.length?`<div style="height:1px;background:rgba(255,255,255,.4);margin:8px 4px"></div>
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 6px;margin-bottom:6px">자동 분류</div>
+      ${autoFolders.map(f=>{const isAct=activeId===f.id;return `<button class="files-folder-btn ${isAct?'active':''}" data-fid="${f.id}" style="${isAct?`color:${f.color};font-weight:500;background:${f.color}18`:''}"><i class="ti ti-folder-filled" style="color:${f.color};font-size:14px;flex-shrink:0"></i><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 6px;border-radius:20px;flex-shrink:0">${f.items.length}</span></button>`;}).join('')}`:''}
+      <div style="height:1px;background:rgba(255,255,255,.4);margin:8px 4px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">내 폴더</span>
+        <button id="addFolderBtn" style="display:flex;align-items:center;gap:3px;border:none;background:rgba(28,133,232,.12);color:var(--o);border-radius:8px;padding:3px 9px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit"><i class="ti ti-plus" style="font-size:11px"></i> 추가</button>
       </div>
-
-      ${folderListHtml||`<div style="font-size:12px;color:var(--muted);padding:4px 10px;text-align:center">폴더가 없습니다</div>`}
+      ${renderFolderTree(manualFolders,activeId,all,0)||'<div style="font-size:12px;color:var(--muted);padding:4px 10px;text-align:center">폴더가 없습니다</div>'}
     </div>
-
-    <!-- 오른쪽 파일 목록 -->
     <div style="flex:1;display:flex;flex-direction:column;min-width:0">
-      <!-- 상단 타이틀 행 -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;flex-shrink:0;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
-          ${activeFolder?`<div style="width:10px;height:10px;border-radius:50%;background:${activeFolder.color||'var(--o)'};flex-shrink:0"></div>`:''}
-          <span style="font-size:15px;font-weight:500">${activeId==='all'?'전체 파일':activeId==='unassigned'?'미분류':(activeFolder?.name||'')}</span>
+          ${activeColor?`<div style="width:10px;height:10px;border-radius:50%;background:${activeColor};flex-shrink:0"></div>`:''}
+          <span style="font-size:15px;font-weight:500">${activeLabel}</span>
           <span style="font-size:12px;color:var(--muted)">${viewItems.length}건</span>
         </div>
-        ${activeFolder&&!isReadOnly()?`<button id="addItemsToFolderBtn" class="btn btn-o" style="font-size:11px;padding:5px 14px"><i class="ti ti-plus"></i> 파일 추가</button>`:''}
+        ${isManualFolder?`<button id="addItemsToFolderBtn" class="btn btn-o" style="font-size:11px;padding:5px 14px;border-radius:999px"><i class="ti ti-plus"></i> 파일 추가</button>`:''}
       </div>
-
-      <!-- 파일 목록 -->
       <div style="padding:0 20px 24px">
         <div id="filesItemList">${renderFileItemList(pageItems)}</div>
         ${pagerHtml}
@@ -2208,33 +2240,29 @@ function viewFiles(){
   </div>`;
 }
 
-/* ── 폴더 생성/편집 모달 ── */
-function folderEditModal(folder){
+/* ── 폴더 모달 ── */
+function folderEditModal(folder,parentId){
   const isEdit=!!folder;
   const presets=['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D','#F59E0B','#6366F1','#EC4899','#14B8A6'];
   const cur=folder?.color||'#1C85E8';
   return `<div class="modal" style="max-width:400px">
-    <div class="mh"><h3>${isEdit?'폴더 편집':'새 폴더'}</h3><button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
-    <div class="mb">
-      <form id="folderForm">
-        <div class="field"><label class="field-label">폴더 이름</label>
-          <input class="inp" name="name" value="${(folder?.name||'').replace(/"/g,'&quot;')}" placeholder="폴더 이름" required/></div>
-        <div class="field"><label class="field-label">색상</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="colorPicker">
-            ${presets.map(c=>`<button type="button" class="cpick" data-color="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:3px solid ${c===cur?'#111':'transparent'};cursor:pointer"></button>`).join('')}
-          </div>
-          <input type="hidden" name="color" id="folderColorVal" value="${cur}"/>
+    <div class="mh"><h3>${isEdit?'폴더 편집':parentId?'하위 폴더 추가':'새 폴더'}</h3><button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+    <div class="mb"><form id="folderForm">
+      <div class="field"><label class="field-label">폴더 이름</label><input class="inp" name="name" value="${(folder?.name||'').replace(/"/g,'&quot;')}" placeholder="폴더 이름" required autofocus/></div>
+      <div class="field"><label class="field-label">색상</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="colorPicker">
+          ${presets.map(c=>`<button type="button" class="cpick" data-color="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:3px solid ${c===cur?'#111':'transparent'};cursor:pointer"></button>`).join('')}
         </div>
-      </form>
-      ${isEdit?`<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bd)">
-        <button id="deleteFolderBtn" class="btn btn-red" style="width:100%"><i class="ti ti-trash"></i> 폴더 삭제</button>
-      </div>`:''}
-    </div>
-    <div class="mf"><button class="btn" id="closeModal">취소</button><button type="submit" form="folderForm" class="btn btn-o"><i class="ti ti-device-floppy"></i> 저장</button></div>
+        <input type="hidden" name="color" id="folderColorVal" value="${cur}"/>
+        <input type="hidden" name="parentId" value="${parentId||''}" />
+      </div>
+    </form>
+    ${isEdit?`<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bd)"><button id="deleteFolderBtn" class="btn btn-red" style="width:100%;border-radius:999px"><i class="ti ti-trash"></i> 폴더 삭제</button></div>`:''}</div>
+    <div class="mf"><button class="btn" id="closeModal" style="border-radius:999px">취소</button><button type="submit" form="folderForm" class="btn btn-o" style="border-radius:999px"><i class="ti ti-device-floppy"></i> 저장</button></div>
   </div>`;
 }
 
-function bindFolderModal(folder){
+function bindFolderModal(existingFolder,parentId){
   document.querySelectorAll('.cpick').forEach(btn=>{
     btn.addEventListener('click',()=>{
       document.querySelectorAll('.cpick').forEach(b=>b.style.borderColor='transparent');
@@ -2245,91 +2273,45 @@ function bindFolderModal(folder){
   document.getElementById('folderForm').addEventListener('submit',e=>{
     e.preventDefault();
     const fd=new FormData(e.target);
-    const name=(fd.get('name')||'').trim();
-    const color=fd.get('color')||'#1C85E8';
+    const name=(fd.get('name')||'').trim(),color=fd.get('color')||'#1C85E8',pid=fd.get('parentId')||'';
     if(!name){showToast('이름을 입력하세요.');return;}
     if(!state.data.fileFolders) state.data.fileFolders=[];
-    if(folder){folder.name=name;folder.color=color;}
-    else state.data.fileFolders.push({id:uid('ff'),name,color,items:[]});
-    closeModal();persist(false);render();
-    showToast(folder?'폴더가 수정됐습니다.':'폴더가 추가됐습니다.');
+    if(existingFolder){existingFolder.name=name;existingFolder.color=color;}
+    else{
+      const nf={id:uid('ff'),name,color,items:[],children:[]};
+      if(pid){const par=findFolder(state.data.fileFolders,pid);if(par){if(!par.children) par.children=[];par.children.push(nf);}else state.data.fileFolders.push(nf);}
+      else state.data.fileFolders.push(nf);
+    }
+    closeModal();persist(false);render();showToast(existingFolder?'폴더가 수정됐습니다.':'폴더가 추가됐습니다.');
   });
   const delBtn=document.getElementById('deleteFolderBtn');
-  if(delBtn&&folder) delBtn.addEventListener('click',()=>{
-    if(!confirm(`"${folder.name}" 폴더를 삭제할까요?\n(파일 원본은 유지됩니다)`)) return;
-    state.data.fileFolders=state.data.fileFolders.filter(f=>f.id!==folder.id);
-    if(state.filesActiveFolderId===folder.id) state.filesActiveFolderId='all';
+  if(delBtn&&existingFolder) delBtn.addEventListener('click',()=>{
+    if(!confirm(`"${existingFolder.name}" 폴더를 삭제할까요?\n하위 폴더도 함께 삭제됩니다.`)) return;
+    function rm(folders,id){const i=folders.findIndex(f=>f.id===id);if(i>-1){folders.splice(i,1);return true;}for(const f of folders){if(f.children&&rm(f.children,id)) return true;}return false;}
+    rm(state.data.fileFolders,existingFolder.id);
+    if(state.filesActiveFolderId===existingFolder.id) state.filesActiveFolderId='all';
     closeModal();persist(false);render();showToast('폴더가 삭제됐습니다.');
   });
 }
 
 function folderAddItemsModal(folder){
-  const all=collectAllFileItems();
-  const cur=folder.items||[];
+  const all=collectAllFileItems(),cur=folder.items||[];
   return `<div class="modal" style="max-width:500px;max-height:80vh">
     <div class="mh"><h3><i class="ti ti-folder-plus" style="color:${folder.color||'var(--o)'}"></i> "${folder.name}"에 파일 추가</h3><button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
     <div class="mb" style="max-height:55vh;overflow-y:auto">
       ${all.length===0?'<div style="color:var(--muted);text-align:center;padding:24px">추가할 파일이 없습니다</div>':
-        all.map(it=>{
-          const icon=it.type==='doc'?'ti-file-text':it.data?'ti-file':'ti-link';
+        all.map(it=>{const icon=it.type==='doc'?'ti-file-text':it.data?'ti-file':'ti-link';
           return `<label style="display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer">
             <input type="checkbox" class="folder-item-cb" value="${it.id}" ${cur.includes(it.id)?'checked':''} style="accent-color:var(--o);width:15px;height:15px;flex-shrink:0"/>
             <i class="ti ${icon}" style="font-size:13px;color:var(--muted)"></i>
             <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:300">${(it.label||'파일').replace(/</g,'&lt;')}</span>
             <span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 8px;border-radius:20px">${it._src||''}</span>
-          </label>`;
-        }).join('')}
+          </label>`;}).join('')}
     </div>
-    <div class="mf"><button class="btn" id="closeModal">취소</button><button class="btn btn-o" id="folderItemsSaveBtn"><i class="ti ti-device-floppy"></i> 저장</button></div>
+    <div class="mf"><button class="btn" id="closeModal" style="border-radius:999px">취소</button><button class="btn btn-o" id="folderItemsSaveBtn" style="border-radius:999px"><i class="ti ti-device-floppy"></i> 저장</button></div>
   </div>`;
 }
 
-/* ── 파일 모음에서 문서 열기 (사이드 패널) ── */
-function openDocEditorFiles(target, link){
-  if(!target.links) target.links=[];
-  const html=`<div style="background:#fff;width:50%;min-width:360px;max-width:700px;height:100%;display:flex;flex-direction:column;box-shadow:0 12px 28px rgba(11,27,46,.15)">
-    <div style="padding:14px 18px;border-bottom:0.5px solid #E5E7EB;display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <input id="docTitleInp" type="text" value="${(link?.label||'').replace(/"/g,'&quot;')}" placeholder="문서 제목" style="border:none;outline:none;font-size:18px;font-weight:700;width:100%;font-family:inherit;color:#0B1B2E"/>
-      <button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button>
-    </div>
-    <div style="display:flex;align-items:center;gap:2px;padding:8px 18px;border-bottom:1px solid #E5E7EB;flex-wrap:wrap">
-      ${['bold','italic','underline'].map(c=>`<button type="button" class="doc-tb-b" data-cmd="${c}" style="width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center"><i class="ti ti-${c}"></i></button>`).join('')}
-      <div style="width:1px;height:18px;background:#E5E7EB;margin:0 5px"></div>
-      <button type="button" class="doc-tb-b" data-cmd="formatBlock" data-val="H2" style="width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center"><i class="ti ti-h-2"></i></button>
-      <button type="button" class="doc-tb-b" data-cmd="insertUnorderedList" style="width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center"><i class="ti ti-list"></i></button>
-      <button type="button" class="doc-tb-b" data-cmd="insertOrderedList" style="width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center"><i class="ti ti-list-numbers"></i></button>
-    </div>
-    <div style="flex:1;overflow-y:auto;padding:18px 22px">
-      <div id="docBodyInp" contenteditable="true" style="min-height:100%;outline:none;font-size:14px;line-height:1.8;color:#0B1B2E" data-placeholder="내용을 입력하세요...">${link?.content||''}</div>
-    </div>
-    <div style="padding:12px 18px;border-top:0.5px solid #E5E7EB;display:flex;justify-content:flex-end;gap:8px">
-      <button class="btn" id="closeModal">취소</button>
-      <button class="btn btn-o" id="docFileSaveBtn"><i class="ti ti-device-floppy"></i> 저장</button>
-    </div>
-  </div>`;
-  const overlay=document.createElement('div');
-  overlay.className='overlay';
-  overlay.style.cssText='justify-content:flex-start;align-items:stretch;padding:0;backdrop-filter:blur(1px)';
-  overlay.style.zIndex=String(200+document.querySelectorAll('.overlay').length*10);
-  overlay.innerHTML=html;
-  overlay.addEventListener('click',e=>{if(e.target===overlay) overlay.remove();});
-  document.body.appendChild(overlay);
-  const area=document.getElementById('docBodyInp');
-  overlay.querySelectorAll('.doc-tb-b').forEach(btn=>{
-    btn.addEventListener('click',()=>{ area.focus(); document.execCommand(btn.dataset.cmd,false,btn.dataset.val||null); });
-  });
-  overlay.querySelectorAll('#closeModal').forEach(b=>b.addEventListener('click',()=>overlay.remove()));
-  document.getElementById('docFileSaveBtn').addEventListener('click',()=>{
-    const title=(document.getElementById('docTitleInp').value||'').trim()||'제목 없는 문서';
-    const content=area.innerHTML.trim();
-    if(!content){showToast('내용을 입력해주세요.');return;}
-    if(link){link.label=title;link.content=content;link.updatedDate=dayjs().format('YYYY-MM-DD');}
-    else{target.links.push({id:uid('doc'),type:'doc',label:title,content,addedDate:dayjs().format('YYYY-MM-DD')});}
-    overlay.remove(); persist(false); render(); showToast('문서가 저장됐습니다.');
-  });
-}
-
-/* ── Word 다운로드 ── */
 function downloadDocAsWord(label,html){
   const name=(label||'문서').replace(/[\\/:*?"<>|]/g,'_');
   const blob=new Blob(['\ufeff',`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${name}</title></head><body>${html||''}</body></html>`],{type:'application/msword'});
@@ -4616,10 +4598,10 @@ function viewVendorDetail(){
                 <span style="font-size:10px;color:var(--muted)">${combinedLinks.length}건</span>
               </div>
               ${!isReadOnly()?`
-              <div style="display:flex;align-items:center;gap:6px">
-                <button class="btn" id="addVendorDocBtn" style="font-size:10px;padding:2px 8px">📝 문서</button>
-                <button class="btn" id="addVendorLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
-                <label class="btn" id="addVendorFileLabelBtn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
+              <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap">
+                <button class="btn" id="addVendorDocBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-file-text" style="font-size:12px"></i> 문서</button>
+                <button class="btn" id="addVendorLinkUrlBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-link" style="font-size:12px"></i> URL</button>
+                <label class="btn" id="addVendorFileLabelBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-upload" style="font-size:12px"></i> 파일
                   <input type="file" id="addVendorFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
                 </label>
               </div>`:''}
@@ -5216,11 +5198,11 @@ function viewProjectDetail(){
             <span style="font-size:10px;color:var(--muted)">${totalCount}건</span>
           </div>
           ${!isReadOnly()?`
-          <div style="display:flex;align-items:center;gap:6px">
-            ${linkedVendors.length>0?`<button class="btn" id="importVendorLinksBtn" style="font-size:10px;padding:2px 8px"><i class="ti ti-building-store" style="font-size:11px"></i> 거래처에서 가져오기</button>`:''}
-            <button class="btn" id="addProjDocBtn" style="font-size:10px;padding:2px 8px">📝 문서</button>
-            <button class="btn" id="addProjLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
-            <label class="btn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
+          <div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap">
+            ${linkedVendors.length>0?`<button class="btn" id="importVendorLinksBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-building-store" style="font-size:12px"></i> 거래처에서 가져오기</button>`:''}
+            <button class="btn" id="addProjDocBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-file-text" style="font-size:12px"></i> 문서</button>
+            <button class="btn" id="addProjLinkUrlBtn" style="font-size:11px;padding:4px 10px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-link" style="font-size:12px"></i> URL</button>
+            <label class="btn" style="font-size:11px;padding:4px 10px;border-radius:999px;cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:4px;white-space:nowrap"><i class="ti ti-upload" style="font-size:12px"></i> 파일
               <input type="file" id="addProjFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
             </label>
           </div>`:''}
@@ -8372,7 +8354,26 @@ function bindViewEvents(){
   });
   const addFolderBtn=document.getElementById('addFolderBtn');
   if(addFolderBtn) addFolderBtn.addEventListener('click',()=>{
-    openModal(folderEditModal(null)); bindModalCommon(); bindFolderModal(null);
+    openModal(folderEditModal(null,null)); bindModalCommon(); bindFolderModal(null,null);
+  });
+
+  // 하위 폴더 추가
+  document.querySelectorAll('.folder-add-child-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      openModal(folderEditModal(null,btn.dataset.fid)); bindModalCommon(); bindFolderModal(null,btn.dataset.fid);
+    });
+  });
+
+  // 폴더 트리 접기/펼치기
+  document.querySelectorAll('.files-tree-toggle').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      if(!state.filesOpenFolders) state.filesOpenFolders={};
+      const fid=btn.dataset.fid;
+      state.filesOpenFolders[fid]=(state.filesOpenFolders[fid]===false)?true:false;
+      render();
+    });
   });
 
   // 파일 목록 페이지네이션
@@ -8382,9 +8383,9 @@ function bindViewEvents(){
   document.querySelectorAll('.folder-edit-btn').forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
-      const f=state.data.fileFolders.find(x=>x.id===btn.dataset.fid);
+      const f=findFolder(state.data.fileFolders,btn.dataset.fid);
       if(!f) return;
-      openModal(folderEditModal(f)); bindModalCommon(); bindFolderModal(f);
+      openModal(folderEditModal(f,null)); bindModalCommon(); bindFolderModal(f,null);
     });
   });
   const addItemsBtn=document.getElementById('addItemsToFolderBtn');
