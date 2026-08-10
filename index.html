@@ -2162,10 +2162,10 @@ function viewFiles(){
   }).join('');
 
   // 뷰 전체 높이 = 화면에서 hdr(~48px) + nav(~62px) 뺀 나머지
-  return `<div style="display:flex;height:calc(100vh - 110px);gap:0;overflow:hidden">
+  return `<div style="display:flex;min-height:calc(100vh - 120px);gap:0">
 
     <!-- 왼쪽 폴더 패널 -->
-    <div class="files-panel-left" style="overflow-y:auto;flex-shrink:0">
+    <div class="files-panel-left" style="position:sticky;top:0;align-self:flex-start;max-height:calc(100vh - 120px);overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 4px">
         <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">파일 모음</span>
       </div>
@@ -2197,7 +2197,7 @@ function viewFiles(){
     </div>
 
     <!-- 오른쪽 파일 목록 -->
-    <div style="flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden">
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0">
       <!-- 상단 타이틀 행 -->
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;flex-shrink:0;flex-wrap:wrap;gap:8px">
         <div style="display:flex;align-items:center;gap:8px">
@@ -2208,8 +2208,8 @@ function viewFiles(){
         ${activeFolder&&!isReadOnly()?`<button id="addItemsToFolderBtn" class="btn btn-o" style="font-size:11px;padding:5px 14px"><i class="ti ti-plus"></i> 파일 추가</button>`:''}
       </div>
 
-      <!-- 파일 목록 (스크롤) -->
-      <div style="flex:1;overflow-y:auto;padding:0 20px 16px">
+      <!-- 파일 목록 -->
+      <div style="padding:0 20px 24px">
         <div id="filesItemList">${renderFileItemList(pageItems)}</div>
         ${pagerHtml}
       </div>
@@ -11532,11 +11532,16 @@ if(sessionStorage.getItem('opl_unlocked') === 'true'){
   document.body.appendChild(btn);
   btn.addEventListener('click', ()=>{
     window.scrollTo({top:0, behavior:'smooth'});
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   });
-  window.addEventListener('scroll', ()=>{
-    if(window.scrollY > 300) btn.classList.add('visible');
+  function checkScroll(){
+    const sy = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    if(sy > 300) btn.classList.add('visible');
     else btn.classList.remove('visible');
-  }, {passive:true});
+  }
+  window.addEventListener('scroll', checkScroll, {passive:true});
+  document.addEventListener('scroll', checkScroll, {passive:true});
 })();
 </script>
 </body>
