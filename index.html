@@ -4632,6 +4632,19 @@ function viewVendorDetail(){
             const sourceCaption = lk.isDirect
               ? `<span style="font-size:9px;color:var(--muted)">직접 첨부</span>`
               : `<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 6px;border-radius:8px;display:inline-flex;align-items:center;gap:2px;max-width:100%"><i class="ti ti-file-text" style="font-size:9px;flex-shrink:0"></i><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${fmtDate(lk.logDate)} 로그 · ${(lk.logSummary||'').slice(0,22)}</span></span>`;
+            // ── 인앱 문서 타입 ──
+            if(lk.type==='doc'){
+              return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+                <i class="ti ti-file-text" style="font-size:16px;color:#7C3AED;flex-shrink:0"></i>
+                <div style="flex:1;min-width:0">
+                  <span style="font-size:12px;font-weight:300;color:var(--text);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(lk.label||'제목 없는 문서').replace(/</g,'&lt;')}</span>
+                  ${sourceCaption}
+                </div>
+                ${!isReadOnly()&&lk.isDirect?`<button class="btn vendor-doc-open-btn" data-idx="${idx}" style="padding:2px 8px;font-size:10px"><i class="ti ti-edit"></i> 열기</button>`:''}
+                <button class="btn vendor-doc-dl-btn" data-idx="${idx}" style="padding:2px 8px;font-size:10px" title="Word 다운로드"><i class="ti ti-download"></i></button>
+                ${!isReadOnly()&&lk.isDirect?`<button class="btn btn-red vendor-link-del-btn" data-idx="${idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:''}
+              </div>`;
+            }
             if(lk.data){
               const t = lk.type||'';
               const icon = t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
@@ -4673,6 +4686,7 @@ function viewVendorDetail(){
               </div>
               ${!isReadOnly()?`
               <div style="display:flex;align-items:center;gap:6px">
+                <button class="btn" id="addVendorDocBtn" style="font-size:10px;padding:2px 8px">📝 문서</button>
                 <button class="btn" id="addVendorLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
                 <label class="btn" id="addVendorFileLabelBtn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
                   <input type="file" id="addVendorFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
@@ -5224,6 +5238,17 @@ function viewProjectDetail(){
           ? (!isReadOnly()?`<button class="btn proj-link-unlink-btn" data-refidx="${lk._refIdx}" title="가져오기 해제" style="padding:2px 6px;font-size:10px;color:var(--muted)"><i class="ti ti-unlink"></i></button>`:'')
           : (!isReadOnly()?`<button class="btn btn-red proj-link-del-btn" data-idx="${lk._idx}" style="padding:2px 6px;font-size:10px"><i class="ti ti-x"></i></button>`:'');
         const sourceTag = (lk._imported||lk._fromLog)?`<span style="font-size:9px;color:var(--o);background:var(--ol);padding:1px 5px;border-radius:8px;flex-shrink:0">${lk._sourceLabel}</span>`:'';
+        // ── 인앱 문서 타입 ──
+        if(lk.type==='doc'){
+          return folderHtml + `<div style="display:flex;align-items:center;gap:8px;padding:7px 0 7px 8px;border-bottom:0.5px solid var(--bd)">
+            <i class="ti ti-file-text" style="font-size:16px;color:#7C3AED;flex-shrink:0"></i>
+            <span style="flex:1;font-size:12px;font-weight:300;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(lk.label||'제목 없는 문서').replace(/</g,'&lt;')}</span>
+            ${(!isReadOnly()&&!lk._imported&&!lk._fromLog)?`<button class="btn proj-doc-open-btn" data-idx="${lk._idx}" style="padding:2px 8px;font-size:10px"><i class="ti ti-edit"></i> 열기</button>`:''}
+            <button class="btn proj-doc-dl-btn" data-idx="${lk._idx??''}" data-refidx="${lk._refIdx??''}" style="padding:2px 8px;font-size:10px" title="Word 다운로드"><i class="ti ti-download"></i></button>
+            ${sourceTag}
+            ${delBtn}
+          </div>`;
+        }
         if(lk.data){
           const t=lk.type||'';
           const icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
@@ -5262,6 +5287,7 @@ function viewProjectDetail(){
           ${!isReadOnly()?`
           <div style="display:flex;align-items:center;gap:6px">
             ${linkedVendors.length>0?`<button class="btn" id="importVendorLinksBtn" style="font-size:10px;padding:2px 8px"><i class="ti ti-building-store" style="font-size:11px"></i> 거래처에서 가져오기</button>`:''}
+            <button class="btn" id="addProjDocBtn" style="font-size:10px;padding:2px 8px">📝 문서</button>
             <button class="btn" id="addProjLinkUrlBtn" style="font-size:10px;padding:2px 8px">🔗 URL</button>
             <label class="btn" style="font-size:10px;padding:2px 8px;cursor:pointer;margin:0">📎 파일
               <input type="file" id="addProjFileInput" multiple accept=".pdf,.xlsx,.xls,.docx,.doc,.csv,.png,.jpg,.jpeg,.gif" style="display:none"/>
@@ -9611,6 +9637,41 @@ function bindViewEvents(){
   // document.querySelectorAll → 전역 위임 처리
 
   // ── 거래처 파일&링크 직접 추가 ──
+
+  // 📝 문서 작성
+  const addVendorDocBtn = document.getElementById('addVendorDocBtn');
+  if(addVendorDocBtn) addVendorDocBtn.addEventListener('click', ()=>{
+    const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+    if(!v) return;
+    const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+    const target = (brand && brand.inherit===false) ? brand : v;
+    openDocEditorFiles(target, null);
+  });
+
+  // 문서 열기
+  document.querySelectorAll('.vendor-doc-open-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v) return;
+      const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = (brand && brand.inherit===false) ? brand : v;
+      const link = target.links?.[parseInt(btn.dataset.idx)];
+      if(link) openDocEditorFiles(target, link);
+    });
+  });
+
+  // 문서 다운로드
+  document.querySelectorAll('.vendor-doc-dl-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
+      if(!v) return;
+      const brand = state.activeBrandId && v.brands ? v.brands.find(b=>b.id===state.activeBrandId) : null;
+      const target = (brand && brand.inherit===false) ? brand : v;
+      const link = target.links?.[parseInt(btn.dataset.idx)];
+      if(link) downloadDocAsWord(link.label, link.content);
+    });
+  });
+
   const addUrlBtn = document.getElementById('addVendorLinkUrlBtn');
   const urlArea   = document.getElementById('vendorLinkUrlArea');
   const urlInput  = document.getElementById('vendorLinkUrlInput');
@@ -9819,6 +9880,46 @@ function bindViewEvents(){
   });
 
   // ── 프로젝트 파일 & 링크 ──
+
+  // 📝 문서 작성
+  const addProjDocBtn = document.getElementById('addProjDocBtn');
+  if(addProjDocBtn) addProjDocBtn.addEventListener('click', ()=>{
+    const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+    if(!proj) return;
+    openDocEditorFiles(proj, null);
+  });
+
+  // 문서 열기
+  document.querySelectorAll('.proj-doc-open-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      if(!proj?.links) return;
+      const link = proj.links[parseInt(btn.dataset.idx)];
+      if(link) openDocEditorFiles(proj, link);
+    });
+  });
+
+  // 문서 다운로드
+  document.querySelectorAll('.proj-doc-dl-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const proj = state.data.projects.find(x=>x.id===state.selectedProjectId);
+      if(!proj) return;
+      let link = null;
+      const refidx = btn.dataset.refidx;
+      if(refidx !== '') {
+        const ref = proj.importedVendorLinks?.[parseInt(refidx)];
+        const vend = ref && state.data.vendors.find(x=>x.id===ref.vendorId);
+        if(vend) {
+          link = (vend.links||[]).find(l=>l.id===ref.linkId);
+          if(!link && vend.brands) { for(const b of vend.brands){ link=(b.links||[]).find(l=>l.id===ref.linkId); if(link) break; } }
+        }
+      } else {
+        link = proj.links?.[parseInt(btn.dataset.idx)];
+      }
+      if(link) downloadDocAsWord(link.label, link.content);
+    });
+  });
+
   const addProjLinkUrlBtn = document.getElementById('addProjLinkUrlBtn');
   const projLinkUrlArea   = document.getElementById('projLinkUrlArea');
   const projUrlInput      = document.getElementById('projLinkUrlInput');
