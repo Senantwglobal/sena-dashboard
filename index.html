@@ -2312,6 +2312,218 @@ function folderAddItemsModal(folder){
   </div>`;
 }
 
+function openDocEditorFiles(target, link){
+  if(!target.links) target.links=[];
+  const overlay=document.createElement('div');
+  overlay.className='overlay';
+  overlay.style.cssText='justify-content:flex-start;align-items:stretch;padding:0;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)';
+  overlay.style.zIndex=String(200+document.querySelectorAll('.overlay').length*10);
+
+  overlay.innerHTML=`
+    <div id="docEditorPanel" style="background:rgba(255,255,255,.96);backdrop-filter:blur(20px);width:52%;min-width:380px;max-width:760px;height:100%;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(11,27,46,.18)">
+      <!-- 타이틀 -->
+      <div style="padding:16px 20px 10px;border-bottom:1px solid rgba(0,0,0,.07);display:flex;align-items:center;gap:10px">
+        <input id="docTitleInp" type="text" value="${(link?.label||'').replace(/"/g,'&quot;')}" placeholder="문서 제목" style="flex:1;border:none;outline:none;font-size:18px;font-weight:700;font-family:inherit;color:#111;background:transparent"/>
+        <button id="docCloseBtn" style="width:26px;height:26px;border-radius:50%;border:none;background:#E53935;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(229,57,53,.35)"><i class="ti ti-x" style="font-size:12px"></i></button>
+      </div>
+
+      <!-- 툴바 행 1 -->
+      <div style="display:flex;align-items:center;gap:2px;padding:6px 14px;border-bottom:1px solid rgba(0,0,0,.06);flex-wrap:wrap">
+        <!-- 글꼴 -->
+        <select id="docFontSel" style="font-size:12px;border:none;background:rgba(0,0,0,.04);border-radius:6px;padding:3px 6px;cursor:pointer;font-family:inherit;color:#333;margin-right:2px">
+          <option value="">글꼴</option>
+          <option value="Pretendard,sans-serif">Pretendard</option>
+          <option value="'Malgun Gothic',sans-serif">맑은 고딕</option>
+          <option value="Georgia,serif">Georgia</option>
+          <option value="'Courier New',monospace">Courier New</option>
+        </select>
+        <!-- 크기 -->
+        <select id="docSizeSel" style="font-size:12px;border:none;background:rgba(0,0,0,.04);border-radius:6px;padding:3px 6px;cursor:pointer;font-family:inherit;color:#333;margin-right:4px">
+          <option value="">크기</option>
+          ${[10,11,12,13,14,16,18,20,24,28,32,36].map(s=>`<option value="${s}pt">${s}</option>`).join('')}
+        </select>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- B I U S -->
+        <button type="button" class="dtb" data-cmd="bold" title="굵게 (Ctrl+B)" style="font-weight:700">B</button>
+        <button type="button" class="dtb" data-cmd="italic" title="기울임 (Ctrl+I)" style="font-style:italic">I</button>
+        <button type="button" class="dtb" data-cmd="underline" title="밑줄 (Ctrl+U)"><u>U</u></button>
+        <button type="button" class="dtb" data-cmd="strikeThrough" title="취소선"><s>S</s></button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 형광펜 / 글자색 -->
+        <button type="button" class="dtb doc-color-trigger" data-mode="bg" title="형광펜" style="position:relative"><span style="text-decoration:underline;text-decoration-color:#FFD600;text-decoration-thickness:3px;font-size:13px">A</span><i class="ti ti-chevron-down" style="font-size:8px;margin-left:1px"></i></button>
+        <button type="button" class="dtb doc-color-trigger" data-mode="fg" title="글자 색" style="position:relative"><b style="color:#E53935;font-size:14px">A</b><i class="ti ti-chevron-down" style="font-size:8px;margin-left:1px"></i></button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 정렬 -->
+        <button type="button" class="dtb" data-cmd="justifyLeft" title="왼쪽 정렬"><i class="ti ti-align-left"></i></button>
+        <button type="button" class="dtb" data-cmd="justifyCenter" title="가운데 정렬"><i class="ti ti-align-center"></i></button>
+        <button type="button" class="dtb" data-cmd="justifyRight" title="오른쪽 정렬"><i class="ti ti-align-right"></i></button>
+        <button type="button" class="dtb" data-cmd="justifyFull" title="양쪽 정렬"><i class="ti ti-align-justified"></i></button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 들여쓰기 -->
+        <button type="button" class="dtb" data-cmd="outdent" title="내어쓰기"><i class="ti ti-indent-decrease"></i></button>
+        <button type="button" class="dtb" data-cmd="indent" title="들여쓰기"><i class="ti ti-indent-increase"></i></button>
+      </div>
+
+      <!-- 툴바 행 2 -->
+      <div style="display:flex;align-items:center;gap:2px;padding:4px 14px 6px;border-bottom:1px solid rgba(0,0,0,.06);flex-wrap:wrap">
+        <!-- 목록 -->
+        <button type="button" class="dtb" data-cmd="insertUnorderedList" title="글머리 기호"><i class="ti ti-list"></i></button>
+        <button type="button" class="dtb" data-cmd="insertOrderedList" title="번호 매기기"><i class="ti ti-list-numbers"></i></button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 제목 스타일 -->
+        <button type="button" class="dtb" data-cmd="formatBlock" data-val="H1" title="제목 1" style="font-size:11px;font-weight:700">H1</button>
+        <button type="button" class="dtb" data-cmd="formatBlock" data-val="H2" title="제목 2" style="font-size:11px;font-weight:700">H2</button>
+        <button type="button" class="dtb" data-cmd="formatBlock" data-val="H3" title="제목 3" style="font-size:11px;font-weight:700">H3</button>
+        <button type="button" class="dtb" data-cmd="formatBlock" data-val="P" title="본문" style="font-size:11px">¶</button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 표 삽입 -->
+        <button type="button" class="dtb" id="docInsertTableBtn" title="표 삽입"><i class="ti ti-table"></i></button>
+        <!-- 행/열 추가 -->
+        <button type="button" class="dtb" id="docAddRowBtn" title="행 추가" style="font-size:11px">+행</button>
+        <button type="button" class="dtb" id="docAddColBtn" title="열 추가" style="font-size:11px">+열</button>
+        <div style="width:1px;height:18px;background:rgba(0,0,0,.12);margin:0 4px"></div>
+        <!-- 실행취소/다시실행 -->
+        <button type="button" class="dtb" data-cmd="undo" title="실행 취소"><i class="ti ti-arrow-back-up"></i></button>
+        <button type="button" class="dtb" data-cmd="redo" title="다시 실행"><i class="ti ti-arrow-forward-up"></i></button>
+      </div>
+
+      <!-- 색상 팝오버 -->
+      <div id="docColorPop" style="display:none;position:fixed;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border:1px solid rgba(0,0,0,.1);border-radius:12px;padding:10px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15)">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;max-width:180px">
+          ${['#000000','#E53935','#F57C00','#FDD835','#43A047','#1E88E5','#8E24AA','#00ACC1','#6D4C41','#546E7A','#FFFFFF','#FFCDD2','#FFE0B2','#FFF9C4','#C8E6C9','#BBDEFB','#E1BEE7','#B2EBF2','FFD600','#F5F5F5'].map(c=>`<button type="button" class="doc-cpick" data-color="${c}" style="width:20px;height:20px;border-radius:4px;background:${c};border:1.5px solid rgba(0,0,0,.12);cursor:pointer"></button>`).join('')}
+        </div>
+      </div>
+
+      <!-- 본문 -->
+      <div style="flex:1;overflow-y:auto;padding:20px 24px">
+        <div id="docBodyInp" contenteditable="true"
+          style="min-height:calc(100vh - 280px);outline:none;font-size:14px;font-weight:300;line-height:1.8;color:#111;font-family:Pretendard,sans-serif"
+          data-placeholder="내용을 입력하세요...">${link?.content||''}</div>
+      </div>
+
+      <!-- 하단 버튼 -->
+      <div style="padding:12px 20px;border-top:1px solid rgba(0,0,0,.07);display:flex;justify-content:flex-end;gap:8px">
+        <button id="docCancelBtn" class="btn" style="border-radius:999px">취소</button>
+        <button id="docFileSaveBtn" class="btn btn-o" style="border-radius:999px"><i class="ti ti-device-floppy"></i> 저장</button>
+      </div>
+    </div>
+  `;
+
+  // placeholder CSS
+  const placeholderStyle=document.createElement('style');
+  placeholderStyle.textContent='#docBodyInp:empty:before{content:attr(data-placeholder);color:#aaa}#docBodyInp h1{font-size:24px;font-weight:700;margin:10px 0 6px}#docBodyInp h2{font-size:20px;font-weight:600;margin:8px 0 5px}#docBodyInp h3{font-size:16px;font-weight:600;margin:6px 0 4px}#docBodyInp ul,#docBodyInp ol{padding-left:22px;margin:4px 0}#docBodyInp table{border-collapse:collapse;width:100%;margin:8px 0}#docBodyInp td,#docBodyInp th{border:1px solid #ddd;padding:6px 10px;font-size:13px}.dtb{min-width:28px;height:28px;border:none;background:none;border-radius:6px;cursor:pointer;color:#333;font-size:13px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px;transition:background .12s}.dtb:hover{background:rgba(0,0,0,.07)}';
+  document.head.appendChild(placeholderStyle);
+
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay){overlay.remove();placeholderStyle.remove();}});
+
+  const area=document.getElementById('docBodyInp');
+
+  // 일반 execCommand 버튼
+  overlay.querySelectorAll('.dtb[data-cmd]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      area.focus();
+      document.execCommand(btn.dataset.cmd,false,btn.dataset.val||null);
+    });
+  });
+
+  // 글꼴 변경
+  const fontSel=document.getElementById('docFontSel');
+  if(fontSel) fontSel.addEventListener('change',()=>{
+    area.focus();
+    document.execCommand('fontName',false,fontSel.value);
+  });
+
+  // 글자 크기 변경
+  const sizeSel=document.getElementById('docSizeSel');
+  if(sizeSel) sizeSel.addEventListener('change',()=>{
+    const sel=window.getSelection();
+    if(!sel.rangeCount) return;
+    const range=sel.getRangeAt(0);
+    const span=document.createElement('span');
+    span.style.fontSize=sizeSel.value;
+    range.surroundContents(span);
+  });
+
+  // 색상 팝오버
+  let colorMode='bg';
+  const colorPop=document.getElementById('docColorPop');
+  overlay.querySelectorAll('.doc-color-trigger').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      colorMode=btn.dataset.mode;
+      const r=btn.getBoundingClientRect();
+      colorPop.style.display='flex';
+      colorPop.style.top=(r.bottom+4)+'px';
+      colorPop.style.left=r.left+'px';
+    });
+  });
+  colorPop.querySelectorAll('.doc-cpick').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      area.focus();
+      if(colorMode==='bg') document.execCommand('hiliteColor',false,btn.dataset.color);
+      else document.execCommand('foreColor',false,btn.dataset.color);
+      colorPop.style.display='none';
+    });
+  });
+  document.addEventListener('click',function hidePop(e){
+    if(!colorPop.contains(e.target)&&!e.target.classList.contains('doc-color-trigger')){
+      colorPop.style.display='none';
+      document.removeEventListener('click',hidePop);
+    }
+  });
+
+  // 표 삽입
+  document.getElementById('docInsertTableBtn').addEventListener('click',()=>{
+    area.focus();
+    const rows=2,cols=3;
+    let html='<table style="border-collapse:collapse;width:100%;margin:8px 0">';
+    for(let r=0;r<rows;r++){html+='<tr>';for(let c=0;c<cols;c++) html+=`<td style="border:1px solid #ddd;padding:6px 10px;min-width:60px">${r===0?'제목':'내용'}</td>`;html+='</tr>';}
+    html+='</table>';
+    document.execCommand('insertHTML',false,html);
+  });
+
+  // 행/열 추가
+  function getSelectedTable(){
+    const sel=window.getSelection();
+    if(!sel.rangeCount) return null;
+    let n=sel.getRangeAt(0).commonAncestorContainer;
+    while(n&&n!==area){if(n.tagName==='TABLE') return n;n=n.parentNode;}
+    return null;
+  }
+  document.getElementById('docAddRowBtn').addEventListener('click',()=>{
+    const tbl=getSelectedTable();if(!tbl) return;
+    const cols=tbl.rows[0]?.cells?.length||3;
+    const tr=tbl.insertRow();
+    for(let i=0;i<cols;i++){const td=tr.insertCell();td.style.cssText='border:1px solid #ddd;padding:6px 10px;min-width:60px';td.textContent='내용';}
+  });
+  document.getElementById('docAddColBtn').addEventListener('click',()=>{
+    const tbl=getSelectedTable();if(!tbl) return;
+    Array.from(tbl.rows).forEach(row=>{const td=row.insertCell();td.style.cssText='border:1px solid #ddd;padding:6px 10px;min-width:60px';td.textContent='내용';});
+  });
+
+  // 닫기
+  document.getElementById('docCloseBtn').addEventListener('click',()=>{overlay.remove();placeholderStyle.remove();});
+  document.getElementById('docCancelBtn').addEventListener('click',()=>{overlay.remove();placeholderStyle.remove();});
+
+  // 저장
+  document.getElementById('docFileSaveBtn').addEventListener('click',()=>{
+    const title=(document.getElementById('docTitleInp').value||'').trim()||'제목 없는 문서';
+    const content=area.innerHTML.trim();
+    if(!content){showToast('내용을 입력해주세요.');return;}
+    if(link){link.label=title;link.content=content;link.updatedDate=dayjs().format('YYYY-MM-DD');}
+    else{target.links.push({id:uid('doc'),type:'doc',label:title,content,addedDate:dayjs().format('YYYY-MM-DD')});}
+    overlay.remove();placeholderStyle.remove();persist(false);render();showToast('문서가 저장됐습니다.');
+  });
+
+  // Ctrl+S 저장
+  overlay.addEventListener('keydown',e=>{
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();document.getElementById('docFileSaveBtn').click();}
+  });
+
+  area.focus();
+}
+
 function downloadDocAsWord(label,html){
   const name=(label||'문서').replace(/[\\/:*?"<>|]/g,'_');
   const blob=new Blob(['\ufeff',`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${name}</title></head><body>${html||''}</body></html>`],{type:'application/msword'});
