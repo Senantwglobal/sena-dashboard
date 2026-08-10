@@ -40,26 +40,58 @@
   --shadow-md:0 4px 12px rgba(11,27,46,.06);
   --shadow-lg:0 12px 28px rgba(11,27,46,.12);
   --ease:cubic-bezier(.16,1,.3,1);
+  --sidebar-w:56px;--sidebar-exp:210px;
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;height:100vh;overflow:hidden}
 ::selection{background:var(--ol);color:var(--od)}
-::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar{width:7px;height:7px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:20px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#C1C7CF}
 a{color:inherit}
 .editorial{font-weight:800;letter-spacing:-.02em}
-.hdr{background:#fff;border-bottom:1px solid var(--bd);padding:12px 22px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+
+/* ── 전체 레이아웃 ── */
+.app-shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── 왼쪽 사이드바 ── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:#fff;border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:2px;transition:width .22s var(--ease);overflow:hidden;position:relative;z-index:60}
+.sidebar:hover{width:var(--sidebar-exp)}
+.sidebar-logo{width:32px;height:32px;background:var(--text);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0;margin-bottom:10px}
+.sb-item{display:flex;align-items:center;gap:10px;width:calc(100% - 16px);padding:9px 11px;border-radius:9px;cursor:pointer;border:none;background:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;transition:background .15s var(--ease),color .15s var(--ease);text-align:left;flex-shrink:0}
+.sb-item i{font-size:17px;flex-shrink:0;width:20px;text-align:center}
+.sb-item span{opacity:0;transition:opacity .15s var(--ease);pointer-events:none}
+.sidebar:hover .sb-item span{opacity:1}
+.sb-item:hover{background:var(--sf);color:var(--text)}
+.sb-item.active{background:var(--ol);color:var(--od)}
+.sb-item.active i{color:var(--od)}
+.sb-divider{width:calc(100% - 24px);height:1px;background:var(--bd);margin:6px 0;flex-shrink:0}
+
+/* ── 메인 영역 (사이드바 오른쪽) ── */
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* ── 상단 헤더 ── */
+.hdr{background:#fff;border-bottom:1px solid var(--bd);padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;position:relative;z-index:50}
 .logo{background:var(--text);color:#fff;font-size:14px;font-weight:800;width:29px;height:29px;display:flex;align-items:center;justify-content:center;border-radius:8px}
 .dday-b{background:var(--ol);color:var(--od);font-size:12px;font-weight:500;padding:3px 10px;border-radius:20px;border:0.5px solid var(--ob)}
 .uinfo{display:flex;align-items:center;gap:8px;position:relative}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;flex-shrink:0}
-.nav{display:flex;gap:2px;padding:6px 16px;background:#fff;border-bottom:1px solid var(--bd);overflow-x:auto;position:sticky;top:53px;z-index:49}
-.nb{padding:8px 15px;font-size:13.5px;border:none;background:none;cursor:pointer;color:var(--muted);border-radius:7px;white-space:nowrap;display:flex;align-items:center;gap:5px;font-weight:600;transition:color .18s var(--ease),background .18s var(--ease)}
-.nb.active{color:var(--od);background:var(--ol)}
-.nb:hover:not(.active){color:var(--text);background:var(--sf)}
+
+/* ── 헤더 중앙 pill 탭 ── */
+.hdr-tabs{display:flex;align-items:center;gap:4px;background:var(--sf);border-radius:50px;padding:4px;border:1px solid var(--bd)}
+.hdr-tab{display:flex;align-items:center;justify-content:center;width:36px;height:30px;border-radius:40px;border:none;background:none;cursor:pointer;color:var(--muted);font-size:16px;transition:background .15s var(--ease),color .15s var(--ease);position:relative}
+.hdr-tab:hover{color:var(--text);background:#fff}
+.hdr-tab.active{background:#111;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.hdr-tab .tab-tooltip{position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);background:#111;color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;font-weight:600;z-index:100}
+.hdr-tab:hover .tab-tooltip{opacity:1}
+
+/* ── 콘텐츠 스크롤 영역 ── */
+.main-scroll{flex:1;overflow-y:auto}
 .cnt{padding:24px;max-width:1200px;margin:0 auto}
+
+/* 구버전 .nav 호환 (hidden) */
+.nav{display:none}
 .card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:17px;margin-bottom:14px;box-shadow:var(--shadow-xs);transition:box-shadow .2s var(--ease)}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap}
 .st{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.01em;color:var(--text)}
@@ -1465,46 +1497,88 @@ function render(){
   if(!state.data){ return; }
 
   const today = dayjs();
-  const nearestDeadline = null; // D-day 배지 미사용
-  const ddayLabel = '';
   const todayLabel = today.format('YYYY년 M월 D일 (ddd)');
 
-  const tabs = [
-    {view:'home', icon:'ti-layout-dashboard', label:'대시보드'},
-    {view:'vendors', icon:'ti-building-store', label:'거래처'},
-    {view:'projects', icon:'ti-checklist', label:'프로젝트'},
-    {view:'calendar', icon:'ti-calendar', label:'캘린더'},
-    {view:'leave', icon:'ti-beach', label:'연차'},
+  // 왼쪽 사이드바 메뉴 항목
+  const sideItems = [
+    {view:'home',     icon:'ti-layout-dashboard', label:'대시보드'},
+    {view:'vendors',  icon:'ti-building-store',   label:'거래처'},
+    {view:'projects', icon:'ti-checklist',        label:'프로젝트'},
+    {view:'calendar', icon:'ti-calendar',         label:'캘린더'},
+    {view:'files',    icon:'ti-folder',           label:'파일 모음'},
+    {view:'leave',    icon:'ti-beach',            label:'연차'},
+    {view:'contacts', icon:'ti-address-book',     label:'주소록'},
+  ];
+
+  // 헤더 중앙 pill 탭
+  const pillTabs = [
+    {view:'home',     icon:'ti-layout-dashboard', label:'대시보드'},
+    {view:'vendors',  icon:'ti-building-store',   label:'거래처'},
+    {view:'projects', icon:'ti-checklist',        label:'프로젝트'},
+    {view:'calendar', icon:'ti-calendar',         label:'캘린더'},
+    {view:'files',    icon:'ti-folder',           label:'파일 모음'},
+    {view:'leave',    icon:'ti-beach',            label:'연차'},
   ];
 
   const app = document.getElementById('app');
   app.innerHTML = `
-    <div class="hdr">
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <span class="logo">O</span>
-        <span class="editorial" style="font-size:16px;font-weight:600;color:#111114">천세나 업무 대시보드</span>
-        <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
-      </div>
-      <div class="uinfo">
-        ${av('천세나', 30)}
-        <span style="font-size:13px;color:var(--muted)">천세나</span>
-        <select id="roleSelect" style="font-size:11px;padding:4px 8px;border:0.5px solid var(--bd);border-radius:6px;background:var(--sf);color:var(--text);cursor:pointer;outline:none;">
-          <option value="me" ${state.data.role==='me'?'selected':''}>편집 모드</option>
-          <option value="ceo" ${state.data.role==='ceo'?'selected':''}>읽기 전용</option>
-        </select>
-        <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
+    <div class="app-shell">
+      <!-- 왼쪽 사이드바 -->
+      <aside class="sidebar">
+        <div class="sidebar-logo">S</div>
+        ${sideItems.map(t=>`
+          <button class="sb-item ${state.view===t.view?'active':''}" data-view="${t.view}">
+            <i class="ti ${t.icon}"></i><span>${t.label}</span>
+          </button>
+        `).join('')}
+        <div class="sb-divider"></div>
+        <button class="sb-item" id="sbRoleBtn" title="역할 전환">
+          <i class="ti ${state.data.role==='me'?'ti-pencil':'ti-eye'}"></i>
+          <span>${state.data.role==='me'?'편집 모드':'읽기 전용'}</span>
+        </button>
+      </aside>
+
+      <!-- 메인 영역 -->
+      <div class="main-area">
+        <!-- 상단 헤더 -->
+        <div class="hdr">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="editorial" style="font-size:15px;font-weight:700;color:#111">sena's workspace</span>
+            <span style="font-size:12px;color:var(--muted)">${todayLabel}</span>
+          </div>
+
+          <!-- 중앙 pill 탭 -->
+          <div class="hdr-tabs">
+            ${pillTabs.map(t=>`
+              <button class="hdr-tab ${state.view===t.view?'active':''}" data-view="${t.view}">
+                <i class="ti ${t.icon}"></i>
+                <span class="tab-tooltip">${t.label}</span>
+              </button>
+            `).join('')}
+          </div>
+
+          <!-- 우측 유저 정보 -->
+          <div class="uinfo">
+            <div style="position:relative">
+              <input id="globalSearch" placeholder="Search..." style="padding:6px 12px 6px 30px;border:1px solid var(--bd);border-radius:20px;font-size:12px;background:var(--sf);color:var(--text);outline:none;width:140px;font-family:inherit;transition:width .2s var(--ease)" onfocus="this.style.width='200px'" onblur="this.style.width='140px'"/>
+              <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none"></i>
+            </div>
+            ${av('천세나', 28)}
+            <span style="font-size:13px;color:var(--muted)">천세나</span>
+            <span id="syncStatus" class="sync-row"><span class="sync-dot"></span>저장됨</span>
+          </div>
+        </div>
+
+        <!-- 콘텐츠 스크롤 영역 -->
+        <div class="main-scroll">
+          <div class="cnt" id="viewRoot"></div>
+        </div>
       </div>
     </div>
-    <div class="nav">
-      ${tabs.map(t=>`<button class="nb ${state.view===t.view?'active':''}" data-view="${t.view}"><i class="ti ${t.icon}"></i>${t.label}</button>`).join('')}
-    </div>
-    <div class="cnt" id="viewRoot"></div>
   `;
 
-  document.getElementById('roleSelect').addEventListener('change', e=>{
-    state.data.role = e.target.value; persist(false);
-  });
-  document.querySelectorAll('.nb').forEach(el=>{
+  // 사이드바 클릭
+  document.querySelectorAll('.sb-item[data-view]').forEach(el=>{
     el.addEventListener('click', ()=>{
       state.view = el.dataset.view;
       state.selectedVendorId = null;
@@ -1514,14 +1588,33 @@ function render(){
     });
   });
 
+  // pill 탭 클릭
+  document.querySelectorAll('.hdr-tab[data-view]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.view = el.dataset.view;
+      state.selectedVendorId = null;
+      state.selectedProjectId = null;
+      state.selectedCompanyId = null;
+      render();
+    });
+  });
+
+  // 역할 전환 버튼
+  const sbRoleBtn = document.getElementById('sbRoleBtn');
+  if(sbRoleBtn) sbRoleBtn.addEventListener('click', ()=>{
+    state.data.role = state.data.role==='me' ? 'ceo' : 'me';
+    persist(false);
+  });
+
   const root = document.getElementById('viewRoot');
-  if(state.view==='home') root.innerHTML = viewHome();
-  else if(state.view==='vendors') root.innerHTML = state.selectedVendorId ? viewVendorDetail() : viewVendorList();
+  if(state.view==='home')     root.innerHTML = viewHome();
+  else if(state.view==='vendors')  root.innerHTML = state.selectedVendorId ? viewVendorDetail() : viewVendorList();
   else if(state.view==='projects') root.innerHTML = state.selectedProjectId ? viewProjectDetail() : viewProjects();
   else if(state.view==='calendar') root.innerHTML = viewCalendar();
-  else if(state.view==='log') root.innerHTML = viewLogInput();
+  else if(state.view==='log')      root.innerHTML = viewLogInput();
   else if(state.view==='contacts') root.innerHTML = state.selectedCompanyId ? viewCompanyDetail() : viewCompanyList();
-  else if(state.view==='leave') root.innerHTML = viewLeave();
+  else if(state.view==='leave')    root.innerHTML = viewLeave();
+  else if(state.view==='files')    root.innerHTML = viewFiles();
 
   bindViewEvents();
 }
@@ -1531,6 +1624,160 @@ function navItem(view, icon, label){
 }
 
 const isReadOnly = () => state.data.role === 'ceo';
+
+/* ================================================================
+   파일 모음 뷰
+   ================================================================ */
+function viewFiles(){
+  if(!state.data.fileFolders) state.data.fileFolders = [];
+
+  // 전체 파일/링크/문서 수집
+  function collectAllItems(){
+    const items = [];
+    // 거래처 직접 첨부 + 로그 첨부
+    state.data.vendors.forEach(v=>{
+      const addFrom = (source, sourceName, vid)=>{
+        (source.links||[]).forEach(lk=>{
+          items.push({...lk, _sourceName:sourceName, _sourceType:'vendor', _vid:vid});
+        });
+      };
+      addFrom(v, v.name, v.id);
+      (v.brands||[]).forEach(b=>addFrom(b, `${v.name} / ${b.name}`, v.id));
+    });
+    state.data.vendorLogs.forEach(log=>{
+      (log.links||[]).forEach(lk=>{
+        const v = state.data.vendors.find(x=>x.id===log.vendorId);
+        items.push({...lk, _sourceName: v?v.name:'거래처', _sourceType:'log', _date:log.date});
+      });
+    });
+    // 프로젝트 첨부
+    state.data.projects.forEach(p=>{
+      (p.links||[]).forEach(lk=>{
+        items.push({...lk, _sourceName:p.title, _sourceType:'project', _pid:p.id});
+      });
+    });
+    return items;
+  }
+
+  const allItems = collectAllItems();
+  const folders = state.data.fileFolders;
+
+  // 폴더에 배정된 아이템 id set
+  const assignedIds = new Set(folders.flatMap(f=>f.items||[]));
+  const unassigned = allItems.filter(it=>!assignedIds.has(it.id));
+
+  const activeFolderId = state.filesActiveFolderId || 'all';
+
+  function renderItemList(items){
+    if(items.length===0) return `<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>파일이나 링크가 없습니다</div>`;
+    return items.map(lk=>{
+      const isDoc = lk.type==='doc';
+      const isFile = !!lk.data && !isDoc;
+      const isUrl = !lk.data && !isDoc && lk.url;
+      let icon, color, label;
+      if(isDoc){ icon='ti-file-text'; color='#7C3AED'; label=lk.label||'문서'; }
+      else if(isFile){
+        const t=lk.type||'';
+        icon=t.includes('image')?'ti-photo':t.includes('pdf')?'ti-file-type-pdf':(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx'))?'ti-file-spreadsheet':'ti-file';
+        color=t.includes('image')?'#0891B2':t.includes('pdf')?'#DC2626':'#15803D';
+        label=lk.label||'파일';
+      } else {
+        const url=lk.url||'';
+        icon=url.includes('drive.google')?'ti-brand-google-drive':url.includes('notion.')?'ti-brand-notion':'ti-link';
+        color='#1C85E8'; label=lk.label||url;
+      }
+      const srcBadge = `<span style="font-size:10px;color:var(--muted);background:var(--sf);padding:1px 7px;border-radius:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${lk._sourceName||''}</span>`;
+      const date = lk.addedDate||lk._date||'';
+      const dateStr = date ? dayjs(date).format('M월 D일') : '';
+      const actions = isDoc
+        ? `<button class="btn files-doc-open-btn" data-id="${lk.id}" style="padding:2px 8px;font-size:10px"><i class="ti ti-edit"></i> 열기</button>
+           <button class="btn files-doc-dl-btn" data-id="${lk.id}" style="padding:2px 8px;font-size:10px"><i class="ti ti-download"></i></button>`
+        : isFile
+          ? `<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" style="padding:2px 8px;font-size:10px;text-decoration:none"><i class="ti ti-download"></i></a>`
+          : `<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" style="padding:2px 8px;font-size:10px;text-decoration:none"><i class="ti ti-external-link"></i></a>`;
+      return `<div class="files-item" data-fid="${lk.id}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;border:0.5px solid var(--bd);margin-bottom:6px;background:#fff;transition:box-shadow .15s">
+        <i class="ti ${icon}" style="font-size:18px;color:${color};flex-shrink:0"></i>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label.replace(/</g,'&lt;')}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-top:2px">${srcBadge}${dateStr?`<span style="font-size:10px;color:var(--muted)">${dateStr}</span>`:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">${actions}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // 현재 탭의 아이템 결정
+  let viewItems = [];
+  if(activeFolderId==='all') viewItems = allItems;
+  else if(activeFolderId==='unassigned') viewItems = unassigned;
+  else {
+    const f = folders.find(x=>x.id===activeFolderId);
+    if(f) viewItems = allItems.filter(it=>(f.items||[]).includes(it.id));
+  }
+
+  const activeFolder = folders.find(x=>x.id===activeFolderId);
+  const folderColor = activeFolder?.color || 'var(--o)';
+
+  return `
+  <div style="display:flex;gap:0;min-height:calc(100vh - 54px)">
+    <!-- 왼쪽 폴더 패널 -->
+    <div style="width:220px;flex-shrink:0;border-right:1px solid var(--bd);padding:16px 10px;background:#fff">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 6px;margin-bottom:8px">파일 모음</div>
+
+      <button class="files-folder-btn ${activeFolderId==='all'?'files-folder-active':''}" data-fid="all" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--text);font-weight:500">
+        <i class="ti ti-files" style="color:var(--muted);font-size:15px"></i> 전체 파일
+        <span style="margin-left:auto;font-size:10px;background:var(--sf);padding:1px 7px;border-radius:20px">${allItems.length}</span>
+      </button>
+      <button class="files-folder-btn ${activeFolderId==='unassigned'?'files-folder-active':''}" data-fid="unassigned" style="display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;color:var(--text);font-weight:500">
+        <i class="ti ti-file-unknown" style="color:var(--muted);font-size:15px"></i> 미분류
+        <span style="margin-left:auto;font-size:10px;background:var(--sf);padding:1px 7px;border-radius:20px">${unassigned.length}</span>
+      </button>
+
+      <div class="sb-divider" style="width:calc(100% - 8px);margin:10px 4px"></div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 6px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between">
+        <span>폴더</span>
+        ${!isReadOnly()?`<button id="addFolderBtn" style="border:none;background:none;cursor:pointer;color:var(--o);font-size:16px;line-height:1;padding:0" title="폴더 추가">+</button>`:''}
+      </div>
+
+      ${folders.map(f=>{
+        const cnt = allItems.filter(it=>(f.items||[]).includes(it.id)).length;
+        const isActive = activeFolderId===f.id;
+        const c = f.color||'#1C85E8';
+        return `<div class="files-folder-row" data-fid="${f.id}" style="display:flex;align-items:center;gap:0;border-radius:8px;${isActive?'background:'+c+'18':''};margin-bottom:2px">
+          <button class="files-folder-btn" data-fid="${f.id}" style="flex:1;display:flex;align-items:center;gap:8px;padding:8px 8px;border-radius:8px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:13px;color:${isActive?c:'var(--text)'};font-weight:${isActive?'600':'500'};min-width:0;text-align:left">
+            <i class="ti ti-folder-filled" style="color:${c};font-size:15px;flex-shrink:0"></i>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span>
+            <span style="margin-left:auto;flex-shrink:0;font-size:10px;background:var(--sf);padding:1px 6px;border-radius:20px">${cnt}</span>
+          </button>
+          ${!isReadOnly()?`<div style="display:flex;gap:1px;padding-right:4px;flex-shrink:0">
+            <button class="btn folder-edit-btn" data-fid="${f.id}" style="padding:2px 5px;font-size:10px;border:none;background:none;color:var(--muted)" title="편집"><i class="ti ti-dots-vertical"></i></button>
+          </div>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- 오른쪽 파일 목록 -->
+    <div style="flex:1;padding:20px 24px;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${activeFolderId!=='all'&&activeFolderId!=='unassigned'&&activeFolder
+            ? `<div style="width:10px;height:10px;border-radius:50%;background:${folderColor};flex-shrink:0"></div>
+               <span style="font-size:16px;font-weight:700">${activeFolder.name}</span>`
+            : `<span style="font-size:16px;font-weight:700">${activeFolderId==='all'?'전체 파일':'미분류'}</span>`}
+          <span style="font-size:12px;color:var(--muted)">${viewItems.length}건</span>
+        </div>
+        ${activeFolderId!=='all'&&activeFolderId!=='unassigned'&&!isReadOnly()
+          ? `<button id="addItemsToFolderBtn" class="btn btn-o" style="font-size:11px;padding:5px 12px"><i class="ti ti-plus"></i> 파일 추가</button>`
+          : ''}
+      </div>
+      <div id="filesItemList">
+        ${renderItemList(viewItems)}
+      </div>
+    </div>
+  </div>
+  `;
+}
 
 
 
@@ -3939,6 +4186,153 @@ function closeModal(){
   if(last) last.remove();
 }
 
+/* ── 파일 모음 - 아이템 id로 원본 링크 찾기 ── */
+function findFilesItemById(id){
+  for(const v of state.data.vendors){
+    const checkSource = (src)=>{
+      const link = (src.links||[]).find(l=>l.id===id);
+      if(link) return {target:src, link};
+      return null;
+    };
+    let r = checkSource(v);
+    if(r) return r;
+    for(const b of (v.brands||[])){
+      r = checkSource(b);
+      if(r) return r;
+    }
+  }
+  for(const p of state.data.projects){
+    const link = (p.links||[]).find(l=>l.id===id);
+    if(link) return {target:p, link};
+  }
+  for(const log of state.data.vendorLogs){
+    const link = (log.links||[]).find(l=>l.id===id);
+    if(link) return {target:log, link};
+  }
+  return null;
+}
+
+/* ── 폴더 생성/편집 모달 ── */
+function folderEditModal(folder){
+  const isEdit = !!folder;
+  const colorPresets = ['#1C85E8','#7C3AED','#DB2777','#D97706','#059669','#DC2626','#0891B2','#65A30D','#F59E0B','#6366F1','#EC4899','#14B8A6'];
+  const curColor = folder?.color || '#1C85E8';
+  return `<div class="modal" style="max-width:400px">
+    <div class="mh"><h3>${isEdit?'폴더 편집':'새 폴더'}</h3><button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+    <div class="mb">
+      <form id="folderForm">
+        <div class="field">
+          <label class="field-label">폴더 이름</label>
+          <input class="inp" name="name" value="${(folder?.name||'').replace(/"/g,'&quot;')}" placeholder="폴더 이름 입력" required/>
+        </div>
+        <div class="field">
+          <label class="field-label">색상</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="colorPicker">
+            ${colorPresets.map(c=>`
+              <button type="button" class="color-pick-btn" data-color="${c}"
+                style="width:26px;height:26px;border-radius:50%;background:${c};border:3px solid ${c===curColor?'#111':'transparent'};cursor:pointer;transition:border-color .12s">
+              </button>`).join('')}
+          </div>
+          <input type="hidden" name="color" id="folderColorVal" value="${curColor}"/>
+        </div>
+      </form>
+      ${isEdit?`<div style="margin-top:12px;padding-top:12px;border-top:0.5px solid var(--bd)">
+        <button id="deleteFolderBtn" class="btn btn-red" style="width:100%"><i class="ti ti-trash"></i> 폴더 삭제</button>
+      </div>`:''}
+    </div>
+    <div class="mf">
+      <button type="button" class="btn" id="closeModal">취소</button>
+      <button type="submit" form="folderForm" class="btn btn-o"><i class="ti ti-device-floppy"></i> 저장</button>
+    </div>
+  </div>`;
+}
+
+function bindFolderFormSubmit(existingFolder){
+  // 색상 피커
+  document.querySelectorAll('.color-pick-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.color-pick-btn').forEach(b=>b.style.borderColor='transparent');
+      btn.style.borderColor='#111';
+      document.getElementById('folderColorVal').value = btn.dataset.color;
+    });
+  });
+  document.getElementById('folderForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const name = (fd.get('name')||'').trim();
+    const color = fd.get('color') || '#1C85E8';
+    if(!name){ showToast('이름을 입력해주세요.'); return; }
+    if(!state.data.fileFolders) state.data.fileFolders = [];
+    if(existingFolder){
+      existingFolder.name = name;
+      existingFolder.color = color;
+    } else {
+      state.data.fileFolders.push({id:uid('ff'), name, color, items:[]});
+    }
+    closeModal(); persist(false); render();
+    showToast(existingFolder ? '폴더가 수정됐습니다.' : '폴더가 추가됐습니다.');
+  });
+  const deleteBtn = document.getElementById('deleteFolderBtn');
+  if(deleteBtn && existingFolder) deleteBtn.addEventListener('click', ()=>{
+    if(!confirm(`"${existingFolder.name}" 폴더를 삭제하시겠습니까?\n(파일 원본은 유지됩니다)`)) return;
+    state.data.fileFolders = state.data.fileFolders.filter(f=>f.id!==existingFolder.id);
+    if(state.filesActiveFolderId===existingFolder.id) state.filesActiveFolderId = 'all';
+    closeModal(); persist(false); render();
+    showToast('폴더가 삭제됐습니다.');
+  });
+}
+
+/* ── 폴더에 파일 추가 모달 ── */
+function folderAddItemsModal(folder){
+  function collectAllItems(){
+    const items = [];
+    state.data.vendors.forEach(v=>{
+      const addFrom=(s,n)=>(s.links||[]).forEach(l=>items.push({...l,_sourceName:n}));
+      addFrom(v,v.name);
+      (v.brands||[]).forEach(b=>addFrom(b,`${v.name}/${b.name}`));
+    });
+    state.data.vendorLogs.forEach(log=>{
+      (log.links||[]).forEach(l=>{
+        const v=state.data.vendors.find(x=>x.id===log.vendorId);
+        items.push({...l,_sourceName:v?v.name:'로그'});
+      });
+    });
+    state.data.projects.forEach(p=>(p.links||[]).forEach(l=>items.push({...l,_sourceName:p.title})));
+    return items;
+  }
+  const all = collectAllItems();
+  const curItems = folder.items || [];
+  return `<div class="modal" style="max-width:500px;max-height:80vh">
+    <div class="mh"><h3><i class="ti ti-folder-plus" style="color:${folder.color||'var(--o)'}"></i> "${folder.name}"에 파일 추가</h3><button class="btn close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+    <div class="mb" style="max-height:55vh;overflow-y:auto">
+      ${all.length===0?'<div style="color:var(--muted);text-align:center;padding:24px">추가할 파일이 없습니다</div>':
+        all.map(it=>{
+          const checked = curItems.includes(it.id);
+          const icon = it.type==='doc'?'ti-file-text':it.data?'ti-file':'ti-link';
+          return `<label style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:0.5px solid var(--bd);cursor:pointer">
+            <input type="checkbox" class="folder-item-cb" value="${it.id}" ${checked?'checked':''} style="accent-color:var(--o);width:15px;height:15px;flex-shrink:0"/>
+            <i class="ti ${icon}" style="font-size:14px;color:var(--muted)"></i>
+            <span style="flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${(it.label||'파일').replace(/</g,'&lt;')}</span>
+            <span style="font-size:10px;color:var(--muted);background:var(--sf);padding:1px 7px;border-radius:8px">${it._sourceName||''}</span>
+          </label>`;
+        }).join('')}
+    </div>
+    <div class="mf">
+      <button class="btn" id="closeModal">취소</button>
+      <button class="btn btn-o" id="folderItemsSaveBtn"><i class="ti ti-device-floppy"></i> 저장</button>
+    </div>
+  </div>`;
+}
+
+function bindFolderAddItemsSubmit(folder){
+  document.getElementById('folderItemsSaveBtn').addEventListener('click', ()=>{
+    const checked = [...document.querySelectorAll('.folder-item-cb:checked')].map(cb=>cb.value);
+    folder.items = checked;
+    closeModal(); persist(false); render();
+    showToast('폴더 항목이 업데이트됐습니다.');
+  });
+}
+
 /* ---------- 문서 작성/편집 (Word 스타일 인앱 에디터) ---------- */
 function modalDocEditor(docTitle, docContent){
   return `
@@ -4888,6 +5282,79 @@ function generateOneLineSummary(text){
    이벤트 바인딩
    ============================================================ */
 function bindViewEvents(){
+
+  /* ── 파일 모음 탭 이벤트 ── */
+  // 폴더 버튼 클릭 (탭 전환)
+  document.querySelectorAll('.files-folder-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.filesActiveFolderId = btn.dataset.fid;
+      render();
+    });
+  });
+
+  // 폴더 추가
+  const addFolderBtn = document.getElementById('addFolderBtn');
+  if(addFolderBtn) addFolderBtn.addEventListener('click', ()=>{
+    openModal(folderEditModal(null));
+    bindModalCommon();
+    bindFolderFormSubmit(null);
+  });
+
+  // 폴더 편집 (케밥 메뉴)
+  document.querySelectorAll('.folder-edit-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      const fid = btn.dataset.fid;
+      const folder = state.data.fileFolders.find(f=>f.id===fid);
+      if(!folder) return;
+      // 편집 메뉴 표시
+      openModal(folderEditModal(folder));
+      bindModalCommon();
+      bindFolderFormSubmit(folder);
+    });
+  });
+
+  // 파일 모음 - 문서 열기
+  document.querySelectorAll('.files-doc-open-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      const item = findFilesItemById(id);
+      if(!item) return;
+      const {target, link} = item;
+      openDocEditor(target, link);
+    });
+  });
+
+  // 파일 모음 - 문서 다운로드
+  document.querySelectorAll('.files-doc-dl-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      const item = findFilesItemById(id);
+      if(item?.link) downloadDocAsWord(item.link.label, item.link.content);
+    });
+  });
+
+  // 파일 모음 - 폴더에 항목 추가 버튼
+  const addItemsBtn = document.getElementById('addItemsToFolderBtn');
+  if(addItemsBtn) addItemsBtn.addEventListener('click', ()=>{
+    const fid = state.filesActiveFolderId;
+    const folder = state.data.fileFolders.find(f=>f.id===fid);
+    if(!folder) return;
+    openModal(folderAddItemsModal(folder));
+    bindModalCommon();
+    bindFolderAddItemsSubmit(folder);
+  });
+
+  // active 스타일 반영
+  document.querySelectorAll('.files-folder-btn').forEach(btn=>{
+    const isActive = btn.dataset.fid === (state.filesActiveFolderId||'all');
+    if(isActive){
+      btn.style.background = 'var(--ol)';
+      btn.style.color = 'var(--od)';
+      btn.style.fontWeight = '600';
+    }
+  });
+
   // 홈/리스트 -> 상세 이동 링크들
   document.querySelectorAll('.vendor-link, .vendor-row').forEach(el=>{
     el.addEventListener('click', ()=>{
