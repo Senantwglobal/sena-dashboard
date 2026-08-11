@@ -1450,6 +1450,7 @@ const state = {
   filesPage: 0,
   filesOpenFolders: {},
   filesSelected: new Set(),
+  filesSearch: '',
 };
 
 function persist(shouldRender=true){
@@ -2220,25 +2221,69 @@ function viewFiles(){
   }
 
   const PAGE=20,filePage=state.filesPage||0;
-  const totalPages=Math.ceil(viewItems.length/PAGE);
-  const pageItems=viewItems.slice(filePage*PAGE,(filePage+1)*PAGE);
+  // 검색 필터
+  const searchQ=(state.filesSearch||'').trim().toLowerCase();
+  const filteredItems=searchQ?viewItems.filter(it=>(it.label||'').toLowerCase().includes(searchQ)||(it._src||'').toLowerCase().includes(searchQ)):viewItems;
+  const totalPages=Math.ceil(filteredItems.length/PAGE);
+  const pageItems=filteredItems.slice(filePage*PAGE,(filePage+1)*PAGE);
   const selCount=(state.filesSelected||new Set()).size;
   const selBarHtml=selCount>0?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(28,133,232,.1);border:1px solid rgba(28,133,232,.25);border-radius:12px"><i class="ti ti-checkbox" style="color:var(--o);font-size:16px"></i><span style="font-size:13px;font-weight:600;color:var(--od)">${selCount}개 선택됨</span><span style="font-size:12px;color:var(--muted)">— 내 폴더 카드로 드래그해서 이동</span><button id="fcClearSelBtn" class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:999px">선택 해제</button></div>`:'';
 
   // 파일 아이콘/색상
+  // 아이콘 프리셋 목록 (커스텀 선택용)
+  const ICON_PRESETS=[
+    {icon:'ti-file-text',  label:'문서',    color:'#7C3AED',bg:'#F3F0FF'},
+    {icon:'ti-file-type-pdf',label:'PDF',  color:'#DC2626',bg:'#FEE2E2'},
+    {icon:'ti-file-spreadsheet',label:'엑셀',color:'#15803D',bg:'#DCFCE7'},
+    {icon:'ti-photo',      label:'이미지',  color:'#0891B2',bg:'#E0F7FA'},
+    {icon:'ti-file-zip',   label:'압축',    color:'#D97706',bg:'#FEF3C7'},
+    {icon:'ti-presentation',label:'발표',   color:'#EA580C',bg:'#FFF7ED'},
+    {icon:'ti-file-code',  label:'코드',    color:'#0F766E',bg:'#F0FDFA'},
+    {icon:'ti-link',       label:'링크',    color:'#1C85E8',bg:'#EFF6FF'},
+    {icon:'ti-brand-notion',label:'Notion', color:'#374151',bg:'#F3F4F6'},
+    {icon:'ti-star',       label:'중요',    color:'#CA8A04',bg:'#FEFCE8'},
+    {icon:'ti-flag',       label:'플래그',  color:'#DC2626',bg:'#FEF2F2'},
+    {icon:'ti-chart-bar',  label:'차트',    color:'#7C3AED',bg:'#F5F3FF'},
+    {icon:'ti-mail',       label:'메일',    color:'#0369A1',bg:'#F0F9FF'},
+    {icon:'ti-currency-dollar',label:'재무',color:'#15803D',bg:'#F0FDF4'},
+    {icon:'ti-users',      label:'팀',      color:'#6D28D9',bg:'#F5F3FF'},
+    {icon:'ti-calendar',   label:'일정',    color:'#0891B2',bg:'#ECFEFF'},
+    {icon:'ti-map',        label:'지도',    color:'#059669',bg:'#ECFDF5'},
+    {icon:'ti-truck',      label:'물류',    color:'#9333EA',bg:'#FAF5FF'},
+    {icon:'ti-settings',   label:'설정',    color:'#475569',bg:'#F8FAFC'},
+    {icon:'ti-package',    label:'패키지',  color:'#B45309',bg:'#FFFBEB'},
+  ];
+
   function fileIconColor(lk){
+    // 커스텀 아이콘 우선
+    if(lk._customIcon){
+      const p=ICON_PRESETS.find(x=>x.icon===lk._customIcon)||{color:'#6B7280',bg:'#F3F4F6'};
+      return {icon:lk._customIcon,color:lk._customColor||p.color,bg:lk._customBg||p.bg,svg:null};
+    }
     if(lk.type==='doc') return {icon:'ti-file-text',color:'#7C3AED',bg:'#F3F0FF'};
     if(lk.data){
       const t=lk.type||'';
       if(t.includes('image')) return {icon:'ti-photo',color:'#0891B2',bg:'#E0F7FA'};
-      if(t.includes('pdf')) return {icon:'ti-file-type-pdf',color:'#DC2626',bg:'#FEE2E2'};
+      if(t.includes('pdf'))   return {icon:'ti-file-type-pdf',color:'#DC2626',bg:'#FEE2E2'};
       if(t.includes('sheet')||String(lk.label||'').endsWith('.xlsx')) return {icon:'ti-file-spreadsheet',color:'#15803D',bg:'#DCFCE7'};
       return {icon:'ti-file',color:'#6B7280',bg:'#F3F4F6'};
     }
+    // 링크 타입별 SVG 아이콘
     const u=lk.url||'';
-    if(u.includes('drive.google')) return {icon:'ti-brand-google-drive',color:'#1C85E8',bg:'#EFF6FF'};
-    if(u.includes('notion.')) return {icon:'ti-brand-notion',color:'#374151',bg:'#F3F4F6'};
-    if(u.includes('sharepoint')) return {icon:'ti-brand-office',color:'#D97706',bg:'#FEF3C7'};
+    if(u.includes('sharepoint')||u.includes('onedrive.live')||u.includes('1drv.ms')){
+      return {icon:null,color:'#0078D4',bg:'#EFF6FF',svg:`<svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12.5 8.5A4.5 4.5 0 0 1 17 13H8.5A3.5 3.5 0 0 1 5 9.5a3.5 3.5 0 0 1 3.5-3.5c.18 0 .36.01.54.04A4.49 4.49 0 0 1 12.5 4a4.5 4.5 0 0 1 4.44 3.77A3 3 0 0 1 20 10.5 3 3 0 0 1 17 13.5" stroke="#0078D4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 13h12" stroke="#2B88D8" stroke-width="1.5" stroke-linecap="round"/></svg>`};
+    }
+    if(u.includes('drive.google')){
+      return {icon:null,color:'#1C85E8',bg:'#EFF6FF',svg:`<svg viewBox="0 0 24 24" width="26" height="26"><path d="M4.5 18.5L8 12.5 4 6h7l4 7-3.5 5.5H4.5z" fill="#0066DA"/><path d="M12 12.5l4-7h4l-4 7H12z" fill="#00AC47"/><path d="M16 12.5l3.5 6H8.5L12 12.5H16z" fill="#FFBA00"/></svg>`};
+    }
+    if(u.includes('notion.')){
+      return {icon:null,color:'#374151',bg:'#F3F4F6',svg:`<svg viewBox="0 0 24 24" width="24" height="24" fill="#374151"><rect x="4" y="4" width="16" height="16" rx="2" fill="#fff" stroke="#374151" stroke-width="1.5"/><path d="M8 8h8M8 12h5M8 16h6" stroke="#374151" stroke-width="1.5" stroke-linecap="round"/></svg>`};
+    }
+    if(u.includes('docs.google')||u.includes('sheets.google')||u.includes('slides.google')){
+      const isSheet=u.includes('sheets'), isSlide=u.includes('slides');
+      const c=isSheet?'#0F9D58':isSlide?'#F4B400':'#4285F4';
+      return {icon:'ti-brand-google',color:c,bg:'#EFF6FF'};
+    }
     return {icon:'ti-link',color:'#1C85E8',bg:'#EFF6FF'};
   }
 
@@ -2269,28 +2314,34 @@ function viewFiles(){
 
   // 파일 카드
   function fileCard(lk){
-    const {icon,color,bg}=fileIconColor(lk);
+    const ic=fileIconColor(lk);
     const label=(lk.label||'파일').replace(/</g,'&lt;');
     const date=lk.addedDate||lk._date||'';
     const isDoc=lk.type==='doc';
     const isSel=(state.filesSelected||new Set()).has(lk.id);
+    const iconHtml=ic.svg
+      ?ic.svg
+      :`<i class="ti ${ic.icon}" style="font-size:22px;color:${ic.color}"></i>`;
     return `<div class="fc-card fc-file ${isSel?'fc-selected':''}" data-fid="${lk.id}" draggable="true"
       style="background:${isSel?'rgba(28,133,232,.12)':'rgba(255,255,255,.72)'};backdrop-filter:blur(14px);border:${isSel?'2px solid rgba(28,133,232,.5)':'1px solid rgba(255,255,255,.8)'};border-radius:16px;padding:16px;transition:box-shadow .18s,transform .15s,border .12s,background .12s;position:relative;cursor:grab;user-select:none"
-      onmouseenter="if(!this.classList.contains('fc-selected')){this.style.boxShadow='0 8px 24px rgba(11,27,46,.12)';this.style.transform='translateY(-2px)';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='1')"
-      onmouseleave="if(!this.classList.contains('fc-selected')){this.style.boxShadow='';this.style.transform='';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='0')">
-      <!-- 체크박스 (좌상단) -->
-      <div class="fc-check" style="position:absolute;top:10px;left:10px;width:18px;height:18px;border-radius:5px;border:1.5px solid ${isSel?'var(--o)':'rgba(0,0,0,.25)'};background:${isSel?'var(--o)':'rgba(255,255,255,.7)'};display:flex;align-items:center;justify-content:center;opacity:${isSel?'1':'0'};transition:opacity .12s;cursor:pointer;z-index:2;flex-shrink:0">
+      onmouseenter="if(!this.classList.contains('fc-selected')){this.style.boxShadow='0 8px 24px rgba(11,27,46,.12)';this.style.transform='translateY(-2px)';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='1');this.querySelector('.fc-check')&&!this.classList.contains('fc-selected')&&(this.querySelector('.fc-check').style.opacity='1')"
+      onmouseleave="if(!this.classList.contains('fc-selected')){this.style.boxShadow='';this.style.transform='';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='0');this.querySelector('.fc-check')&&!this.classList.contains('fc-selected')&&(this.querySelector('.fc-check').style.opacity='0')">
+      <div class="fc-check" style="position:absolute;top:10px;left:10px;width:18px;height:18px;border-radius:5px;border:1.5px solid ${isSel?'var(--o)':'rgba(0,0,0,.25)'};background:${isSel?'var(--o)':'rgba(255,255,255,.7)'};display:flex;align-items:center;justify-content:center;opacity:${isSel?'1':'0'};transition:opacity .12s;cursor:pointer;z-index:2">
         ${isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
       </div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
-        <div style="width:44px;height:44px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center">
-          <i class="ti ${icon}" style="font-size:22px;color:${color}"></i>
-        </div>
+        <button class="fc-icon-change-btn" data-fid="${lk.id}" onclick="event.stopPropagation()" title="아이콘 변경"
+          style="width:44px;height:44px;border-radius:12px;background:${ic.bg};display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:transform .12s;flex-shrink:0"
+          onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform=''">
+          ${iconHtml}
+        </button>
         <div style="display:flex;gap:2px;opacity:0;transition:opacity .15s" class="fc-actions">
-          ${isDoc?`<button class="btn files-doc-open" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-edit"></i></button>
-                   <button class="btn files-doc-dl" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-download"></i></button>`
-          :lk.data?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-download"></i></a>`
-          :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-external-link"></i></a>`}
+          ${isDoc
+            ?`<button class="btn files-doc-open" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-edit"></i></button>
+              <button class="btn files-doc-dl" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-download"></i></button>`
+            :lk.data
+              ?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-download"></i></a>`
+              :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-external-link"></i></a>`}
         </div>
       </div>
       <div style="font-size:13px;font-weight:500;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${label}">${label}</div>
@@ -2344,7 +2395,13 @@ function viewFiles(){
             ${activeId==='root'?'내 폴더':activeId==='all'?'전체 파일':activeId==='unassigned'?'미분류':breadcrumb[breadcrumb.length-1]?.name||''}
           </span>
         </div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <!-- 검색바 -->
+          <div style="position:relative">
+            <input id="fcSearchInput" value="${(state.filesSearch||'').replace(/"/g,'&quot;')}" placeholder="파일 검색..." style="width:180px;padding:7px 12px 7px 32px;border-radius:999px;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.55);backdrop-filter:blur(10px);font-size:12px;font-family:inherit;color:var(--text);outline:none;transition:width .2s,box-shadow .15s" onfocus="this.style.width='230px';this.style.boxShadow='0 0 0 3px rgba(28,133,232,.15)'" onblur="this.style.width='180px';this.style.boxShadow=''"/>
+            <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none"></i>
+            ${state.filesSearch?`<button id="fcSearchClear" onclick="event.stopPropagation()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;line-height:1;padding:0">×</button>`:''}
+          </div>
           ${showAddFolder?`<button id="addFolderBtn" class="btn" style="border-radius:999px;font-size:12px"><i class="ti ti-folder-plus"></i> 새 폴더</button>`:''}
           ${(!activeId.startsWith('auto_')&&activeId!=='all')&&findFolder(manualFolders,activeId)?`<button id="addItemsToFolderBtn" class="btn btn-o" style="border-radius:999px;font-size:12px"><i class="ti ti-plus"></i> 파일 추가</button>`:''}
         </div>
@@ -8703,61 +8760,149 @@ function bindViewEvents(){
     card.addEventListener('mouseleave',()=>{ const a=card.querySelector('.fc-actions'); if(a) a.style.opacity='0'; });
   });
 
-  // ── 파일 카드 클릭: 선택/해제 토글 ──
+  // ── 파일 검색 ──
+  const fcSearch=document.getElementById('fcSearchInput');
+  if(fcSearch){
+    fcSearch.addEventListener('input',()=>{
+      state.filesSearch=fcSearch.value;
+      state.filesPage=0;
+      // 렌더 없이 그리드만 실시간 업데이트
+      const q=state.filesSearch.trim().toLowerCase();
+      document.querySelectorAll('.fc-file').forEach(card=>{
+        const label=card.querySelector('[title]')?.getAttribute('title')||'';
+        card.style.display=(!q||label.toLowerCase().includes(q))?'':'none';
+      });
+      // 그리드가 비었으면 안내 표시
+      const grid=document.getElementById('filesGrid');
+      const visible=grid?[...grid.querySelectorAll('.fc-file')].filter(c=>c.style.display!=='none').length:0;
+      let empty=grid?.querySelector('.fc-empty-search');
+      if(q&&visible===0){
+        if(!empty){empty=document.createElement('div');empty.className='fc-empty-search';empty.style.cssText='grid-column:1/-1;text-align:center;padding:40px 0;color:var(--muted);font-size:13px';empty.innerHTML=`<i class="ti ti-search" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>"${q}" 검색 결과 없음`;grid.appendChild(empty);}
+      } else if(empty) empty.remove();
+    });
+    fcSearch.addEventListener('keydown',e=>{ if(e.key==='Escape'){ state.filesSearch=''; render(); } });
+  }
+  const fcSearchClear=document.getElementById('fcSearchClear');
+  if(fcSearchClear) fcSearchClear.addEventListener('click',()=>{ state.filesSearch=''; render(); });
+
+  // ── 아이콘 변경 팝업 ──
+  document.querySelectorAll('.fc-icon-change-btn').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      document.querySelectorAll('.fc-icon-pop').forEach(p=>p.remove());
+      const fid=btn.dataset.fid;
+      const pop=document.createElement('div');
+      pop.className='fc-icon-pop';
+      pop.style.cssText='position:fixed;z-index:9999;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.1);border-radius:16px;padding:12px;box-shadow:0 12px 32px rgba(11,27,46,.18);width:260px';
+      const r=btn.getBoundingClientRect();
+      pop.style.top=(r.bottom+6)+'px';
+      pop.style.left=Math.min(r.left,window.innerWidth-280)+'px';
+      pop.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">아이콘 선택</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+          ${ICON_PRESETS.map(p=>`<button class="fc-icon-opt" data-icon="${p.icon}" data-color="${p.color}" data-bg="${p.bg}" title="${p.label}"
+            style="width:44px;height:44px;border-radius:10px;border:none;background:${p.bg};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s"
+            onmouseenter="this.style.transform='scale(1.12)'" onmouseleave="this.style.transform=''">
+            <i class="ti ${p.icon}" style="font-size:20px;color:${p.color}"></i>
+          </button>`).join('')}
+        </div>
+        <button class="fc-icon-reset" style="margin-top:10px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--bd);background:none;cursor:pointer;font-size:11px;color:var(--muted)">기본값으로 초기화</button>`;
+      document.body.appendChild(pop);
+
+      // 아이콘 선택
+      pop.querySelectorAll('.fc-icon-opt').forEach(opt=>{
+        opt.addEventListener('click',()=>{
+          const item=findFileItemById(fid);
+          if(item?.link){
+            item.link._customIcon=opt.dataset.icon;
+            item.link._customColor=opt.dataset.color;
+            item.link._customBg=opt.dataset.bg;
+            persist(false);render();
+          }
+          pop.remove();
+        });
+      });
+      pop.querySelector('.fc-icon-reset').addEventListener('click',()=>{
+        const item=findFileItemById(fid);
+        if(item?.link){ delete item.link._customIcon; delete item.link._customColor; delete item.link._customBg; persist(false);render(); }
+        pop.remove();
+      });
+      setTimeout(()=>document.addEventListener('click',function close(ev){ if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',close);}},true),10);
+    });
+  });
+
+  // ── 파일 카드 클릭 ──
   if(!state.filesSelected) state.filesSelected=new Set();
+
+  function updateSelBar(){
+    const bar=document.getElementById('fcSelBar');
+    if(bar){
+      if(state.filesSelected.size>0){bar.style.display='flex';const cnt=bar.querySelector('#fcSelCount');if(cnt)cnt.textContent=state.filesSelected.size+'개 선택됨';}
+      else bar.style.display='none';
+    } else if(state.filesSelected.size>0){
+      const grid=document.getElementById('filesGrid');
+      if(grid){
+        const div=document.createElement('div');div.id='fcSelBar';
+        div.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(28,133,232,.1);border:1px solid rgba(28,133,232,.25);border-radius:12px;grid-column:1/-1';
+        div.innerHTML=`<i class="ti ti-checkbox" style="color:var(--o);font-size:16px"></i><span id="fcSelCount" style="font-size:13px;font-weight:600;color:var(--od)">${state.filesSelected.size}개 선택됨</span><span style="font-size:12px;color:var(--muted)">— 내 폴더 카드로 드래그해서 이동</span><button id="fcClearSelBtn" class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:999px">선택 해제</button>`;
+        grid.prepend(div);
+        div.querySelector('#fcClearSelBtn').addEventListener('click',()=>{ state.filesSelected.clear(); render(); });
+      }
+    }
+  }
+
+  function toggleSelect(card){
+    const fid=card.dataset.fid;
+    if(state.filesSelected.has(fid)) state.filesSelected.delete(fid);
+    else state.filesSelected.add(fid);
+    const isSel=state.filesSelected.has(fid);
+    const ck=card.querySelector('.fc-check');
+    if(ck){ck.style.opacity=isSel?'1':'0';ck.style.background=isSel?'var(--o)':'rgba(255,255,255,.7)';ck.style.borderColor=isSel?'var(--o)':'rgba(0,0,0,.25)';ck.innerHTML=isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':'';}
+    card.style.background=isSel?'rgba(28,133,232,.12)':'rgba(255,255,255,.72)';
+    card.style.border=isSel?'2px solid rgba(28,133,232,.5)':'1px solid rgba(255,255,255,.8)';
+    updateSelBar();
+  }
 
   document.querySelectorAll('.fc-file').forEach(card=>{
     card.addEventListener('click',e=>{
+      if(e.target.closest('.fc-icon-change-btn')) return;
       if(e.target.closest('.fc-actions')) return;
       const fid=card.dataset.fid;
-      if(state.filesSelected.has(fid)) state.filesSelected.delete(fid);
-      else state.filesSelected.add(fid);
-      // 체크박스만 빠르게 업데이트 (re-render 없이)
-      const ck=card.querySelector('.fc-check');
-      const isSel=state.filesSelected.has(fid);
-      if(ck){
-        ck.style.opacity=isSel?'1':'0';
-        ck.style.background=isSel?'var(--o)':'rgba(255,255,255,.7)';
-        ck.style.borderColor=isSel?'var(--o)':'rgba(0,0,0,.25)';
-        ck.innerHTML=isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':'';
+
+      // 체크박스 클릭 or 이미 선택 중 → 토글 모드
+      if(e.target.closest('.fc-check')||(state.filesSelected&&state.filesSelected.size>0)){
+        toggleSelect(card);
+        return;
       }
-      card.style.background=isSel?'rgba(28,133,232,.12)':'rgba(255,255,255,.72)';
-      card.style.border=isSel?'2px solid rgba(28,133,232,.5)':'1px solid rgba(255,255,255,.8)';
-      // selBar 업데이트
-      const bar=document.getElementById('fcSelBar');
-      if(bar){
-        if(state.filesSelected.size>0){
-          bar.style.display='flex';
-          const cnt=bar.querySelector('#fcSelCount');
-          if(cnt) cnt.textContent=state.filesSelected.size+'개 선택됨';
-        } else {
-          bar.style.display='none';
+
+      // 선택 없는 상태 → 파일 열기
+      const item=findFileItemById(fid);
+      if(!item?.link) return;
+      const lk=item.link;
+      if(lk.type==='doc'){
+        openDocEditorFiles(item.target,lk);
+      } else if(lk.data){
+        try{
+          const byteStr=atob(lk.data);
+          const ab=new ArrayBuffer(byteStr.length);
+          const ia=new Uint8Array(ab);
+          for(let i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
+          const blob=new Blob([ab],{type:lk.type||'application/octet-stream'});
+          const url=URL.createObjectURL(blob);
+          window.open(url,'_blank');
+          setTimeout(()=>URL.revokeObjectURL(url),5000);
+        } catch(err){
+          const a=document.createElement('a');
+          a.href=`data:${lk.type};base64,${lk.data}`;
+          a.download=lk.label||'file';
+          a.click();
         }
-      } else if(state.filesSelected.size>0){
-        // 처음 선택 시 selBar 동적 삽입
-        const grid=document.getElementById('filesGrid');
-        if(grid){
-          const div=document.createElement('div');
-          div.id='fcSelBar';
-          div.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(28,133,232,.1);border:1px solid rgba(28,133,232,.25);border-radius:12px;grid-column:1/-1';
-          div.innerHTML=`<i class="ti ti-checkbox" style="color:var(--o);font-size:16px"></i><span id="fcSelCount" style="font-size:13px;font-weight:600;color:var(--od)">${state.filesSelected.size}개 선택됨</span><span style="font-size:12px;color:var(--muted)">— 내 폴더 카드로 드래그해서 이동</span><button id="fcClearSelBtn" class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:999px">선택 해제</button>`;
-          grid.prepend(div);
-          div.querySelector('#fcClearSelBtn').addEventListener('click',()=>{
-            state.filesSelected.clear();
-            render();
-          });
-        }
+      } else if(lk.url){
+        window.open(lk.url,'_blank');
       }
     });
     // 호버시 체크박스 노출
-    card.addEventListener('mouseenter',()=>{
-      const ck=card.querySelector('.fc-check');
-      if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='1';
-    });
-    card.addEventListener('mouseleave',()=>{
-      const ck=card.querySelector('.fc-check');
-      if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='0';
-    });
+    card.addEventListener('mouseenter',()=>{ const ck=card.querySelector('.fc-check'); if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='1'; });
+    card.addEventListener('mouseleave',()=>{ const ck=card.querySelector('.fc-check'); if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='0'; });
   });
 
   // 선택 해제 버튼
@@ -8884,6 +9029,9 @@ function bindViewEvents(){
       card.style.opacity='';
       dragFolderId=null;
       document.querySelectorAll('.fc-drop-overlay').forEach(o=>o.style.display='none');
+      document.querySelectorAll('.fc-folder').forEach(c=>{
+        c.style.borderLeft=''; c.style.borderRight='';
+      });
     });
   });
 
@@ -8897,20 +9045,47 @@ function bindViewEvents(){
       if(dragFolderId===targetFid) return;
       e.preventDefault();
       e.dataTransfer.dropEffect='move';
-      const ov=card.querySelector('.fc-drop-overlay');
-      if(ov) ov.style.display='flex';
+
+      if(dragFolderId){
+        // 마우스가 카드 좌측 40% → 앞에 삽입, 우측 40% → 뒤에 삽입, 가운데 20% → 내부 이동
+        const r=card.getBoundingClientRect();
+        const ratio=(e.clientX-r.left)/r.width;
+        document.querySelectorAll('.fc-folder').forEach(c=>{c.style.borderLeft='';c.style.borderRight='';});
+        const ov=card.querySelector('.fc-drop-overlay');
+        if(ratio<0.4){
+          if(ov) ov.style.display='none';
+          card.style.borderLeft='3px solid var(--o)';
+          card.dataset.dropMode='before';
+        } else if(ratio>0.6){
+          if(ov) ov.style.display='none';
+          card.style.borderRight='3px solid var(--o)';
+          card.dataset.dropMode='after';
+        } else {
+          if(ov) ov.style.display='flex';
+          card.style.borderLeft=''; card.style.borderRight='';
+          card.dataset.dropMode='inside';
+        }
+      } else {
+        // 파일 드래그는 항상 내부
+        const ov=card.querySelector('.fc-drop-overlay');
+        if(ov) ov.style.display='flex';
+      }
     });
+
     card.addEventListener('dragleave',e=>{
       if(card.contains(e.relatedTarget)) return;
       const ov=card.querySelector('.fc-drop-overlay');
       if(ov) ov.style.display='none';
+      card.style.borderLeft=''; card.style.borderRight='';
     });
+
     card.addEventListener('drop',e=>{
       e.preventDefault();
       const ov=card.querySelector('.fc-drop-overlay');
       if(ov) ov.style.display='none';
+      card.style.borderLeft=''; card.style.borderRight='';
 
-      // ── 파일(들) → 폴더 이동 ──
+      // ── 파일(들) → 폴더 내부 이동 ──
       if(dragFileIds.size>0){
         const targetFolder=findFolder(state.data.fileFolders,targetFid);
         if(!targetFolder) return;
@@ -8932,23 +9107,56 @@ function bindViewEvents(){
         return;
       }
 
-      // ── 폴더 → 폴더 이동 ──
+      // ── 폴더 순서/위치 변경 ──
       if(dragFolderId&&dragFolderId!==targetFid){
+        const dropMode=card.dataset.dropMode||'inside';
         const dragged=findFolder(state.data.fileFolders,dragFolderId);
         if(!dragged) return;
+
         function isDesc(f,id){if(f.id===id) return true;return(f.children||[]).some(c=>isDesc(c,id));}
         if(isDesc(dragged,targetFid)){showToast('상위 폴더를 하위로 이동할 수 없습니다.');return;}
+
         function rmFromTree(folders,id){
           const i=folders.findIndex(f=>f.id===id);if(i>-1) return folders.splice(i,1)[0];
           for(const f of folders){const r=rmFromTree(f.children||[],id);if(r) return r;}return null;
         }
-        const moved=rmFromTree(state.data.fileFolders,dragFolderId);
-        if(!moved) return;
-        const target=findFolder(state.data.fileFolders,targetFid);
-        if(!target){state.data.fileFolders.push(moved);}
-        else{if(!target.children) target.children=[];target.children.push(moved);}
-        persist(false);render();
-        showToast(`"${moved.name}"이(가) "${target?.name||'루트'}"으로 이동됐습니다.`);
+
+        // 드래그된 폴더와 타겟이 같은 부모인지 확인
+        function getParentAndSiblings(folders,id,parent=null){
+          for(let i=0;i<folders.length;i++){
+            if(folders[i].id===id) return {siblings:folders,idx:i,parent};
+            const r=getParentAndSiblings(folders[i].children||[],id,folders[i]);
+            if(r) return r;
+          }
+          return null;
+        }
+
+        const dragInfo=getParentAndSiblings(state.data.fileFolders,dragFolderId);
+        const targetInfo=getParentAndSiblings(state.data.fileFolders,targetFid);
+
+        if(dropMode==='inside'){
+          // 내부로 이동 (하위 폴더로)
+          const moved=rmFromTree(state.data.fileFolders,dragFolderId);
+          if(!moved) return;
+          const target=findFolder(state.data.fileFolders,targetFid);
+          if(!target){state.data.fileFolders.push(moved);}
+          else{if(!target.children) target.children=[];target.children.push(moved);}
+          persist(false);render();
+          showToast(`"${moved.name}"이(가) "${target?.name||'루트'}"으로 이동됐습니다.`);
+        } else {
+          // 순서 변경 (before / after) — 같은 부모 안에서 재정렬
+          if(!dragInfo||!targetInfo) return;
+          const moved=rmFromTree(state.data.fileFolders,dragFolderId);
+          if(!moved) return;
+          // rmFromTree 후 targetInfo 재탐색 (인덱스 변할 수 있음)
+          const newTargetInfo=getParentAndSiblings(state.data.fileFolders,targetFid);
+          if(!newTargetInfo){state.data.fileFolders.push(moved);}
+          else{
+            const ins=dropMode==='before'?newTargetInfo.idx:newTargetInfo.idx+1;
+            newTargetInfo.siblings.splice(ins,0,moved);
+          }
+          persist(false);render();
+        }
       }
     });
   });
