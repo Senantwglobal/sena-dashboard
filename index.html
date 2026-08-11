@@ -1494,6 +1494,7 @@ const state = {
   filesSelected: new Set(),
   filesSearch: '',
   filesView: 'tile', // 'tile' | 'list' | 'simple'
+  calListFilter: '전체',
 };
 
 function persist(shouldRender=true){
@@ -6211,36 +6212,77 @@ function viewCalendar(){
       <div style="flex:1;min-width:0">
       ${monthEvs.length>0 ? `
       <div class="card" style="margin-bottom:0">
-        <div class="sh"><div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
-        <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span></div>
+        <div class="sh">
+          <div class="st"><i class="ti ti-list oi"></i>${month.format('M월')} 전체 일정</div>
+          <span style="font-size:12px;color:var(--muted)">${monthEvs.length}건</span>
+        </div>
         ${(() => {
           const specialEvs = monthEvs.filter(e=>e.isHoliday||e.isLeave);
           const realEvs = monthEvs.filter(e=>!e.isHoliday && !e.isLeave);
-          const specialHtml = specialEvs.length>0 ? `
-            <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--bd)">
-              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px">공휴일 · 연차/반차</div>
-              <div style="display:flex;flex-direction:column;gap:4px">
+
+          // 카테고리 추출
+          const categories = [...new Set(realEvs.map(e=>e.type))].filter(Boolean);
+          const activeCat = state.calListFilter || '전체';
+
+          // 필터 적용
+          const filteredEvs = activeCat==='전체' ? realEvs
+            : activeCat==='공휴일/연차' ? specialEvs
+            : realEvs.filter(e=>e.type===activeCat);
+
+          // 탭 버튼
+          const tabHtml = `
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+              ${['전체','공휴일/연차',...categories].map(cat=>{
+                const isAct = activeCat===cat;
+                const cnt = cat==='전체' ? monthEvs.length
+                  : cat==='공휴일/연차' ? specialEvs.length
+                  : realEvs.filter(e=>e.type===cat).length;
+                return `<button class="cal-cat-tab" data-cat="${cat}"
+                  style="display:flex;align-items:center;gap:5px;padding:5px 12px;border:none;border-radius:999px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:${isAct?'600':'300'};
+                  background:${isAct?'rgba(15,23,42,.82)':'rgba(255,255,255,.5)'};
+                  color:${isAct?'#fff':'var(--text)'};
+                  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+                  border:1px solid ${isAct?'transparent':'rgba(255,255,255,.7)'};
+                  box-shadow:${isAct?'0 2px 8px rgba(15,23,42,.15)':'none'};
+                  transition:all .15s">
+                  ${cat}
+                  <span style="font-size:10px;padding:1px 6px;border-radius:20px;background:${isAct?'rgba(255,255,255,.2)':'rgba(0,0,0,.06)'};color:${isAct?'rgba(255,255,255,.9)':'var(--muted)'}">${cnt}</span>
+                </button>`;
+              }).join('')}
+            </div>`;
+
+          // 공휴일/연차 전용 뷰
+          if(activeCat==='공휴일/연차'){
+            return tabHtml + (specialEvs.length===0 ? `<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">이번 달 공휴일/연차가 없습니다.</div>` :
+              `<div style="display:flex;flex-direction:column;gap:6px">
                 ${specialEvs.map(e=>{
-                  const isToday = e.date===todayStr;
-                  return `<div style="display:flex;align-items:center;gap:8px">
+                  const isToday=e.date===todayStr;
+                  return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0">
                     <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-                    <span style="font-size:12px;color:${e.isHoliday?'#DC2626':'var(--muted)'};font-weight:600">${e.title}</span>
+                    <span style="font-size:13px;color:${e.isHoliday?'#DC2626':'var(--text)'};font-weight:500">${e.title}</span>
+                    ${e.isLeave?`<span style="font-size:10px;padding:1px 7px;border-radius:20px;background:#E0F2FE;color:#0369A1">${e.type||'연차'}</span>`:''}
                   </div>`;
                 }).join('')}
-              </div>
-            </div>` : '';
-          const realHtml = realEvs.map(e=>{
-            const c=eventColor(e.type);
-            const isToday=e.date===todayStr;
-            const isEditable = state.data.calendar.some(x=>x.id===e.id);
-            return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}" style="gap:8px;${isEditable?'cursor:pointer':''}">
-            <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'600':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
-            <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
-            <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
-            <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
-          </div>`;
-          }).join('');
-          return specialHtml + realHtml;
+              </div>`);
+          }
+
+          // 일반 이벤트
+          const listHtml = filteredEvs.length===0
+            ? `<div style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center">해당 유형의 일정이 없습니다.</div>`
+            : filteredEvs.map(e=>{
+                const c=eventColor(e.type);
+                const isToday=e.date===todayStr;
+                const isEditable=state.data.calendar.some(x=>x.id===e.id);
+                return `<div class="dash-row ${isEditable?'calendar-event-link':''}" data-eid="${e.id}"
+                  style="gap:8px;${isEditable?'cursor:pointer':''}">
+                  <span style="font-size:11px;color:${isToday?'var(--o)':'var(--muted)'};font-weight:${isToday?'600':'300'};width:56px;flex-shrink:0">${fmtDate(e.date)}</span>
+                  <span style="width:8px;height:8px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
+                  <span style="font-size:13px;flex:1">${e.title}${e.time?' · '+e.time:''}</span>
+                  <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${c.bg};color:${c.text}">${e.type}</span>
+                </div>`;
+              }).join('');
+
+          return tabHtml + listHtml;
         })()}
       </div>` : ''}
       </div>
@@ -8968,6 +9010,14 @@ function bindViewEvents(){
     // 호버시 액션 버튼 보이기
     card.addEventListener('mouseenter',()=>{ const a=card.querySelector('.fc-actions'); if(a) a.style.opacity='1'; });
     card.addEventListener('mouseleave',()=>{ const a=card.querySelector('.fc-actions'); if(a) a.style.opacity='0'; });
+  });
+
+  // ── 캘린더 전체 일정 카테고리 탭 ──
+  document.querySelectorAll('.cal-cat-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.calListFilter = btn.dataset.cat;
+      render();
+    });
   });
 
   // ── 파일 보기 방식 전환 드롭다운 ──
