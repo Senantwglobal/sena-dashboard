@@ -502,12 +502,19 @@ async function loadStoreRemote(){
     } else {
       // 연차/반차/반반차는 더 이상 수동 관리 유형이 아님 (연차 관리에서 자동 생성됨) → 제거
       d.calendarEventTypes = d.calendarEventTypes.filter(t=>!['연차','반차','반반차'].includes(t.name));
+      // 온라인 미팅/외부 미팅/내부 회의 → 미팅으로 통합
+      d.calendarEventTypes = d.calendarEventTypes.filter(t=>!['온라인 미팅','외부 미팅','내부 회의'].includes(t.name));
       // 기존 유형에 없는 기본 유형만 앞에 추가
       const existingNames = d.calendarEventTypes.map(t=>t.name);
       const missing = defaultEventTypes.filter(t=>!existingNames.includes(t.name));
       if(missing.length > 0){
         d.calendarEventTypes = [...missing, ...d.calendarEventTypes];
       }
+    }
+    // ── 기존 캘린더 일정 타입 일괄 마이그레이션 ──
+    const mergeToMeeting = ['온라인 미팅','외부 미팅','내부 회의'];
+    if(d.calendar){
+      d.calendar.forEach(ev=>{ if(mergeToMeeting.includes(ev.type)) ev.type='미팅'; });
     }
     return d;
   }
@@ -1625,15 +1632,19 @@ function eventColor(type){
   }
   // 기본 타입
   const defaults = {
-    '미팅':     {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
-    '외근':     {bg:'#FAECE7', text:'#993C1D', dot:'#D85A30'},
-    '마감':     {bg:'#EEEDFE', text:'#534AB7', dot:'#7F77DD'},
-    '연차':     {bg:'#EAF3DE', text:'#3B6D11', dot:'#1D9E75'},
-    '반차':     {bg:'#F0FDF4', text:'#15803D', dot:'#22C55E'},
-    '반반차':   {bg:'#F0FDF4', text:'#15803D', dot:'#86EFAC'},
+    '미팅':       {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
+    '외근':       {bg:'#FAECE7', text:'#993C1D', dot:'#D85A30'},
+    '마감':       {bg:'#EEEDFE', text:'#534AB7', dot:'#7F77DD'},
+    '연차':       {bg:'#EAF3DE', text:'#3B6D11', dot:'#1D9E75'},
+    '반차':       {bg:'#F0FDF4', text:'#15803D', dot:'#22C55E'},
+    '반반차':     {bg:'#F0FDF4', text:'#15803D', dot:'#86EFAC'},
     '한국 공휴일':{bg:'#FFF0F0', text:'#CC0000', dot:'#CC0000'},
     '미국 공휴일':{bg:'#F0F4FF', text:'#003087', dot:'#003087'},
-    '전화 통화':{bg:'#F0F9FF', text:'#0369A1', dot:'#38BDF8'},
+    '전화 통화':  {bg:'#F0F9FF', text:'#0369A1', dot:'#38BDF8'},
+    // 통합된 구 타입도 미팅 색상으로 표시 (마이그레이션 전 데이터 호환)
+    '온라인 미팅':{bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
+    '외부 미팅':  {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
+    '내부 회의':  {bg:'#E8F2FE', text:'#0B4E9E', dot:'#1C85E8'},
   };
   return defaults[type] || {bg:'var(--sf)', text:'var(--muted)', dot:'#888780'};
 }
@@ -2937,7 +2948,7 @@ function viewHome(){
     .map(e=>({...e, dday:dayjs(e.date).diff(today,'day')}))
     .filter(e=>e.dday>=0 && e.dday<=7)
     .sort((a,b)=>a.dday-b.dday);
-  const meetingTypes = ['미팅','전화 통화','온라인 미팅','외근'];
+  const meetingTypes = ['미팅','전화 통화','외근'];
   const thisMonthMeetings = allCalendarEvents().filter(e=>e.date.startsWith(thisMonthStr) && meetingTypes.includes(e.type)).length;
 
   // 프로젝트별 진행률
