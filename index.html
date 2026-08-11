@@ -7603,7 +7603,10 @@ function modalMeetingNoteForm(){
         </div>
         <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}" style="margin:0"/></div>
         <div class="field"><label class="field-label">회의 내용</label><textarea class="inp" id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="margin:0"></textarea></div>
-        <button id="mnGenerateBtn" class="btn btn-o" style="margin-top:8px;margin-bottom:14px;width:100%"><i class="ti ti-sparkles"></i> AI 요약 및 Action Item 추출</button>
+        <div style="display:flex;gap:6px;margin-top:8px;margin-bottom:14px">
+          <button id="mnGenerateBtn" class="btn btn-o" style="flex:1;font-size:12px"><i class="ti ti-sparkles"></i> AI 요약 및 Action Item 추출</button>
+          <button id="mnManualAddBtn" class="btn" style="font-size:12px;white-space:nowrap"><i class="ti ti-plus"></i> 직접 추가</button>
+        </div>
         <div id="mnResult"></div>
       </div>
     </div>
@@ -10461,6 +10464,39 @@ function bindViewEvents(){
       const result = generateMeetingSummary(text);
       renderMeetingResult(result, text);
     });
+
+    // 직접 추가 버튼
+    const mnManualAddBtn = document.getElementById('mnManualAddBtn');
+    if(mnManualAddBtn) mnManualAddBtn.addEventListener('click', ()=>{
+      const resultDiv = document.getElementById('mnResult');
+      if(!resultDiv) return;
+      const defaultVid = document.getElementById('mnVendor')?.value || '';
+      const defaultPid = document.getElementById('mnProject')?.value || '';
+      if(!resultDiv.querySelector('#mnItemsList')){
+        resultDiv.innerHTML = `
+          <div style="border-top:0.5px solid var(--bd);padding-top:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:600"><i class="ti ti-checklist" style="color:var(--o)"></i> Action Items</span>
+              <button type="button" id="mnAddManualBtn" class="btn" style="font-size:11px;padding:4px 10px;border-radius:999px"><i class="ti ti-plus"></i> 추가</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px" id="mnItemsList"></div>
+            <div style="display:flex;gap:8px">
+              <button type="button" id="cancelMeetingNote" class="btn" style="flex:1">취소</button>
+              <button type="button" id="confirmAddItems" class="btn btn-o" style="flex:1"><i class="ti ti-device-floppy"></i> 체크리스트 생성</button>
+            </div>
+          </div>`;
+        const listEl = resultDiv.querySelector('#mnItemsList');
+        resultDiv.querySelector('#mnAddManualBtn').addEventListener('click', ()=>addManualActionCard(listEl, defaultVid, defaultPid));
+        resultDiv.querySelector('#cancelMeetingNote').addEventListener('click', closeModal);
+        resultDiv.querySelector('#confirmAddItems').addEventListener('click', ()=>{
+          const items = collectActionItems(listEl);
+          const added = saveActionItemsToChecklist(items);
+          closeModal(); persist(false); render();
+          showToast(`체크리스트 ${added}건이 생성됐습니다.`);
+        });
+      }
+      addManualActionCard(resultDiv.querySelector('#mnItemsList'), defaultVid, defaultPid);
+    });
   });
 
   // ── 미배정 로그 브랜드 배정 ──
@@ -12089,9 +12125,14 @@ function modalEventMeetingNoteForm(eid, note){
               <select class="inp" id="emnProject" style="margin:0;font-size:12px;padding:6px 8px">${projOpts}</select>
             </div>
           </div>
-          <button type="button" class="btn btn-o" id="emnAiBtn" style="width:100%;font-size:12px">
-            <i class="ti ti-sparkles"></i> AI로 Action Item 추출
-          </button>
+          <div style="display:flex;gap:6px">
+            <button type="button" class="btn btn-o" id="emnAiBtn" style="flex:1;font-size:12px">
+              <i class="ti ti-sparkles"></i> AI로 Action Item 추출
+            </button>
+            <button type="button" class="btn" id="emnManualStartBtn" style="font-size:12px;white-space:nowrap">
+              <i class="ti ti-plus"></i> 직접 추가
+            </button>
+          </div>
           <div id="emnActionResult" style="margin-top:10px"></div>
         </div>
 
@@ -12106,6 +12147,41 @@ function modalEventMeetingNoteForm(eid, note){
 
 function bindEventMeetingNoteForm(eid, noteId){
   bindRichEditor('emnText');
+
+  // 직접 추가 버튼 (AI 없이 바로 시작)
+  const emnManualStartBtn = document.getElementById('emnManualStartBtn');
+  if(emnManualStartBtn) emnManualStartBtn.addEventListener('click', ()=>{
+    const resultDiv = document.getElementById('emnActionResult');
+    if(!resultDiv) return;
+    const defaultVid = document.getElementById('emnVendor')?.value || '';
+    const defaultPid = document.getElementById('emnProject')?.value || '';
+    // 섹션이 없으면 초기화
+    if(!resultDiv.querySelector('#emnItemsList')){
+      resultDiv.innerHTML = `
+        <div style="border-top:0.5px solid rgba(28,133,232,.2);padding-top:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:12px;font-weight:600;color:var(--text)">Action Items <span style="font-size:11px;font-weight:300;color:var(--muted)">— 체크된 항목만 추가됩니다</span></span>
+            <button type="button" id="emnAddManualBtn" class="btn" style="font-size:11px;padding:4px 10px;border-radius:999px"><i class="ti ti-plus"></i> 추가</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px" id="emnItemsList"></div>
+          <button type="button" id="emnConfirmItems" class="btn btn-o" style="width:100%;margin-top:10px;font-size:12px">
+            <i class="ti ti-checklist"></i> 선택한 항목 체크리스트에 추가
+          </button>
+        </div>`;
+      const listEl = resultDiv.querySelector('#emnItemsList');
+      resultDiv.querySelector('#emnAddManualBtn').addEventListener('click', ()=>addManualActionCard(listEl, defaultVid, defaultPid));
+      resultDiv.querySelector('#emnConfirmItems').addEventListener('click', ()=>{
+        const items = collectActionItems(listEl);
+        const added = saveActionItemsToChecklist(items);
+        persist(false); render();
+        showToast(`체크리스트 ${added}건이 추가됐습니다.`);
+        const btn = resultDiv.querySelector('#emnConfirmItems');
+        if(btn){ btn.textContent=`✅ ${added}건 추가 완료`; btn.disabled=true; }
+      });
+    }
+    // 카드 바로 추가
+    addManualActionCard(resultDiv.querySelector('#emnItemsList'), defaultVid, defaultPid);
+  });
 
   // AI Action Item 추출 버튼
   const emnAiBtn = document.getElementById('emnAiBtn');
@@ -12154,118 +12230,160 @@ function bindEventMeetingNoteForm(eid, noteId){
   });
 }
 
-function renderEmnActionItems(result, originalText, eid){
-  const resultDiv = document.getElementById('emnActionResult');
-  if(!resultDiv) return;
-
+/* ── Action Item 카드 공통 생성 헬퍼 ── */
+function makeActionItemCardHtml(idx, text='', checked=true, defaultVid='', defaultPid=''){
   const allPeople = [];
   state.data.vendors.forEach(v=>{
     (v.people||[]).forEach(p=>{ if(!allPeople.find(x=>x.name===p.name)) allPeople.push({name:p.name, vendor:v.name}); });
   });
+  return `
+    <div class="ai-action-card" data-idx="${idx}" style="background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.8);border-radius:12px;padding:10px 12px">
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:8px">
+        <input type="checkbox" class="action-item-check" data-idx="${idx}" ${checked?'checked':''} style="width:14px;height:14px;margin-top:3px;accent-color:var(--o);flex-shrink:0"/>
+        <input type="text" class="inp action-item-text" data-idx="${idx}" value="${text.replace(/"/g,'&quot;')}" placeholder="액션 아이템 내용 입력..." style="flex:1;margin:0;font-size:12px;padding:4px 8px;font-weight:300;border-radius:8px"/>
+        <button type="button" class="action-item-del-btn" data-idx="${idx}" style="border:none;background:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px;flex-shrink:0;line-height:1;margin-top:2px" title="삭제">×</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;padding-left:22px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">거래처</span>
+          <select class="inp ai-vendor-sel emn-vendor-sel" data-idx="${idx}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
+            <option value="">-- 없음 --</option>
+            ${state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===defaultVid?'selected':''}>${v.name}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">프로젝트</span>
+          <select class="inp ai-proj-sel emn-proj-sel" data-idx="${idx}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
+            <option value="">-- 없음 --</option>
+            ${state.data.projects.map(p=>`<option value="${p.id}" ${p.id===defaultPid?'selected':''}>${p.title}</option>`).join('')}
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-start">
+          <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0;margin-top:5px">담당자</span>
+          <div style="flex:1">
+            <div class="ai-people-list emn-people-list" id="aiPeople_${idx}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px"></div>
+            <div style="display:flex;gap:4px">
+              <select class="inp ai-people-add-sel emn-people-sel" data-idx="${idx}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
+                <option value="">담당자 추가...</option>
+                ${allPeople.map(p=>`<option value="${p.name}">${p.name} (${p.vendor})</option>`).join('')}
+                <option value="__custom__">직접 입력</option>
+              </select>
+              <button type="button" class="btn ai-people-add-btn emn-people-add-btn" data-idx="${idx}" style="padding:3px 8px;font-size:11px;flex-shrink:0"><i class="ti ti-plus"></i></button>
+            </div>
+            <input type="text" class="inp ai-people-custom emn-people-custom" data-idx="${idx}" placeholder="이름 입력" style="display:none;margin-top:4px;font-size:11px;padding:4px 6px"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">마감일</span>
+          <input type="date" class="inp ai-due-date emn-due" data-idx="${idx}" style="flex:1;margin:0;font-size:11px;padding:4px 6px"/>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindActionItemCard(card, container){
+  const idx = card.dataset.idx;
+  // 삭제
+  card.querySelector('.action-item-del-btn')?.addEventListener('click', ()=>card.remove());
+  // 담당자 추가
+  card.querySelector('.ai-people-add-btn')?.addEventListener('click', ()=>{
+    const sel = card.querySelector(`.ai-people-add-sel`);
+    const custom = card.querySelector(`.ai-people-custom`);
+    let name = sel.value==='__custom__' ? custom.value.trim() : sel.value;
+    if(sel.value==='__custom__' && !name){ custom.style.display='block'; custom.focus(); return; }
+    if(!name) return;
+    const list = card.querySelector(`#aiPeople_${idx}`);
+    if(!list || list.querySelector(`[data-name="${name}"]`)) return;
+    const chip = document.createElement('div');
+    chip.dataset.name = name;
+    chip.style.cssText='display:flex;align-items:center;gap:3px;background:var(--ol);color:var(--od);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:500';
+    chip.innerHTML=`${name}<button type="button" style="border:none;background:none;cursor:pointer;color:var(--od);font-size:11px;padding:0;margin-left:2px;line-height:1">×</button>`;
+    chip.querySelector('button').addEventListener('click', ()=>chip.remove());
+    list.appendChild(chip);
+    sel.value=''; custom.style.display='none'; custom.value='';
+  });
+  card.querySelector('.ai-people-add-sel')?.addEventListener('change', function(){
+    const custom = card.querySelector('.ai-people-custom');
+    if(custom) custom.style.display = this.value==='__custom__' ? 'block' : 'none';
+  });
+}
+
+function collectActionItems(container){
+  const items = [];
+  container.querySelectorAll('.ai-action-card').forEach(card=>{
+    const checked = card.querySelector('.action-item-check')?.checked;
+    if(!checked) return;
+    const text = (card.querySelector('.action-item-text')?.value || '').trim();
+    if(!text) return;
+    const vid = card.querySelector('.ai-vendor-sel')?.value || '';
+    const pid = card.querySelector('.ai-proj-sel')?.value || '';
+    const dueDate = card.querySelector('.ai-due-date')?.value || '';
+    const people = [...card.querySelectorAll('.ai-people-list [data-name]')].map(el=>el.dataset.name);
+    items.push({text, vid, pid, dueDate, assignee: people.join(', ')});
+  });
+  return items;
+}
+
+function saveActionItemsToChecklist(items){
+  let added = 0;
+  items.forEach(({text,vid,pid,dueDate,assignee})=>{
+    if(vid){ const v=state.data.vendors.find(x=>x.id===vid); if(v){if(!v.checklist)v.checklist=[];v.checklist.push({id:uid('c'),text,done:false,dueDate,assignee,fromMeeting:true});added++;}}
+    if(pid){ const p=state.data.projects.find(x=>x.id===pid); if(p){if(!p.checklist)p.checklist=[];p.checklist.push({id:uid('c'),text,done:false,dueDate,assignee,fromMeeting:true});if(!vid)added++;}}
+  });
+  return added;
+}
+
+function addManualActionCard(listEl, defaultVid='', defaultPid=''){
+  const idx = 'manual_' + uid('ai');
+  const div = document.createElement('div');
+  div.innerHTML = makeActionItemCardHtml(idx, '', true, defaultVid, defaultPid);
+  const card = div.firstElementChild;
+  listEl.appendChild(card);
+  bindActionItemCard(card, listEl);
+  card.querySelector('.action-item-text')?.focus();
+}
+
+function renderEmnActionItems(result, originalText, eid){
+  const resultDiv = document.getElementById('emnActionResult');
+  if(!resultDiv) return;
+
+  const defaultVid = document.getElementById('emnVendor')?.value || '';
+  const defaultPid = document.getElementById('emnProject')?.value || '';
 
   resultDiv.innerHTML = `
     <div style="border-top:0.5px solid rgba(28,133,232,.2);padding-top:12px">
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">AI 요약</div>
-      <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.6);border-radius:8px">${result.summary}</p>
-      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Action Items <span style="font-size:11px;font-weight:300;color:var(--muted)">— 체크된 항목만 체크리스트에 추가됩니다</span></div>
+      ${result.summary?`<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px">AI 요약</div>
+      <p style="font-size:12px;color:var(--muted);line-height:1.6;margin:0 0 12px;padding:8px 10px;background:rgba(255,255,255,.6);border-radius:8px">${result.summary}</p>`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:var(--text)">Action Items <span style="font-size:11px;font-weight:300;color:var(--muted)">— 체크된 항목만 추가됩니다</span></span>
+        <button type="button" id="emnAddManualBtn" class="btn" style="font-size:11px;padding:4px 10px;border-radius:999px"><i class="ti ti-plus"></i> 직접 추가</button>
+      </div>
       <div style="display:flex;flex-direction:column;gap:8px" id="emnItemsList">
-        ${result.items.map((item,i)=>`
-          <div style="background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.8);border-radius:12px;padding:10px 12px">
-            <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin-bottom:8px">
-              <input type="checkbox" class="emn-item-check" data-idx="${i}" checked style="width:14px;height:14px;margin-top:2px;accent-color:var(--o);flex-shrink:0"/>
-              <span style="font-size:12px;font-weight:300;flex:1">${item.text}</span>
-            </label>
-            <div style="display:flex;flex-direction:column;gap:6px;padding-left:22px">
-              <div style="display:flex;gap:6px;align-items:center">
-                <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">거래처</span>
-                <select class="inp emn-vendor-sel" data-idx="${i}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
-                  <option value="">-- 없음 --</option>
-                  ${state.data.vendors.map(v=>`<option value="${v.id}" ${v.id===(document.getElementById('emnVendor')?.value||'')?'selected':''}>${v.name}</option>`).join('')}
-                </select>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center">
-                <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">프로젝트</span>
-                <select class="inp emn-proj-sel" data-idx="${i}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
-                  <option value="">-- 없음 --</option>
-                  ${state.data.projects.map(p=>`<option value="${p.id}" ${p.id===(document.getElementById('emnProject')?.value||'')?'selected':''}>${p.title}</option>`).join('')}
-                </select>
-              </div>
-              <div style="display:flex;gap:6px;align-items:flex-start">
-                <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0;margin-top:5px">담당자</span>
-                <div style="flex:1">
-                  <div class="emn-people-list" id="emnPeople_${i}" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px"></div>
-                  <div style="display:flex;gap:4px">
-                    <select class="inp emn-people-sel" data-idx="${i}" style="flex:1;margin:0;font-size:11px;padding:4px 6px">
-                      <option value="">담당자 추가...</option>
-                      ${allPeople.map(p=>`<option value="${p.name}">${p.name} (${p.vendor})</option>`).join('')}
-                      <option value="__custom__">직접 입력</option>
-                    </select>
-                    <button type="button" class="btn emn-people-add-btn" data-idx="${i}" style="padding:4px 8px;font-size:11px;flex-shrink:0"><i class="ti ti-plus"></i></button>
-                  </div>
-                  <input type="text" class="inp emn-people-custom" data-idx="${i}" placeholder="이름 입력" style="display:none;margin-top:4px;font-size:11px;padding:4px 6px"/>
-                </div>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center">
-                <span style="font-size:10px;color:var(--muted);width:48px;flex-shrink:0">마감일</span>
-                <input type="date" class="inp emn-due" data-idx="${i}" style="flex:1;margin:0;font-size:11px;padding:4px 6px"/>
-              </div>
-            </div>
-          </div>
-        `).join('')}
+        ${result.items.map((item,i)=>makeActionItemCardHtml(i, item.text, true, defaultVid, defaultPid)).join('')}
       </div>
       <button type="button" id="emnConfirmItems" class="btn btn-o" style="width:100%;margin-top:10px;font-size:12px">
         <i class="ti ti-checklist"></i> 선택한 항목 체크리스트에 추가
       </button>
     </div>`;
 
-  // 담당자 추가 버튼
-  resultDiv.querySelectorAll('.emn-people-add-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const i = btn.dataset.idx;
-      const sel = resultDiv.querySelector(`.emn-people-sel[data-idx="${i}"]`);
-      const custom = resultDiv.querySelector(`.emn-people-custom[data-idx="${i}"]`);
-      let name = sel.value==='__custom__' ? custom.value.trim() : sel.value;
-      if(sel.value==='__custom__' && !name){ custom.style.display='block'; custom.focus(); return; }
-      if(!name) return;
-      const list = resultDiv.querySelector(`#emnPeople_${i}`);
-      if(list.querySelector(`[data-name="${name}"]`)) return;
-      const chip = document.createElement('div');
-      chip.dataset.name = name;
-      chip.style.cssText='display:flex;align-items:center;gap:3px;background:var(--ol);color:var(--od);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:500';
-      chip.innerHTML=`${name}<button type="button" style="border:none;background:none;cursor:pointer;color:var(--od);font-size:11px;padding:0;margin-left:2px;line-height:1">×</button>`;
-      chip.querySelector('button').addEventListener('click', ()=>chip.remove());
-      list.appendChild(chip);
-      sel.value=''; custom.style.display='none'; custom.value='';
-    });
-  });
-  resultDiv.querySelectorAll('.emn-people-sel').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const i = sel.dataset.idx;
-      const custom = resultDiv.querySelector(`.emn-people-custom[data-idx="${i}"]`);
-      custom.style.display = sel.value==='__custom__' ? 'block' : 'none';
-    });
+  const listEl = resultDiv.querySelector('#emnItemsList');
+
+  // 기존 카드 바인딩
+  listEl.querySelectorAll('.ai-action-card').forEach(card=>bindActionItemCard(card, listEl));
+
+  // 수동 추가
+  resultDiv.querySelector('#emnAddManualBtn').addEventListener('click', ()=>{
+    addManualActionCard(listEl, defaultVid, defaultPid);
   });
 
-  // 확인 버튼
+  // 저장
   resultDiv.querySelector('#emnConfirmItems').addEventListener('click', ()=>{
-    const checks = resultDiv.querySelectorAll('.emn-item-check');
-    let added = 0;
-    checks.forEach(ck=>{
-      if(!ck.checked) return;
-      const i = ck.dataset.idx;
-      const text = result.items[parseInt(i)].text;
-      const vid = resultDiv.querySelector(`.emn-vendor-sel[data-idx="${i}"]`)?.value || '';
-      const pid = resultDiv.querySelector(`.emn-proj-sel[data-idx="${i}"]`)?.value || '';
-      const dueDate = resultDiv.querySelector(`.emn-due[data-idx="${i}"]`)?.value || '';
-      const people = [...resultDiv.querySelectorAll(`#emnPeople_${i} [data-name]`)].map(el=>el.dataset.name);
-      const assignee = people.join(', ');
-      if(vid){ const v=state.data.vendors.find(x=>x.id===vid); if(v){if(!v.checklist)v.checklist=[];v.checklist.push({id:uid('c'),text,done:false,dueDate,assignee,fromMeeting:true});added++;}}
-      if(pid){ const p=state.data.projects.find(x=>x.id===pid); if(p){if(!p.checklist)p.checklist=[];p.checklist.push({id:uid('c'),text,done:false,dueDate,assignee,fromMeeting:true});if(!vid)added++;}}
-    });
+    const items = collectActionItems(listEl);
+    const added = saveActionItemsToChecklist(items);
     persist(false); render();
     showToast(`체크리스트 ${added}건이 추가됐습니다.`);
-    resultDiv.querySelector('#emnConfirmItems').textContent = `✅ ${added}건 추가 완료`;
-    resultDiv.querySelector('#emnConfirmItems').disabled = true;
+    const btn = resultDiv.querySelector('#emnConfirmItems');
+    if(btn){ btn.textContent = `✅ ${added}건 추가 완료`; btn.disabled=true; }
   });
 }
 
@@ -12569,19 +12687,6 @@ function renderMeetingResult(result, originalText){
   const resultDiv = document.getElementById('mnResult');
   if(!resultDiv) return;
 
-  // 거래처 목록
-  const vendorOpts = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
-  // 프로젝트 목록
-  const projOpts = `<option value="">-- 없음 --</option>` + state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
-  // 담당자 목록 (내부 인원 전체)
-  const allPeople = [];
-  state.data.vendors.forEach(v=>{
-    (v.people||[]).forEach(p=>{
-      if(!allPeople.find(x=>x.name===p.name)) allPeople.push({id:p.id||uid('pe'), name:p.name, vendor:v.name});
-    });
-  });
-
-  // 기본값: 폼에서 선택한 거래처/프로젝트
   const defaultVid = document.getElementById('mnVendor')?.value || '';
   const defaultPid = document.getElementById('mnProject')?.value || '';
 
@@ -12593,174 +12698,46 @@ function renderMeetingResult(result, originalText){
       </div>
       <p style="font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 16px;padding:10px 12px;background:var(--sf);border-radius:10px">${result.summary}</p>
 
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px">
-        <i class="ti ti-checklist" style="color:var(--o)"></i> Action Items
-        <span style="font-size:11px;font-weight:300;color:var(--muted);margin-left:6px">각 항목별로 담당처와 담당자를 지정하세요</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;font-weight:600"><i class="ti ti-checklist" style="color:var(--o)"></i> Action Items <span style="font-size:11px;font-weight:300;color:var(--muted)">— 체크된 항목만 추가됩니다</span></span>
+        <button type="button" id="mnAddManualBtn" class="btn" style="font-size:11px;padding:4px 10px;border-radius:999px"><i class="ti ti-plus"></i> 직접 추가</button>
       </div>
-
-      <div id="actionItemsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-        ${result.items.map((item,i)=>`
-          <div style="background:rgba(255,255,255,.6);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.7);border-radius:14px;padding:12px 14px">
-            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:10px">
-              <input type="checkbox" class="action-item-check" data-idx="${i}" checked style="width:15px;height:15px;margin-top:2px;accent-color:var(--o);flex-shrink:0"/>
-              <span style="font-size:13px;font-weight:300;flex:1">${item.text}</span>
-            </label>
-            <div class="ai-item-meta" data-idx="${i}" style="display:flex;flex-direction:column;gap:8px;padding-left:25px">
-              <!-- 거래처 선택 -->
-              <div style="display:flex;gap:8px;align-items:center">
-                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">거래처</span>
-                <select class="inp ai-vendor-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
-                  <option value="">-- 없음 --</option>
-                  ${vendorOpts}
-                </select>
-              </div>
-              <!-- 프로젝트 선택 -->
-              <div style="display:flex;gap:8px;align-items:center">
-                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">프로젝트</span>
-                <select class="inp ai-proj-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
-                  ${projOpts}
-                </select>
-              </div>
-              <!-- 담당자 복수 선택 -->
-              <div style="display:flex;gap:8px;align-items:flex-start">
-                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0;margin-top:4px">담당자</span>
-                <div style="flex:1">
-                  <div class="ai-people-list" data-idx="${i}" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px" id="aiPeople_${i}"></div>
-                  <div style="display:flex;gap:6px">
-                    <select class="inp ai-people-add-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
-                      <option value="">담당자 추가...</option>
-                      ${allPeople.map(p=>`<option value="${p.name}">${p.name} (${p.vendor})</option>`).join('')}
-                      <option value="__custom__">직접 입력</option>
-                    </select>
-                    <button type="button" class="btn ai-people-add-btn" data-idx="${i}" style="padding:5px 10px;font-size:11px;flex-shrink:0"><i class="ti ti-plus"></i></button>
-                  </div>
-                  <input type="text" class="inp ai-people-custom" data-idx="${i}" placeholder="담당자 이름 입력" style="display:none;margin-top:6px;font-size:12px;padding:5px 8px"/>
-                </div>
-              </div>
-              <!-- 마감일 -->
-              <div style="display:flex;gap:8px;align-items:center">
-                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">마감일</span>
-                <input type="date" class="inp ai-due-date" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px"/>
-              </div>
-            </div>
-          </div>
-        `).join('')}
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px" id="mnItemsList">
+        ${result.items.map((item,i)=>makeActionItemCardHtml(i, item.text, true, defaultVid, defaultPid)).join('')}
       </div>
-
       <div style="display:flex;gap:8px">
         <button type="button" id="cancelMeetingNote" class="btn" style="flex:1">취소</button>
         <button type="button" id="confirmAddItems" class="btn btn-o" style="flex:1"><i class="ti ti-device-floppy"></i> 저장 및 체크리스트 생성</button>
       </div>
-    </div>
-  `;
+    </div>`;
 
-  // 기본값 세팅
-  document.querySelectorAll('.ai-vendor-sel').forEach(sel=>{ if(defaultVid) sel.value=defaultVid; });
-  document.querySelectorAll('.ai-proj-sel').forEach(sel=>{ if(defaultPid) sel.value=defaultPid; });
+  const listEl = resultDiv.querySelector('#mnItemsList');
 
-  // 담당자 추가 버튼
-  document.querySelectorAll('.ai-people-add-btn').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx = btn.dataset.idx;
-      const sel = document.querySelector(`.ai-people-add-sel[data-idx="${idx}"]`);
-      const customInp = document.querySelector(`.ai-people-custom[data-idx="${idx}"]`);
-      let name = '';
-      if(sel.value==='__custom__'){
-        name = customInp.value.trim();
-        if(!name){ customInp.style.display='block'; customInp.focus(); return; }
-        customInp.style.display='none'; customInp.value='';
-      } else {
-        name = sel.value;
-      }
-      if(!name) return;
-      const list = document.getElementById(`aiPeople_${idx}`);
-      // 중복 방지
-      if(list.querySelector(`[data-name="${name}"]`)) return;
-      const chip = document.createElement('div');
-      chip.dataset.name = name;
-      chip.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--ol);color:var(--od);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500';
-      chip.innerHTML = `${name}<button type="button" style="border:none;background:none;cursor:pointer;color:var(--od);font-size:12px;line-height:1;padding:0;margin-left:2px">×</button>`;
-      chip.querySelector('button').addEventListener('click', ()=>chip.remove());
-      list.appendChild(chip);
-      sel.value = '';
-    });
-  });
+  // 기존 카드 바인딩
+  listEl.querySelectorAll('.ai-action-card').forEach(card=>bindActionItemCard(card, listEl));
 
-  // 담당자 직접 입력 토글
-  document.querySelectorAll('.ai-people-add-sel').forEach(sel=>{
-    sel.addEventListener('change', ()=>{
-      const idx = sel.dataset.idx;
-      const customInp = document.querySelector(`.ai-people-custom[data-idx="${idx}"]`);
-      customInp.style.display = sel.value==='__custom__' ? 'block' : 'none';
-    });
-  });
-
-  // 체크박스 연동 - 체크 해제시 메타 흐리게
-  document.querySelectorAll('.action-item-check').forEach(ck=>{
-    ck.addEventListener('change', ()=>{
-      const meta = document.querySelector(`.ai-item-meta[data-idx="${ck.dataset.idx}"]`);
-      if(meta) meta.style.opacity = ck.checked ? '1' : '0.35';
-    });
+  // 수동 추가
+  resultDiv.querySelector('#mnAddManualBtn').addEventListener('click', ()=>{
+    addManualActionCard(listEl, defaultVid, defaultPid);
   });
 
   document.getElementById('cancelMeetingNote').addEventListener('click', closeModal);
 
   document.getElementById('confirmAddItems').addEventListener('click', ()=>{
     const date = document.getElementById('mnDate').value;
-    const headerVid = document.getElementById('mnVendor')?.value;
-    const headerPid = document.getElementById('mnProject')?.value;
-    const checks = document.querySelectorAll('.action-item-check');
-    let addedTotal = 0;
+    const headerPid = defaultPid;
 
-    checks.forEach(ck=>{
-      if(!ck.checked) return;
-      const i = ck.dataset.idx;
-      const itemText = result.items[parseInt(i)].text;
-      const vid = document.querySelector(`.ai-vendor-sel[data-idx="${i}"]`)?.value || headerVid || '';
-      const pid = document.querySelector(`.ai-proj-sel[data-idx="${i}"]`)?.value || headerPid || '';
-      const dueDate = document.querySelector(`.ai-due-date[data-idx="${i}"]`)?.value || '';
-      const people = [...document.querySelectorAll(`#aiPeople_${i} [data-name]`)].map(el=>el.dataset.name);
-      const assignee = people.join(', ');
+    const items = collectActionItems(listEl);
+    const added = saveActionItemsToChecklist(items);
 
-      // 거래처 체크리스트에 추가
-      if(vid){
-        const v = state.data.vendors.find(x=>x.id===vid);
-        if(v){
-          if(!v.checklist) v.checklist=[];
-          v.checklist.push({id:uid('c'), text:itemText, done:false, dueDate, assignee, fromMeeting:true, createdAt:date});
-          addedTotal++;
-        }
-      }
-
-      // 프로젝트 체크리스트에 추가
-      if(pid){
-        const p = state.data.projects.find(x=>x.id===pid);
-        if(p){
-          if(!p.checklist) p.checklist=[];
-          p.checklist.push({id:uid('c'), text:itemText, done:false, dueDate, assignee, fromMeeting:true, createdAt:date});
-          if(vid && !addedTotal) addedTotal++; // 거래처 없이 프로젝트만인 경우
-          if(!vid) addedTotal++;
-        }
-      }
-
-      // 둘 다 없으면 카운트만
-      if(!vid && !pid) addedTotal++;
-    });
-
-    // 회의록 저장 (프로젝트에)
-    const savePid = headerPid || document.querySelector('.ai-proj-sel')?.value || '';
-    if(savePid){
-      const p = state.data.projects.find(x=>x.id===savePid);
-      if(p){
-        if(!p.meetingNotes) p.meetingNotes=[];
-        p.meetingNotes.push({id:uid('mn'), date, text:originalText, summary:result.summary});
-      }
+    // 회의록 저장
+    if(headerPid){
+      const p = state.data.projects.find(x=>x.id===headerPid);
+      if(p){ if(!p.meetingNotes)p.meetingNotes=[]; p.meetingNotes.push({id:uid('mn'),date,text:originalText,summary:result.summary}); }
     }
 
-    closeModal();
-    persist(false);
-    render();
-    showToast(`회의록 저장 완료 · 체크리스트 ${addedTotal}건 생성됐습니다.`);
+    closeModal(); persist(false); render();
+    showToast(`회의록 저장 완료 · 체크리스트 ${added}건 생성됐습니다.`);
   });
 }
 
