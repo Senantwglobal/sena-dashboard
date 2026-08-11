@@ -2065,7 +2065,10 @@ function collectAllFileItems(){
   });
   (state.data.vendorLogs||[]).forEach(log=>{
     const v=state.data.vendors.find(x=>x.id===log.vendorId);
-    (log.links||[]).forEach(lk=>items.push({...lk,_src:v?v.name:'로그',_srcType:'log',_date:log.date,_vid:log.vendorId}));
+    (log.links||[]).forEach(lk=>{
+      if(!lk.id) lk.id=uid('lf'); // 기존 저장 데이터 호환
+      items.push({...lk,_src:v?v.name:'로그',_srcType:'log',_date:log.date,_vid:log.vendorId});
+    });
   });
   (state.data.projects||[]).forEach(p=>(p.links||[]).forEach(lk=>items.push({...lk,_src:p.title,_srcType:'project',_pid:p.id})));
   return items;
@@ -2221,9 +2224,15 @@ function viewFiles(){
   }
 
   const PAGE=20,filePage=state.filesPage||0;
-  // 검색 필터
   const searchQ=(state.filesSearch||'').trim().toLowerCase();
-  const filteredItems=searchQ?viewItems.filter(it=>(it.label||'').toLowerCase().includes(searchQ)||(it._src||'').toLowerCase().includes(searchQ)):viewItems;
+  // 검색 필터 - 파일
+  const filteredItems=searchQ
+    ?viewItems.filter(it=>(it.label||'').toLowerCase().includes(searchQ)||(it._src||'').toLowerCase().includes(searchQ))
+    :viewItems;
+  // 검색 필터 - 폴더 (검색어 있을 때 폴더명으로 필터)
+  const filteredFolders=searchQ
+    ?currentFolders.filter(f=>(f.name||'').toLowerCase().includes(searchQ))
+    :currentFolders;
   const totalPages=Math.ceil(filteredItems.length/PAGE);
   const pageItems=filteredItems.slice(filePage*PAGE,(filePage+1)*PAGE);
   const selCount=(state.filesSelected||new Set()).size;
@@ -2330,18 +2339,19 @@ function viewFiles(){
         ${isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
       </div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
-        <button class="fc-icon-change-btn" data-fid="${lk.id}" onclick="event.stopPropagation()" title="아이콘 변경"
+        <button class="fc-icon-change-btn" data-fid="${lk.id}" title="클릭 또는 우클릭으로 아이콘 변경"
+          draggable="false"
           style="width:44px;height:44px;border-radius:12px;background:${ic.bg};display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:transform .12s;flex-shrink:0"
           onmouseenter="this.style.transform='scale(1.08)'" onmouseleave="this.style.transform=''">
           ${iconHtml}
         </button>
         <div style="display:flex;gap:2px;opacity:0;transition:opacity .15s" class="fc-actions">
           ${isDoc
-            ?`<button class="btn files-doc-open" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-edit"></i></button>
-              <button class="btn files-doc-dl" data-id="${lk.id}" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-download"></i></button>`
+            ?`<button class="btn files-doc-open" data-id="${lk.id}" onclick="event.stopPropagation()" draggable="false" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-edit"></i></button>
+              <button class="btn files-doc-dl" data-id="${lk.id}" onclick="event.stopPropagation()" draggable="false" style="padding:2px 6px;font-size:10px;border-radius:8px"><i class="ti ti-download"></i></button>`
             :lk.data
-              ?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-download"></i></a>`
-              :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" onclick="event.stopPropagation()" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-external-link"></i></a>`}
+              ?`<a href="data:${lk.type};base64,${lk.data}" download="${label}" class="btn" onclick="event.stopPropagation()" draggable="false" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-download"></i></a>`
+              :`<a href="${(lk.url||'').replace(/"/g,'&quot;')}" target="_blank" class="btn" onclick="event.stopPropagation()" draggable="false" style="padding:2px 6px;font-size:10px;border-radius:8px;text-decoration:none"><i class="ti ti-external-link"></i></a>`}
         </div>
       </div>
       <div style="font-size:13px;font-weight:500;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${label}">${label}</div>
@@ -2411,9 +2421,12 @@ function viewFiles(){
       <!-- 그리드 -->
       <div id="fc-grid-drop" style="min-height:200px;border-radius:16px;transition:background .15s,border .15s">
       <div id="filesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
-        ${currentFolders.map(f=>folderCard(f)).join('')}
+        ${filteredFolders.map(f=>folderCard(f)).join('')}
         ${pageItems.map(lk=>fileCard(lk)).join('')}
-        ${currentFolders.length===0&&pageItems.length===0?`<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)"><i class="ti ti-inbox" style="font-size:40px;display:block;margin-bottom:10px;opacity:.3"></i>비어 있습니다</div>`:''}
+        ${filteredFolders.length===0&&pageItems.length===0?`<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)">
+          <i class="ti ${searchQ?'ti-search':'ti-inbox'}" style="font-size:40px;display:block;margin-bottom:10px;opacity:.3"></i>
+          ${searchQ?`"${searchQ.replace(/</g,'&lt;')}" 검색 결과 없음`:'비어 있습니다'}
+        </div>`:''}
       </div><!-- /filesGrid -->
       </div><!-- /fc-grid-drop -->
       ${pagerHtml}
@@ -6413,9 +6426,9 @@ function bindLogModal(preVendorId, preProjectId){
       const data  = row.querySelector('.link-data')?.value?.trim();
       const type  = row.querySelector('.link-type')?.value?.trim();
       if(data){
-        links.push({label: label||'파일', url:'', data, type});
+        links.push({id:uid('lf'), label: label||'파일', url:'', data, type});
       } else if(url){
-        links.push({label: label||url, url});
+        links.push({id:uid('ll'), label: label||url, url});
       }
     });
 
@@ -8766,67 +8779,77 @@ function bindViewEvents(){
     fcSearch.addEventListener('input',()=>{
       state.filesSearch=fcSearch.value;
       state.filesPage=0;
-      // 렌더 없이 그리드만 실시간 업데이트
-      const q=state.filesSearch.trim().toLowerCase();
-      document.querySelectorAll('.fc-file').forEach(card=>{
-        const label=card.querySelector('[title]')?.getAttribute('title')||'';
-        card.style.display=(!q||label.toLowerCase().includes(q))?'':'none';
-      });
-      // 그리드가 비었으면 안내 표시
-      const grid=document.getElementById('filesGrid');
-      const visible=grid?[...grid.querySelectorAll('.fc-file')].filter(c=>c.style.display!=='none').length:0;
-      let empty=grid?.querySelector('.fc-empty-search');
-      if(q&&visible===0){
-        if(!empty){empty=document.createElement('div');empty.className='fc-empty-search';empty.style.cssText='grid-column:1/-1;text-align:center;padding:40px 0;color:var(--muted);font-size:13px';empty.innerHTML=`<i class="ti ti-search" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>"${q}" 검색 결과 없음`;grid.appendChild(empty);}
-      } else if(empty) empty.remove();
+      render();
     });
     fcSearch.addEventListener('keydown',e=>{ if(e.key==='Escape'){ state.filesSearch=''; render(); } });
+    // 포커스 유지 (render 후 포커스 잃지 않도록)
+    if(state.filesSearch) fcSearch.focus();
   }
   const fcSearchClear=document.getElementById('fcSearchClear');
   if(fcSearchClear) fcSearchClear.addEventListener('click',()=>{ state.filesSearch=''; render(); });
 
   // ── 아이콘 변경 팝업 ──
+  function showIconPop(btn, fid){
+    document.querySelectorAll('.fc-icon-pop').forEach(p=>p.remove());
+    const pop=document.createElement('div');
+    pop.className='fc-icon-pop';
+    pop.style.cssText='position:fixed;z-index:9999;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.1);border-radius:16px;padding:12px;box-shadow:0 12px 32px rgba(11,27,46,.18);width:260px';
+    const r=btn.getBoundingClientRect();
+    const top=Math.min(r.bottom+6, window.innerHeight-320);
+    const left=Math.min(r.left, window.innerWidth-280);
+    pop.style.top=top+'px';
+    pop.style.left=left+'px';
+    pop.innerHTML=`<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">아이콘 선택</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+        ${ICON_PRESETS.map(p=>`<button class="fc-icon-opt" data-icon="${p.icon}" data-color="${p.color}" data-bg="${p.bg}" title="${p.label}"
+          style="width:44px;height:44px;border-radius:10px;border:none;background:${p.bg};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s"
+          onmouseenter="this.style.transform='scale(1.12)'" onmouseleave="this.style.transform=''">
+          <i class="ti ${p.icon}" style="font-size:20px;color:${p.color}"></i>
+        </button>`).join('')}
+      </div>
+      <button class="fc-icon-reset" style="margin-top:10px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--bd);background:none;cursor:pointer;font-size:11px;color:var(--muted)">기본값으로 초기화</button>`;
+    document.body.appendChild(pop);
+    pop.querySelectorAll('.fc-icon-opt').forEach(opt=>{
+      opt.addEventListener('click',e=>{
+        e.stopPropagation();
+        const item=findFileItemById(fid);
+        if(item?.link){
+          item.link._customIcon=opt.dataset.icon;
+          item.link._customColor=opt.dataset.color;
+          item.link._customBg=opt.dataset.bg;
+          persist(false); render();
+        }
+        pop.remove();
+      });
+    });
+    pop.querySelector('.fc-icon-reset').addEventListener('click',e=>{
+      e.stopPropagation();
+      const item=findFileItemById(fid);
+      if(item?.link){ delete item.link._customIcon; delete item.link._customColor; delete item.link._customBg; persist(false); render(); }
+      pop.remove();
+    });
+    setTimeout(()=>document.addEventListener('click',function close(ev){
+      if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',close);}
+    },true),10);
+  }
+
+  // 아이콘 버튼 클릭
   document.querySelectorAll('.fc-icon-change-btn').forEach(btn=>{
     btn.addEventListener('click',e=>{
       e.stopPropagation();
-      document.querySelectorAll('.fc-icon-pop').forEach(p=>p.remove());
-      const fid=btn.dataset.fid;
-      const pop=document.createElement('div');
-      pop.className='fc-icon-pop';
-      pop.style.cssText='position:fixed;z-index:9999;background:rgba(255,255,255,.97);backdrop-filter:blur(16px);border:1px solid rgba(0,0,0,.1);border-radius:16px;padding:12px;box-shadow:0 12px 32px rgba(11,27,46,.18);width:260px';
-      const r=btn.getBoundingClientRect();
-      pop.style.top=(r.bottom+6)+'px';
-      pop.style.left=Math.min(r.left,window.innerWidth-280)+'px';
-      pop.innerHTML=`<div style="font-size:12px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">아이콘 선택</div>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-          ${ICON_PRESETS.map(p=>`<button class="fc-icon-opt" data-icon="${p.icon}" data-color="${p.color}" data-bg="${p.bg}" title="${p.label}"
-            style="width:44px;height:44px;border-radius:10px;border:none;background:${p.bg};cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s"
-            onmouseenter="this.style.transform='scale(1.12)'" onmouseleave="this.style.transform=''">
-            <i class="ti ${p.icon}" style="font-size:20px;color:${p.color}"></i>
-          </button>`).join('')}
-        </div>
-        <button class="fc-icon-reset" style="margin-top:10px;width:100%;padding:6px;border-radius:8px;border:1px solid var(--bd);background:none;cursor:pointer;font-size:11px;color:var(--muted)">기본값으로 초기화</button>`;
-      document.body.appendChild(pop);
+      showIconPop(btn, btn.dataset.fid);
+    });
+  });
 
-      // 아이콘 선택
-      pop.querySelectorAll('.fc-icon-opt').forEach(opt=>{
-        opt.addEventListener('click',()=>{
-          const item=findFileItemById(fid);
-          if(item?.link){
-            item.link._customIcon=opt.dataset.icon;
-            item.link._customColor=opt.dataset.color;
-            item.link._customBg=opt.dataset.bg;
-            persist(false);render();
-          }
-          pop.remove();
-        });
-      });
-      pop.querySelector('.fc-icon-reset').addEventListener('click',()=>{
-        const item=findFileItemById(fid);
-        if(item?.link){ delete item.link._customIcon; delete item.link._customColor; delete item.link._customBg; persist(false);render(); }
-        pop.remove();
-      });
-      setTimeout(()=>document.addEventListener('click',function close(ev){ if(!pop.contains(ev.target)){pop.remove();document.removeEventListener('click',close);}},true),10);
+  // 파일 카드 우클릭 → 아이콘 팝업
+  document.querySelectorAll('.fc-file').forEach(card=>{
+    card.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const fid=card.dataset.fid;
+      // 팝업 위치용 가상 버튼 역할
+      const fakeBtn={getBoundingClientRect:()=>({bottom:e.clientY,left:e.clientX})};
+      showIconPop(fakeBtn, fid);
     });
   });
 
@@ -8864,8 +8887,7 @@ function bindViewEvents(){
 
   document.querySelectorAll('.fc-file').forEach(card=>{
     card.addEventListener('click',e=>{
-      if(e.target.closest('.fc-icon-change-btn')) return;
-      if(e.target.closest('.fc-actions')) return;
+      if(e.target.closest('.fc-icon-change-btn')||e.target.closest('.fc-actions')) return;
       const fid=card.dataset.fid;
 
       // 체크박스 클릭 or 이미 선택 중 → 토글 모드
@@ -8986,13 +9008,14 @@ function bindViewEvents(){
   // 파일 카드 드래그
   document.querySelectorAll('.fc-file[draggable="true"]').forEach(card=>{
     card.addEventListener('dragstart',e=>{
+      // 내부 버튼/링크에서 시작된 dragstart는 무시
+      if(e.target!==card&&e.target.closest('a,button')) { e.preventDefault(); return; }
       dragFolderId=null;
-      // 선택된 게 있고 드래그 카드도 선택된 경우 → 다중
-      if(state.filesSelected.size>0&&state.filesSelected.has(card.dataset.fid)){
+      const fid=card.dataset.fid;
+      if(state.filesSelected.size>0&&state.filesSelected.has(fid)){
         dragFileIds=new Set(state.filesSelected);
       } else {
-        // 단일 드래그 (선택 안 된 카드 드래그)
-        dragFileIds=new Set([card.dataset.fid]);
+        dragFileIds=new Set([fid]);
       }
       e.dataTransfer.effectAllowed='move';
       e.dataTransfer.setData('text/plain',card.dataset.fid);
@@ -9678,8 +9701,8 @@ function bindViewEvents(){
           const url   = row.querySelector('.link-url')?.value?.trim();
           const data  = row.querySelector('.link-data')?.value?.trim();
           const type  = row.querySelector('.link-type')?.value?.trim();
-          if(data){ links.push({label: label||'파일', url:'', data, type}); }
-          else if(url){ links.push({label: label||url, url}); }
+          if(data){ links.push({id:uid('lf'), label: label||'파일', url:'', data, type}); }
+          else if(url){ links.push({id:uid('ll'), label: label||url, url}); }
         });
 
         // 로그 업데이트
