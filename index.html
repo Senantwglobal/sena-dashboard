@@ -5764,15 +5764,15 @@ function viewProjectDetail(){
       <!-- 헤더 + ① 벤더 선택 탭 (브랜드탭과 동일한 세그먼트 스타일, 거래 상태 점 표시) -->
       <div style="padding:14px 16px 12px 16px">
         ${secHeader({icon:'ti-building-store', title:'거래처별 로그', caption:'거래처마다 따로 쌓이는 기록입니다', tint:'var(--ol)', color:'var(--o)'})}
-        <div style="display:inline-flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
+        <div id="vendorTabsContainer" style="display:inline-flex;align-items:center;gap:2px;flex-wrap:nowrap;overflow-x:auto;max-width:100%;background:rgba(15,23,42,.035);padding:4px;border-radius:12px">
           ${linkedVendors.map(v=>{
             const vLogCnt = (vendorLogs[v.id]||[]).length;
             const vMeetCnt = (vendorMeetings[v.id]||[]).length;
             const total = vLogCnt + vMeetCnt;
             const isActive = v.id === activeVendorId;
             const statusLabel = {Active:'거래중',Pending:'대기중',Review:'검토중',Hold:'거래보류',Inactive:'거래중단'}[v.companyStatus||'Active'];
-            return `<button class="proj-vendor-tab" data-vid="${v.id}"
-              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};cursor:pointer;font-size:12.5px;white-space:nowrap;color:${isActive?'var(--text)':'var(--muted)'};font-weight:${isActive?'600':'300'};font-family:inherit;flex-shrink:0;transition:color .12s var(--ease)">
+            return `<button class="proj-vendor-tab" data-vid="${v.id}" draggable="true"
+              style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:none;border-radius:9px;background:${isActive?'#fff':'transparent'};box-shadow:${isActive?'0 1px 3px rgba(15,23,42,.08)':'none'};cursor:grab;font-size:12.5px;white-space:nowrap;color:${isActive?'var(--text)':'var(--muted)'};font-weight:${isActive?'600':'300'};font-family:inherit;flex-shrink:0;transition:color .12s var(--ease),opacity .15s">
               ${av(v.name,18)}${v.name}
               <span class="badge" style="${vendorStatusStyle(v.companyStatus||'Active')};font-size:9px;padding:1.5px 6px;flex-shrink:0">${statusLabel}</span>
               <span style="font-size:10px;background:${isActive?'var(--ol)':'var(--bd)'};color:${isActive?'var(--od)':'var(--muted)'};padding:1px 6px;border-radius:10px">${total}</span>
@@ -10125,13 +10125,74 @@ function bindViewEvents(){
     });
   });
 
-  // 벤더 탭 전환
+  // 벤더 탭 전환 + 드래그 순서 변경
+  let dragVendorTabId = null;
+
   document.querySelectorAll('.proj-vendor-tab').forEach(el=>{
+    // 클릭 - 탭 전환
     el.addEventListener('click', ()=>{
       state.activeProjectVendorTab = el.dataset.vid;
-      state.activeVendorSubTab = 'log'; // 벤더 탭 바꾸면 서브탭은 기록으로 초기화
+      state.activeVendorSubTab = 'log';
       state.projLogShowAll = false;
       render();
+    });
+
+    // 드래그 시작
+    el.addEventListener('dragstart', e=>{
+      dragVendorTabId = el.dataset.vid;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(()=>el.style.opacity='.4', 0);
+    });
+    el.addEventListener('dragend', ()=>{
+      el.style.opacity = '';
+      dragVendorTabId = null;
+      document.querySelectorAll('.proj-vendor-tab').forEach(t=>{
+        t.style.borderLeft = '';
+        t.style.borderRight = '';
+      });
+    });
+
+    // 드래그 오버 - 삽입 위치 표시
+    el.addEventListener('dragover', e=>{
+      if(!dragVendorTabId || dragVendorTabId === el.dataset.vid) return;
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width/2;
+      document.querySelectorAll('.proj-vendor-tab').forEach(t=>{ t.style.borderLeft=''; t.style.borderRight=''; });
+      if(before) el.style.borderLeft = '2.5px solid var(--o)';
+      else el.style.borderRight = '2.5px solid var(--o)';
+    });
+    el.addEventListener('dragleave', ()=>{
+      el.style.borderLeft = '';
+      el.style.borderRight = '';
+    });
+
+    // 드롭 - vendorIds 순서 변경 후 저장
+    el.addEventListener('drop', e=>{
+      e.preventDefault();
+      el.style.borderLeft = '';
+      el.style.borderRight = '';
+      if(!dragVendorTabId || dragVendorTabId === el.dataset.vid) return;
+
+      const proj = state.data.projects.find(p=>p.id===state.selectedProjectId);
+      if(!proj) return;
+
+      const ids = [...(proj.vendorIds||[])];
+      const fromIdx = ids.indexOf(dragVendorTabId);
+      const toIdx = ids.indexOf(el.dataset.vid);
+      if(fromIdx === -1 || toIdx === -1) return;
+
+      // 드롭 위치(왼쪽/오른쪽) 결정
+      const r = el.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width/2;
+
+      ids.splice(fromIdx, 1);
+      const newTo = ids.indexOf(el.dataset.vid);
+      ids.splice(before ? newTo : newTo+1, 0, dragVendorTabId);
+
+      proj.vendorIds = ids;
+      state.activeProjectVendorTab = dragVendorTabId; // 드래그한 탭 선택 유지
+      persist(true);
     });
   });
 
