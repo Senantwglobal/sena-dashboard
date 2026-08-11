@@ -524,6 +524,18 @@ async function loadStoreRemote(){
 let saveTimer = null;
 let saveInFlight = false;
 let savePending = false;
+let lastSavedAt = Date.now();
+let lastModifiedAt = Date.now();
+
+// 페이지 닫기 전 미저장 경고
+window.addEventListener('beforeunload', e => {
+  // 저장 중이거나 마지막 수정 후 3초 이상 지나도 저장 안 됐으면 경고
+  if(saveInFlight || (lastModifiedAt > lastSavedAt && Date.now() - lastModifiedAt < 5000)){
+    e.preventDefault();
+    e.returnValue = '저장 중입니다. 페이지를 닫으면 변경사항이 손실될 수 있습니다.';
+    return e.returnValue;
+  }
+});
 
 function saveStore(){
   // 디바운스: 짧은 시간 내 연속 저장 요청을 묶어서 한 번만 전송
@@ -534,42 +546,71 @@ function saveStore(){
 async function doSaveStore(){
   if(saveInFlight){ savePending = true; return; }
   saveInFlight = true;
-  try{
-    const payload = JSON.stringify({ data: state.data, updated_at: new Date().toISOString() });
-    const sizeMB = (new Blob([payload]).size / (1024*1024));
-    if(sizeMB > 8){
-      throw new Error(`데이터 용량이 너무 큽니다 (${sizeMB.toFixed(1)}MB). 첨부된 이미지/파일을 정리해주세요.`);
+  let retries = 0;
+  const maxRetries = 3;
+  
+  while(retries <= maxRetries){
+    try{
+      const payload = JSON.stringify({ data: state.data, updated_at: new Date().toISOString() });
+      const sizeMB = (new Blob([payload]).size / (1024*1024));
+      if(sizeMB > 8){
+        throw new Error(`데이터 용량이 너무 큽니다 (${sizeMB.toFixed(1)}MB). 첨부된 이미지/파일을 정리해주세요.`);
+      }
+      await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}`, {
+        method: 'PATCH',
+        prefer: 'return=minimal',
+        body: payload
+      });
+      setSyncStatus('synced');
+      lastSavedAt = Date.now();
+      break; // 성공 시 루프 종료
+    }catch(e){
+      retries++;
+      const msg = (e && e.message) || '';
+      console.error(`저장 실패 (시도 ${retries}/${maxRetries}):`, e);
+      
+      if(msg.includes('용량이 너무 큽니다')){
+        // 용량 에러는 재시도해도 의미없음
+        setSyncStatus('error');
+        showToast(`⚠️ ${msg}`);
+        break;
+      }
+      
+      if(retries <= maxRetries){
+        // 재시도 전 대기 (1s, 2s, 4s)
+        setSyncStatus('saving');
+        await new Promise(r => setTimeout(r, 1000 * retries));
+        continue;
+      }
+      
+      // 최종 실패
+      setSyncStatus('error');
+      if(e instanceof TypeError){
+        showToast('⚠️ 저장 실패! 인터넷 연결을 확인하고 재시도 버튼을 눌러주세요.');
+      } else {
+        showToast(`⚠️ 저장 실패 (${retries}회 시도): ${msg.slice(0,80)}`);
+      }
     }
-    await supabaseFetch(`${SUPABASE_TABLE}?id=eq.${SUPABASE_ROW_ID}`, {
-      method: 'PATCH',
-      prefer: 'return=minimal',
-      body: payload
-    });
-    setSyncStatus('synced');
-  }catch(e){
-    console.error('저장 실패:', e);
-    setSyncStatus('error');
-    // 실제 원인 구분: 용량/서버 응답 에러 vs 진짜 네트워크 단절(TypeError: Failed to fetch)
-    const msg = (e && e.message) || '';
-    if(msg.includes('용량이 너무 큽니다')){
-      showToast(`⚠️ ${msg}`);
-    } else if(e instanceof TypeError){
-      showToast('⚠️ 저장 실패! 인터넷 연결을 확인해주세요.');
-    } else {
-      showToast(`⚠️ 저장 실패: ${msg.slice(0,120)}`);
-    }
-  }finally{
-    saveInFlight = false;
-    if(savePending){ savePending = false; doSaveStore(); }
   }
+  
+  saveInFlight = false;
+  if(savePending){ savePending = false; doSaveStore(); }
 }
 
 function setSyncStatus(status){
   const el = document.getElementById('syncStatus');
   if(!el) return;
-  if(status==='saving'){ el.textContent = '저장 중...'; el.style.color = 'var(--muted)'; }
-  else if(status==='synced'){ el.textContent = '저장됨'; el.style.color = '#3B6D11'; }
-  else if(status==='error'){ el.textContent = '저장 실패'; el.style.color = '#A32D2D'; }
+  if(status==='saving'){
+    el.innerHTML = '<span class="sync-dot" style="background:#F59E0B;animation:pulse 1s infinite"></span>저장 중...';
+    el.style.color = 'var(--muted)';
+  } else if(status==='synced'){
+    el.innerHTML = '<span class="sync-dot" style="background:#22C55E"></span>저장됨';
+    el.style.color = '#15803D';
+  } else if(status==='error'){
+    el.innerHTML = '<span class="sync-dot" style="background:#EF4444"></span>저장 실패 — <button onclick="persist(false)" style="border:none;background:none;cursor:pointer;color:#DC2626;font-size:11px;font-weight:600;text-decoration:underline;padding:0">재시도</button>';
+    el.style.color = '#DC2626';
+    showToast('⚠️ 저장 실패! 인터넷 연결을 확인하고 재시도 버튼을 눌러주세요.');
+  }
 }
 
 function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
@@ -1412,6 +1453,7 @@ function seedData(){
     approvalItems: [],
     memo: '',
     role: 'me',
+    fileFolders: [],
   };
 }
 
@@ -1454,9 +1496,11 @@ const state = {
 };
 
 function persist(shouldRender=true){
+  lastModifiedAt = Date.now();
   setSyncStatus('saving');
-  if(saveTimer){ clearTimeout(saveTimer); saveTimer = null; }
-  doSaveStore();
+  // 디바운스: 연속 변경을 묶어서 한 번에 저장 (race condition 방지)
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ saveTimer=null; doSaveStore(); }, 300);
   if(shouldRender) render();
 }
 
