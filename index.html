@@ -1449,6 +1449,7 @@ const state = {
   filesActiveFolderId: 'all',
   filesPage: 0,
   filesOpenFolders: {},
+  filesSelected: new Set(),
 };
 
 function persist(shouldRender=true){
@@ -2221,6 +2222,8 @@ function viewFiles(){
   const PAGE=20,filePage=state.filesPage||0;
   const totalPages=Math.ceil(viewItems.length/PAGE);
   const pageItems=viewItems.slice(filePage*PAGE,(filePage+1)*PAGE);
+  const selCount=(state.filesSelected||new Set()).size;
+  const selBarHtml=selCount>0?`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(28,133,232,.1);border:1px solid rgba(28,133,232,.25);border-radius:12px"><i class="ti ti-checkbox" style="color:var(--o);font-size:16px"></i><span style="font-size:13px;font-weight:600;color:var(--od)">${selCount}개 선택됨</span><span style="font-size:12px;color:var(--muted)">— 내 폴더 카드로 드래그해서 이동</span><button id="fcClearSelBtn" class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:999px">선택 해제</button></div>`:'';
 
   // 파일 아이콘/색상
   function fileIconColor(lk){
@@ -2270,10 +2273,15 @@ function viewFiles(){
     const label=(lk.label||'파일').replace(/</g,'&lt;');
     const date=lk.addedDate||lk._date||'';
     const isDoc=lk.type==='doc';
-    return `<div class="fc-card fc-file" data-fid="${lk.id}" draggable="true"
-      style="background:rgba(255,255,255,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:16px;transition:box-shadow .18s,transform .15s;position:relative;cursor:grab"
-      onmouseenter="this.style.boxShadow='0 8px 24px rgba(11,27,46,.12)';this.style.transform='translateY(-2px)';this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='1')"
-      onmouseleave="this.style.boxShadow='';this.style.transform='';this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='0')">
+    const isSel=(state.filesSelected||new Set()).has(lk.id);
+    return `<div class="fc-card fc-file ${isSel?'fc-selected':''}" data-fid="${lk.id}" draggable="true"
+      style="background:${isSel?'rgba(28,133,232,.12)':'rgba(255,255,255,.72)'};backdrop-filter:blur(14px);border:${isSel?'2px solid rgba(28,133,232,.5)':'1px solid rgba(255,255,255,.8)'};border-radius:16px;padding:16px;transition:box-shadow .18s,transform .15s,border .12s,background .12s;position:relative;cursor:grab;user-select:none"
+      onmouseenter="if(!this.classList.contains('fc-selected')){this.style.boxShadow='0 8px 24px rgba(11,27,46,.12)';this.style.transform='translateY(-2px)';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='1')"
+      onmouseleave="if(!this.classList.contains('fc-selected')){this.style.boxShadow='';this.style.transform='';}this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='0')">
+      <!-- 체크박스 (좌상단) -->
+      <div class="fc-check" style="position:absolute;top:10px;left:10px;width:18px;height:18px;border-radius:5px;border:1.5px solid ${isSel?'var(--o)':'rgba(0,0,0,.25)'};background:${isSel?'var(--o)':'rgba(255,255,255,.7)'};display:flex;align-items:center;justify-content:center;opacity:${isSel?'1':'0'};transition:opacity .12s;cursor:pointer;z-index:2;flex-shrink:0">
+        ${isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':''}
+      </div>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
         <div style="width:44px;height:44px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center">
           <i class="ti ${icon}" style="font-size:22px;color:${color}"></i>
@@ -2340,6 +2348,7 @@ function viewFiles(){
         </div>
       </div>
 
+      ${selBarHtml}
       <!-- 그리드 -->
       <div id="filesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
         ${currentFolders.map(f=>folderCard(f)).join('')}
@@ -8690,30 +8699,110 @@ function bindViewEvents(){
     card.addEventListener('mouseleave',()=>{ const a=card.querySelector('.fc-actions'); if(a) a.style.opacity='0'; });
   });
 
-  // ── 드래그&드롭 ── (폴더 이동 + 파일→폴더 이동)
+  // ── 파일 카드 클릭: 선택/해제 토글 ──
+  if(!state.filesSelected) state.filesSelected=new Set();
+
+  document.querySelectorAll('.fc-file').forEach(card=>{
+    card.addEventListener('click',e=>{
+      if(e.target.closest('.fc-actions')) return;
+      const fid=card.dataset.fid;
+      if(state.filesSelected.has(fid)) state.filesSelected.delete(fid);
+      else state.filesSelected.add(fid);
+      // 체크박스만 빠르게 업데이트 (re-render 없이)
+      const ck=card.querySelector('.fc-check');
+      const isSel=state.filesSelected.has(fid);
+      if(ck){
+        ck.style.opacity=isSel?'1':'0';
+        ck.style.background=isSel?'var(--o)':'rgba(255,255,255,.7)';
+        ck.style.borderColor=isSel?'var(--o)':'rgba(0,0,0,.25)';
+        ck.innerHTML=isSel?'<i class="ti ti-check" style="font-size:11px;color:#fff"></i>':'';
+      }
+      card.style.background=isSel?'rgba(28,133,232,.12)':'rgba(255,255,255,.72)';
+      card.style.border=isSel?'2px solid rgba(28,133,232,.5)':'1px solid rgba(255,255,255,.8)';
+      // selBar 업데이트
+      const bar=document.getElementById('fcSelBar');
+      if(bar){
+        if(state.filesSelected.size>0){
+          bar.style.display='flex';
+          const cnt=bar.querySelector('#fcSelCount');
+          if(cnt) cnt.textContent=state.filesSelected.size+'개 선택됨';
+        } else {
+          bar.style.display='none';
+        }
+      } else if(state.filesSelected.size>0){
+        // 처음 선택 시 selBar 동적 삽입
+        const grid=document.getElementById('filesGrid');
+        if(grid){
+          const div=document.createElement('div');
+          div.id='fcSelBar';
+          div.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 14px;background:rgba(28,133,232,.1);border:1px solid rgba(28,133,232,.25);border-radius:12px;grid-column:1/-1';
+          div.innerHTML=`<i class="ti ti-checkbox" style="color:var(--o);font-size:16px"></i><span id="fcSelCount" style="font-size:13px;font-weight:600;color:var(--od)">${state.filesSelected.size}개 선택됨</span><span style="font-size:12px;color:var(--muted)">— 내 폴더 카드로 드래그해서 이동</span><button id="fcClearSelBtn" class="btn" style="margin-left:auto;font-size:11px;padding:3px 10px;border-radius:999px">선택 해제</button>`;
+          grid.prepend(div);
+          div.querySelector('#fcClearSelBtn').addEventListener('click',()=>{
+            state.filesSelected.clear();
+            render();
+          });
+        }
+      }
+    });
+    // 호버시 체크박스 노출
+    card.addEventListener('mouseenter',()=>{
+      const ck=card.querySelector('.fc-check');
+      if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='1';
+    });
+    card.addEventListener('mouseleave',()=>{
+      const ck=card.querySelector('.fc-check');
+      if(ck&&!state.filesSelected.has(card.dataset.fid)) ck.style.opacity='0';
+    });
+  });
+
+  // 선택 해제 버튼
+  const clearSelBtn=document.getElementById('fcClearSelBtn');
+  if(clearSelBtn) clearSelBtn.addEventListener('click',()=>{ state.filesSelected.clear(); render(); });
+
+  // ── 드래그&드롭 ──
   let dragFolderId=null;
-  let dragFileId=null;
+  let dragFileIds=new Set(); // 다중 선택 드래그
 
   // 파일 카드 드래그
   document.querySelectorAll('.fc-file[draggable="true"]').forEach(card=>{
     card.addEventListener('dragstart',e=>{
-      dragFileId=card.dataset.fid;
       dragFolderId=null;
+      // 선택된 게 있고 드래그 카드도 선택된 경우 → 다중
+      if(state.filesSelected.size>0&&state.filesSelected.has(card.dataset.fid)){
+        dragFileIds=new Set(state.filesSelected);
+      } else {
+        // 단일 드래그 (선택 안 된 카드 드래그)
+        dragFileIds=new Set([card.dataset.fid]);
+      }
       e.dataTransfer.effectAllowed='move';
-      card.style.opacity='.45';
+      e.dataTransfer.setData('text/plain',card.dataset.fid);
+      // 드래그 중인 카드들 흐리게
+      document.querySelectorAll('.fc-file').forEach(c=>{
+        if(dragFileIds.has(c.dataset.fid)) c.style.opacity='.4';
+      });
+      // 드래그 고스트 텍스트
+      if(dragFileIds.size>1){
+        const ghost=document.createElement('div');
+        ghost.style.cssText='position:fixed;top:-100px;left:-100px;padding:8px 14px;background:rgba(28,133,232,.9);color:#fff;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap';
+        ghost.textContent=dragFileIds.size+'개 선택';
+        document.body.appendChild(ghost);
+        e.dataTransfer.setDragImage(ghost,0,0);
+        setTimeout(()=>ghost.remove(),0);
+      }
     });
     card.addEventListener('dragend',()=>{
-      card.style.opacity='';
-      dragFileId=null;
+      document.querySelectorAll('.fc-file').forEach(c=>c.style.opacity='');
+      dragFileIds=new Set();
       document.querySelectorAll('.fc-drop-overlay').forEach(o=>o.style.display='none');
     });
   });
 
-  // 폴더 카드 드래그 (폴더 이동용)
+  // 폴더 카드 드래그 (폴더 이동)
   document.querySelectorAll('.fc-folder[draggable="true"]').forEach(card=>{
     card.addEventListener('dragstart',e=>{
       dragFolderId=card.dataset.fid;
-      dragFileId=null;
+      dragFileIds=new Set();
       e.dataTransfer.effectAllowed='move';
       card.style.opacity='.5';
     });
@@ -8724,13 +8813,13 @@ function bindViewEvents(){
     });
   });
 
-  // 모든 폴더 카드: dragover + drop (파일 또는 폴더 이동 받기)
+  // 폴더 카드: dragover + drop
   document.querySelectorAll('.fc-folder').forEach(card=>{
     const targetFid=card.dataset.fid;
-    if(targetFid.startsWith('auto_')) return; // 자동 분류 폴더는 드롭 타겟 안 됨
+    if(targetFid.startsWith('auto_')) return;
 
     card.addEventListener('dragover',e=>{
-      if(!dragFileId&&!dragFolderId) return;
+      if(dragFileIds.size===0&&!dragFolderId) return;
       if(dragFolderId===targetFid) return;
       e.preventDefault();
       e.dataTransfer.dropEffect='move';
@@ -8747,49 +8836,45 @@ function bindViewEvents(){
       const ov=card.querySelector('.fc-drop-overlay');
       if(ov) ov.style.display='none';
 
-      // 파일을 폴더로 이동
-      if(dragFileId){
+      // ── 파일(들) → 폴더 이동 ──
+      if(dragFileIds.size>0){
         const targetFolder=findFolder(state.data.fileFolders,targetFid);
-        if(!targetFolder){dragFileId=null;return;}
+        if(!targetFolder) return;
         if(!targetFolder.items) targetFolder.items=[];
-        if(!targetFolder.items.includes(dragFileId)){
-          // 기존 다른 폴더에서 제거
-          function removeFileFromTree(folders,fid){
-            for(const f of folders){
-              if(f.items){const i=f.items.indexOf(fid);if(i>-1) f.items.splice(i,1);}
-              if(f.children) removeFileFromTree(f.children,fid);
-            }
+        function removeFileFromTree(folders,fid){
+          for(const f of folders){
+            if(f.items){const i=f.items.indexOf(fid);if(i>-1) f.items.splice(i,1);}
+            if(f.children) removeFileFromTree(f.children,fid);
           }
-          removeFileFromTree(state.data.fileFolders,dragFileId);
-          targetFolder.items.push(dragFileId);
         }
-        const fileItem=collectAllFileItems().find(x=>x.id===dragFileId);
+        let movedCount=0;
+        dragFileIds.forEach(fid=>{
+          removeFileFromTree(state.data.fileFolders,fid);
+          if(!targetFolder.items.includes(fid)){targetFolder.items.push(fid);movedCount++;}
+        });
+        state.filesSelected.clear();
         persist(false);render();
-        showToast(`"${fileItem?.label||'파일'}"이(가) "${targetFolder.name}"으로 이동됐습니다.`);
-        dragFileId=null;
+        showToast(`${movedCount}개 파일이 "${targetFolder.name}"으로 이동됐습니다.`);
         return;
       }
 
-      // 폴더를 폴더로 이동
+      // ── 폴더 → 폴더 이동 ──
       if(dragFolderId&&dragFolderId!==targetFid){
         const dragged=findFolder(state.data.fileFolders,dragFolderId);
-        if(!dragged){dragFolderId=null;return;}
+        if(!dragged) return;
         function isDesc(f,id){if(f.id===id) return true;return(f.children||[]).some(c=>isDesc(c,id));}
-        if(isDesc(dragged,targetFid)){showToast('상위 폴더를 하위로 이동할 수 없습니다.');dragFolderId=null;return;}
+        if(isDesc(dragged,targetFid)){showToast('상위 폴더를 하위로 이동할 수 없습니다.');return;}
         function rmFromTree(folders,id){
-          const i=folders.findIndex(f=>f.id===id);
-          if(i>-1) return folders.splice(i,1)[0];
-          for(const f of folders){const r=rmFromTree(f.children||[],id);if(r) return r;}
-          return null;
+          const i=folders.findIndex(f=>f.id===id);if(i>-1) return folders.splice(i,1)[0];
+          for(const f of folders){const r=rmFromTree(f.children||[],id);if(r) return r;}return null;
         }
         const moved=rmFromTree(state.data.fileFolders,dragFolderId);
-        if(!moved){dragFolderId=null;return;}
+        if(!moved) return;
         const target=findFolder(state.data.fileFolders,targetFid);
         if(!target){state.data.fileFolders.push(moved);}
         else{if(!target.children) target.children=[];target.children.push(moved);}
         persist(false);render();
         showToast(`"${moved.name}"이(가) "${target?.name||'루트'}"으로 이동됐습니다.`);
-        dragFolderId=null;
       }
     });
   });
