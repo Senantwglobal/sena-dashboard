@@ -3198,16 +3198,49 @@ function viewHome(){
             ? `<div style="font-size:12px;color:var(--muted);padding:8px 0">승인 대기 항목이 없습니다.</div>`
             : (state.data.approvalItems||[]).filter(a=>!a.approved).map(a=>{
                 const v=state.data.vendors.find(x=>x.id===a.vendorId);
-                return `<div class="dash-row" style="gap:8px">
-                  <div class="approval-item" data-aid="${a.id}" data-vid="${a.vendorId}" style="cursor:pointer;display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-                    ${av(v?v.name:'?',22)}
+                // 원본 로그 찾기
+                const origLog = a.logId ? (state.data.vendorLogs||[]).find(l=>l.id===a.logId) : null;
+                // 첨부파일 수집
+                const attachments = origLog ? (origLog.links||[]).filter(lk=>lk.data||lk.url) : [];
+                const fileIcons = attachments.slice(0,3).map(lk=>{
+                  const isImg = (lk.type||'').includes('image');
+                  const isPdf = (lk.type||'').includes('pdf');
+                  const isDoc = lk.type==='doc';
+                  const isUrl = !lk.data && lk.url;
+                  const icon = isDoc?'ti-file-text':isImg?'ti-photo':isPdf?'ti-file-type-pdf':isUrl?'ti-link':'ti-file';
+                  const color = isDoc?'#7C3AED':isImg?'#0891B2':isPdf?'#DC2626':isUrl?'#1C85E8':'#6B7280';
+                  if(lk.data){
+                    return `<a href="data:${lk.type};base64,${lk.data}" download="${(lk.label||'파일').replace(/"/g,'')}" 
+                      title="${lk.label||'파일'}" onclick="event.stopPropagation()"
+                      style="width:24px;height:24px;border-radius:6px;background:${color}15;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;transition:background .12s"
+                      onmouseenter="this.style.background='${color}30'" onmouseleave="this.style.background='${color}15'">
+                      <i class="ti ${icon}" style="font-size:12px;color:${color}"></i>
+                    </a>`;
+                  } else if(lk.url){
+                    return `<a href="${lk.url.replace(/"/g,'&quot;')}" target="_blank"
+                      title="${lk.label||lk.url}" onclick="event.stopPropagation()"
+                      style="width:24px;height:24px;border-radius:6px;background:${color}15;display:flex;align-items:center;justify-content:center;text-decoration:none;flex-shrink:0;transition:background .12s"
+                      onmouseenter="this.style.background='${color}30'" onmouseleave="this.style.background='${color}15'">
+                      <i class="ti ${icon}" style="font-size:12px;color:${color}"></i>
+                    </a>`;
+                  }
+                  return '';
+                }).join('');
+                const moreCount = attachments.length > 3 ? attachments.length - 3 : 0;
+                return `<div class="dash-row" style="gap:8px;align-items:flex-start;padding:10px 0">
+                  <div class="approval-item" data-aid="${a.id}" data-vid="${a.vendorId}" style="cursor:pointer;display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0">
+                    <div style="flex-shrink:0;margin-top:2px">${av(v?v.name:'?',22)}</div>
                     <div style="flex:1;min-width:0">
                       <div style="font-size:13px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.content}</div>
-                      <div style="font-size:11px;color:var(--muted)">${v?v.name:''} · ${fmtDate(a.date)}</div>
+                      <div style="font-size:11px;color:var(--muted);margin-top:1px">${v?v.name:''} · ${fmtDate(a.date)}</div>
+                      ${attachments.length>0?`<div style="display:flex;align-items:center;gap:4px;margin-top:6px" onclick="event.stopPropagation()">
+                        ${fileIcons}
+                        ${moreCount>0?`<span style="font-size:10px;color:var(--muted)">+${moreCount}</span>`:''}
+                      </div>`:''}
                     </div>
-                    <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px"></i>
+                    <i class="ti ti-chevron-right" style="color:var(--muted);font-size:14px;flex-shrink:0;margin-top:4px"></i>
                   </div>
-                  ${!isReadOnly()?`<button class="approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="width:26px;height:26px;border-radius:50%;border:none;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;padding:0"><i class="ti ti-check"></i></button>`:''}
+                  ${!isReadOnly()?`<button class="approval-dismiss-btn" data-aid="${a.id}" title="완료 처리" style="width:26px;height:26px;border-radius:50%;border:none;background:#EF4444;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;padding:0;margin-top:2px"><i class="ti ti-check"></i></button>`:''}
                 </div>`;
               }).join('')}
         </div>
@@ -5198,7 +5231,7 @@ function viewVendorDetail(){
                 <div style="font-size:10px;font-weight:300;color:var(--muted);padding:5px 16px;background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.04em;text-transform:uppercase">${ym}</div>
                 ${glogs.map(l=>{
                   const tb=logTypeBadge(l.type);
-                  return `<div style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd)">
+                  return `<div data-lid="${l.id}" style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd);transition:background .4s">
                     <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:36px;padding-top:2px">
                       <span style="font-size:11px;color:var(--muted);white-space:nowrap">${dayjs(l.date).format('M/D')}</span>
                       <span style="font-size:9px;color:var(--muted)">${dayjs(l.date).format('(ddd)')}</span>
@@ -5812,7 +5845,7 @@ function viewProjectDetail(){
                 const showAll = !!state.projLogShowAll;
                 const visible = showAll ? sorted : sorted.slice(0, LOG_PAGE);
                 const rowsHtml = visible.map(l=>`
-                  <div style="padding:12px 16px;border-bottom:0.5px solid var(--bd);display:flex;gap:10px">
+                  <div data-lid="${l.id}" style="padding:12px 16px;border-bottom:0.5px solid var(--bd);display:flex;gap:10px;transition:background .4s">
                     <div style="flex:1;min-width:0">
                       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
                         <span style="font-size:11px;color:var(--muted)">${fmtDateDow(l.date)} · ${l.type}</span>
@@ -11241,10 +11274,28 @@ function moveCalendarEventToDate(eid, newDate){
   // ── 거래처 상태값 인라인 변경 ──
   // 대표님 승인 항목 클릭 → 벤더 상세로 이동
   document.querySelectorAll('.approval-item').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      state.selectedVendorId = el.dataset.vid;
+    el.addEventListener('click', e=>{
+      if(e.target.closest('a')) return; // 첨부파일 링크 클릭은 무시
+      const aid = el.dataset.aid;
+      const vid = el.dataset.vid;
+      const apItem = (state.data.approvalItems||[]).find(a=>a.id===aid);
+      state.selectedVendorId = vid;
       state.view = 'vendors';
+      // 원본 로그가 있으면 하이라이트 상태 설정
+      if(apItem?.logId) state.highlightLogId = apItem.logId;
       render();
+      // 해당 로그로 스크롤
+      if(apItem?.logId){
+        setTimeout(()=>{
+          const el = document.querySelector(`[data-lid="${apItem.logId}"]`);
+          if(el){
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+            el.style.transition='background .3s';
+            el.style.background='rgba(28,133,232,.12)';
+            setTimeout(()=>{ el.style.background=''; state.highlightLogId=null; },2000);
+          }
+        },300);
+      }
     });
   });
 
