@@ -2304,7 +2304,9 @@ function viewFiles(){
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding:0 4px">탐색</div>
       <button class="files-folder-btn ${activeId==='all'?'active':''}" data-fid="all"><i class="ti ti-files" style="font-size:14px;flex-shrink:0;color:var(--muted)"></i><span style="flex:1">전체 파일</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 6px;border-radius:20px">${all.length}</span></button>
       <button class="files-folder-btn ${activeId==='root'?'active':''}" data-fid="root"><i class="ti ti-home" style="font-size:14px;flex-shrink:0;color:var(--muted)"></i><span style="flex:1">내 폴더</span></button>
-      <button class="files-folder-btn ${activeId==='unassigned'?'active':''}" data-fid="unassigned"><i class="ti ti-file-unknown" style="font-size:14px;flex-shrink:0;color:var(--muted)"></i><span style="flex:1">미분류</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 6px;border-radius:20px">${unassigned.length}</span></button>
+      <button class="files-folder-btn ${activeId==='unassigned'?'active':''}" data-fid="unassigned" id="fcUnassignedBtn"
+        style="position:relative;transition:background .15s,border .15s"
+      ><i class="ti ti-file-unknown" style="font-size:14px;flex-shrink:0;color:var(--muted)"></i><span style="flex:1">미분류</span><span style="font-size:10px;color:var(--muted);background:rgba(255,255,255,.5);padding:1px 6px;border-radius:20px">${unassigned.length}</span></button>
       ${autoFolders.length?`
       <div style="height:1px;background:rgba(255,255,255,.4);margin:8px 4px"></div>
       <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;padding:0 4px">자동 분류</div>
@@ -2350,11 +2352,13 @@ function viewFiles(){
 
       ${selBarHtml}
       <!-- 그리드 -->
+      <div id="fc-grid-drop" style="min-height:200px;border-radius:16px;transition:background .15s,border .15s">
       <div id="filesGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
         ${currentFolders.map(f=>folderCard(f)).join('')}
         ${pageItems.map(lk=>fileCard(lk)).join('')}
         ${currentFolders.length===0&&pageItems.length===0?`<div style="grid-column:1/-1;text-align:center;padding:60px 0;color:var(--muted)"><i class="ti ti-inbox" style="font-size:40px;display:block;margin-bottom:10px;opacity:.3"></i>비어 있습니다</div>`:''}
-      </div>
+      </div><!-- /filesGrid -->
+      </div><!-- /fc-grid-drop -->
       ${pagerHtml}
     </div>
   </div>`;
@@ -8759,6 +8763,76 @@ function bindViewEvents(){
   // 선택 해제 버튼
   const clearSelBtn=document.getElementById('fcClearSelBtn');
   if(clearSelBtn) clearSelBtn.addEventListener('click',()=>{ state.filesSelected.clear(); render(); });
+
+  // ── 미분류로 드롭 (폴더에서 제거) ──
+  function removeFilesFromAllFolders(fileIds){
+    function removeFileFromTree(folders,fid){
+      for(const f of folders){
+        if(f.items){const i=f.items.indexOf(fid);if(i>-1) f.items.splice(i,1);}
+        if(f.children) removeFileFromTree(f.children,fid);
+      }
+    }
+    fileIds.forEach(fid=>removeFileFromTree(state.data.fileFolders,fid));
+  }
+
+  const unassignedBtn=document.getElementById('fcUnassignedBtn');
+  if(unassignedBtn){
+    unassignedBtn.addEventListener('dragover',e=>{
+      if(dragFileIds&&dragFileIds.size===0) return;
+      e.preventDefault();
+      unassignedBtn.style.background='rgba(239,68,68,.12)';
+      unassignedBtn.style.border='1.5px dashed #EF4444';
+      unassignedBtn.style.color='#DC2626';
+    });
+    unassignedBtn.addEventListener('dragleave',()=>{
+      unassignedBtn.style.background='';
+      unassignedBtn.style.border='';
+      unassignedBtn.style.color='';
+    });
+    unassignedBtn.addEventListener('drop',e=>{
+      e.preventDefault();
+      unassignedBtn.style.background='';
+      unassignedBtn.style.border='';
+      unassignedBtn.style.color='';
+      if(!dragFileIds||dragFileIds.size===0) return;
+      removeFilesFromAllFolders([...dragFileIds]);
+      const cnt=dragFileIds.size;
+      state.filesSelected.clear();
+      persist(false);render();
+      showToast(`${cnt}개 파일이 미분류로 이동됐습니다.`);
+    });
+  }
+
+  // ── 그리드 빈 영역 드롭 (현재 폴더에서 제거) ──
+  const gridDrop=document.getElementById('fc-grid-drop');
+  if(gridDrop){
+    gridDrop.addEventListener('dragover',e=>{
+      if(!dragFileIds||dragFileIds.size===0) return;
+      // 폴더 카드 위가 아닐 때만
+      if(e.target.closest('.fc-folder')) return;
+      e.preventDefault();
+      gridDrop.style.background='rgba(239,68,68,.05)';
+      gridDrop.style.outline='2px dashed rgba(239,68,68,.35)';
+    });
+    gridDrop.addEventListener('dragleave',e=>{
+      if(gridDrop.contains(e.relatedTarget)) return;
+      gridDrop.style.background='';
+      gridDrop.style.outline='';
+    });
+    gridDrop.addEventListener('drop',e=>{
+      gridDrop.style.background='';
+      gridDrop.style.outline='';
+      // 폴더 카드 위면 처리 안 함 (fc-folder drop이 처리)
+      if(e.target.closest('.fc-folder')) return;
+      if(!dragFileIds||dragFileIds.size===0) return;
+      e.preventDefault();
+      removeFilesFromAllFolders([...dragFileIds]);
+      const cnt=dragFileIds.size;
+      state.filesSelected.clear();
+      persist(false);render();
+      showToast(`${cnt}개 파일이 폴더에서 제거됐습니다.`);
+    });
+  }
 
   // ── 드래그&드롭 ──
   let dragFolderId=null;
