@@ -7538,15 +7538,19 @@ function modalDayDetail(dateStr){
 }
 
 function modalMeetingNoteForm(){
-  const projectOptions = state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+  const projectOptions = `<option value="">-- 프로젝트 선택 --</option>` + state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+  const vendorOptions = `<option value="">-- 거래처 선택 --</option>` + state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
   return `
-    <div class="modal" style="width:560px">
-      <div class="mh"><h3>회의록 작성</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
-      <div class="mb">
-        <div class="field"><label class="field-label">연결 프로젝트</label><select class="inp" id="mnProject">${projectOptions}</select></div>
-        <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}"/></div>
-        <div class="field"><label class="field-label">회의 내용</label><textarea class="inp" id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요"></textarea></div>
-        <button id="mnGenerateBtn" class="btn" style="margin-bottom:14px"><i class="ti ti-sparkles" style="color:var(--text)"></i> AI 요약 및 액션 아이템 생성</button>
+    <div class="modal" style="width:580px;max-height:90vh">
+      <div class="mh"><h3><i class="ti ti-notes" style="color:var(--o)"></i> 회의록 작성</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb" style="overflow-y:auto;max-height:calc(90vh - 120px)">
+        <div class="two" style="gap:10px">
+          <div class="field"><label class="field-label">연결 프로젝트</label><select class="inp" id="mnProject" style="margin:0">${projectOptions}</select></div>
+          <div class="field"><label class="field-label">연결 거래처</label><select class="inp" id="mnVendor" style="margin:0">${vendorOptions}</select></div>
+        </div>
+        <div class="field"><label class="field-label">날짜</label><input class="inp" type="date" id="mnDate" value="${dayjs().format('YYYY-MM-DD')}" style="margin:0"/></div>
+        <div class="field"><label class="field-label">회의 내용</label><textarea class="inp" id="mnText" rows="6" placeholder="회의 내용을 입력하거나 붙여넣으세요" style="margin:0"></textarea></div>
+        <button id="mnGenerateBtn" class="btn btn-o" style="margin-top:8px;margin-bottom:14px;width:100%"><i class="ti ti-sparkles"></i> AI 요약 및 Action Item 추출</button>
         <div id="mnResult"></div>
       </div>
     </div>
@@ -12334,50 +12338,200 @@ function bindDayDetailEvents(dateStr){
 
 function renderMeetingResult(result, originalText){
   const resultDiv = document.getElementById('mnResult');
+  if(!resultDiv) return;
+
+  // 거래처 목록
+  const vendorOpts = state.data.vendors.map(v=>`<option value="${v.id}">${v.name}</option>`).join('');
+  // 프로젝트 목록
+  const projOpts = `<option value="">-- 없음 --</option>` + state.data.projects.map(p=>`<option value="${p.id}">${p.title}</option>`).join('');
+  // 담당자 목록 (내부 인원 전체)
+  const allPeople = [];
+  state.data.vendors.forEach(v=>{
+    (v.people||[]).forEach(p=>{
+      if(!allPeople.find(x=>x.name===p.name)) allPeople.push({id:p.id||uid('pe'), name:p.name, vendor:v.name});
+    });
+  });
+
+  // 기본값: 폼에서 선택한 거래처/프로젝트
+  const defaultVid = document.getElementById('mnVendor')?.value || '';
+  const defaultPid = document.getElementById('mnProject')?.value || '';
+
   resultDiv.innerHTML = `
-    <div style="border-top:0.5px solid var(--border); padding-top:14px;">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-        <i class="ti ti-sparkles" style="font-size:16px; color:var(--accent-text);"></i>
-        <h3 style="margin:0;">AI 요약</h3>
+    <div style="border-top:0.5px solid var(--bd);padding-top:14px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <i class="ti ti-sparkles" style="font-size:16px;color:var(--o)"></i>
+        <span style="font-weight:600;font-size:14px">AI 요약</span>
       </div>
-      <p style="font-size:13px; color:var(--text-muted); line-height:1.6; margin:0 0 16px;">${result.summary}</p>
-      <p style="font-size:13px; font-weight:300; margin:0 0 10px;">추출된 액션 아이템 · 체크한 항목만 체크리스트에 추가됩니다</p>
-      <div id="actionItemsList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+      <p style="font-size:13px;color:var(--muted);line-height:1.6;margin:0 0 16px;padding:10px 12px;background:var(--sf);border-radius:10px">${result.summary}</p>
+
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">
+        <i class="ti ti-checklist" style="color:var(--o)"></i> Action Items
+        <span style="font-size:11px;font-weight:300;color:var(--muted);margin-left:6px">각 항목별로 담당처와 담당자를 지정하세요</span>
+      </div>
+
+      <div id="actionItemsList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
         ${result.items.map((item,i)=>`
-          <label style="display:flex; align-items:flex-start; gap:10px; padding:10px 12px; background:var(--surface); border-radius:var(--radius); cursor:pointer;">
-            <input type="checkbox" class="action-item-check" data-idx="${i}" checked style="width:14px; height:14px; margin-top:2px;"/>
-            <span style="font-size:13px; flex:1;">${item.text}</span>
-          </label>
+          <div style="background:rgba(255,255,255,.6);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.7);border-radius:14px;padding:12px 14px">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:10px">
+              <input type="checkbox" class="action-item-check" data-idx="${i}" checked style="width:15px;height:15px;margin-top:2px;accent-color:var(--o);flex-shrink:0"/>
+              <span style="font-size:13px;font-weight:300;flex:1">${item.text}</span>
+            </label>
+            <div class="ai-item-meta" data-idx="${i}" style="display:flex;flex-direction:column;gap:8px;padding-left:25px">
+              <!-- 거래처 선택 -->
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">거래처</span>
+                <select class="inp ai-vendor-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
+                  <option value="">-- 없음 --</option>
+                  ${vendorOpts}
+                </select>
+              </div>
+              <!-- 프로젝트 선택 -->
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">프로젝트</span>
+                <select class="inp ai-proj-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
+                  ${projOpts}
+                </select>
+              </div>
+              <!-- 담당자 복수 선택 -->
+              <div style="display:flex;gap:8px;align-items:flex-start">
+                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0;margin-top:4px">담당자</span>
+                <div style="flex:1">
+                  <div class="ai-people-list" data-idx="${i}" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px" id="aiPeople_${i}"></div>
+                  <div style="display:flex;gap:6px">
+                    <select class="inp ai-people-add-sel" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px">
+                      <option value="">담당자 추가...</option>
+                      ${allPeople.map(p=>`<option value="${p.name}">${p.name} (${p.vendor})</option>`).join('')}
+                      <option value="__custom__">직접 입력</option>
+                    </select>
+                    <button type="button" class="btn ai-people-add-btn" data-idx="${i}" style="padding:5px 10px;font-size:11px;flex-shrink:0"><i class="ti ti-plus"></i></button>
+                  </div>
+                  <input type="text" class="inp ai-people-custom" data-idx="${i}" placeholder="담당자 이름 입력" style="display:none;margin-top:6px;font-size:12px;padding:5px 8px"/>
+                </div>
+              </div>
+              <!-- 마감일 -->
+              <div style="display:flex;gap:8px;align-items:center">
+                <span style="font-size:11px;color:var(--muted);width:54px;flex-shrink:0">마감일</span>
+                <input type="date" class="inp ai-due-date" data-idx="${i}" style="flex:1;margin:0;font-size:12px;padding:5px 8px"/>
+              </div>
+            </div>
+          </div>
         `).join('')}
       </div>
-      <div style="display:flex; gap:8px;">
-        <button type="button" id="cancelMeetingNote" style="flex:1;">취소</button>
-        <button type="button" id="confirmAddItems" class="primary" style="flex:1;">체크리스트에 추가</button>
+
+      <div style="display:flex;gap:8px">
+        <button type="button" id="cancelMeetingNote" class="btn" style="flex:1">취소</button>
+        <button type="button" id="confirmAddItems" class="btn btn-o" style="flex:1"><i class="ti ti-device-floppy"></i> 저장 및 체크리스트 생성</button>
       </div>
     </div>
   `;
-  document.getElementById('cancelMeetingNote').addEventListener('click', closeModal);
-  document.getElementById('confirmAddItems').addEventListener('click', ()=>{
-    const projectId = document.getElementById('mnProject').value;
-    const date = document.getElementById('mnDate').value;
-    const p = state.data.projects.find(x=>x.id===projectId);
-    if(!p){ showToast('프로젝트를 찾을 수 없습니다.'); return; }
 
-    const checks = document.querySelectorAll('.action-item-check');
-    let addedCount = 0;
-    checks.forEach(c=>{
-      if(c.checked){
-        const idx = parseInt(c.dataset.idx);
-        p.checklist.push({id:uid('c'), text:result.items[idx].text, done:false});
-        addedCount++;
+  // 기본값 세팅
+  document.querySelectorAll('.ai-vendor-sel').forEach(sel=>{ if(defaultVid) sel.value=defaultVid; });
+  document.querySelectorAll('.ai-proj-sel').forEach(sel=>{ if(defaultPid) sel.value=defaultPid; });
+
+  // 담당자 추가 버튼
+  document.querySelectorAll('.ai-people-add-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = btn.dataset.idx;
+      const sel = document.querySelector(`.ai-people-add-sel[data-idx="${idx}"]`);
+      const customInp = document.querySelector(`.ai-people-custom[data-idx="${idx}"]`);
+      let name = '';
+      if(sel.value==='__custom__'){
+        name = customInp.value.trim();
+        if(!name){ customInp.style.display='block'; customInp.focus(); return; }
+        customInp.style.display='none'; customInp.value='';
+      } else {
+        name = sel.value;
       }
+      if(!name) return;
+      const list = document.getElementById(`aiPeople_${idx}`);
+      // 중복 방지
+      if(list.querySelector(`[data-name="${name}"]`)) return;
+      const chip = document.createElement('div');
+      chip.dataset.name = name;
+      chip.style.cssText = 'display:flex;align-items:center;gap:4px;background:var(--ol);color:var(--od);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500';
+      chip.innerHTML = `${name}<button type="button" style="border:none;background:none;cursor:pointer;color:var(--od);font-size:12px;line-height:1;padding:0;margin-left:2px">×</button>`;
+      chip.querySelector('button').addEventListener('click', ()=>chip.remove());
+      list.appendChild(chip);
+      sel.value = '';
     });
-    if(!p.meetingNotes) p.meetingNotes = [];
-    p.meetingNotes.push({id:uid('mn'), date, text:originalText, summary:result.summary});
+  });
+
+  // 담당자 직접 입력 토글
+  document.querySelectorAll('.ai-people-add-sel').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const idx = sel.dataset.idx;
+      const customInp = document.querySelector(`.ai-people-custom[data-idx="${idx}"]`);
+      customInp.style.display = sel.value==='__custom__' ? 'block' : 'none';
+    });
+  });
+
+  // 체크박스 연동 - 체크 해제시 메타 흐리게
+  document.querySelectorAll('.action-item-check').forEach(ck=>{
+    ck.addEventListener('change', ()=>{
+      const meta = document.querySelector(`.ai-item-meta[data-idx="${ck.dataset.idx}"]`);
+      if(meta) meta.style.opacity = ck.checked ? '1' : '0.35';
+    });
+  });
+
+  document.getElementById('cancelMeetingNote').addEventListener('click', closeModal);
+
+  document.getElementById('confirmAddItems').addEventListener('click', ()=>{
+    const date = document.getElementById('mnDate').value;
+    const headerVid = document.getElementById('mnVendor')?.value;
+    const headerPid = document.getElementById('mnProject')?.value;
+    const checks = document.querySelectorAll('.action-item-check');
+    let addedTotal = 0;
+
+    checks.forEach(ck=>{
+      if(!ck.checked) return;
+      const i = ck.dataset.idx;
+      const itemText = result.items[parseInt(i)].text;
+      const vid = document.querySelector(`.ai-vendor-sel[data-idx="${i}"]`)?.value || headerVid || '';
+      const pid = document.querySelector(`.ai-proj-sel[data-idx="${i}"]`)?.value || headerPid || '';
+      const dueDate = document.querySelector(`.ai-due-date[data-idx="${i}"]`)?.value || '';
+      const people = [...document.querySelectorAll(`#aiPeople_${i} [data-name]`)].map(el=>el.dataset.name);
+      const assignee = people.join(', ');
+
+      // 거래처 체크리스트에 추가
+      if(vid){
+        const v = state.data.vendors.find(x=>x.id===vid);
+        if(v){
+          if(!v.checklist) v.checklist=[];
+          v.checklist.push({id:uid('c'), text:itemText, done:false, dueDate, assignee, fromMeeting:true, createdAt:date});
+          addedTotal++;
+        }
+      }
+
+      // 프로젝트 체크리스트에 추가
+      if(pid){
+        const p = state.data.projects.find(x=>x.id===pid);
+        if(p){
+          if(!p.checklist) p.checklist=[];
+          p.checklist.push({id:uid('c'), text:itemText, done:false, dueDate, assignee, fromMeeting:true, createdAt:date});
+          if(vid && !addedTotal) addedTotal++; // 거래처 없이 프로젝트만인 경우
+          if(!vid) addedTotal++;
+        }
+      }
+
+      // 둘 다 없으면 카운트만
+      if(!vid && !pid) addedTotal++;
+    });
+
+    // 회의록 저장 (프로젝트에)
+    const savePid = headerPid || document.querySelector('.ai-proj-sel')?.value || '';
+    if(savePid){
+      const p = state.data.projects.find(x=>x.id===savePid);
+      if(p){
+        if(!p.meetingNotes) p.meetingNotes=[];
+        p.meetingNotes.push({id:uid('mn'), date, text:originalText, summary:result.summary});
+      }
+    }
 
     closeModal();
     persist(false);
-    showToast(`회의록이 저장되고 체크리스트에 ${addedCount}건 추가되었습니다.`);
+    render();
+    showToast(`회의록 저장 완료 · 체크리스트 ${addedTotal}건 생성됐습니다.`);
   });
 }
 
