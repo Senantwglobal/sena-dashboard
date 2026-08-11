@@ -2260,7 +2260,7 @@ function viewFiles(){
       </div>
       <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</div>
       <div style="font-size:11px;color:var(--muted)">${childCnt?childCnt+'개 폴더 · ':''} ${itemCnt}개 파일</div>
-      ${isDraggable&&!isAuto?`<div class="fc-drop-overlay" style="display:none;position:absolute;inset:0;border-radius:16px;background:${c}22;border:2px dashed ${c};align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${c}">여기에 이동</div>`:''}
+      <div class="fc-drop-overlay" style="display:none;position:absolute;inset:0;border-radius:16px;background:${c}22;border:2px dashed ${c};align-items:center;justify-content:center;font-size:12px;font-weight:600;color:${c}">여기에 이동</div>
     </div>`;
   }
 
@@ -2270,8 +2270,8 @@ function viewFiles(){
     const label=(lk.label||'파일').replace(/</g,'&lt;');
     const date=lk.addedDate||lk._date||'';
     const isDoc=lk.type==='doc';
-    return `<div class="fc-card fc-file" data-fid="${lk.id}"
-      style="background:rgba(255,255,255,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:16px;transition:box-shadow .18s,transform .15s;position:relative"
+    return `<div class="fc-card fc-file" data-fid="${lk.id}" draggable="true"
+      style="background:rgba(255,255,255,.72);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:16px;transition:box-shadow .18s,transform .15s;position:relative;cursor:grab"
       onmouseenter="this.style.boxShadow='0 8px 24px rgba(11,27,46,.12)';this.style.transform='translateY(-2px)';this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='1')"
       onmouseleave="this.style.boxShadow='';this.style.transform='';this.querySelector('.fc-actions')&&(this.querySelector('.fc-actions').style.opacity='0')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
@@ -8690,11 +8690,30 @@ function bindViewEvents(){
     card.addEventListener('mouseleave',()=>{ const a=card.querySelector('.fc-actions'); if(a) a.style.opacity='0'; });
   });
 
-  // ── 드래그&드롭 폴더 이동 ──
+  // ── 드래그&드롭 ── (폴더 이동 + 파일→폴더 이동)
   let dragFolderId=null;
+  let dragFileId=null;
+
+  // 파일 카드 드래그
+  document.querySelectorAll('.fc-file[draggable="true"]').forEach(card=>{
+    card.addEventListener('dragstart',e=>{
+      dragFileId=card.dataset.fid;
+      dragFolderId=null;
+      e.dataTransfer.effectAllowed='move';
+      card.style.opacity='.45';
+    });
+    card.addEventListener('dragend',()=>{
+      card.style.opacity='';
+      dragFileId=null;
+      document.querySelectorAll('.fc-drop-overlay').forEach(o=>o.style.display='none');
+    });
+  });
+
+  // 폴더 카드 드래그 (폴더 이동용)
   document.querySelectorAll('.fc-folder[draggable="true"]').forEach(card=>{
     card.addEventListener('dragstart',e=>{
       dragFolderId=card.dataset.fid;
+      dragFileId=null;
       e.dataTransfer.effectAllowed='move';
       card.style.opacity='.5';
     });
@@ -8703,40 +8722,75 @@ function bindViewEvents(){
       dragFolderId=null;
       document.querySelectorAll('.fc-drop-overlay').forEach(o=>o.style.display='none');
     });
+  });
+
+  // 모든 폴더 카드: dragover + drop (파일 또는 폴더 이동 받기)
+  document.querySelectorAll('.fc-folder').forEach(card=>{
+    const targetFid=card.dataset.fid;
+    if(targetFid.startsWith('auto_')) return; // 자동 분류 폴더는 드롭 타겟 안 됨
+
     card.addEventListener('dragover',e=>{
-      if(!dragFolderId||dragFolderId===card.dataset.fid) return;
-      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(!dragFileId&&!dragFolderId) return;
+      if(dragFolderId===targetFid) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
       const ov=card.querySelector('.fc-drop-overlay');
       if(ov) ov.style.display='flex';
     });
-    card.addEventListener('dragleave',()=>{
+    card.addEventListener('dragleave',e=>{
+      if(card.contains(e.relatedTarget)) return;
       const ov=card.querySelector('.fc-drop-overlay');
       if(ov) ov.style.display='none';
     });
     card.addEventListener('drop',e=>{
       e.preventDefault();
-      const targetId=card.dataset.fid;
-      if(!dragFolderId||dragFolderId===targetId) return;
-      // 순환 방지: targetId가 dragFolder의 자손이면 취소
-      const dragged=findFolder(state.data.fileFolders,dragFolderId);
-      if(!dragged) return;
-      function isDescendant(folder,id){if(folder.id===id) return true;return (folder.children||[]).some(c=>isDescendant(c,id));}
-      if(isDescendant(dragged,targetId)){showToast('상위 폴더를 하위로 이동할 수 없습니다.');return;}
-      // 원래 위치에서 제거
-      function removeFromTree(folders,id){
-        const i=folders.findIndex(f=>f.id===id);
-        if(i>-1) return folders.splice(i,1)[0];
-        for(const f of folders){const r=removeFromTree(f.children||[],id);if(r) return r;}
-        return null;
+      const ov=card.querySelector('.fc-drop-overlay');
+      if(ov) ov.style.display='none';
+
+      // 파일을 폴더로 이동
+      if(dragFileId){
+        const targetFolder=findFolder(state.data.fileFolders,targetFid);
+        if(!targetFolder){dragFileId=null;return;}
+        if(!targetFolder.items) targetFolder.items=[];
+        if(!targetFolder.items.includes(dragFileId)){
+          // 기존 다른 폴더에서 제거
+          function removeFileFromTree(folders,fid){
+            for(const f of folders){
+              if(f.items){const i=f.items.indexOf(fid);if(i>-1) f.items.splice(i,1);}
+              if(f.children) removeFileFromTree(f.children,fid);
+            }
+          }
+          removeFileFromTree(state.data.fileFolders,dragFileId);
+          targetFolder.items.push(dragFileId);
+        }
+        const fileItem=collectAllFileItems().find(x=>x.id===dragFileId);
+        persist(false);render();
+        showToast(`"${fileItem?.label||'파일'}"이(가) "${targetFolder.name}"으로 이동됐습니다.`);
+        dragFileId=null;
+        return;
       }
-      const moved=removeFromTree(state.data.fileFolders,dragFolderId);
-      if(!moved) return;
-      // target에 추가
-      const target=findFolder(state.data.fileFolders,targetId);
-      if(!target){state.data.fileFolders.push(moved);}
-      else{if(!target.children) target.children=[];target.children.push(moved);}
-      persist(false);render();
-      showToast(`"${moved.name}"이(가) "${target?.name||'루트'}"으로 이동됐습니다.`);
+
+      // 폴더를 폴더로 이동
+      if(dragFolderId&&dragFolderId!==targetFid){
+        const dragged=findFolder(state.data.fileFolders,dragFolderId);
+        if(!dragged){dragFolderId=null;return;}
+        function isDesc(f,id){if(f.id===id) return true;return(f.children||[]).some(c=>isDesc(c,id));}
+        if(isDesc(dragged,targetFid)){showToast('상위 폴더를 하위로 이동할 수 없습니다.');dragFolderId=null;return;}
+        function rmFromTree(folders,id){
+          const i=folders.findIndex(f=>f.id===id);
+          if(i>-1) return folders.splice(i,1)[0];
+          for(const f of folders){const r=rmFromTree(f.children||[],id);if(r) return r;}
+          return null;
+        }
+        const moved=rmFromTree(state.data.fileFolders,dragFolderId);
+        if(!moved){dragFolderId=null;return;}
+        const target=findFolder(state.data.fileFolders,targetFid);
+        if(!target){state.data.fileFolders.push(moved);}
+        else{if(!target.children) target.children=[];target.children.push(moved);}
+        persist(false);render();
+        showToast(`"${moved.name}"이(가) "${target?.name||'루트'}"으로 이동됐습니다.`);
+        dragFolderId=null;
+      }
     });
   });
 
