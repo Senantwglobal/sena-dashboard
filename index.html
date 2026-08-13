@@ -6131,6 +6131,7 @@ function viewCalendar(){
         // 기간(다일) 일정 - endDate가 있고 date와 다른 경우
         const multiEvs = allEvs.filter(e=>{
           if(!e.endDate || e.endDate===e.date) return false;
+          if(e.type==='마감') return false; // 마감은 도트로 처리
           return e.date <= wMax && e.endDate >= wMin;
         }).sort((a,b)=>a.date.localeCompare(b.date));
 
@@ -6165,10 +6166,25 @@ function viewCalendar(){
             const dayEvsAll = allEvs.filter(e=>e.date===dateStr && (!e.endDate || e.endDate===e.date));
             const holidayEvs = dayEvsAll.filter(e=>e.isHoliday);
             const leaveEvs = dayEvsAll.filter(e=>e.isLeave);
-            const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave);
+            const deadlineEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave && e.type==='마감');
+            const dayEvs = dayEvsAll.filter(e=>!e.isHoliday && !e.isLeave && e.type!=='마감');
             const EV_MAX = 2;
             const labelParts = [...holidayEvs.map(h=>h.title), ...leaveEvs.map(l=>l.title)];
-            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="aspect-ratio:16/9">
+
+            // 마감 도트 (우상단 코너)
+            const deadlineDotColor = eventColor('마감').dot;
+            const deadlineDotsHtml = deadlineEvs.length>0 ? `
+              <div class="deadline-dots-wrap" style="position:absolute;top:4px;right:4px;display:flex;gap:3px;z-index:5;flex-wrap:wrap;justify-content:flex-end;max-width:60%">
+                ${deadlineEvs.map(e=>`
+                  <button class="deadline-dot-btn" data-eid="${e.id}" title="${e.title}"
+                    style="width:10px;height:10px;border-radius:50%;background:${deadlineDotColor};border:1.5px solid #fff;box-shadow:0 1px 3px rgba(124,58,237,.35);cursor:pointer;padding:0;flex-shrink:0;transition:transform .12s"
+                    onmouseenter="this.style.transform='scale(1.4)'" onmouseleave="this.style.transform=''">
+                  </button>`).join('')}
+                ${deadlineEvs.length>3?`<span style="font-size:8px;color:${deadlineDotColor};font-weight:700">+${deadlineEvs.length-3}</span>`:''}
+              </div>` : '';
+
+            return `<div class="cal-cell${isToday?' today':''}" data-date="${dateStr}" style="aspect-ratio:16/9;position:relative">
+              ${deadlineDotsHtml}
               <div style="display:flex;align-items:baseline;gap:4px;min-width:0">
                 <span class="cal-num${isToday?' today':''}" style="${holidayEvs.length>0&&!isToday?'color:#DC2626':''};flex-shrink:0">${c.day}</span>
                 ${labelParts.length>0?`<span style="font-size:8.5px;color:${holidayEvs.length>0?'#DC2626':'var(--muted)'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">${labelParts.join(', ')}</span>`:''}
@@ -11304,6 +11320,64 @@ function moveCalendarEventToDate(eid, newDate){
       });
     });
   }
+
+  // 마감 도트 클릭 → 팝오버 상세
+  document.querySelectorAll('.deadline-dot-btn').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      document.querySelectorAll('.deadline-pop').forEach(p=>p.remove());
+      const eid = btn.dataset.eid;
+      const allEvs = allCalendarEvents();
+      const ev = allEvs.find(x=>x.id===eid) || state.data.calendar.find(x=>x.id===eid);
+      if(!ev) return;
+
+      // 연결된 프로젝트/거래처 정보
+      const proj = ev.projectId ? state.data.projects.find(p=>p.id===ev.projectId) : null;
+      const vids = ev.vendorIds||[];
+      const vendors = vids.map(vid=>state.data.vendors.find(v=>v.id===vid)).filter(Boolean);
+
+      const pop = document.createElement('div');
+      pop.className = 'deadline-pop';
+      const r = btn.getBoundingClientRect();
+      pop.style.cssText = `position:fixed;z-index:9999;background:rgba(255,255,255,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,0,0,.1);border-radius:14px;padding:14px 16px;min-width:220px;max-width:280px;box-shadow:0 12px 32px rgba(0,0,0,.18)`;
+      pop.style.top = (r.bottom+6)+'px';
+      pop.style.left = Math.min(r.left, window.innerWidth-300)+'px';
+
+      const dc = eventColor('마감');
+      pop.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${dc.dot};flex-shrink:0"></div>
+          <span style="font-size:13px;font-weight:600;color:#111">${ev.title}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:5px">
+          <div style="display:flex;align-items:center;gap:6px"><i class="ti ti-calendar" style="font-size:12px"></i> ${dayjs(ev.date).format('YYYY년 M월 D일 (ddd)')}</div>
+          ${proj?`<div style="display:flex;align-items:center;gap:6px"><i class="ti ti-checklist" style="font-size:12px"></i> ${proj.title}</div>`:''}
+          ${vendors.length?`<div style="display:flex;align-items:center;gap:6px"><i class="ti ti-building-store" style="font-size:12px"></i> ${vendors.map(v=>v.name).join(', ')}</div>`:''}
+          ${ev.note?`<div style="margin-top:4px;padding:6px 8px;background:var(--sf);border-radius:8px;font-size:11px;line-height:1.5">${ev.note}</div>`:''}
+        </div>
+        ${proj||state.data.calendar.find(x=>x.id===eid)?`
+        <div style="margin-top:10px;padding-top:10px;border-top:0.5px solid var(--bd);display:flex;gap:6px">
+          ${proj?`<button class="btn btn-o" style="flex:1;font-size:11px;padding:5px 8px" id="deadlineGoProj" data-pid="${proj.id}"><i class="ti ti-arrow-right"></i> 프로젝트 보기</button>`:''}
+          ${state.data.calendar.find(x=>x.id===eid)?`<button class="btn" style="flex:1;font-size:11px;padding:5px 8px" id="deadlineGoDetail" data-eid="${eid}"><i class="ti ti-pencil"></i> 수정</button>`:''}
+        </div>`:''}
+      `;
+      document.body.appendChild(pop);
+
+      pop.querySelector('#deadlineGoProj')?.addEventListener('click', ()=>{
+        pop.remove();
+        state.selectedProjectId = proj.id; state.view='projects'; render();
+      });
+      pop.querySelector('#deadlineGoDetail')?.addEventListener('click', ()=>{
+        pop.remove();
+        openModal(modalEditEvent(state.data.calendar.find(x=>x.id===eid)));
+        bindModalCommon(); bindEditEventModal(eid);
+      });
+
+      setTimeout(()=>document.addEventListener('click', function closePop(ev2){
+        if(!pop.contains(ev2.target)){ pop.remove(); document.removeEventListener('click',closePop); }
+      }), 10);
+    });
+  });
 
   document.querySelectorAll('.cal-more-btn[data-date]').forEach(el=>{
     el.addEventListener('click', e=>{
