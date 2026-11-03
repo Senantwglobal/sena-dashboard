@@ -5248,6 +5248,74 @@ function viewVendorDetail(){
             if(fy!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('YYYY')===fy);
             if(fm!=='all') filtered = filtered.filter(l=>dayjs(l.date).format('M')===fm);
             const displayLogs = state.vendorLogExpanded ? filtered : filtered.slice(0,5);
+            const rowHtml = (l, inThread)=>{
+                  const tb=logTypeBadge(l.type);
+                  return `<div data-lid="${l.id}" style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd);transition:background .4s">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:36px;padding-top:2px">
+                      <span style="font-size:11px;color:var(--muted);white-space:nowrap">${dayjs(l.date).format('M/D')}</span>
+                      <span style="font-size:9px;color:var(--muted)">${dayjs(l.date).format('(ddd)')}</span>
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+                        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:300">${l.type}</span>
+                        <span class="badge bgr" style="font-size:9px">${l.status}</span>
+                        ${l.needsApproval?`<span style="font-size:9px;padding:1px 6px;border-radius:20px;background:#FCEBEB;color:#A32D2D">📋 대표님 승인</span>`:''}
+                      </div>
+                      <div style="font-size:13px;line-height:1.4;font-weight:300">${l.summary}</div>
+                      ${emailMeta(l)}
+                      ${l.nextStep?`<div style="font-size:12px;margin-top:4px;display:flex;align-items:flex-start;gap:5px">
+                        <span style="color:var(--o);font-size:10px;margin-top:2px">→</span>
+                        <span style="color:${l.nextStepDone?'var(--muted)':'var(--text)'};text-decoration:${l.nextStepDone?'line-through':'none'}">${l.nextStep}</span>
+                        ${l.nextStepDue?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${fmtDate(l.nextStepDue)}</span>`:''}
+                        ${!l.nextStepDone?`<input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:13px;height:13px;flex-shrink:0;cursor:pointer;margin-top:1px"/>`:'<span style="font-size:10px;color:#3B6D11">✓</span>'}
+                      </div>`:''}
+                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
+                      ${renderLogLinks(l.links)}
+                    </div>
+                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
+                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
+                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
+                    </div>`:''}
+                  </div>`;
+            };
+            const emailMeta = (l)=> (l.emailFrom||l.emailTo) ? `<div style="font-size:11px;color:var(--muted);margin-top:3px;word-break:break-all"><i class="ti ti-mail-forward" style="font-size:11px"></i> ${escAttr(l.emailFrom||'?')} → ${escAttr(l.emailTo||'?')}</div>` : '';
+            const threadMap = {};
+            displayLogs.forEach(l=>{
+              if(l.type==='이메일' && l.emailSubject){
+                const k = threadKeyId(l.vendorId, normEmailSubject(l.emailSubject));
+                (threadMap[k] = threadMap[k] || []).push(l);
+              }
+            });
+            const emitted = new Set();
+            const logOrThread = (l)=>{
+              if(l.type==='이메일' && l.emailSubject){
+                const k = threadKeyId(l.vendorId, normEmailSubject(l.emailSubject));
+                const th = threadMap[k];
+                if(th && th.length>=2){
+                  if(emitted.has(k)) return '';
+                  emitted.add(k);
+                  const open = !!(state.openThreads||{})[k];
+                  const ordered = th.slice().sort((a,b)=> (a.date+(a.createdAt||0)).toString().localeCompare((b.date+(b.createdAt||0)).toString()) || ((a.createdAt||0)-(b.createdAt||0)));
+                  const latest = ordered[ordered.length-1];
+                  return `<div style="border-bottom:0.5px solid var(--bd)">
+                    <div onclick="toggleLogThread('${k}')" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:rgba(0,0,0,.015)">
+                      <div style="width:36px;flex-shrink:0;text-align:center"><i class="ti ti-messages" style="font-size:18px;color:#0C6EBD"></i></div>
+                      <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                          <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:#E6F1FB;color:#0C6EBD">Thread</span>
+                          <span style="font-size:13px;font-weight:400;overflow:hidden;text-overflow:ellipsis">${escAttr(latest.emailSubject)}</span>
+                          <span class="badge bgr" style="font-size:9px">${th.length}건</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--muted);margin-top:3px;font-weight:300;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dayjs(latest.date).format('M/D')} · ${escAttr(latest.summary||'')}</div>
+                      </div>
+                      <i class="ti ti-chevron-${open?'up':'down'}" style="color:var(--muted)"></i>
+                    </div>
+                    ${open?`<div style="margin-left:26px;border-left:2px solid #B5D4F4">${ordered.map(x=>rowHtml(x,true)).join('')}</div>`:''}
+                  </div>`;
+                }
+              }
+              return rowHtml(l,false);
+            };
             const groups = {};
             displayLogs.forEach(l=>{
               const ym = dayjs(l.date).format('YYYY년 M월');
@@ -5276,35 +5344,7 @@ function viewVendorDetail(){
               Object.entries(groups).map(([ym, glogs])=>`
               <div>
                 <div style="font-size:10px;font-weight:300;color:var(--muted);padding:5px 16px;background:var(--sf);border-bottom:0.5px solid var(--bd);letter-spacing:.04em;text-transform:uppercase">${ym}</div>
-                ${glogs.map(l=>{
-                  const tb=logTypeBadge(l.type);
-                  return `<div data-lid="${l.id}" style="display:flex;gap:10px;padding:12px 16px;border-bottom:0.5px solid var(--bd);transition:background .4s">
-                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0;width:36px;padding-top:2px">
-                      <span style="font-size:11px;color:var(--muted);white-space:nowrap">${dayjs(l.date).format('M/D')}</span>
-                      <span style="font-size:9px;color:var(--muted)">${dayjs(l.date).format('(ddd)')}</span>
-                    </div>
-                    <div style="flex:1;min-width:0">
-                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px">
-                        <span style="font-size:10px;padding:1px 7px;border-radius:20px;background:${tb.bg};color:${tb.color};font-weight:300">${l.type}</span>
-                        <span class="badge bgr" style="font-size:9px">${l.status}</span>
-                        ${l.needsApproval?`<span style="font-size:9px;padding:1px 6px;border-radius:20px;background:#FCEBEB;color:#A32D2D">📋 대표님 승인</span>`:''}
-                      </div>
-                      <div style="font-size:13px;line-height:1.4;font-weight:300">${l.summary}</div>
-                      ${l.nextStep?`<div style="font-size:12px;margin-top:4px;display:flex;align-items:flex-start;gap:5px">
-                        <span style="color:var(--o);font-size:10px;margin-top:2px">→</span>
-                        <span style="color:${l.nextStepDone?'var(--muted)':'var(--text)'};text-decoration:${l.nextStepDone?'line-through':'none'}">${l.nextStep}</span>
-                        ${l.nextStepDue?`<span style="font-size:10px;color:var(--muted);flex-shrink:0">${fmtDate(l.nextStepDue)}</span>`:''}
-                        ${!l.nextStepDone?`<input type="checkbox" class="nextaction-done" data-lid="${l.id}" style="accent-color:var(--o);width:13px;height:13px;flex-shrink:0;cursor:pointer;margin-top:1px"/>`:'<span style="font-size:10px;color:#3B6D11">✓</span>'}
-                      </div>`:''}
-                      ${l.rawText?`<div class="log-detail-row" data-lid="${l.id}" style="font-size:11px;color:var(--o);margin-top:4px;cursor:pointer;display:inline-block"><i class="ti ti-file-text"></i> 원본 보기</div>`:''}
-                      ${renderLogLinks(l.links)}
-                    </div>
-                    ${!isReadOnly()?`<div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0">
-                      <button class="btn log-edit-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-pencil"></i></button>
-                      <button class="btn btn-red log-delete-btn" data-lid="${l.id}" style="padding:3px 7px;font-size:11px"><i class="ti ti-trash"></i></button>
-                    </div>`:''}
-                  </div>`;
-                }).join('')}
+                ${glogs.map(logOrThread).join('')}
               </div>`).join('')}
             ${!state.vendorLogExpanded && filtered.length>5?`<div style="text-align:center;padding:12px">
               <button class="btn" id="toggleLogViewBtn2" style="font-size:12px"><i class="ti ti-chevron-down"></i> 전체 ${filtered.length}건 보기</button>
@@ -6313,6 +6353,35 @@ function viewCalendar(){
 }
 
 
+function escAttr(t){ return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function vendorEmailOptionsHtml(vendorIds){
+  const seen = new Set(); const out = [];
+  (vendorIds||[]).forEach(vid=>{
+    const v = state.data.vendors.find(x=>x.id===vid);
+    if(!v) return;
+    (v.people||[]).forEach(p=>{
+      const em = (p.email||'').trim();
+      if(!em || seen.has(em.toLowerCase())) return;
+      seen.add(em.toLowerCase());
+      out.push(`<option value="${escAttr(em)}">${escAttr(p.name||'')}${p.title?' ('+escAttr(p.title)+')':''} — ${escAttr(v.name)}</option>`);
+    });
+  });
+  return out.join('');
+}
+function normEmailSubject(sub){
+  return String(sub||'').replace(/^\s*((re|fw|fwd|회신|답장|전달)\s*:\s*)+/i,'').replace(/\s+/g,' ').trim().toLowerCase();
+}
+function threadKeyId(vendorId, norm){
+  let h = 0; const str = vendorId+'|'+norm;
+  for(let i=0;i<str.length;i++){ h = ((h<<5)-h + str.charCodeAt(i))|0; }
+  return 'th'+Math.abs(h).toString(36);
+}
+function toggleLogThread(key){
+  state.openThreads = state.openThreads || {};
+  state.openThreads[key] = !state.openThreads[key];
+  render();
+}
+
 function modalLogForm(preVendorId, preProjectId){
   const preVendorIds = preVendorId ? [preVendorId] : [];
   const relProjects = preVendorIds.length ? state.data.projects.filter(p=>{
@@ -6373,10 +6442,12 @@ function modalLogForm(preVendorId, preProjectId){
           </div>
           <div id="lmEmailFields" style="display:none;background:var(--sf);border-radius:10px;padding:12px;margin-bottom:4px">
             <div class="two">
-              <div class="field" style="margin:0"><label class="field-label">보낸사람</label><input class="inp" type="text" name="emailFrom" id="lmEmailFrom" placeholder="name@company.com" style="margin:0"/></div>
-              <div class="field" style="margin:0"><label class="field-label">받는사람</label><input class="inp" type="text" name="emailTo" id="lmEmailTo" placeholder="name@company.com" style="margin:0"/></div>
+              <div class="field" style="margin:0"><label class="field-label">보낸사람</label><input class="inp" type="text" name="emailFrom" id="lmEmailFrom" list="lmEmailList" autocomplete="off" placeholder="선택 또는 직접 입력" style="margin:0"/></div>
+              <div class="field" style="margin:0"><label class="field-label">받는사람</label><input class="inp" type="text" name="emailTo" id="lmEmailTo" list="lmEmailList" autocomplete="off" placeholder="선택 또는 직접 입력 (여러 명은 , 로 구분)" style="margin:0"/></div>
             </div>
-            <div class="field" style="margin:8px 0 0 0"><label class="field-label">이메일 제목</label><input class="inp" type="text" name="emailSubject" id="lmEmailSubject" placeholder="이메일 제목" style="margin:0"/></div>
+            <div class="field" style="margin:8px 0 0 0"><label class="field-label">이메일 제목 <span style="font-size:10.5px;color:var(--muted);font-weight:300">(같은 제목은 Thread로 묶입니다)</span></label><input class="inp" type="text" name="emailSubject" id="lmEmailSubject" list="lmSubjectList" autocomplete="off" placeholder="이메일 제목" style="margin:0"/></div>
+            <datalist id="lmEmailList">${vendorEmailOptionsHtml(preVendorIds)}</datalist>
+            <datalist id="lmSubjectList"></datalist>
           </div>
           <div class="field"><label class="field-label" id="lmRawTextLabel">원본 내용 (이메일 전체 등)</label>
             <textarea class="inp" id="lmRawText" name="rawText" rows="4" placeholder="이메일 전체 내용 또는 메모를 붙여넣으세요" style="resize:vertical"></textarea>
@@ -6482,8 +6553,20 @@ function bindLogModal(preVendorId, preProjectId){
   }
 
   bindVendorPersonChecklists('lmVendorCheckList', 'lmPersonCheckList', 'lmVendorSearch');
+  function updateEmailDatalists(){
+    const vids = Array.from(document.querySelectorAll('#lmVendorCheckList .ev-vendor-cb:checked')).map(cb=>cb.value);
+    const dl = document.getElementById('lmEmailList');
+    if(dl) dl.innerHTML = vendorEmailOptionsHtml(vids);
+    const sl = document.getElementById('lmSubjectList');
+    if(sl){
+      const subs = [];
+      state.data.vendorLogs.forEach(l=>{ if(vids.includes(l.vendorId) && l.emailSubject && !subs.includes(l.emailSubject)) subs.push(l.emailSubject); });
+      sl.innerHTML = subs.slice(0,50).map(x=>`<option value="${escAttr(x)}"></option>`).join('');
+    }
+  }
+  updateEmailDatalists();
   if(vendorList) vendorList.addEventListener('change', e=>{
-    if(e.target.classList.contains('ev-vendor-cb')) updateProjectsForCheckedVendors();
+    if(e.target.classList.contains('ev-vendor-cb')){ updateProjectsForCheckedVendors(); updateEmailDatalists(); }
   });
 
   // API 키 설정 버튼
@@ -8438,6 +8521,14 @@ function modalEditLog(log){
               ${['높음','보통','낮음','완료'].map(p=>`<option ${log.priority===p?'selected':''}>${p}</option>`).join('')}
             </select>
           </div>
+          <div id="elEmailFields" style="display:${log.type==='이메일'?'':'none'};background:var(--sf);border-radius:10px;padding:12px;margin-bottom:10px">
+            <div class="two">
+              <div class="field" style="margin:0"><label class="field-label">보낸사람</label><input class="inp" type="text" name="emailFrom" list="elEmailList" autocomplete="off" value="${escAttr(log.emailFrom||'')}" placeholder="선택 또는 직접 입력" style="margin:0"/></div>
+              <div class="field" style="margin:0"><label class="field-label">받는사람</label><input class="inp" type="text" name="emailTo" list="elEmailList" autocomplete="off" value="${escAttr(log.emailTo||'')}" placeholder="선택 또는 직접 입력 (여러 명은 , 로 구분)" style="margin:0"/></div>
+            </div>
+            <div class="field" style="margin:8px 0 0 0"><label class="field-label">이메일 제목 <span style="font-size:10.5px;color:var(--muted);font-weight:300">(같은 제목은 Thread로 묶입니다)</span></label><input class="inp" type="text" name="emailSubject" value="${escAttr(log.emailSubject||'')}" placeholder="이메일 제목" style="margin:0"/></div>
+            <datalist id="elEmailList">${vendorEmailOptionsHtml([log.vendorId])}</datalist>
+          </div>
           <div class="field"><label class="field-label">상황 요약</label>
             <input class="inp" type="text" name="summary" value="${(log.summary||'').replace(/"/g,'&quot;')}" required/>
           </div>
@@ -9887,6 +9978,18 @@ function bindViewEvents(){
       openModal(modalEditLog(log));
       bindModalCommon();
 
+      // 이메일 필드 토글 + 거래처 변경 시 담당자 이메일 드롭다운 갱신
+      (function(){
+        const f = document.getElementById('editLogForm');
+        if(!f) return;
+        const typeEl = f.querySelector('select[name="type"]');
+        const vEl = f.querySelector('select[name="vendorId"]');
+        const box = document.getElementById('elEmailFields');
+        const dl = document.getElementById('elEmailList');
+        if(typeEl && box) typeEl.addEventListener('change', ()=>{ box.style.display = typeEl.value==='이메일' ? '' : 'none'; });
+        if(vEl && dl) vEl.addEventListener('change', ()=>{ dl.innerHTML = vendorEmailOptionsHtml([vEl.value]); });
+      })();
+
       // ── 파일 & 링크 (수정 모달) ──
       let editPendingFileReads = 0;
       function updateEditSubmitBtnState(){
@@ -10024,6 +10127,7 @@ function bindViewEvents(){
             nextStep: fd.get('nextStep')||'',
             nextStepDue: fd.get('nextStepDue')||'',
             rawText: fd.get('rawText')||'',
+            emailFrom: fd.get('emailFrom')||'', emailTo: fd.get('emailTo')||'', emailSubject: fd.get('emailSubject')||'',
             needsApproval: fd.get('needsApproval')==='on',
             linkedProjectId: newLinkedProjectId,
             brandId: newBrandId,
