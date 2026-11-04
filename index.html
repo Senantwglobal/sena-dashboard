@@ -13148,15 +13148,18 @@ function inboxClean(txt){
   return String(txt||'').replace(/!?\[[^\]]*\]\(plaud:\/\/[^)]*\)/g,'').replace(/\n{3,}/g,'\n\n').trim();
 }
 function inboxToHtml(txt){
-  return escAttr(inboxClean(txt)).replace(/\n/g,'<br>');
+  return escAttr(inboxClean(txt))
+    .replace(/^#{1,6}\s*(.+)$/gm,'<b style="display:inline-block;margin-top:6px;color:var(--text)">$1</b>')
+    .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
+    .replace(/\n/g,'<br>');
 }
 function modalMeetingInbox(){
   const vopts = (state.data.vendors||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${escAttr(v.name)}</option>`).join('');
   const items = (state.inbox||[]);
   return `
-    <div class="modal" style="width:640px">
+    <div class="modal" style="width:min(860px,94vw)">
       <div class="mh"><h3><i class="ti ti-microphone" style="color:var(--text)"></i> Plaud 새 회의록 (${items.length})</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
-      <div class="mb" style="max-height:70vh;overflow-y:auto">
+      <div class="mb" style="max-height:82vh;overflow-y:auto">
         ${items.length===0 ? '<div class="empty-state" style="padding:24px">새 회의록이 없습니다.</div>' : items.map(it=>{
           const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
           const gv = inboxGuessVendor(it.title);
@@ -13164,10 +13167,10 @@ function modalMeetingInbox(){
             <input class="inp ib-title" value="${escAttr(it.title||'제목 없음')}" style="margin:0 0 6px;font-weight:500"/>
             <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
               <input type="date" class="inp ib-date" value="${dt.format('YYYY-MM-DD')}" style="margin:0;width:150px"/>
-              <input type="time" class="inp ib-time" value="${dt.format('HH:mm')}" style="margin:0;width:110px"/>
+              <input type="time" class="inp ib-time" value="${dt.format('HH:mm')}" style="margin:0;width:140px"/>
               <select class="inp ib-vendor" style="margin:0;flex:1;min-width:150px"><option value="">거래처 선택 (선택)</option>${vopts.replace(`value="${gv}"`,`value="${gv}" selected`)}</select>
             </div>
-            <div style="font-size:12px;color:var(--muted);max-height:90px;overflow-y:auto;background:var(--sf);border-radius:8px;padding:8px;margin-bottom:8px;font-weight:300">${inboxToHtml(it.summary||it.transcript||'(내용 없음)')}</div>
+            <div style="font-size:13px;line-height:1.6;color:var(--text);height:52vh;min-height:240px;max-height:70vh;resize:vertical;overflow-y:auto;background:var(--sf);border-radius:8px;padding:12px 14px;margin-bottom:8px;font-weight:300">${inboxToHtml(it.summary||it.transcript||'(내용 없음)')}</div>
             <div style="display:flex;gap:6px;justify-content:flex-end">
               <button class="btn ib-skip" style="font-size:11px;padding:4px 10px">무시</button>
               <button class="btn btn-o ib-apply" style="font-size:11px;padding:4px 12px"><i class="ti ti-calendar-plus"></i> 캘린더에 반영</button>
