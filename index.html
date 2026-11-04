@@ -42,7 +42,7 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background-image:radial-gradient(ellipse 80% 60% at 85% 0%, rgba(90,140,215,.20) 0%, transparent 65%),linear-gradient(180deg,#E4E9F0 0%,#D9E0EA 55%,#CFD8E5 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}::selection{background:var(--ol);color:var(--od)}
+body{font-family:var(--sans);background-image:linear-gradient(180deg,#F5F5F5 0%,#F0F0F0 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:20px;border:2px solid var(--bg)}
@@ -134,17 +134,48 @@ select.inp{cursor:pointer}
 .rte-content table{border-collapse:collapse}
 .rte-content table td{border:1px solid var(--bd);padding:6px 8px;font-size:12px}
 .dl-d{background:#F0F1F3;color:#5F6672}
+
+/* ---- 캘린더 신규 뷰 (Agenda/List/Day/Week) ---- */
+.cv-wrap{background:#fff;border-radius:16px;border:1px solid #E6E6E6;overflow:hidden}
+.cv-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.cv-seg{display:inline-flex;background:#E7E7E9;border-radius:10px;padding:3px;gap:1px}
+.cv-seg button{border:none;background:transparent;font-family:inherit;font-size:12.5px;padding:5px 14px;border-radius:8px;cursor:pointer;color:#6B6F76;font-weight:400}
+.cv-seg button.on{background:#fff;color:#111;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.cv-title{font-size:26px;font-weight:700;letter-spacing:-.02em;color:#111}
+.cv-title span{color:#6B6F76;font-weight:400;margin-left:8px}
+.cv-nav button{border:1px solid #E1E1E1;background:#fff;border-radius:8px;height:30px;min-width:30px;cursor:pointer;font-family:inherit;font-size:12.5px;padding:0 10px;color:#222}
+.cv-sec{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:26px 0 6px;color:#111}
+.cv-date{font-size:14px;font-weight:600;padding:14px 18px 8px;color:#111}
+.cv-row{display:flex;gap:18px;padding:11px 18px;border-top:1px solid #EFEFEF;cursor:pointer;align-items:flex-start}
+.cv-row:hover{background:#FAFAFA}
+.cv-time{width:92px;flex-shrink:0;font-size:13px;color:#6B6F76;font-variant-numeric:tabular-nums;padding-top:1px}
+.cv-rt{font-size:14.5px;font-weight:500;color:#111;line-height:1.35}
+.cv-rs{font-size:12.5px;color:#8A8F98;margin-top:3px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.cv-empty{padding:46px 16px;text-align:center;color:#8A8F98;font-size:13px}
+.cv-allday{display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border-bottom:1px solid #EFEFEF;background:#FCFCFC;min-height:34px;align-items:center}
+.cv-chip{font-size:11px;padding:2px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.tl-scroll{overflow-y:auto;max-height:68vh;position:relative}
+.tl-grid{position:relative;display:grid}
+.tl-hour{font-size:11px;color:#8A8F98;text-align:right;padding-right:8px;transform:translateY(-7px);background:#fff}
+.tl-line{border-top:1px solid #EFEFEF}
+.tl-col{position:relative;border-left:1px solid #EFEFEF}
+.tl-ev{position:absolute;border-radius:6px;padding:2px 6px;font-size:11.5px;line-height:1.3;overflow:hidden;cursor:pointer;border-left:3px solid;box-sizing:border-box}
+.tl-now{position:absolute;left:0;right:0;height:0;border-top:1.5px solid #FF453A;z-index:4;pointer-events:none}
+.tl-now::before{content:'';position:absolute;left:-4px;top:-4.5px;width:7px;height:7px;border-radius:50%;background:#FF453A}
+.tl-dh{text-align:center;padding:10px 4px;font-size:12.5px;color:#6B6F76;border-bottom:1px solid #EFEFEF}
+.tl-dh b{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;font-weight:600;color:#111;margin-left:3px}
+.tl-dh.today b{background:#111;color:#fff}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .cal-dh{text-align:center;font-size:11px;color:var(--muted);padding:5px;font-weight:300;letter-spacing:.02em}
-.cal-cell{min-height:80px;border-radius:10px;padding:5px;border:none;background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);position:relative;cursor:pointer;transition:background .15s var(--ease);overflow:hidden}
-.cal-cell:hover{background:rgba(255,255,255,.8)}
+.cal-cell{min-height:80px;border-radius:0;padding:5px;border:none;background:#fff;box-shadow:inset 0 0 0 .5px #ECECEC;position:relative;cursor:pointer;transition:background .15s var(--ease);overflow:hidden}
+.cal-cell:hover{background:#FAFAFA}
 .cal-year-month:hover{background:var(--sf)}
 .price-list-year-btn:hover{background:var(--sf)}
-.cal-cell.today{background:var(--ol)}
-.cal-cell.today:hover{background:rgba(232,242,254,.85)}
+.cal-cell.today{background:#fff}
+.cal-cell.today:hover{background:#FAFAFA}
 .cal-cell.empty{background:transparent;border:none;cursor:default}
 .cal-num{font-size:11px;font-weight:300;margin-bottom:2px}
-.cal-cell.today .cal-num{color:var(--o);font-weight:600}
+.cal-cell.today .cal-num{background:#111;color:#fff;font-weight:600;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center}
 .cal-ev{font-size:10px;padding:3px 6px;border-radius:6px;margin-bottom:3px;overflow:hidden;display:flex;align-items:baseline;gap:4px;line-height:1.3;cursor:grab;white-space:nowrap}
 .cal-ev.dragging{opacity:.4}
 .cal-cell.drag-over{border-color:var(--o);border-width:1.5px;background:var(--ol)}
@@ -1473,6 +1504,7 @@ const state = {
   selectedCompanyId: null,
   calMonth: dayjs().format('YYYY-MM'),
   calView: 'month',
+  calDay: '',
   expandedPurchaseYears: {},
   projectFilter: '전체',
   vendorSearch: '',
@@ -6106,8 +6138,214 @@ function viewCalendarYear(){
   `;
 }
 
+/* ---------- 캘린더: Agenda / List / Day / Week ---------- */
+function calSegHtml(cur){
+  const items=[['agenda','Agenda'],['list','List'],['day','Day'],['week','Week'],['month','Month']];
+  return `<div style="display:flex;align-items:center;gap:8px">
+    <div class="cv-seg">${items.map(([v,l])=>`<button class="cal-view-toggle ${cur===v?'on':''}" data-view="${v}">${l}</button>`).join('')}</div>
+    <button class="cal-view-toggle" data-view="year" title="연간 보기" style="border:1px solid #E1E1E1;background:#fff;border-radius:8px;height:28px;font-family:inherit;font-size:11.5px;padding:0 10px;cursor:pointer;color:#6B6F76">연간</button>
+  </div>`;
+}
+function calTopButtonsHtml(){
+  return `<button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
+    ${!isReadOnly()?`<button class="btn" id="manageEventTypesBtn"><i class="ti ti-settings"></i> 일정 유형 관리</button>`:''}
+    ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}`;
+}
+function calMinutes(t){ const m=String(t||'').match(/^(\d{1,2}):(\d{2})/); return m? (+m[1])*60+(+m[2]) : null; }
+function calEventTimeLabel(e){
+  if(e.allDay) return '종일';
+  if(e.startTime) return e.startTime + (e.endTime?' - '+e.endTime:'');
+  if(e.time) return String(e.time).replace('~',' - ');
+  return '종일';
+}
+function calEventsOnDate(allEvs, ds){
+  return allEvs.filter(e=>{
+    const end = (e.endDate && e.endDate>e.date) ? e.endDate : e.date;
+    return e.date<=ds && end>=ds;
+  });
+}
+function calAttrs(e){
+  return `data-eid="${e.id}" data-pid="${e.projectId||''}" data-vid="${(e.vendorIds&&e.vendorIds[0])||''}"`;
+}
+function calChipHtml(e){
+  const c = e.isHoliday ? {bg:'#FDECEC',text:'#C0392B'} : e.isLeave ? {bg:'#EEF0F3',text:'#555'} : eventColor(e.type);
+  return `<span class="cal-ev cv-chip" ${calAttrs(e)} style="background:${c.bg};color:${c.text};margin:0;cursor:pointer;display:inline-block">${escAttr(e.title)}</span>`;
+}
+// 겹치는 일정 열 배치
+function calLayoutDay(evs){
+  const items = evs.map(e=>{
+    const s0 = calMinutes(e.startTime || (e.time||'').split('~')[0]);
+    let e0 = calMinutes(e.endTime || (e.time||'').split('~')[1]);
+    if(s0===null) return null;
+    if(e0===null || e0<=s0) e0 = s0+60;
+    return {e, s:s0, en:e0, col:0, cols:1};
+  }).filter(Boolean).sort((a,b)=>a.s-b.s||a.en-b.en);
+  let group=[], gEnd=-1;
+  const flush=()=>{ const n=Math.max(1,...group.map(x=>x.col+1)); group.forEach(x=>x.cols=n); group=[]; };
+  items.forEach(it=>{
+    if(group.length && it.s>=gEnd){ flush(); gEnd=-1; }
+    const used = group.filter(g=>g.en>it.s).map(g=>g.col);
+    let c=0; while(used.includes(c)) c++;
+    it.col=c; group.push(it); gEnd=Math.max(gEnd,it.en);
+  });
+  if(group.length) flush();
+  return items;
+}
+function calTimelineHtml(dates){
+  const allEvs = allCalendarEvents();
+  const HH = 56, todayStr = dayjs().format('YYYY-MM-DD');
+  const dow = ['일','월','화','수','목','금','토'];
+  const cols = dates.length;
+  const grid = `56px repeat(${cols},1fr)`;
+  const perDay = dates.map(ds=>{
+    const evs = calEventsOnDate(allEvs, ds);
+    const timed = evs.filter(e=>!e.isHoliday && !e.isLeave && e.type!=='마감' && !e.allDay && (e.startTime||e.time) && calMinutes(e.startTime||(e.time||'').split('~')[0])!==null && !(e.endDate && e.endDate>e.date));
+    const rest = evs.filter(e=>!timed.includes(e));
+    return {ds, timed: calLayoutDay(timed), rest};
+  });
+  const head = `<div style="display:grid;grid-template-columns:${grid}">
+      <div class="tl-dh"></div>
+      ${perDay.map(d=>{ const dj=dayjs(d.ds); return `<div class="tl-dh ${d.ds===todayStr?'today':''}" style="border-left:1px solid #EFEFEF">${dow[dj.day()]}${dates.length>1?`<b>${dj.date()}</b>`:''}</div>`; }).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:${grid}">
+      <div class="cv-allday" style="justify-content:flex-end;font-size:10.5px;color:#8A8F98">종일</div>
+      ${perDay.map(d=>`<div class="cv-allday" style="border-left:1px solid #EFEFEF">${d.rest.map(calChipHtml).join('')}</div>`).join('')}
+    </div>`;
+  const hours = Array.from({length:24},(_,h)=>h);
+  const body = `<div class="tl-scroll" id="calTimeScroll" data-hh="${HH}" data-first="${(()=>{const m=perDay.flatMap(d=>d.timed.map(x=>x.s)); return m.length?Math.min(...m):''})()}"><div class="tl-grid" style="grid-template-columns:${grid};height:${24*HH}px">
+      <div style="position:relative">${hours.map(h=>`<div class="tl-hour" style="position:absolute;top:${h*HH}px;right:0;left:0">${h===0?'':String(h).padStart(2,'0')+':00'}</div>`).join('')}</div>
+      ${perDay.map(d=>`<div class="tl-col" data-date="${d.ds}">
+        ${hours.map(h=>`<div class="tl-line tl-slot" data-date="${d.ds}" data-hour="${h}" style="position:absolute;left:0;right:0;top:${h*HH}px;height:${HH}px;cursor:pointer"></div>`).join('')}
+        ${d.ds===todayStr?`<div class="tl-now" id="calNowLine" style="top:${(dayjs().format('HH')*60 + +dayjs().format('mm'))/60*HH}px"></div>`:''}
+        ${d.timed.map(it=>{
+          const c = eventColor(it.e.type);
+          const w = 100/it.cols;
+          const top = it.s/60*HH, h = Math.max(22,(it.en-it.s)/60*HH-2);
+          return `<div class="cal-ev tl-ev" ${calAttrs(it.e)} style="top:${top}px;height:${h}px;left:calc(${it.col*w}% + 2px);width:calc(${w}% - 4px);background:${c.bg};color:${c.text};border-left-color:${c.dot};margin:0">
+            <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escAttr(it.e.title)}</div>
+            ${h>34?`<div style="opacity:.75;font-size:10.5px">${calEventTimeLabel(it.e)}</div>`:''}
+          </div>`;
+        }).join('')}
+      </div>`).join('')}
+  </div></div>`;
+  return head+body;
+}
+function calEventSubHtml(e){
+  const vs = (e.vendorIds||[]).map(id=>(state.data.vendors.find(v=>v.id===id)||{}).name).filter(Boolean);
+  const pj = e.projectId ? (state.data.projects.find(p=>p.id===e.projectId)||{}).title : '';
+  const notes = (state.data.calendar.find(x=>x.id===e.id)) ? eventMeetingNotes(state.data.calendar.find(x=>x.id===e.id)) : [];
+  const parts = [];
+  if(vs.length) parts.push(`<span><i class="ti ti-building-store" style="font-size:12px"></i> ${escAttr(vs.slice(0,2).join(', '))}</span>`);
+  if(pj) parts.push(`<span><i class="ti ti-clipboard-list" style="font-size:12px"></i> ${escAttr(pj)}</span>`);
+  if(notes.length) parts.push(`<span style="color:#1C85E8"><i class="ti ti-notes" style="font-size:12px"></i> 회의록 ${notes.length}</span>`);
+  if(e.location) parts.push(`<span><i class="ti ti-map-pin" style="font-size:12px"></i> ${escAttr(e.location)}</span>`);
+  return {html: parts.join(''), notes};
+}
+function calRowHtml(e){
+  const c = e.isHoliday ? {dot:'#E5484D'} : e.isLeave ? {dot:'#999'} : eventColor(e.type);
+  const sub = calEventSubHtml(e);
+  const preview = sub.notes.length ? (sub.notes[0].summary||'') : '';
+  return `<div class="cv-row cal-ev" ${calAttrs(e)} style="margin:0;border-radius:0;display:flex;font-size:inherit;line-height:inherit;white-space:normal;overflow:visible">
+    <div class="cv-time">${calEventTimeLabel(e)}</div>
+    <div style="flex:1;min-width:0">
+      <div class="cv-rt"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${c.dot};margin-right:7px"></span>${escAttr(e.title)}</div>
+      <div class="cv-rs">${sub.html}<span style="color:#A0A4AB">${escAttr(e.type||'')}</span></div>
+      ${preview?`<div class="cv-rs" style="margin-top:4px;color:#6B6F76">${escAttr(preview)}</div>`:''}
+    </div>
+  </div>`;
+}
+function calGroupByDate(evs, desc){
+  const m = {};
+  evs.forEach(e=>{ (m[e.date]=m[e.date]||[]).push(e); });
+  const keys = Object.keys(m).sort(); if(desc) keys.reverse();
+  keys.forEach(k=>m[k].sort((a,b)=>String(a.startTime||a.time||'').localeCompare(String(b.startTime||b.time||''))));
+  return keys.map(k=>({date:k, evs:m[k]}));
+}
+function calDateHeading(ds){
+  const d=dayjs(ds); const dow=['일','월','화','수','목','금','토'][d.day()];
+  return `${d.format('M월 D일')} (${dow})`;
+}
+function viewCalendarModes(){
+  const mode = state.calView;
+  const todayStr = dayjs().format('YYYY-MM-DD');
+  if(!state.calDay) state.calDay = todayStr;
+  const allEvs = allCalendarEvents();
+  const real = allEvs.filter(e=>!e.isHoliday && !e.isLeave);
+  const dow = ['일','월','화','수','목','금','토'];
+  let title='', navHtml='', bodyHtml='';
+
+  const nav = `<div class="cv-nav" style="display:flex;gap:6px;align-items:center">
+      <button id="calNavToday">Today</button>
+      <button id="calNavPrev"><i class="ti ti-chevron-left"></i></button>
+      <button id="calNavNext"><i class="ti ti-chevron-right"></i></button>
+    </div>`;
+
+  if(mode==='agenda'){
+    title = 'Agenda';
+    const upcoming = real.filter(e=>(e.endDate&&e.endDate>e.date?e.endDate:e.date)>=todayStr && e.type!=='마감').sort((a,b)=>(a.date+(a.startTime||'')).localeCompare(b.date+(b.startTime||''))).slice(0,8);
+    const noted = state.data.calendar.filter(e=>eventMeetingNotes(e).length>0).map(e=>({...e}));
+    const groups = calGroupByDate(noted, true).slice(0,60);
+    bodyHtml = `
+      <div class="cv-sec" style="margin-top:6px">Upcoming</div>
+      <div class="cv-wrap">${upcoming.length===0
+        ? `<div class="cv-empty"><i class="ti ti-calendar" style="font-size:44px;display:block;margin-bottom:10px;color:#9AA0A6"></i>다가오는 일정이 없습니다<div style="margin-top:4px;font-size:12px">최근 회의록을 확인하고 다음 액션을 정리해 보세요.</div></div>`
+        : groupsHtml(calGroupByDate(upcoming,false))}</div>
+      <div class="cv-sec">Meeting notes</div>
+      <div class="cv-wrap">${groups.length===0
+        ? `<div class="cv-empty">저장된 회의록이 없습니다.<div style="margin-top:4px;font-size:12px">일정에서 회의록을 추가하거나 Plaud 회의록을 반영하면 여기에 모입니다.</div></div>`
+        : groupsHtml(groups)}</div>`;
+  } else if(mode==='list'){
+    const month = dayjs(state.calMonth+'-01');
+    title = `${month.format('YYYY년 M월')}`;
+    navHtml = nav;
+    const monthStr = month.format('YYYY-MM');
+    const monthEvs = allEvs.filter(e=>e.date.startsWith(monthStr));
+    const realEvs = monthEvs.filter(e=>!e.isHoliday && !e.isLeave);
+    const specialEvs = monthEvs.filter(e=>e.isHoliday||e.isLeave);
+    const cats = [...new Set(realEvs.map(e=>e.type))].filter(Boolean);
+    const act = state.calListFilter || '전체';
+    const shown = act==='전체' ? monthEvs : act==='공휴일/연차' ? specialEvs : realEvs.filter(e=>e.type===act);
+    const tabs = ['전체','공휴일/연차',...cats].map(cat=>{
+      const on = act===cat;
+      const cnt = cat==='전체'?monthEvs.length : cat==='공휴일/연차'?specialEvs.length : realEvs.filter(e=>e.type===cat).length;
+      return `<button class="cal-cat-tab" data-cat="${cat}" style="border:1px solid ${on?'#111':'#E1E1E1'};background:${on?'#111':'#fff'};color:${on?'#fff':'#333'};border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;font-family:inherit">${cat} <span style="opacity:.6;font-size:10.5px">${cnt}</span></button>`;
+    }).join('');
+    bodyHtml = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">${tabs}</div>
+      <div class="cv-wrap">${shown.length===0?`<div class="cv-empty">해당 조건의 일정이 없습니다.</div>`:groupsHtml(calGroupByDate(shown,false))}</div>`;
+  } else if(mode==='day'){
+    const d = dayjs(state.calDay);
+    title = `${d.format('M월 D일')}<span>${d.format('YYYY')} · ${dow[d.day()]}요일</span>`;
+    navHtml = nav;
+    bodyHtml = `<div class="cv-wrap">${calTimelineHtml([state.calDay])}</div>`;
+  } else {
+    const d = dayjs(state.calDay);
+    const st = d.startOf('week');
+    const dates = Array.from({length:7},(_,i)=>st.add(i,'day').format('YYYY-MM-DD'));
+    const en = dayjs(dates[6]);
+    title = `${st.format('M월 D일')} – ${st.format('M')===en.format('M')?en.format('D일'):en.format('M월 D일')}<span>${st.format('YYYY')}</span>`;
+    navHtml = nav;
+    bodyHtml = `<div class="cv-wrap">${calTimelineHtml(dates)}</div>`;
+  }
+
+  function groupsHtml(gs){
+    return gs.map(g=>`<div class="cv-date">${calDateHeading(g.date)}${g.date===todayStr?' <span style="font-size:11px;color:#1C85E8;font-weight:500">오늘</span>':''}</div>${g.evs.map(calRowHtml).join('')}`).join('');
+  }
+
+  return `
+    <div class="cv-head">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div class="cv-title">${title}</div>${navHtml}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${calSegHtml(mode)}
+        ${calTopButtonsHtml()}
+      </div>
+    </div>
+    ${bodyHtml}
+  `;
+}
+
 function viewCalendar(){
   if(state.calView==='year') return viewCalendarYear();
+  if(['agenda','list','day','week'].includes(state.calView)) return viewCalendarModes();
   const month = dayjs(state.calMonth+'-01');
   const startDay = month.startOf('month').day();
   const daysInMonth = month.endOf('month').date();
@@ -6154,10 +6392,7 @@ function viewCalendar(){
         <span style="font-size:12px;color:var(--muted);padding:4px 8px">${dayjs().format('M월 D일 (ddd)')}</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
-        <div style="display:flex;background:rgba(255,255,255,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:999px;padding:2px">
-          <button class="btn cal-view-toggle" data-view="month" style="font-size:11px;padding:5px 12px;background:var(--text);color:#fff;box-shadow:0 2px 8px rgba(15,23,42,.15)">월간</button>
-          <button class="btn cal-view-toggle" data-view="year" style="font-size:11px;padding:5px 12px;background:transparent;color:var(--muted)">연간</button>
-        </div>
+        ${calSegHtml('month')}
         <button class="btn" id="viewAllMeetingNotesBtn"><i class="ti ti-notes"></i> 회의록 모아보기</button>
         ${!isReadOnly()?`<button class="btn" id="manageEventTypesBtn"><i class="ti ti-settings"></i> 일정 유형 관리</button>`:''}
         ${!isReadOnly()?`<button class="btn btn-o" id="addEventBtnTop"><i class="ti ti-plus"></i> 일정 등록</button>`:''}
@@ -11395,6 +11630,38 @@ function moveCalendarEventToDate(eid, newDate){
   if(ev){ ev.date = newDate; return {ok:true, label:'일정'}; }
   return {ok:false};
 }
+
+  // 캘린더 신규 뷰 내비게이션 / 시간 슬롯 클릭
+  (function(){
+    const shift = (dir)=>{
+      const v = state.calView;
+      if(v==='list'){ state.calMonth = dayjs(state.calMonth+'-01').add(dir,'month').format('YYYY-MM'); }
+      else if(v==='day'){ state.calDay = dayjs(state.calDay||dayjs().format('YYYY-MM-DD')).add(dir,'day').format('YYYY-MM-DD'); }
+      else if(v==='week'){ state.calDay = dayjs(state.calDay||dayjs().format('YYYY-MM-DD')).add(dir*7,'day').format('YYYY-MM-DD'); }
+      render();
+    };
+    const pv = document.getElementById('calNavPrev'); if(pv) pv.addEventListener('click', ()=>shift(-1));
+    const nx = document.getElementById('calNavNext'); if(nx) nx.addEventListener('click', ()=>shift(1));
+    const td = document.getElementById('calNavToday'); if(td) td.addEventListener('click', ()=>{
+      state.calDay = dayjs().format('YYYY-MM-DD'); state.calMonth = dayjs().format('YYYY-MM'); render();
+    });
+    document.querySelectorAll('.tl-slot').forEach(el=>{
+      el.addEventListener('click', e=>{
+        if(isReadOnly()) return;
+        const h = String(el.dataset.hour).padStart(2,'0');
+        openModal(modalEventForm(el.dataset.date, [], {startTime: h+':00'}));
+        bindModalCommon();
+        bindEventFormSubmit();
+      });
+    });
+    const sc = document.getElementById('calTimeScroll');
+    if(sc){
+      const hh = +sc.dataset.hh || 56;
+      const first = sc.dataset.first==='' ? null : +sc.dataset.first;
+      const startH = first===null ? 8 : Math.max(0, Math.min(8, Math.floor(first/60)-1));
+      sc.scrollTop = startH*hh;
+    }
+  })();
 
   document.querySelectorAll('.cal-cell[data-date]').forEach(el=>{
     el.addEventListener('click', ()=>{
