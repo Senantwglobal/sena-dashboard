@@ -2000,6 +2000,10 @@ function render(){
             </div>
           </div>`;
         })()}
+        <button id="meetingInboxBtn" title="Plaud 새 회의록" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:pointer;display:${(state.inbox||[]).length?'flex':'none'};align-items:center;justify-content:center;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.08);flex-shrink:0">
+          <i class="ti ti-microphone" style="font-size:16px;color:#555"></i>
+          <span style="position:absolute;top:-3px;right:-3px;min-width:17px;height:17px;border-radius:50%;background:#1C85E8;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;padding:0 3px;line-height:1">${(state.inbox||[]).length}</span>
+        </button>
         <a href="https://ntwglobal-my.sharepoint.com/" target="_blank" title="OneDrive" style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;text-decoration:none;flex-shrink:0;background:linear-gradient(135deg,rgba(255,255,255,.55) 0%,rgba(200,230,255,.35) 100%);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.7);box-shadow:0 1px 4px rgba(0,100,220,.10),inset 0 1px 0 rgba(255,255,255,.8)">
           <svg width="17" height="13" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
@@ -2041,6 +2045,13 @@ function render(){
     openModal(modalProfilePhoto());
     bindModalCommon();
     bindProfilePhotoModal();
+  });
+
+  const meetingInboxBtn = document.getElementById('meetingInboxBtn');
+  if(meetingInboxBtn) meetingInboxBtn.addEventListener('click', ()=>{
+    openModal(modalMeetingInbox());
+    bindModalCommon();
+    bindMeetingInbox();
   });
 
   const holidayBellBtn = document.getElementById('holidayBellBtn');
@@ -13110,6 +13121,95 @@ async function fetchExchangeRate(){
   }
 }
 
+/* ---------- Plaud 회의록 인박스 (Zapier → Supabase meeting_inbox) ---------- */
+async function refreshMeetingInbox(){
+  try{
+    const rows = await supabaseFetch('meeting_inbox?status=eq.new&order=created_at.desc&limit=50');
+    const prev = (state.inbox||[]).length;
+    state.inbox = rows || [];
+    if(state.inbox.length !== prev){
+      const btn = document.getElementById('meetingInboxBtn');
+      if(btn){ render(); }
+      if(state.inbox.length > prev && prev !== undefined) showToast(`Plaud 새 회의록 ${state.inbox.length}건`);
+    }
+  }catch(e){ /* 테이블 접근 실패 시 조용히 무시 */ }
+}
+function inboxGuessVendor(title){
+  const t = (title||'').toLowerCase();
+  let best = null;
+  (state.data.vendors||[]).forEach(v=>{
+    const n = (v.name||'').toLowerCase().trim();
+    if(n.length>=3 && t.includes(n) && (!best || n.length>best.name.length)) best = {id:v.id, name:n};
+    (v.brands||[]).forEach(b=>{ const bn=(b.name||'').toLowerCase().trim(); if(bn.length>=3 && t.includes(bn) && (!best||bn.length>best.name.length)) best={id:v.id,name:bn}; });
+  });
+  return best ? best.id : '';
+}
+function inboxToHtml(txt){
+  return escAttr(txt||'').replace(/\n/g,'<br>');
+}
+function modalMeetingInbox(){
+  const vopts = (state.data.vendors||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${escAttr(v.name)}</option>`).join('');
+  const items = (state.inbox||[]);
+  return `
+    <div class="modal" style="width:640px">
+      <div class="mh"><h3><i class="ti ti-microphone" style="color:var(--text)"></i> Plaud 새 회의록 (${items.length})</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+      <div class="mb" style="max-height:70vh;overflow-y:auto">
+        ${items.length===0 ? '<div class="empty-state" style="padding:24px">새 회의록이 없습니다.</div>' : items.map(it=>{
+          const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
+          const gv = inboxGuessVendor(it.title);
+          return `<div class="inbox-card" data-iid="${it.id}" style="border:0.5px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px">
+            <input class="inp ib-title" value="${escAttr(it.title||'제목 없음')}" style="margin:0 0 6px;font-weight:500"/>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+              <input type="date" class="inp ib-date" value="${dt.format('YYYY-MM-DD')}" style="margin:0;width:150px"/>
+              <input type="time" class="inp ib-time" value="${dt.format('HH:mm')}" style="margin:0;width:110px"/>
+              <select class="inp ib-vendor" style="margin:0;flex:1;min-width:150px"><option value="">거래처 선택 (선택)</option>${vopts.replace(`value="${gv}"`,`value="${gv}" selected`)}</select>
+            </div>
+            <div style="font-size:12px;color:var(--muted);max-height:90px;overflow-y:auto;background:var(--sf);border-radius:8px;padding:8px;margin-bottom:8px;font-weight:300">${inboxToHtml(it.summary||it.transcript||'(내용 없음)')}</div>
+            <div style="display:flex;gap:6px;justify-content:flex-end">
+              <button class="btn ib-skip" style="font-size:11px;padding:4px 10px">무시</button>
+              <button class="btn btn-o ib-apply" style="font-size:11px;padding:4px 12px"><i class="ti ti-calendar-plus"></i> 캘린더에 반영</button>
+            </div>
+          </div>`;}).join('')}
+      </div>
+    </div>`;
+}
+function bindMeetingInbox(){
+  document.querySelectorAll('.inbox-card').forEach(card=>{
+    const iid = card.dataset.iid;
+    const it = (state.inbox||[]).find(x=>String(x.id)===String(iid));
+    const done = async (status)=>{
+      try{ await supabaseFetch(`meeting_inbox?id=eq.${iid}`, {method:'PATCH', prefer:'return=minimal', body: JSON.stringify({status})}); }catch(e){ showToast('상태 저장 실패: '+e.message); return false; }
+      state.inbox = (state.inbox||[]).filter(x=>String(x.id)!==String(iid));
+      return true;
+    };
+    card.querySelector('.ib-skip').addEventListener('click', async ()=>{
+      if(await done('skipped')){ closeModal(); if(state.inbox.length){ openModal(modalMeetingInbox()); bindModalCommon(); bindMeetingInbox(); } render(); }
+    });
+    card.querySelector('.ib-apply').addEventListener('click', async ()=>{
+      if(!it) return;
+      const title = card.querySelector('.ib-title').value.trim() || '회의';
+      const date = card.querySelector('.ib-date').value || dayjs().format('YYYY-MM-DD');
+      const time = card.querySelector('.ib-time').value || '';
+      const vid = card.querySelector('.ib-vendor').value;
+      const body = [it.summary?('<b>요약</b><br>'+inboxToHtml(it.summary)):'', it.action_items?('<br><br><b>Action Items</b><br>'+inboxToHtml(it.action_items)):'', it.transcript?('<br><br><b>전사</b><br>'+inboxToHtml(it.transcript)):''].join('');
+      const oneLine = (it.summary||it.transcript||'').replace(/\s+/g,' ').slice(0,80);
+      const ev = {
+        id: uid('ev'), date, endDate:'', type:'미팅', title, time, startTime:time, endTime:'', allDay:false,
+        vendorIds: vid?[vid]:[], vendorId: vid||'', attendeePersonIds:[], attendeePersonId:'', projectId:'',
+        location:'', attendees:'', memo:'Plaud 자동 등록',
+        meetingNotes:[{id:uid('emn'), title, text: body, date, summary: oneLine}]
+      };
+      if(!(await done('done'))) return;
+      state.data.calendar.push(ev);
+      persist(false);
+      closeModal();
+      render();
+      showToast('캘린더에 회의록이 반영되었습니다.');
+      if(state.inbox.length){ openModal(modalMeetingInbox()); bindModalCommon(); bindMeetingInbox(); }
+    });
+  });
+}
+
 async function initApp(){
   const app = document.getElementById('app');
   app.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--text-muted);font-size:13px;">불러오는 중...</div>`;
@@ -13117,6 +13217,9 @@ async function initApp(){
     state.data = await loadStoreRemote();
     purgeOldTrash();
     render();
+    refreshMeetingInbox();
+    setInterval(refreshMeetingInbox, 5*60*1000);
+    document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshMeetingInbox(); });
     // 시계 위젯 시작
     startClock();
   }catch(e){
