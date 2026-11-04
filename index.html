@@ -12843,7 +12843,7 @@ function bindEventFormSubmit(){
       const noteText = (fd.get('noteText')||'').trim();
       if(noteText){
         newEv.meetingNotes = [{id:uid('emn'), title: newEv.title, text: inboxToHtml(noteText), date: startDate,
-          summary: inboxClean(noteText).replace(/#+\s*/g,'').replace(/\s+/g,' ').slice(0,80)}];
+          summary: inboxClean(noteText).replace(/[■•]\s*/g,'').replace(/\s+/g,' ').slice(0,80)}];
       }
       supabaseFetch(`meeting_inbox?id=eq.${encodeURIComponent(inboxId)}`, {method:'PATCH', prefer:'return=minimal', body: JSON.stringify({status:'done'})})
         .catch(err=>showToast('인박스 상태 저장 실패: '+err.message));
@@ -13163,7 +13163,12 @@ function inboxGuessVendor(title){
   return best ? best.id : '';
 }
 function inboxClean(txt){
-  return String(txt||'').replace(/!?\[[^\]]*\]\(plaud:\/\/[^)]*\)/g,'').replace(/\n{3,}/g,'\n\n').trim();
+  return String(txt||'')
+    .replace(/!?\[[^\]]*\]\(plaud:\/\/[^)]*\)/g,'')
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]*(.+)$/gm,'■ $1')
+    .replace(/\*\*(.+?)\*\*/g,'$1').replace(/__(.+?)__/g,'$1').replace(/`([^`]+)`/g,'$1')
+    .replace(/^[ \t]*[-*][ \t]+/gm,'• ')
+    .replace(/\n{3,}/g,'\n\n').trim();
 }
 function inboxRecordedAt(it){
   // Plaud 제목이 "MM-DD ..." 로 시작하면 그 날짜를 녹음일로 우선 사용 (Create Time은 처리 시각과 다를 수 있음)
@@ -13183,7 +13188,7 @@ function inboxRecordedAt(it){
 }
 function inboxToHtml(txt){
   return escAttr(inboxClean(txt))
-    .replace(/^#{1,6}\s*(.+)$/gm,'<b style="display:inline-block;margin-top:6px;color:var(--text)">$1</b>')
+    .replace(/^■\s*(.+)$/gm,'<b style="display:inline-block;margin-top:6px;color:var(--text)">$1</b>')
     .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')
     .replace(/\n/g,'<br>');
 }
