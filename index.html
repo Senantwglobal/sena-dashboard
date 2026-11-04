@@ -42,7 +42,7 @@
   --ease:cubic-bezier(.16,1,.3,1);
 }
 html{-webkit-text-size-adjust:100%}
-body{font-family:var(--sans);background-image:radial-gradient(ellipse 60% 55% at 15% 15%, rgba(186,168,235,.5) 0%, transparent 60%),radial-gradient(ellipse 55% 50% at 50% 5%, rgba(255,205,175,.5) 0%, transparent 55%),radial-gradient(ellipse 60% 55% at 85% 20%, rgba(160,195,245,.55) 0%, transparent 60%),radial-gradient(ellipse 70% 65% at 90% 85%, rgba(120,165,240,.65) 0%, transparent 62%),radial-gradient(ellipse 60% 55% at 10% 90%, rgba(180,200,250,.55) 0%, transparent 60%),linear-gradient(165deg,#F0F3FB 0%,#EAF0FA 50%,#DEE8FA 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}::selection{background:var(--ol);color:var(--od)}
+body{font-family:var(--sans);background-image:radial-gradient(ellipse 80% 60% at 85% 0%, rgba(120,170,235,.14) 0%, transparent 65%),linear-gradient(180deg,#F7F8FA 0%,#EFF2F6 55%,#E8EDF4 100%);background-attachment:fixed;color:var(--text);font-size:14px;font-weight:300;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;min-height:100vh}::selection{background:var(--ol);color:var(--od)}
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:#D7DBE0;border-radius:20px;border:2px solid var(--bg)}
@@ -13165,6 +13165,21 @@ function inboxGuessVendor(title){
 function inboxClean(txt){
   return String(txt||'').replace(/!?\[[^\]]*\]\(plaud:\/\/[^)]*\)/g,'').replace(/\n{3,}/g,'\n\n').trim();
 }
+function inboxRecordedAt(it){
+  // Plaud 제목이 "MM-DD ..." 로 시작하면 그 날짜를 녹음일로 우선 사용 (Create Time은 처리 시각과 다를 수 있음)
+  let dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
+  const m = String(it.title||'').match(/^\s*(\d{1,2})[-./](\d{1,2})(?!\d)/);
+  if(m){
+    const mo = +m[1], d = +m[2];
+    if(mo>=1 && mo<=12 && d>=1 && d<=31){
+      let y = dt.year();
+      let cand = dayjs(`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+      if(cand.diff(dt,'day') > 30) cand = cand.subtract(1,'year');
+      if(cand.isValid()) dt = cand.hour(dt.hour()).minute(dt.minute());
+    }
+  }
+  return dt;
+}
 function inboxToHtml(txt){
   return escAttr(inboxClean(txt))
     .replace(/^#{1,6}\s*(.+)$/gm,'<b style="display:inline-block;margin-top:6px;color:var(--text)">$1</b>')
@@ -13178,7 +13193,7 @@ function modalMeetingInbox(){
       <div class="mh"><h3><i class="ti ti-microphone" style="color:var(--text)"></i> Plaud 새 회의록 (${items.length})</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb" style="max-height:82vh;overflow-y:auto">
         ${items.length===0 ? '<div class="empty-state" style="padding:24px">새 회의록이 없습니다.</div>' : items.map(it=>{
-          const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
+          const dt = inboxRecordedAt(it);
           return `<div class="inbox-card" data-iid="${it.id}" style="border:0.5px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px">
             <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">
               <span style="font-size:14px;font-weight:500">${escAttr(it.title||'제목 없음')}</span>
@@ -13207,7 +13222,7 @@ function bindMeetingInbox(){
     });
     card.querySelector('.ib-apply').addEventListener('click', ()=>{
       if(!it) return;
-      const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
+      const dt = inboxRecordedAt(it);
       const gv = inboxGuessVendor(it.title);
       closeModal();
       openModal(modalEventForm(dt.format('YYYY-MM-DD'), gv?[gv]:[], {
