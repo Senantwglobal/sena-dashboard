@@ -7524,13 +7524,15 @@ function eventProjectOptionsHtml(selectedProjectId){
   return `<option value="">없음</option>` + projects.map(p=>`<option value="${p.id}" ${p.id===selectedProjectId?'selected':''}>${p.title}</option>`).join('');
 }
 
-function modalEventForm(dateStr, presetVendorIds){
+function modalEventForm(dateStr, presetVendorIds, opts){
   presetVendorIds = presetVendorIds || [];
+  const o = opts || {};
   return `
-    <div class="modal">
-      <div class="mh"><h3>일정 등록</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+    <div class="modal" style="${o.inboxId?'width:min(860px,94vw)':''}">
+      <div class="mh"><h3>${o.inboxId?'<i class="ti ti-microphone"></i> Plaud 회의록 → 일정 등록':'일정 등록'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
       <div class="mb">
         <form id="eventForm">
+          ${o.inboxId?`<input type="hidden" name="inboxId" value="${escAttr(o.inboxId)}"/>`:''}
           <div class="two">
             <div class="field"><label class="field-label" style="display:flex;align-items:center;gap:10px">
               날짜
@@ -7545,10 +7547,10 @@ function modalEventForm(dateStr, presetVendorIds){
               <input class="inp" type="date" name="endDate" id="eventEndDateNew" value="${dateStr||dayjs().format('YYYY-MM-DD')}"/>
             </div>
             <div class="field" id="typeFieldNew"><label class="field-label">종류</label><select class="inp" name="type">
-              ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option>${t.name}</option>`).join('')}
+              ${(state.data.calendarEventTypes||[{name:'미팅'},{name:'외근'},{name:'개인 용무'},{name:'전화 통화'}]).map(t=>`<option ${t.name===(o.type||'')?'selected':''}>${t.name}</option>`).join('')}
             </select></div>
           </div>
-          <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required placeholder="예: Nordic Naturals 미팅"/></div>
+          <div class="field"><label class="field-label">제목</label><input class="inp" type="text" name="title" required value="${escAttr(o.title||'')}" placeholder="예: Nordic Naturals 미팅"/></div>
           <div class="field">
             <label class="field-label" style="display:flex;align-items:center;gap:10px">
               시간
@@ -7558,7 +7560,7 @@ function modalEventForm(dateStr, presetVendorIds){
             </label>
             <div id="timeFieldsNew">
               <div style="display:flex;align-items:center;gap:8px">
-                <input class="inp" type="time" name="startTime" placeholder="시작"/>
+                <input class="inp" type="time" name="startTime" value="${escAttr(o.startTime||'')}" placeholder="시작"/>
                 <span style="font-size:12px;color:var(--muted)">~</span>
                 <input class="inp" type="time" name="endTime" placeholder="종료"/>
               </div>
@@ -7582,7 +7584,11 @@ function modalEventForm(dateStr, presetVendorIds){
             </div>
           </div>
           <div class="field"><label class="field-label">추가 참석자 (직접 입력)</label><input class="inp" type="text" name="attendees" placeholder="예: 천세나, Troy Taylor"/></div>
-          <div class="field"><label class="field-label">메모</label><textarea class="inp" name="memo" rows="2" placeholder="일정 관련 메모" style="resize:vertical"></textarea></div>
+          <div class="field"><label class="field-label">메모</label><textarea class="inp" name="memo" rows="2" placeholder="일정 관련 메모" style="resize:vertical">${escAttr(o.memo||'')}</textarea></div>
+          ${o.inboxId?`<div class="field">
+            <label class="field-label"><i class="ti ti-notes"></i> 회의록 (저장 시 이 일정의 회의록으로 함께 저장됩니다)</label>
+            <textarea class="inp" name="noteText" style="height:42vh;min-height:220px;resize:vertical;line-height:1.6;font-size:13px">${escAttr(o.noteText||'')}</textarea>
+          </div>`:''}
         </form>
       </div>
       <div class="mf"><button type="submit" form="eventForm" class="btn btn-o">저장</button></div>
@@ -12824,15 +12830,27 @@ function bindEventFormSubmit(){
     const startDate = fd.get('date');
     let endDate = isMultiDay ? (fd.get('endDate')||startDate) : '';
     if(endDate && endDate < startDate) endDate = startDate;
-    state.data.calendar.push({
+    const newEv = {
       id: uid('ev'), date: startDate, endDate, type: fd.get('type'), title: fd.get('title'),
       time: timeLabel, startTime, endTime, allDay,
       vendorIds, vendorId: vendorIds[0]||'',
       attendeePersonIds, attendeePersonId: attendeePersonIds[0]||'',
       projectId: fd.get('projectId')||'',
       location: fd.get('location')||'', attendees: fd.get('attendees')||'', memo: fd.get('memo')||''
-    });
-    closeModal(); persist(false); render(); showToast('일정이 등록되었습니다.');
+    };
+    const inboxId = fd.get('inboxId');
+    if(inboxId){
+      const noteText = (fd.get('noteText')||'').trim();
+      if(noteText){
+        newEv.meetingNotes = [{id:uid('emn'), title: newEv.title, text: inboxToHtml(noteText), date: startDate,
+          summary: inboxClean(noteText).replace(/#+\s*/g,'').replace(/\s+/g,' ').slice(0,80)}];
+      }
+      supabaseFetch(`meeting_inbox?id=eq.${encodeURIComponent(inboxId)}`, {method:'PATCH', prefer:'return=minimal', body: JSON.stringify({status:'done'})})
+        .catch(err=>showToast('인박스 상태 저장 실패: '+err.message));
+      state.inbox = (state.inbox||[]).filter(x=>String(x.id)!==String(inboxId));
+    }
+    state.data.calendar.push(newEv);
+    closeModal(); persist(false); render(); showToast(inboxId?'일정과 회의록이 저장되었습니다.':'일정이 등록되었습니다.');
   });
 }
 
@@ -13154,7 +13172,6 @@ function inboxToHtml(txt){
     .replace(/\n/g,'<br>');
 }
 function modalMeetingInbox(){
-  const vopts = (state.data.vendors||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${escAttr(v.name)}</option>`).join('');
   const items = (state.inbox||[]);
   return `
     <div class="modal" style="width:min(860px,94vw)">
@@ -13162,18 +13179,15 @@ function modalMeetingInbox(){
       <div class="mb" style="max-height:82vh;overflow-y:auto">
         ${items.length===0 ? '<div class="empty-state" style="padding:24px">새 회의록이 없습니다.</div>' : items.map(it=>{
           const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
-          const gv = inboxGuessVendor(it.title);
           return `<div class="inbox-card" data-iid="${it.id}" style="border:0.5px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px">
-            <input class="inp ib-title" value="${escAttr(it.title||'제목 없음')}" style="margin:0 0 6px;font-weight:500"/>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-              <input type="date" class="inp ib-date" value="${dt.format('YYYY-MM-DD')}" style="margin:0;width:150px"/>
-              <input type="time" class="inp ib-time" value="${dt.format('HH:mm')}" style="margin:0;width:140px"/>
-              <select class="inp ib-vendor" style="margin:0;flex:1;min-width:150px"><option value="">거래처 선택 (선택)</option>${vopts.replace(`value="${gv}"`,`value="${gv}" selected`)}</select>
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+              <span style="font-size:14px;font-weight:500">${escAttr(it.title||'제목 없음')}</span>
+              <span style="font-size:11px;color:var(--muted)">${dt.format('YYYY-MM-DD HH:mm')}</span>
             </div>
-            <div style="font-size:13px;line-height:1.6;color:var(--text);height:52vh;min-height:240px;max-height:70vh;resize:vertical;overflow-y:auto;background:var(--sf);border-radius:8px;padding:12px 14px;margin-bottom:8px;font-weight:300">${inboxToHtml(it.summary||it.transcript||'(내용 없음)')}</div>
+            <div style="font-size:13px;line-height:1.6;color:var(--text);height:46vh;min-height:220px;max-height:70vh;resize:vertical;overflow-y:auto;background:var(--sf);border-radius:8px;padding:12px 14px;margin-bottom:8px;font-weight:300">${inboxToHtml(it.summary||it.transcript||'(내용 없음)')}</div>
             <div style="display:flex;gap:6px;justify-content:flex-end">
               <button class="btn ib-skip" style="font-size:11px;padding:4px 10px">무시</button>
-              <button class="btn btn-o ib-apply" style="font-size:11px;padding:4px 12px"><i class="ti ti-calendar-plus"></i> 캘린더에 반영</button>
+              <button class="btn btn-o ib-apply" style="font-size:12px;padding:5px 14px"><i class="ti ti-calendar-plus"></i> 일정 등록 (회의록 포함)</button>
             </div>
           </div>`;}).join('')}
       </div>
@@ -13183,35 +13197,25 @@ function bindMeetingInbox(){
   document.querySelectorAll('.inbox-card').forEach(card=>{
     const iid = card.dataset.iid;
     const it = (state.inbox||[]).find(x=>String(x.id)===String(iid));
-    const done = async (status)=>{
-      try{ await supabaseFetch(`meeting_inbox?id=eq.${iid}`, {method:'PATCH', prefer:'return=minimal', body: JSON.stringify({status})}); }catch(e){ showToast('상태 저장 실패: '+e.message); return false; }
-      state.inbox = (state.inbox||[]).filter(x=>String(x.id)!==String(iid));
-      return true;
-    };
     card.querySelector('.ib-skip').addEventListener('click', async ()=>{
-      if(await done('skipped')){ closeModal(); if(state.inbox.length){ openModal(modalMeetingInbox()); bindModalCommon(); bindMeetingInbox(); } render(); }
-    });
-    card.querySelector('.ib-apply').addEventListener('click', async ()=>{
-      if(!it) return;
-      const title = card.querySelector('.ib-title').value.trim() || '회의';
-      const date = card.querySelector('.ib-date').value || dayjs().format('YYYY-MM-DD');
-      const time = card.querySelector('.ib-time').value || '';
-      const vid = card.querySelector('.ib-vendor').value;
-      const body = [it.summary?('<b>요약</b><br>'+inboxToHtml(it.summary)):'', it.action_items?('<br><br><b>Action Items</b><br>'+inboxToHtml(it.action_items)):'', it.transcript?('<br><br><b>전사</b><br>'+inboxToHtml(it.transcript)):''].join('');
-      const oneLine = inboxClean(it.summary||it.transcript||'').replace(/\s+/g,' ').slice(0,80);
-      const ev = {
-        id: uid('ev'), date, endDate:'', type:'미팅', title, time, startTime:time, endTime:'', allDay:false,
-        vendorIds: vid?[vid]:[], vendorId: vid||'', attendeePersonIds:[], attendeePersonId:'', projectId:'',
-        location:'', attendees:'', memo:'Plaud 자동 등록',
-        meetingNotes:[{id:uid('emn'), title, text: body, date, summary: oneLine}]
-      };
-      if(!(await done('done'))) return;
-      state.data.calendar.push(ev);
-      persist(false);
+      try{ await supabaseFetch(`meeting_inbox?id=eq.${iid}`, {method:'PATCH', prefer:'return=minimal', body: JSON.stringify({status:'skipped'})}); }
+      catch(e){ showToast('상태 저장 실패: '+e.message); return; }
+      state.inbox = (state.inbox||[]).filter(x=>String(x.id)!==String(iid));
       closeModal();
-      render();
-      showToast('캘린더에 회의록이 반영되었습니다.');
       if(state.inbox.length){ openModal(modalMeetingInbox()); bindModalCommon(); bindMeetingInbox(); }
+      render();
+    });
+    card.querySelector('.ib-apply').addEventListener('click', ()=>{
+      if(!it) return;
+      const dt = it.recorded_at ? dayjs(it.recorded_at) : dayjs(it.created_at);
+      const gv = inboxGuessVendor(it.title);
+      closeModal();
+      openModal(modalEventForm(dt.format('YYYY-MM-DD'), gv?[gv]:[], {
+        inboxId: String(it.id), title: it.title||'', type: '미팅', startTime: dt.format('HH:mm'),
+        memo: 'Plaud 자동 등록', noteText: inboxClean(it.summary||it.transcript||'')
+      }));
+      bindModalCommon();
+      bindEventFormSubmit();
     });
   });
 }
