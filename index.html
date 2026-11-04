@@ -103,7 +103,8 @@ select.inp{cursor:pointer}
 .kpi{background:linear-gradient(160deg, rgba(255,255,255,.6) 0%, var(--card) 40%);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border-radius:16px;border:none;padding:16px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.02),0 5px 12px -8px rgba(15,23,42,.08),inset 0 1px 1px rgba(255,255,255,.6);transition:box-shadow .2s var(--ease)}
 .kpi:hover{box-shadow:var(--shadow-md)}
 .proj-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
-.proj-card:hover{box-shadow:var(--shadow-md)}
+.proj-card:hover,.cv-card:hover{box-shadow:var(--shadow-md)}
+.cv-card{border:1px solid transparent!important;box-shadow:var(--shadow-sm);transition:box-shadow .15s var(--ease)}
 .ki{width:32px;height:32px;border-radius:50%;background:color-mix(in srgb, var(--ac,var(--o)) 16%, white);color:var(--ac,var(--o));display:flex;align-items:center;justify-content:center;font-size:14px;position:relative;z-index:1}
 /* 아이콘 웹폰트 로드 실패 시 폴백 (KPI 카드 최소 보장) */
 .ti-fallback .ki i[class*="ti-"]::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor}
@@ -6323,7 +6324,7 @@ function calRowHtml(e, forcePast){
   const c = e.isHoliday ? {dot:'#E5484D'} : e.isLeave ? {dot:'#999'} : eventColor(e.type);
   const sub = calEventSubHtml(e);
   const preview = sub.notes.length ? (sub.notes[0].summary||'') : '';
-  return `<div class="card proj-card cal-ev cv-item ${past?'past':''}" ${calAttrs(e)}>
+  return `<div class="card cv-card cal-ev cv-item ${past?'past':''}" ${calAttrs(e)}>
     <div class="cv-top">
       <span style="width:7px;height:7px;border-radius:50%;background:${c.dot};flex-shrink:0"></span>
       <span class="cv-rt">${escAttr(e.title)}</span>
@@ -11941,9 +11942,24 @@ function moveCalendarEventToDate(eid, newDate){
       const vid = ev.dataset.vid;
       // 프로젝트 마감/체크리스트 마감 → 프로젝트로 이동
       if(pid && (eid.startsWith('deadline_') || eid.startsWith('ck_'))){
-        state.selectedProjectId = pid;
-        state.view = 'projects';
-        render();
+        const pj = state.data.projects.find(x=>x.id===pid);
+        if(!pj){ return; }
+        const cks = pj.checklist||[];
+        const doneN = cks.filter(c=>c.done).length;
+        const isCk = eid.startsWith('ck_');
+        const item = isCk ? cks.find(c=>c.id===eid.slice(3)) : null;
+        const rows = (isCk ? [item] : cks).filter(Boolean).map(c=>`<div style="display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:13px;font-weight:300"><i class="ti ${c.done?'ti-circle-check':'ti-circle'}" style="color:${c.done?'#16A34A':'var(--muted)'};margin-top:2px"></i><span style="flex:1;${c.done?'text-decoration:line-through;color:var(--muted)':''}">${escAttr(c.text)}</span><span style="font-size:11.5px;color:var(--muted)">${c.dueDate||''}</span></div>`).join('');
+        openModal(`<div class="modal" style="max-width:460px"><div class="mh"><h3>${isCk?'체크리스트 마감':'프로젝트 마감'}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+          <div class="mb">
+            <div style="font-size:15px;font-weight:600;margin-bottom:4px">${escAttr(pj.title)}</div>
+            <div style="font-size:12px;color:var(--muted);font-weight:300;margin-bottom:12px">${[pj.category,pj.status,pj.deadline?('마감 '+pj.deadline):'',cks.length?('체크리스트 '+doneN+'/'+cks.length):''].filter(Boolean).map(escAttr).join(' · ')}</div>
+            ${rows||'<div class="empty-state" style="padding:16px">체크리스트가 없습니다.</div>'}
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+              <button class="btn" id="pdGo"><i class="ti ti-arrow-right"></i> 프로젝트로 이동</button>
+            </div>
+          </div></div>`);
+        bindModalCommon();
+        document.getElementById('pdGo').addEventListener('click',()=>{ closeModal(); state.selectedProjectId = pid; state.view = 'projects'; render(); });
         return;
       }
       // 거래처 로그의 다음 액션 마감일 → 로그 상세 모달
