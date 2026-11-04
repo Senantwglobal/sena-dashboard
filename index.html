@@ -218,6 +218,21 @@ select.inp{cursor:pointer}
 .cv-seg{background:rgba(255,255,255,.28)}
 .cv-nav button{background:rgba(255,255,255,.35);border-color:rgba(255,255,255,.55)}
 .cv-item.past{background:rgba(255,255,255,.16)}
+/* 미니 캘린더: 깔끔한 화이트 카드 + 검정 라운드 사각 선택 */
+.cv-mini{background:rgba(255,255,255,.82)!important;backdrop-filter:blur(20px)!important}
+.mc-head{padding:16px 16px 8px}
+.mc-head b{font-size:14px;font-weight:500;color:#2F4A55}
+.mc-head button{font-size:16px}
+.mc-dow{font-size:11.5px;color:#A9B8BF;font-weight:400}
+.mc-grid{gap:4px 2px;padding:6px 14px 16px}
+.mc-day{height:34px;border-radius:10px;font-size:13px;font-weight:400;color:#4B6670}
+.mc-day:hover{background:rgba(15,23,42,.06)}
+.mc-day.inweek{background:transparent}
+.mc-day.today{box-shadow:inset 0 0 0 1.5px rgba(15,23,42,.25)}
+.mc-day.sel{background:#000;color:#fff;font-weight:500;box-shadow:none}
+.mc-day.other{color:#C3CDD2}
+.mc-day .mc-dot{background:#8FA3AB}
+.mc-day.sel .mc-dot{background:#fff}
 .tl-now{position:absolute;left:0;right:0;height:0;border-top:1.5px solid #FF453A;z-index:4;pointer-events:none}
 .tl-now::before{content:'';position:absolute;left:-4px;top:-4.5px;width:7px;height:7px;border-radius:50%;background:#FF453A}
 .tl-dh{text-align:center;padding:10px 4px;font-size:12px;color:var(--muted);border-bottom:1px solid rgba(15,23,42,.06);font-weight:300}
@@ -6441,7 +6456,7 @@ function viewCalendarModes(){
     const d = dayjs(state.calDay);
     title = `${d.format('YYYY년 M월 D일')}`;
     navHtml = nav;
-    bodyHtml = `<div class="cv-layout"><div class="cv-wrap">${calMiniHtml()}${calDetailHtml()}</div><div class="cv-wrap">${calTimelineHtml([state.calDay])}</div></div>`;
+    bodyHtml = `<div class="cv-layout"><div class="cv-wrap cv-mini">${calMiniHtml()}${calDetailHtml()}</div><div class="cv-wrap">${calTimelineHtml([state.calDay])}</div></div>`;
   } else {
     const d = dayjs(state.calDay);
     const st = d.startOf('week');
@@ -6449,7 +6464,7 @@ function viewCalendarModes(){
     const en = dayjs(dates[6]);
     title = `${st.format('YYYY년 M월 D일')} – ${st.format('M')===en.format('M')?en.format('D일'):en.format('M월 D일')}`;
     navHtml = nav;
-    bodyHtml = `<div class="cv-layout"><div class="cv-wrap">${calMiniHtml()}${calDetailHtml()}</div><div class="cv-wrap">${calTimelineHtml(dates)}</div></div>`;
+    bodyHtml = `<div class="cv-layout"><div class="cv-wrap cv-mini">${calMiniHtml()}${calDetailHtml()}</div><div class="cv-wrap">${calTimelineHtml(dates)}</div></div>`;
   }
 
   function groupsHtml(gs, forcePast){
@@ -6459,7 +6474,7 @@ function viewCalendarModes(){
   return `
     <div class="cv-head">
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">${(mode==='day'||mode==='week')
-        ? (()=>{const sd=dayjs(state.calDay);return `<div class="cv-badge"><i>${sd.format('M')}월</i><b>${sd.date()}</b></div><div><div class="cv-title">${title}</div><div class="cv-sub">${dow[sd.day()]}요일${mode==='week'?' · 선택일 기준 주간':''}</div></div>`;})()
+        ? (()=>{const sd=dayjs(state.calDay);return `<div><div class="cv-title">${title}</div><div class="cv-sub">${dow[sd.day()]}요일${mode==='week'?' · 선택일 기준 주간':''}</div></div>`;})()
         : `<div class="cv-title">${title}</div>`}${navHtml}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         ${calSegHtml(mode)}
@@ -11950,6 +11965,18 @@ function moveCalendarEventToDate(eid, newDate){
       // 일반 캘린더 이벤트 → 상세보기 모달 (읽기전용, 수정 버튼으로 진입)
       const evData = state.data.calendar.find(x=>x.id===eid);
       if(!evData) return;
+      if(ev.classList.contains('cv-item') && eventMeetingNotes(evData).length){
+        const nts = eventMeetingNotes(evData);
+        openModal(`<div class="modal" style="max-width:380px"><div class="mh"><h3>${escAttr(evData.title)}</h3><button class="btn btn-g close-x" id="closeModal"><i class="ti ti-x"></i></button></div>
+          <div class="mb" style="display:flex;flex-direction:column;gap:10px">
+            <button class="btn" id="pickDetail" style="justify-content:flex-start;padding:14px 16px;gap:10px"><i class="ti ti-calendar-event"></i> 일정 상세</button>
+            <button class="btn btn-p" id="pickNote" style="justify-content:flex-start;padding:14px 16px;gap:10px"><i class="ti ti-notes"></i> 회의록 보기${nts.length>1?` (${nts.length})`:''}</button>
+          </div></div>`);
+        bindModalCommon();
+        document.getElementById('pickDetail').addEventListener('click',()=>{ closeModal(); openModal(modalEventDetail(evData)); bindModalCommon(); bindEventDetailModal(eid); });
+        document.getElementById('pickNote').addEventListener('click',()=>{ const mid=nts[0].id; closeModal(); openModal(modalMeetingNoteFull(evData, mid)); bindModalCommon(); bindMeetingNoteFullModal(evData.id, mid); });
+        return;
+      }
       openModal(modalEventDetail(evData));
       bindModalCommon();
       bindEventDetailModal(eid);
