@@ -13144,8 +13144,11 @@ function inboxGuessVendor(title){
   });
   return best ? best.id : '';
 }
+function inboxClean(txt){
+  return String(txt||'').replace(/!?\[[^\]]*\]\(plaud:\/\/[^)]*\)/g,'').replace(/\n{3,}/g,'\n\n').trim();
+}
 function inboxToHtml(txt){
-  return escAttr(txt||'').replace(/\n/g,'<br>');
+  return escAttr(inboxClean(txt)).replace(/\n/g,'<br>');
 }
 function modalMeetingInbox(){
   const vopts = (state.data.vendors||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')).map(v=>`<option value="${v.id}">${escAttr(v.name)}</option>`).join('');
@@ -13192,7 +13195,7 @@ function bindMeetingInbox(){
       const time = card.querySelector('.ib-time').value || '';
       const vid = card.querySelector('.ib-vendor').value;
       const body = [it.summary?('<b>요약</b><br>'+inboxToHtml(it.summary)):'', it.action_items?('<br><br><b>Action Items</b><br>'+inboxToHtml(it.action_items)):'', it.transcript?('<br><br><b>전사</b><br>'+inboxToHtml(it.transcript)):''].join('');
-      const oneLine = (it.summary||it.transcript||'').replace(/\s+/g,' ').slice(0,80);
+      const oneLine = inboxClean(it.summary||it.transcript||'').replace(/\s+/g,' ').slice(0,80);
       const ev = {
         id: uid('ev'), date, endDate:'', type:'미팅', title, time, startTime:time, endTime:'', allDay:false,
         vendorIds: vid?[vid]:[], vendorId: vid||'', attendeePersonIds:[], attendeePersonId:'', projectId:'',
