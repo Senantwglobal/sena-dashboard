@@ -1584,7 +1584,7 @@ const state = {
   selectedProjectId: null,
   selectedCompanyId: null,
   calMonth: dayjs().format('YYYY-MM'),
-  calView: 'month',
+  calView: 'agenda',
   calDay: '',
   calSelEid: '',
   calKeepScroll: null,
@@ -2254,6 +2254,7 @@ function render(){
 
   document.querySelectorAll('.nb').forEach(el=>{
     el.addEventListener('click', ()=>{
+      if(el.dataset.view==='calendar' && state.view!=='calendar') state.calView = 'agenda';
       state.view = el.dataset.view;
       state.selectedVendorId = null;
       state.selectedProjectId = null;
