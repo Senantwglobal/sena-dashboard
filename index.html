@@ -202,6 +202,13 @@ select.inp{cursor:pointer}
 .tl-ev.sel{box-shadow:0 0 0 2px rgba(15,23,42,.55)}
 .tl-ev{border-width:1px 1px 1px 3px;border-style:solid;border-color:transparent}
 
+
+/* 거래처 상세 상단 배너 (로고 대표색 기반, 유튜브 배너 느낌) */
+#viewRoot:has(.vd-banner){position:relative}
+.vd-banner{position:absolute;top:-76px;left:50%;width:100vw;transform:translateX(-50%);height:360px;z-index:-1;pointer-events:none;
+  background:radial-gradient(70% 90% at 20% 30%,color-mix(in srgb,var(--bn) 55%,transparent) 0%,transparent 70%),radial-gradient(60% 80% at 85% 20%,color-mix(in srgb,var(--bn) 35%,#fff) 0%,transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--bn) 34%,transparent) 0%,color-mix(in srgb,var(--bn) 16%,transparent) 65%,transparent 100%);
+  opacity:.75;-webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 100%);mask-image:linear-gradient(180deg,#000 55%,transparent 100%);transition:background .4s}
+body{overflow-x:clip}
 /* ---- 캘린더 투명도 통일 (대시보드 탭과 같은 반투명 글래스) ---- */
 .cv-wrap{background:linear-gradient(160deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.16) 45%, rgba(255,255,255,.22) 100%);border:1px solid rgba(255,255,255,.55);backdrop-filter:blur(26px) saturate(1.15);-webkit-backdrop-filter:blur(26px) saturate(1.15);box-shadow:0 1px 2px rgba(15,23,42,.02),0 10px 24px -14px rgba(15,23,42,.14),inset 0 1px 1px rgba(255,255,255,.7)}
 .cv-allday{background:rgba(255,255,255,.12)}
@@ -4613,6 +4620,27 @@ function viewVendorAnalytics(){
   `;
 }
 
+function vdBannerColor(img){
+  try{
+    const c=document.createElement('canvas');c.width=c.height=32;
+    const x=c.getContext('2d');x.drawImage(img,0,0,32,32);
+    const d=x.getImageData(0,0,32,32).data;
+    let r=0,g=0,b=0,w=0,R=0,G=0,B=0,W=0;
+    for(let i=0;i<d.length;i+=4){
+      const a=d[i+3]/255; if(a<.3)continue;
+      const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);
+      const sat=mx?(mx-mn)/mx:0;
+      R+=d[i];G+=d[i+1];B+=d[i+2];W++;
+      if(mx>235&&sat<.1)continue; // 흰 배경 제외
+      const wt=.15+sat*sat*4; r+=d[i]*wt;g+=d[i+1]*wt;b+=d[i+2]*wt;w+=wt;
+    }
+    let cr,cg,cb;
+    if(w>0){cr=r/w;cg=g/w;cb=b/w;}else if(W){cr=R/W;cg=G/W;cb=B/W;}else return;
+    const l=(Math.max(cr,cg,cb)+Math.min(cr,cg,cb))/510;
+    if(l<.28){const k=(.28-l)*255*1.2;cr+=k;cg+=k;cb+=k;}
+    const el=document.getElementById('vdBanner'); if(el) el.style.setProperty('--bn',`rgb(${Math.round(cr)},${Math.round(cg)},${Math.round(cb)})`);
+  }catch(e){}
+}
 function viewVendorDetail(){
   const v = state.data.vendors.find(x=>x.id===state.selectedVendorId);
   if(!v) return '<div class="empty-state">벤더를 찾을 수 없습니다.</div>';
@@ -4766,6 +4794,7 @@ function viewVendorDetail(){
   const currentStatus = actionStatuses.find(s=>s.value===v.actionStatus) || actionStatuses[0];
 
   return `
+    <div class="vd-banner" id="vdBanner" style="--bn:${avatarColor(v.name)}">${v.logoUrl?`<img src="${v.logoUrl}" crossorigin="anonymous" alt="" style="display:none" onload="vdBannerColor(this)"/>`:''}</div>
     <button class="back-link" id="backToVendors"><i class="ti ti-arrow-left"></i> Company 목록</button>
     <div class="sh">
       <div style="display:flex;align-items:center;gap:12px">
